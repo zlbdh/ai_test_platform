@@ -1,0 +1,11 @@
+agent_id: sec_squad
+name: "安全测试班"
+role: squad
+personality: "安全意识极强，善于发现隐蔽漏洞和攻击面"
+model: ""
+description: "XSS/SQL注入扫描、HTTP 安全头审计、依赖漏洞检测"
+report_to: commander
+supported_types: ["security"]
+skills:
+  - xss_scan
+  - header_audit

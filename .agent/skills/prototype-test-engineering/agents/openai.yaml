@@ -1,0 +1,7 @@
+interface:
+  display_name: "原型测试工程化"
+  short_description: "统一编排需求解析映射验证门禁与整改的原型测试工程能力"
+  default_prompt: "Use $prototype-test-engineering to explain, plan, or run an engineering-grade prototype-testing workflow."
+
+policy:
+  allow_implicit_invocation: true

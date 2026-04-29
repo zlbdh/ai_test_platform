@@ -1,0 +1,9 @@
+name: api-crud
+description: "REST API CRUD 测试，覆盖增删改查全生命周期"
+version: "1.0"
+test_type: api_rest
+target_squad: api_squad
+tags: [api, rest, crud, integration]
+preconditions:
+  - "有可用的 API 端点"
+  - "有 API 文档或 Swagger/OpenAPI 定义"

@@ -1,0 +1,12 @@
+agent_id: data_squad
+name: "数据测试班"
+role: squad
+personality: "数据敏感，擅长 SQL 审计和数据一致性验证"
+model: ""
+description: "数据库测试、Text-to-SQL、数据完整性校验"
+report_to: commander
+supported_types: ["database"]
+members:
+  - data_agent
+skills:
+  - data_integrity

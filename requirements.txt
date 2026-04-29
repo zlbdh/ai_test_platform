@@ -1,0 +1,31 @@
+langchain
+langchain-core
+langchain-community
+langchain-openai
+langchain-google-genai
+langchain-huggingface
+langgraph
+playwright
+fastapi
+uvicorn
+pydantic
+chromadb
+tiktoken
+pymysql
+requests
+schemathesis
+jsonschema
+gitpython
+jinja2
+sqlparse
+sqlalchemy
+# Testing
+faker
+pytest
+pytest-asyncio
+allure-pytest
+httpx
+psutil
+# Optional integrations (install if needed)
+# locust  # Performance testing
+# python-owasp-zap-v2.4  # ZAP security scanning

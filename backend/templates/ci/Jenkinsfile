@@ -1,0 +1,66 @@
+# ============================================================================
+# AI Test Platform — Jenkinsfile 模板
+#
+# 使用方法:
+# 1. 将此文件复制到你的项目根目录
+# 2. 配置 Jenkins 环境变量 AITEST_API_URL
+# 3. 运行 Pipeline
+# ============================================================================
+
+pipeline {
+    agent any
+
+    environment {
+        AITEST_API_URL = credentials('aitest-api-url') ?: 'http://localhost:8020'
+    }
+
+    parameters {
+        string(name: 'TEST_URL', defaultValue: 'https://example.com', description: '测试目标 URL')
+        string(name: 'TEST_GOAL', defaultValue: '验证首页正常加载', description: '测试指令')
+        choice(name: 'TEST_MODE', choices: ['smart', 'fast', 'deep'], description: '测试模式')
+    }
+
+    stages {
+        stage('🏥 健康检查') {
+            steps {
+                sh 'python aitest.py health'
+            }
+        }
+
+        stage('🚀 AI 测试') {
+            steps {
+                sh """
+                    python aitest.py run \\
+                        --url "${params.TEST_URL}" \\
+                        --goal "${params.TEST_GOAL}" \\
+                        --mode ${params.TEST_MODE} \\
+                        --wait \\
+                        --timeout 120 \\
+                        --output junit
+                """
+            }
+            post {
+                always {
+                    junit 'test-results-*.xml'
+                    archiveArtifacts artifacts: 'test-results-*.xml', allowEmptyArchive: true
+                }
+            }
+        }
+
+        stage('📊 生成报告') {
+            steps {
+                sh 'python aitest.py report'
+                sh 'python aitest.py analytics'
+            }
+        }
+    }
+
+    post {
+        failure {
+            echo '❌ AI 测试失败!'
+        }
+        success {
+            echo '✅ AI 测试通过!'
+        }
+    }
+}

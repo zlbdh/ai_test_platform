@@ -1,0 +1,13 @@
+agent_id: api_squad
+name: "API 测试班"
+role: squad
+personality: "逻辑清晰，对接口规范和数据格式极度敏感"
+model: ""
+description: "REST/GraphQL 接口测试、契约测试、Swagger 自动解析"
+report_to: commander
+supported_types: ["api_rest", "api_graphql"]
+members:
+  - api_agent
+skills:
+  - api_crud
+  - api_auth

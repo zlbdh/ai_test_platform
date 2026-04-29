@@ -1,0 +1,7 @@
+interface:
+  display_name: "原型异常边界检查"
+  short_description: "检查空态失败态危险操作确认加载态与边界拦截表达情况"
+  default_prompt: "Use $prototype-test-exception-boundary-check to inspect exception states, empty states, confirmations, and boundary handling."
+
+policy:
+  allow_implicit_invocation: true

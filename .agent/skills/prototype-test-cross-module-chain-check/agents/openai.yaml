@@ -1,0 +1,7 @@
+interface:
+  display_name: "跨模块链路检查"
+  short_description: "检查上下游模块入口动作回写回显是否形成真实业务闭环"
+  default_prompt: "Use $prototype-test-cross-module-chain-check to verify cross-module chains and upstream/downstream handoffs in a prototype."
+
+policy:
+  allow_implicit_invocation: true

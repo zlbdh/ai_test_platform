@@ -1,0 +1,273 @@
+"""
+Contract Testing Service - 契约测试服务
+
+支持 API 契约测试：
+- Provider 验证
+- Consumer 驱动契约
+- 契约版本管理
+- Pact 格式兼容
+"""
+
+from typing import Dict, Any, List, Optional
+from dataclasses import dataclass
+from enum import Enum
+import json
+import hashlib
+from datetime import datetime
+import aiohttp
+import asyncio
+
+
+class ContractStatus(Enum):
+    PENDING = "pending"
+    VERIFIED = "verified"
+    FAILED = "failed"
+
+
+@dataclass
+class ContractInteraction:
+    """契约交互"""
+    description: str
+    request: Dict[str, Any]
+    response: Dict[str, Any]
+
+
+@dataclass 
+class Contract:
+    """API 契约"""
+    contract_id: str
+    consumer: str
+    provider: str
+    interactions: List[ContractInteraction]
+    version: str
+    created_at: str
+    status: ContractStatus
+
+
+@dataclass
+class VerificationResult:
+    """验证结果"""
+    contract_id: str
+    passed: bool
+    total_interactions: int
+    passed_interactions: int
+    failed_interactions: int
+    failures: List[Dict[str, Any]]
+    verification_time_ms: int
+
+
+class ContractTestingService:
+    """契约测试服务"""
+    
+    def __init__(self):
+        self.contracts: Dict[str, Contract] = {}
+        self.verification_history: List[VerificationResult] = []
+    
+    def _generate_id(self, consumer: str, provider: str) -> str:
+        """生成契约 ID"""
+        content = f"{consumer}:{provider}:{datetime.now().isoformat()}"
+        return hashlib.md5(content.encode()).hexdigest()[:12]
+    
+    def create_contract(
+        self,
+        consumer: str,
+        provider: str,
+        interactions: List[Dict[str, Any]],
+        version: str = "1.0.0"
+    ) -> Contract:
+        """创建契约"""
+        contract_id = self._generate_id(consumer, provider)
+        
+        parsed_interactions = [
+            ContractInteraction(
+                description=i.get("description", ""),
+                request=i.get("request", {}),
+                response=i.get("response", {})
+            )
+            for i in interactions
+        ]
+        
+        contract = Contract(
+            contract_id=contract_id,
+            consumer=consumer,
+            provider=provider,
+            interactions=parsed_interactions,
+            version=version,
+            created_at=datetime.now().isoformat(),
+            status=ContractStatus.PENDING
+        )
+        
+        self.contracts[contract_id] = contract
+        return contract
+    
+    async def verify_contract(
+        self,
+        contract_id: str,
+        provider_base_url: str
+    ) -> VerificationResult:
+        """验证契约"""
+        contract = self.contracts.get(contract_id)
+        if not contract:
+            return VerificationResult(
+                contract_id=contract_id,
+                passed=False,
+                total_interactions=0,
+                passed_interactions=0,
+                failed_interactions=1,
+                failures=[{"error": "Contract not found"}],
+                verification_time_ms=0
+            )
+        
+        start_time = datetime.now()
+        failures = []
+        passed_count = 0
+        
+        async with aiohttp.ClientSession() as session:
+            for interaction in contract.interactions:
+                result = await self._verify_interaction(
+                    session,
+                    provider_base_url,
+                    interaction
+                )
+                
+                if result["passed"]:
+                    passed_count += 1
+                else:
+                    failures.append({
+                        "description": interaction.description,
+                        "error": result.get("error"),
+                        "expected": result.get("expected"),
+                        "actual": result.get("actual")
+                    })
+        
+        elapsed = int((datetime.now() - start_time).total_seconds() * 1000)
+        total = len(contract.interactions)
+        
+        passed = passed_count == total
+        contract.status = ContractStatus.VERIFIED if passed else ContractStatus.FAILED
+        
+        result = VerificationResult(
+            contract_id=contract_id,
+            passed=passed,
+            total_interactions=total,
+            passed_interactions=passed_count,
+            failed_interactions=total - passed_count,
+            failures=failures,
+            verification_time_ms=elapsed
+        )
+        
+        self.verification_history.append(result)
+        return result
+    
+    async def _verify_interaction(
+        self,
+        session: aiohttp.ClientSession,
+        base_url: str,
+        interaction: ContractInteraction
+    ) -> Dict[str, Any]:
+        """验证单个交互"""
+        request = interaction.request
+        expected = interaction.response
+        
+        url = base_url + request.get("path", "/")
+        method = request.get("method", "GET").upper()
+        headers = request.get("headers", {})
+        body = request.get("body")
+        
+        try:
+            async with session.request(
+                method,
+                url,
+                headers=headers,
+                json=body if body else None,
+                ssl=False
+            ) as response:
+                actual_status = response.status
+                actual_body = await response.json() if response.content_type == "application/json" else await response.text()
+                
+                # 验证状态码
+                expected_status = expected.get("status", 200)
+                if actual_status != expected_status:
+                    return {
+                        "passed": False,
+                        "error": "Status code mismatch",
+                        "expected": expected_status,
+                        "actual": actual_status
+                    }
+                
+                # 验证响应体 (简化: 检查关键字段)
+                expected_body = expected.get("body", {})
+                if expected_body:
+                    for key, exp_value in expected_body.items():
+                        if isinstance(actual_body, dict):
+                            actual_value = actual_body.get(key)
+                            if actual_value != exp_value:
+                                return {
+                                    "passed": False,
+                                    "error": f"Body mismatch at '{key}'",
+                                    "expected": exp_value,
+                                    "actual": actual_value
+                                }
+                
+                return {"passed": True}
+        
+        except Exception as e:
+            return {
+                "passed": False,
+                "error": str(e)
+            }
+    
+    def export_pact(self, contract_id: str) -> Dict[str, Any]:
+        """导出为 Pact 格式"""
+        contract = self.contracts.get(contract_id)
+        if not contract:
+            return {}
+        
+        return {
+            "consumer": {"name": contract.consumer},
+            "provider": {"name": contract.provider},
+            "interactions": [
+                {
+                    "description": i.description,
+                    "request": i.request,
+                    "response": i.response
+                }
+                for i in contract.interactions
+            ],
+            "metadata": {
+                "pactSpecification": {"version": "2.0.0"}
+            }
+        }
+    
+    def import_pact(self, pact_data: Dict[str, Any]) -> Contract:
+        """导入 Pact 格式契约"""
+        consumer = pact_data.get("consumer", {}).get("name", "unknown")
+        provider = pact_data.get("provider", {}).get("name", "unknown")
+        interactions = pact_data.get("interactions", [])
+        
+        return self.create_contract(consumer, provider, interactions)
+    
+    def get_statistics(self) -> Dict[str, Any]:
+        """获取统计信息"""
+        total = len(self.contracts)
+        verified = sum(1 for c in self.contracts.values() if c.status == ContractStatus.VERIFIED)
+        failed = sum(1 for c in self.contracts.values() if c.status == ContractStatus.FAILED)
+        
+        return {
+            "total_contracts": total,
+            "verified": verified,
+            "failed": failed,
+            "pending": total - verified - failed,
+            "verification_runs": len(self.verification_history)
+        }
+
+
+# 单例
+_contract_service: Optional[ContractTestingService] = None
+
+def get_contract_service() -> ContractTestingService:
+    """获取契约测试服务"""
+    global _contract_service
+    if _contract_service is None:
+        _contract_service = ContractTestingService()
+    return _contract_service

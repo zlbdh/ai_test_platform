@@ -1,0 +1,35 @@
+# ============================================================================
+# AI Test Platform — GitLab CI 模板
+# ============================================================================
+
+variables:
+  AITEST_API_URL: ${AITEST_API_URL:-http://localhost:8020}
+
+stages:
+  - test
+  - report
+
+ai-test:
+  stage: test
+  image: python:3.10-slim
+  script:
+    - python aitest.py health
+    - python aitest.py run
+        --url "${TEST_URL:-https://example.com}"
+        --goal "${TEST_GOAL:-验证首页正常加载}"
+        --wait --timeout 120 --output junit
+  artifacts:
+    when: always
+    reports:
+      junit: test-results-*.xml
+    paths:
+      - test-results-*.xml
+    expire_in: 30 days
+
+analytics:
+  stage: report
+  image: python:3.10-slim
+  script:
+    - python aitest.py analytics
+    - python aitest.py report
+  when: always

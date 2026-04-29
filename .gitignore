@@ -1,0 +1,105 @@
+venv/
+__pycache__/
+.env
+data/*.db
+artifacts/
+*.png
+.coverage
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+
+# 环境变量
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# Backend runtime artifacts
+.hypothesis/
+.pytest_cache/
+backend/.hypothesis/
+backend/.pytest_cache/
+backend/data/allure-report/
+backend/data/allure-results/
+backend/data/chroma_db/
+backend/data/healing_history.db
+backend/data/strategy_history.db
+backend/data/tracing.db
+
+# Frontend generated output
+frontend/node_modules/
+frontend/dist/
+
+# Root runtime data
+vector_db/
+data/chroma_db/
+data/backups/
+data/docker_diag_*/
+data/*_stdout.log
+data/*_stderr.log
+
+# Local secrets and runtime state
+.env
+.env.*
+!.env.example
+.claude/
+*.pem
+*.p12
+*.pfx
+*credentials*
+*secret*
+*token*
+settings.local.json
+
+# Generated/runtime data
+node_modules/
+dist/
+build/
+.vite/
+__pycache__/
+.pytest_cache/
+.hypothesis/
+.coverage
+coverage/
+artifacts/
+reports/
+logs/
+tmp/
+data/
+vector_db/
+chroma_db/
+allure-report/
+allure-results/
+*.db
+*.sqlite
+*.sqlite3
+*.bin
+*.pkl
+*.log
+*.zip
+*.7z
+*.rar
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+
+# Test command output snapshots
+backend/tests/*.txt
+

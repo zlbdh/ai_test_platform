@@ -1,0 +1,16 @@
+node_modules/
+.venv/
+venv/
+vector_db/
+data/
+tmp/
+artifacts/
+__pycache__/
+.git/
+dist/
+build/
+*.html
+.coverage
+.claude/
+.agent/
+.hypothesis/

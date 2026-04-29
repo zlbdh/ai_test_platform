@@ -1,0 +1,7 @@
+interface:
+  display_name: "原型结构检查"
+  short_description: "检查菜单路由页面骨架及关键区块承接是否与页面类型一致"
+  default_prompt: "Use $prototype-test-structure-check to verify menu, route, and page-structure coverage in a prototype."
+
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,7 @@
+interface:
+  display_name: "原型交互流程检查"
+  short_description: "核查入口跳转弹窗确认返回结果态是否形成真实动作闭环"
+  default_prompt: "Use $prototype-test-interaction-flow to verify key interaction flows across prototype pages."
+
+policy:
+  allow_implicit_invocation: true
