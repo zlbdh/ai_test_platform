@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-MCP Server — Model Context Protocol 服务器
+MCP Server — Model Context Protocol server
 
-通过 stdio 协议暴露平台能力给外部 AI 助手。
-支持工具调用 (tools/call) 和工具列表 (tools/list)。
+Expose platform capabilities to external AI assistants over stdio.
+Supports tool calls (tools/call) and tool listing (tools/list).
 
-启动方式:
+Startup:
     python -m mcp.server
 """
 
@@ -17,7 +17,7 @@ import logging
 import base64
 from typing import Dict, Any, Optional
 
-# 将项目根目录加入路径
+# Add the project root to the path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from core.app_meta import APP_VERSION
@@ -27,10 +27,10 @@ logger = logging.getLogger("mcp_server")
 
 class MCPServer:
     """
-    MCP Server 实现
+    MCP Server implementation
 
-    通过 stdin/stdout 进行 JSONRPC 通信，
-    符合 Model Context Protocol 规范。
+    Communicate with JSONRPC over stdin/stdout,
+    following the Model Context Protocol specification.
     """
 
     def __init__(self):
@@ -38,7 +38,7 @@ class MCPServer:
         self._register_tools()
 
     def _register_tools(self):
-        """注册所有 MCP tools"""
+        """Register all MCP tools"""
         self.tools = {
             "run_test": self._tool_run_test,
             "get_test_status": self._tool_get_test_status,
@@ -48,7 +48,7 @@ class MCPServer:
             "list_sessions": self._tool_list_sessions,
             "run_api_test": self._tool_run_api_test,
             "evaluate_agent": self._tool_evaluate_agent,
-            # P1 新增
+            # Added in P1
             "generate_test_data": self._tool_generate_test_data,
             "get_analytics": self._tool_get_analytics,
             "get_execution_history": self._tool_get_execution_history,
@@ -58,7 +58,7 @@ class MCPServer:
     # ── MCP Protocol Handlers ────────────────────────────────────────────────
 
     async def handle_message(self, message: Dict) -> Dict:
-        """处理 MCP JSONRPC 消息"""
+        """Handle an MCP JSONRPC message"""
         method = message.get("method", "")
         msg_id = message.get("id")
         params = message.get("params", {})
@@ -89,7 +89,7 @@ class MCPServer:
                 })
 
             elif method == "notifications/initialized":
-                return None  # 无需响应
+                return None  # No response needed
 
             else:
                 return self._error(msg_id, -32601, f"Method not found: {method}")
@@ -99,7 +99,7 @@ class MCPServer:
             return self._error(msg_id, -32603, str(e))
 
     async def _call_tool(self, name: str, arguments: Dict) -> Dict:
-        """调用工具"""
+        """Call a tool"""
         handler = self.tools.get(name)
         if not handler:
             return {"error": f"Unknown tool: {name}"}
@@ -108,13 +108,13 @@ class MCPServer:
     # ── Tool Implementations ─────────────────────────────────────────────────
 
     async def _tool_run_test(self, args: Dict) -> Dict:
-        """执行测试"""
+        """Run tests"""
         url = args.get("url", "")
         instructions = args.get("instructions", "")
         session_id = args.get("session_id", "mcp_session")
 
         if not url or not instructions:
-            return {"error": "url 和 instructions 为必填参数"}
+            return {"error": "url and instructions are required"}
 
         try:
             import httpx
@@ -122,17 +122,17 @@ class MCPServer:
                 resp = await client.post(
                     "http://localhost:8020/api/commander/execute",
                     json={
-                        "instruction": f"打开 {url}，{instructions}",
+                        "instruction": f"Open {url}, {instructions}",
                         "session_id": session_id,
                     },
                 )
                 return resp.json()
         except Exception as e:
-            return {"error": f"调用测试API失败: {str(e)}",
-                    "hint": "请确保后端服务已启动 (localhost:8020)"}
+            return {"error": f"Failed to call the testing API: {str(e)}",
+                    "hint": "Ensure the backend service is running (localhost:8020)"}
 
     async def _tool_get_test_status(self, args: Dict) -> Dict:
-        """获取测试状态"""
+        """Get test status"""
         session_id = args.get("session_id", "")
         try:
             import httpx
@@ -145,7 +145,7 @@ class MCPServer:
             return {"error": str(e)}
 
     async def _tool_get_screenshot(self, args: Dict) -> Dict:
-        """获取截图"""
+        """Get a screenshot"""
         session_id = args.get("session_id", "mcp_session")
         try:
             from core.session_manager import session_manager
@@ -154,18 +154,18 @@ class MCPServer:
             if frame:
                 b64 = base64.b64encode(frame).decode("utf-8")
                 return {"status": "success", "image_base64": b64[:100] + "...(truncated)", "size_bytes": len(frame)}
-            return {"status": "no_frame", "message": "当前无活跃浏览器会话"}
+            return {"status": "no_frame", "message": "No active browser session"}
         except Exception as e:
             return {"error": str(e)}
 
     async def _tool_browse_and_verify(self, args: Dict) -> Dict:
-        """浏览并验证"""
+        """Browse and verify"""
         url = args.get("url", "")
         assertion = args.get("assertion", "")
         session_id = args.get("session_id", "mcp_session")
 
         if not url or not assertion:
-            return {"error": "url 和 assertion 为必填参数"}
+            return {"error": "url and assertion are required"}
 
         try:
             import httpx
@@ -173,7 +173,7 @@ class MCPServer:
                 resp = await client.post(
                     "http://localhost:8020/api/commander/execute",
                     json={
-                        "instruction": f"打开 {url}，然后验证: {assertion}",
+                        "instruction": f"Open {url}, then verify: {assertion}",
                         "session_id": session_id,
                     },
                 )
@@ -182,7 +182,7 @@ class MCPServer:
             return {"error": str(e)}
 
     async def _tool_get_test_report(self, args: Dict) -> Dict:
-        """获取测试报告"""
+        """Get the test report"""
         session_id = args.get("session_id", "")
         try:
             import httpx
@@ -195,7 +195,7 @@ class MCPServer:
             return {"error": str(e)}
 
     async def _tool_list_sessions(self, args: Dict) -> Dict:
-        """列出活跃会话"""
+        """List active sessions"""
         try:
             import httpx
             async with httpx.AsyncClient(timeout=10) as client:
@@ -205,7 +205,7 @@ class MCPServer:
             return {"error": str(e)}
 
     async def _tool_run_api_test(self, args: Dict) -> Dict:
-        """运行API测试"""
+        """Run API tests"""
         try:
             import httpx
             method = args.get("method", "GET").upper()
@@ -225,7 +225,7 @@ class MCPServer:
                 elif method == "DELETE":
                     resp = await client.delete(url, headers=headers)
                 else:
-                    return {"error": f"不支持的 HTTP 方法: {method}"}
+                    return {"error": f"Unsupported HTTP method: {method}"}
 
                 result = {
                     "status_code": resp.status_code,
@@ -234,7 +234,7 @@ class MCPServer:
                     "elapsed_ms": resp.elapsed.total_seconds() * 1000 if resp.elapsed else 0,
                 }
 
-                # 执行断言
+                # Evaluate assertions
                 assertions = args.get("assertions", "")
                 if assertions:
                     result["assertion_result"] = self._check_assertions(assertions, resp)
@@ -244,7 +244,7 @@ class MCPServer:
             return {"error": str(e)}
 
     async def _tool_evaluate_agent(self, args: Dict) -> Dict:
-        """运行Agent评估"""
+        """Run agent evaluation"""
         try:
             import httpx
             scenario_id = args.get("scenario_id", "")
@@ -262,7 +262,7 @@ class MCPServer:
 
     @staticmethod
     def _check_assertions(assertions: str, response) -> Dict:
-        """简单断言检查"""
+        """Basic assertion check"""
         results = {"passed": True, "checks": []}
         if "status_code == 200" in assertions:
             ok = response.status_code == 200
@@ -276,10 +276,10 @@ class MCPServer:
                 results["passed"] = False
         return results
 
-    # ── P1 新增 Tool Implementations ────────────────────────────────────────
+    # ── Added in P1 Tool Implementations ────────────────────────────────────────
 
     async def _tool_generate_test_data(self, args: Dict) -> Dict:
-        """生成测试数据"""
+        """Generate test data"""
         try:
             from core.test_data_generator import TestDataGenerator
             template = args.get("template", "user")
@@ -291,7 +291,7 @@ class MCPServer:
             return {"error": str(e)}
 
     async def _tool_get_analytics(self, args: Dict) -> Dict:
-        """获取分析摘要"""
+        """Get an analytics summary"""
         try:
             import httpx
             async with httpx.AsyncClient(timeout=10) as client:
@@ -301,7 +301,7 @@ class MCPServer:
             return {"error": str(e)}
 
     async def _tool_get_execution_history(self, args: Dict) -> Dict:
-        """获取执行历史"""
+        """Get execution history"""
         try:
             import httpx
             limit = int(args.get("limit", 10))
@@ -312,7 +312,7 @@ class MCPServer:
             return {"error": str(e)}
 
     async def _tool_trigger_ci_test(self, args: Dict) -> Dict:
-        """触发 CI 测试"""
+        """Trigger CI tests"""
         try:
             import httpx
             async with httpx.AsyncClient(timeout=30) as client:
@@ -342,22 +342,22 @@ class MCPServer:
 # ── stdio Helpers ───────────────────────────────────────────────────────────
 
 def _stdio_reader():
-    """优先使用二进制流，避免 Windows pipe transport 兼容问题。"""
+    """Prefer binary streams to avoid Windows pipe transport compatibility issues."""
     return getattr(sys.stdin, "buffer", sys.stdin)
 
 
 def _stdio_writer():
-    """优先使用二进制流，避免 Windows pipe transport 兼容问题。"""
+    """Prefer binary streams to avoid Windows pipe transport compatibility issues."""
     return getattr(sys.stdout, "buffer", sys.stdout)
 
 
 async def _read_message_line() -> bytes | str:
-    """在线程中阻塞读取一行，兼容控制台和重定向 pipe。"""
+    """Read a line with a blocking call in a thread, supporting consoles and redirected pipes."""
     return await asyncio.to_thread(_stdio_reader().readline)
 
 
 async def _write_message_line(payload: str) -> None:
-    """在线程中写回一行 JSONRPC 响应并立即刷新。"""
+    """Write one JSONRPC response line in a thread and flush immediately."""
 
     def _write() -> None:
         writer = _stdio_writer()
@@ -371,12 +371,12 @@ async def _write_message_line(payload: str) -> None:
     await asyncio.to_thread(_write)
 
 
-# ── 主入口 ───────────────────────────────────────────────────────────────────
+# ── Main entry point ───────────────────────────────────────────────────────────────────
 
 async def main():
-    """通过 stdio 运行 MCP Server"""
+    """Run the MCP Server over stdio"""
     logging.basicConfig(level=logging.INFO, stream=sys.stderr)
-    logger.info("🚀 AI Test Platform MCP Server 启动")
+    logger.info("🚀 AI Test Platform MCP Server started")
 
     server = MCPServer()
     while True:
@@ -407,7 +407,7 @@ async def main():
             logger.error(f"MCP Server Error: {e}", exc_info=True)
             break
 
-    logger.info("MCP Server 已关闭")
+    logger.info("MCP Server stopped")
 
 
 if __name__ == "__main__":

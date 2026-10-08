@@ -335,7 +335,7 @@ def test_impact_empty():
     from cicd import ChangeImpactAnalyzer
     a = ChangeImpactAnalyzer()
     r = a.analyze([])
-    assert r.reason == "无文件变更"
+    assert r.reason == "No file changes"
 test("empty -> no tests", test_impact_empty)
 
 def test_github_webhook():

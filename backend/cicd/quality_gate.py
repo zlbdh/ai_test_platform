@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-Quality Gate — 质量门禁引擎
+Quality Gate — Quality gate engine
 
-在 CI/CD 管道中提供结构化的质量决策点：
-- 覆盖率阈值检查
-- Agent 评估分数门禁
-- 自定义规则引擎
+Provide structured quality decisions in CI/CD pipelines:
+- Coverage threshold checks
+- Agent evaluation score gates
+- Custom rule engine
 """
 
 from typing import Dict, Any, List, Optional
@@ -29,10 +29,10 @@ class GateStatus(str, Enum):
 
 @dataclass
 class GateRule:
-    """质量门禁规则"""
+    """Quality gate rule"""
     name: str
     description: str = ""
-    metric: str = ""           # 对应指标名
+    metric: str = ""           # Corresponding metric name
     operator: str = ">="      # >=, <=, ==, !=
     threshold: float = 0.0
     severity: str = "blocking"  # blocking, warning, info
@@ -52,7 +52,7 @@ class GateRule:
 
 @dataclass
 class GateCheckResult:
-    """单条规则检查结果"""
+    """Result of checking one rule"""
     rule_name: str
     status: GateStatus = GateStatus.PENDING
     actual_value: float = 0.0
@@ -71,7 +71,7 @@ class GateCheckResult:
 
 @dataclass
 class GateVerdict:
-    """质量门禁总体判定"""
+    """Overall quality gate decision"""
     status: GateStatus = GateStatus.PENDING
     checks: List[GateCheckResult] = field(default_factory=list)
     summary: str = ""
@@ -91,12 +91,12 @@ class GateVerdict:
         }
 
 
-# ── 默认规则 ──────────────────────────────────────────────────────────────────
+# ── Default rules ──────────────────────────────────────────────────────────────────
 
 DEFAULT_RULES: List[GateRule] = [
     GateRule(
         name="goal_achievement_gate",
-        description="测试目标达成率必须 >= 80%",
+        description="Test goal achievement must be >= 80%",
         metric="goal_achievement",
         operator=">=",
         threshold=0.8,
@@ -104,7 +104,7 @@ DEFAULT_RULES: List[GateRule] = [
     ),
     GateRule(
         name="step_accuracy_gate",
-        description="步骤首次尝试成功率 >= 70%",
+        description="First-attempt step success rate >= 70%",
         metric="step_accuracy",
         operator=">=",
         threshold=0.7,
@@ -112,7 +112,7 @@ DEFAULT_RULES: List[GateRule] = [
     ),
     GateRule(
         name="hallucination_gate",
-        description="幻觉分数（越高越好） >= 0.8",
+        description="Hallucination score (higher is better) >= 0.8",
         metric="hallucination_score",
         operator=">=",
         threshold=0.8,
@@ -120,7 +120,7 @@ DEFAULT_RULES: List[GateRule] = [
     ),
     GateRule(
         name="healing_rate_warning",
-        description="自愈成功率 >= 0.6 (警告级)",
+        description="Healing success rate >= 0.6 (warning)",
         metric="healing_success_rate",
         operator=">=",
         threshold=0.6,
@@ -128,7 +128,7 @@ DEFAULT_RULES: List[GateRule] = [
     ),
     GateRule(
         name="token_efficiency_info",
-        description="Token效率 >= 0.5 (信息级)",
+        description="Token efficiency >= 0.5 (informational)",
         metric="token_efficiency",
         operator=">=",
         threshold=0.5,
@@ -138,7 +138,7 @@ DEFAULT_RULES: List[GateRule] = [
 
 
 class QualityGateEngine:
-    """质量门禁引擎"""
+    """Quality gate engine"""
 
     def __init__(self):
         self._rules = list(DEFAULT_RULES)
@@ -170,21 +170,21 @@ class QualityGateEngine:
             """)
 
     def _load_custom_rules(self):
-        """从数据库加载自定义规则"""
+        """Load custom rules from the database"""
         try:
             with sqlite3.connect(self._db_path) as conn:
                 rows = conn.execute("SELECT data FROM gate_rules").fetchall()
                 for row in rows:
                     data = json.loads(row[0])
                     rule = GateRule(**data)
-                    # 替换同名默认规则
+                    # Replace the default rule with the same name
                     self._rules = [r for r in self._rules if r.name != rule.name]
                     self._rules.append(rule)
         except Exception:
             pass
 
     def check(self, metric_scores: Dict[str, float], run_id: str = "") -> GateVerdict:
-        """执行质量门禁检查"""
+        """Run quality gate checks"""
         start = time.time()
         checks = []
         has_blocking_fail = False
@@ -199,7 +199,7 @@ class QualityGateEngine:
                 checks.append(GateCheckResult(
                     rule_name=rule.name,
                     status=GateStatus.PENDING,
-                    message=f"指标 {rule.metric} 数据不可用",
+                    message=f"Data for metric {rule.metric} is unavailable",
                 ))
                 continue
 
@@ -212,14 +212,14 @@ class QualityGateEngine:
                 if rule.severity == "blocking":
                     status = GateStatus.FAILED
                     has_blocking_fail = True
-                    msg = f"{rule.metric} = {actual:.3f} 不满足 {rule.operator} {rule.threshold} ❌"
+                    msg = f"{rule.metric} = {actual:.3f} does not meet {rule.operator} {rule.threshold} ❌"
                 elif rule.severity == "warning":
                     status = GateStatus.WARNING
                     has_warning = True
-                    msg = f"{rule.metric} = {actual:.3f} 低于预期 {rule.threshold} ⚠️"
+                    msg = f"{rule.metric} = {actual:.3f} is below the expected {rule.threshold} ⚠️"
                 else:
                     status = GateStatus.WARNING
-                    msg = f"{rule.metric} = {actual:.3f} (信息) ℹ️"
+                    msg = f"{rule.metric} = {actual:.3f} (informational) ℹ️"
 
             checks.append(GateCheckResult(
                 rule_name=rule.name,
@@ -229,16 +229,16 @@ class QualityGateEngine:
                 message=msg,
             ))
 
-        # 总体判定
+        # Overall decision
         if has_blocking_fail:
             overall = GateStatus.FAILED
-            summary = "❌ 质量门禁未通过: 存在阻断级别的规则失败"
+            summary = "❌ Quality gate failed: blocking rules did not pass"
         elif has_warning:
             overall = GateStatus.WARNING
-            summary = "⚠️ 质量门禁通过（有警告）"
+            summary = "⚠️ Quality gate passed with warnings"
         else:
             overall = GateStatus.PASSED
-            summary = "✅ 质量门禁全部通过"
+            summary = "✅ All quality gates passed"
 
         verdict = GateVerdict(
             status=overall,
@@ -247,13 +247,13 @@ class QualityGateEngine:
             duration_ms=(time.time() - start) * 1000,
         )
 
-        # 持久化
+        # Persist
         self._save_history(run_id, verdict)
 
         return verdict
 
     def add_rule(self, rule: GateRule):
-        """添加/更新自定义规则"""
+        """Add or update a custom rule"""
         self._rules = [r for r in self._rules if r.name != rule.name]
         self._rules.append(rule)
         with sqlite3.connect(self._db_path) as conn:
@@ -294,7 +294,7 @@ class QualityGateEngine:
                     (run_id, verdict.status.value, json.dumps(verdict.to_dict()), time.time()),
                 )
         except Exception as e:
-            logger.warning(f"保存门禁历史失败: {e}")
+            logger.warning(f"Failed to save quality gate history: {e}")
 
     @staticmethod
     def _evaluate_rule(actual: float, operator: str, threshold: float) -> bool:
@@ -313,7 +313,7 @@ class QualityGateEngine:
         return False
 
 
-# ── 单例 ──────────────────────────────────────────────────────────────────────
+# ── Singleton ──────────────────────────────────────────────────────────────────────
 
 _gate: Optional[QualityGateEngine] = None
 

@@ -10,7 +10,7 @@ import os
 import sys
 import threading
 
-# 添加项目根目录到 Python 路径
+# Add the project root to the Python path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from core.config import Config
@@ -22,17 +22,17 @@ from services.commander_chatops_service import get_commander_chatops_service
 from services.platform_maintenance_service import get_platform_maintenance_service
 from services.platform_readiness_service import get_platform_readiness_service
 
-# 配置统一日志（带 trace_id + 结构化格式）
+# Configure shared logging with trace_id and structured formatting
 from core.logging_config import setup_logging, new_trace_id
 setup_logging()
 logger = logging.getLogger(__name__)
 
-# ── 数据库初始化 ──
+# ── Database initialization ──
 from core.db_helper import init_db, execute_safe
 init_db()
 
 
-# ── Orchestrator 管理（线程安全） ────────────────────────────────────────────
+# ── Orchestrator management (thread-safe) ────────────────────────────────────────────
 _orch_lock = threading.Lock()
 orchestrators = {}
 
@@ -45,39 +45,39 @@ def get_orchestrator(session_id: str = "default_session"):
         return orchestrators[session_id]
 
 
-# ── API Key 鉴权依赖 ────────────────────────────────────────────────────────
+# ── API key authentication dependency ────────────────────────────────────────────────────────
 SYSTEM_API_KEY = os.getenv("SYSTEM_API_KEY", "")
 
 
 async def require_system_key(request: Request):
-    """系统管理端点鉴权 — 需要 X-API-Key 头或 SYSTEM_API_KEY 环境变量"""
+    """System administration endpoint authentication — requires the X-API-Key header or SYSTEM_API_KEY environment variable"""
     if not SYSTEM_API_KEY:
-        return  # 未配置密钥时跳过（开发模式）
+        return  # Skip when no key is configured (development mode)
     key = request.headers.get("X-API-Key", "")
     if key != SYSTEM_API_KEY:
         raise HTTPException(status_code=403, detail="Invalid or missing API Key")
 
 
-# ── Lifespan（替代 deprecated on_event） ─────────────────────────────────────
+# ── Lifespan (replaces deprecated on_event) ─────────────────────────────────────
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # ── Startup ──
     logger.info("🔥 Backend Service Started")
-    # AgentBus 初始化 — 从 YAML Profiles 统一注册
+    # Initialize AgentBus with centralized registration from YAML profiles
     try:
         from agents.commander import Commander
         _cmd = Commander()
-        logger.info("[AgentBus] Commander + Profiles 已注册")
+        logger.info("[AgentBus] Commander and profiles registered")
     except Exception as e:
-        logger.warning(f"[AgentBus] 初始化失败 (非阻断): {e}")
+        logger.warning(f"[AgentBus] Initialization failed (nonblocking): {e}")
 
     try:
         maintenance = get_platform_maintenance_service().run(force=True, reason="startup")
-        logger.info("[Maintenance] 启动维护完成: %s", maintenance)
+        logger.info("[Maintenance] Startup maintenance completed: %s", maintenance)
     except Exception as e:
-        logger.warning(f"[Maintenance] 启动维护失败 (非阻断): {e}")
+        logger.warning(f"[Maintenance] Startup maintenance failed (nonblocking): {e}")
 
-    yield  # ── 运行中 ──
+    yield  # ── Running ──
 
     # ── Shutdown ──
     logger.info("🛑 Shutting down all Orchestrators...")
@@ -92,14 +92,14 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title=API_TITLE, version=APP_VERSION, lifespan=lifespan)
 
 
-# ── CORS 允许的前端域名 ───────────────────────────────────────────────────────
+# ── Frontend domains allowed by CORS ───────────────────────────────────────────────────────
 ALLOWED_ORIGINS = os.getenv(
     "CORS_ORIGINS",
     "http://localhost:8010,http://localhost:3000,http://127.0.0.1:8010,http://localhost:5173,http://127.0.0.1:5173"
 ).split(",")
 
 
-# ── 全局异常处理 + Trace-ID ──────────────────────────────────────────────────
+# ── Global exception handling + Trace-ID ──────────────────────────────────────────────────
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 from core.models import APIError
@@ -137,8 +137,8 @@ class GlobalExceptionMiddleware(BaseHTTPMiddleware):
 
 app.add_middleware(GlobalExceptionMiddleware)
 
-# ── CORS — 必须在 GlobalExceptionMiddleware 之后添加，确保 CORS 是最外层 ───
-# Starlette 后添加的中间件先执行(LIFO)，CORS 必须最外层才能给所有响应加头
+# ── CORS — add after GlobalExceptionMiddleware to keep CORS outermost ───
+# Starlette executes middleware in reverse registration order (LIFO); CORS must be outermost to add headers to every response
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
@@ -148,7 +148,7 @@ app.add_middleware(
 )
 
 
-# ── 注册路由模块 ─────────────────────────────────────────────────────────────
+# ── Register route modules ─────────────────────────────────────────────────────────────
 from routers import (
     graphql_router, ws_test_router, grpc_router, database_router,
     testing_router, knowledge_router,
@@ -197,7 +197,7 @@ for r in [
 setup_platform_routes(app)
 
 
-# ── 挂载报告静态文件 ─────────────────────────────────────────────────────────
+# ── Mount static report files ─────────────────────────────────────────────────────────
 from fastapi.staticfiles import StaticFiles
 
 try:
@@ -211,7 +211,7 @@ except Exception as e:
 # ── Health Check ─────────────────────────────────────────────────────────────
 @app.get("/api/health")
 async def api_health():
-    """系统健康检查"""
+    """System health check"""
     from core.db_helper import get_connection, get_db_observability
     cfg = Config()
     db_ok = False
@@ -335,15 +335,15 @@ async def websocket_sandbox(websocket: WebSocket, session_id: str = "default_ses
     retry = 0
     while not session.get_page():
         if retry > max_retries:
-            await websocket.send_json({"type": "status", "message": "等待超时，请先启动测试任务"})
+            await websocket.send_json({"type": "status", "message": "Wait timed out. Start a test task first"})
             await websocket.close(code=1000, reason="No active browser session")
             return
         if retry % 10 == 0:
-            await websocket.send_json({"type": "status", "message": f"等待浏览器会话... ({retry // 2}s)"})
+            await websocket.send_json({"type": "status", "message": f"Waiting for a browser session... ({retry // 2}s)"})
         await asyncio.sleep(0.5)
         retry += 1
 
-    await websocket.send_json({"type": "status", "message": "浏览器会话已连接"})
+    await websocket.send_json({"type": "status", "message": "Browser session connected"})
 
     frame_queue = thread_queue.Queue(maxsize=2)
     stop_event = threading.Event()
@@ -379,7 +379,7 @@ async def websocket_sandbox(websocket: WebSocket, session_id: str = "default_ses
                     await websocket.send_json({"type": "frame", "data": frame_data})
                 except thread_queue.Empty:
                     if not session.get_page():
-                        await websocket.send_json({"type": "status", "message": "浏览器会话已结束"})
+                        await websocket.send_json({"type": "status", "message": "Browser session ended"})
                         break
                 except Exception:
                     break
@@ -415,10 +415,10 @@ async def websocket_sandbox(websocket: WebSocket, session_id: str = "default_ses
         screenshot_thread.join(timeout=2)
 
 
-# ── System Management（需要 API Key） ────────────────────────────────────────
+# ── System Management（Requires API key） ────────────────────────────────────────
 @app.post("/api/system/db/reset", dependencies=[Depends(require_system_key)])
 async def system_db_reset():
-    """清空历史记录和报告数据（需要 X-API-Key 头）"""
+    """Clear history and report data (requires the X-API-Key header)"""
     import glob
     report_dir = os.path.join(os.path.dirname(__file__), "reports")
     if os.path.exists(report_dir):
@@ -430,21 +430,21 @@ async def system_db_reset():
             f.write("[]")
     execute_safe("DELETE FROM test_runs")
     execute_safe("DELETE FROM test_records")
-    return {"status": "success", "message": "数据库已重置"}
+    return {"status": "success", "message": "Database reset"}
 
 
 @app.post("/api/system/db/backup", dependencies=[Depends(require_system_key)])
 async def system_db_backup():
-    """备份数据目录（需要 X-API-Key 头）"""
+    """Back up the data directory (requires the X-API-Key header)"""
     import shutil
     from datetime import datetime
     data_dir = os.path.join(os.path.dirname(__file__), "data")
     if not os.path.exists(data_dir):
-        raise HTTPException(status_code=404, detail="数据目录不存在")
+        raise HTTPException(status_code=404, detail="Data directory does not exist")
     backup_name = f"data_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
     backup_path = os.path.join(os.path.dirname(__file__), backup_name)
     shutil.copytree(data_dir, backup_path)
-    return {"status": "success", "message": f"备份成功: {backup_name}"}
+    return {"status": "success", "message": f"Backup completed: {backup_name}"}
 
 
 # ── Main Entry ───────────────────────────────────────────────────────────────

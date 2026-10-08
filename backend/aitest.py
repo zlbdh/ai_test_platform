@@ -1,17 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-AI Test Platform CLI — 命令行测试运行工具
+AI Test Platform CLI — Command-line test runner
 
-用法:
-    python -m aitest run --url https://example.com --goal "搜索AI测试"
-    python -m aitest run --url https://example.com --goal "登录测试" --output junit
+Usage:
+    python -m aitest run --url https://example.com --goal "Search for AI testing"
+    python -m aitest run --url https://example.com --goal "Login test" --output junit
     python -m aitest status
     python -m aitest report --format html
     python -m aitest health
 
-环境变量:
-    AITEST_API_URL  — 平台 API 地址（默认 http://localhost:8020）
+Environment variables:
+    AITEST_API_URL  — Platform API URL (default: http://localhost:8020)
 """
 import argparse
 import json
@@ -25,7 +25,7 @@ API_URL = os.environ.get("AITEST_API_URL", "http://localhost:8020")
 
 
 def _api(method: str, path: str, body: dict = None) -> dict:
-    """调用平台 API"""
+    """Call the platform API"""
     url = f"{API_URL}{path}"
     data = json.dumps(body).encode() if body else None
     headers = {"Content-Type": "application/json"} if data else {}
@@ -36,34 +36,34 @@ def _api(method: str, path: str, body: dict = None) -> dict:
             return json.loads(resp.read().decode())
     except urllib.error.HTTPError as e:
         body_text = e.read().decode() if e.fp else ""
-        print(f"❌ API 错误 [{e.code}]: {body_text}", file=sys.stderr)
+        print(f"❌ API error [{e.code}]: {body_text}", file=sys.stderr)
         sys.exit(1)
     except urllib.error.URLError as e:
-        print(f"❌ 无法连接平台: {e.reason}", file=sys.stderr)
-        print(f"   请确认平台运行在 {API_URL}", file=sys.stderr)
+        print(f"❌ Cannot connect to the platform: {e.reason}", file=sys.stderr)
+        print(f"   Ensure the platform is running at {API_URL}", file=sys.stderr)
         sys.exit(1)
 
 
 def cmd_health(args):
-    """health — 检查平台健康状态"""
+    """health — Check platform health"""
     resp = _api("GET", "/api/health")
     status = resp.get("status", "unknown")
-    print(f"🏥 平台状态: {'✅ 正常' if status == 'ok' else '❌ 异常'}")
+    print(f"🏥 Platform status: {'✅ Healthy' if status == 'ok' else '❌ Unhealthy'}")
     print(f"   API: {API_URL}")
     if "version" in resp:
-        print(f"   版本: {resp['version']}")
+        print(f"   Version: {resp['version']}")
     return 0 if status == "ok" else 1
 
 
 def cmd_run(args):
-    """run — 执行测试"""
-    print(f"🚀 启动测试...")
-    print(f"   目标: {args.url}")
-    print(f"   指令: {args.goal}")
-    print(f"   模式: {args.mode}")
+    """run — Run tests"""
+    print(f"🚀 Starting test...")
+    print(f"   Target: {args.url}")
+    print(f"   Instructions: {args.goal}")
+    print(f"   Mode: {args.mode}")
     print()
 
-    # 发起测试
+    # Start the test
     payload = {
         "url": args.url,
         "requirement": args.goal,
@@ -71,14 +71,14 @@ def cmd_run(args):
     }
     resp = _api("POST", "/api/test", payload)
     task_id = resp.get("task_id", "")
-    print(f"📋 任务 ID: {task_id}")
+    print(f"📋 Task ID: {task_id}")
 
     if not args.wait:
-        print("ℹ️  使用 --wait 参数等待测试完成")
+        print("ℹ️  Use --wait to wait for test completion")
         return 0
 
-    # 等待完成
-    print("⏳ 等待执行完成...")
+    # Wait for completion
+    print("⏳ Waiting for execution to finish...")
     max_wait = args.timeout
     elapsed = 0
     final_status = "unknown"
@@ -92,25 +92,25 @@ def cmd_run(args):
             if status in ("success", "completed", "failed", "error"):
                 final_status = status
                 break
-            # 进度指示
+            # Progress indicator
             dots = "." * (elapsed // 3 % 4)
-            print(f"\r   执行中{dots}  ({elapsed}s)", end="", flush=True)
+            print(f"\r   Running{dots}  ({elapsed}s)", end="", flush=True)
         except SystemExit:
             continue
 
-    print()  # 换行
+    print()  # Newline
 
     if final_status in ("success", "completed"):
-        print(f"✅ 测试通过! (耗时 {elapsed}s)")
+        print(f"✅ Test passed! (duration: {elapsed}s)")
         exit_code = 0
     elif final_status in ("failed", "error"):
-        print(f"❌ 测试失败! (耗时 {elapsed}s)")
+        print(f"❌ Test failed! (duration: {elapsed}s)")
         exit_code = 1
     else:
-        print(f"⏰ 超时 ({max_wait}s)，测试仍在执行中")
+        print(f"⏰ Timed out after {max_wait}s; the test is still running")
         exit_code = 2
 
-    # 输出报告
+    # Output the report
     if args.output == "junit":
         _output_junit(task_id)
     elif args.output == "json":
@@ -121,7 +121,7 @@ def cmd_run(args):
 
 
 def _output_junit(task_id: str):
-    """输出 JUnit XML 格式报告"""
+    """Output a JUnit XML report"""
     detail = _api("GET", f"/api/history/{task_id}")
     logs = detail.get("logs", [])
 
@@ -157,7 +157,7 @@ def _output_junit(task_id: str):
     outfile = f"test-results-{task_id[:8]}.xml"
     with open(outfile, "w", encoding="utf-8") as f:
         f.write(xml_content)
-    print(f"📄 JUnit XML 报告已保存: {outfile}")
+    print(f"📄 JUnit XML report saved: {outfile}")
 
 
 def _xml_escape(s: str) -> str:
@@ -165,15 +165,15 @@ def _xml_escape(s: str) -> str:
 
 
 def cmd_status(args):
-    """status — 查看最近执行状态"""
+    """status — View recent execution status"""
     resp = _api("GET", "/api/history?limit=5")
     items = resp.get("items", [])
     if not items:
-        print("📭 暂无执行记录")
+        print("📭 No execution records yet")
         return 0
 
-    print(f"📊 最近 {len(items)} 条执行记录:\n")
-    print(f"{'ID':<12} {'状态':<10} {'需求':<40} {'时间'}")
+    print(f"📊 Latest {len(items)} execution records:\n")
+    print(f"{'ID':<12} {'Status':<10} {'Requirement':<40} {'Time'}")
     print("─" * 80)
     for item in items:
         tid = (item.get("task_id") or item.get("id", ""))[:10]
@@ -187,30 +187,30 @@ def cmd_status(args):
 
 
 def cmd_report(args):
-    """report — 生成报告"""
+    """report — Generate a report"""
     resp = _api("POST", "/api/report/generate")
     if resp.get("status") == "success" or resp.get("report_url"):
         url = resp.get("report_url", "")
-        print(f"✅ 报告已生成")
+        print(f"✅ Report generated")
         if url:
-            print(f"   查看: {API_URL}{url}")
+            print(f"   View: {API_URL}{url}")
     else:
-        print(f"❌ 报告生成失败: {resp.get('message', 'unknown')}")
+        print(f"❌ Report generation failed: {resp.get('message', 'unknown')}")
     return 0
 
 
 def cmd_analytics(args):
-    """analytics — 查看分析摘要"""
+    """analytics — View the analytics summary"""
     resp = _api("GET", "/api/analytics/summary")
-    print("📊 平台分析摘要\n")
-    print(f"  总执行数:   {resp.get('total', 0)}")
-    print(f"  通过:       {resp.get('passed', 0)}")
-    print(f"  失败:       {resp.get('failed', 0)}")
-    print(f"  自愈:       {resp.get('healed', 0)}")
-    print(f"  通过率:     {resp.get('overallPassRate', 0)}%")
-    print(f"  平均耗时:   {resp.get('avgDurationMs', 0)}ms")
-    print(f"  今日执行:   {resp.get('today', 0)}")
-    print(f"  本周执行:   {resp.get('thisWeek', 0)}")
+    print("📊 Platform analytics summary\n")
+    print(f"  Total executions:   {resp.get('total', 0)}")
+    print(f"  Passed:       {resp.get('passed', 0)}")
+    print(f"  Failed:       {resp.get('failed', 0)}")
+    print(f"  Healed:       {resp.get('healed', 0)}")
+    print(f"  Pass rate:     {resp.get('overallPassRate', 0)}%")
+    print(f"  Average duration:   {resp.get('avgDurationMs', 0)}ms")
+    print(f"  Executions today:   {resp.get('today', 0)}")
+    print(f"  Executions this week:   {resp.get('thisWeek', 0)}")
     return 0
 
 
@@ -218,31 +218,31 @@ def main():
     global API_URL
     parser = argparse.ArgumentParser(
         prog="aitest",
-        description="AI Test Platform CLI — 命令行测试运行工具",
+        description="AI Test Platform CLI — Command-line test runner",
     )
-    parser.add_argument("--api-url", default=API_URL, help=f"平台 API 地址 (默认: {API_URL})")
-    subparsers = parser.add_subparsers(dest="command", help="子命令")
+    parser.add_argument("--api-url", default=API_URL, help=f"Platform API URL (default: {API_URL})")
+    subparsers = parser.add_subparsers(dest="command", help="Subcommands")
 
     # run
-    run_parser = subparsers.add_parser("run", help="执行测试")
-    run_parser.add_argument("--url", required=True, help="测试目标 URL")
-    run_parser.add_argument("--goal", required=True, help="自然语言测试指令")
-    run_parser.add_argument("--mode", default="smart", choices=["smart", "fast", "deep"], help="测试模式")
-    run_parser.add_argument("--wait", action="store_true", help="等待测试完成")
-    run_parser.add_argument("--timeout", type=int, default=120, help="最大等待时间（秒）")
-    run_parser.add_argument("--output", default="text", choices=["text", "json", "junit"], help="输出格式")
+    run_parser = subparsers.add_parser("run", help="Run tests")
+    run_parser.add_argument("--url", required=True, help="Test target URL")
+    run_parser.add_argument("--goal", required=True, help="Natural-language test instructions")
+    run_parser.add_argument("--mode", default="smart", choices=["smart", "fast", "deep"], help="Test mode")
+    run_parser.add_argument("--wait", action="store_true", help="Wait for test completion")
+    run_parser.add_argument("--timeout", type=int, default=120, help="Maximum wait time in seconds")
+    run_parser.add_argument("--output", default="text", choices=["text", "json", "junit"], help="Output format")
 
     # status
-    subparsers.add_parser("status", help="查看最近执行状态")
+    subparsers.add_parser("status", help="View recent execution status")
 
     # report
-    subparsers.add_parser("report", help="生成报告")
+    subparsers.add_parser("report", help="Generate a report")
 
     # analytics
-    subparsers.add_parser("analytics", help="查看分析摘要")
+    subparsers.add_parser("analytics", help="View the analytics summary")
 
     # health
-    subparsers.add_parser("health", help="检查平台健康状态")
+    subparsers.add_parser("health", help="Check platform health")
 
     args = parser.parse_args()
     if args.api_url:

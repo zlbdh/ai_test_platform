@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-MCP Tools — 定义平台暴露给外部 AI 的工具
+MCP Tools — Define the platform tools exposed to external AI assistants
 
-每个 Tool 对应平台的一项核心能力，通过 MCP 协议供
-Claude Code / Cursor / 其他 AI 助手调用。
+Each tool represents a core platform capability, available over MCP to
+Claude Code, Cursor, and other AI assistants.
 """
 
 from typing import Dict, Any, Optional, List
@@ -13,7 +13,7 @@ import json
 
 @dataclass
 class ToolParameter:
-    """MCP 工具参数"""
+    """MCP tool parameter"""
     name: str
     type: str = "string"
     description: str = ""
@@ -23,13 +23,13 @@ class ToolParameter:
 
 @dataclass
 class MCPTool:
-    """MCP 工具定义"""
+    """MCP tool definition"""
     name: str
     description: str
     parameters: List[ToolParameter] = field(default_factory=list)
 
     def to_schema(self) -> Dict:
-        """转为 MCP Tool Schema"""
+        """Convert to an MCP tool schema"""
         properties = {}
         required = []
         for p in self.parameters:
@@ -53,100 +53,100 @@ class MCPTool:
         }
 
 
-# ── 工具定义 ──────────────────────────────────────────────────────────────────
+# ── Tool definitions ──────────────────────────────────────────────────────────────────
 
 PLATFORM_TOOLS: List[MCPTool] = [
     MCPTool(
         name="run_test",
-        description="执行AI驱动的端到端测试。提供目标URL和自然语言测试指令，平台会自动规划并执行测试步骤。",
+        description="Run an AI-driven end-to-end test. Provide a target URL and natural-language instructions; the platform plans and executes the test steps automatically.",
         parameters=[
-            ToolParameter(name="url", type="string", description="测试目标URL", required=True),
-            ToolParameter(name="instructions", type="string", description="自然语言测试指令，如 '搜索AI测试并验证结果'", required=True),
-            ToolParameter(name="session_id", type="string", description="测试会话ID（可选）", default="mcp_session"),
+            ToolParameter(name="url", type="string", description="Test target URL", required=True),
+            ToolParameter(name="instructions", type="string", description="Natural-language test instructions, such as 'Search for AI testing and verify the results'", required=True),
+            ToolParameter(name="session_id", type="string", description="Test session ID (optional)", default="mcp_session"),
         ],
     ),
     MCPTool(
         name="get_test_status",
-        description="查询指定会话的测试执行状态，包括当前步骤、进度和任何错误信息。",
+        description="Get the test execution status for a session, including its current step, progress, and errors.",
         parameters=[
-            ToolParameter(name="session_id", type="string", description="测试会话ID", required=True),
+            ToolParameter(name="session_id", type="string", description="Test session ID", required=True),
         ],
     ),
     MCPTool(
         name="get_screenshot",
-        description="获取当前浏览器窗口的截图，返回 base64 编码的 JPEG 图像。",
+        description="Capture the current browser window and return a base64-encoded JPEG image.",
         parameters=[
-            ToolParameter(name="session_id", type="string", description="测试会话ID", default="mcp_session"),
+            ToolParameter(name="session_id", type="string", description="Test session ID", default="mcp_session"),
         ],
     ),
     MCPTool(
         name="browse_and_verify",
-        description="导航到指定URL并对页面内容执行语义断言验证。",
+        description="Navigate to a URL and verify a semantic assertion against the page content.",
         parameters=[
-            ToolParameter(name="url", type="string", description="要访问的URL", required=True),
-            ToolParameter(name="assertion", type="string", description="要验证的断言，如 '页面包含登录按钮'", required=True),
-            ToolParameter(name="session_id", type="string", description="测试会话ID", default="mcp_session"),
+            ToolParameter(name="url", type="string", description="URL to visit", required=True),
+            ToolParameter(name="assertion", type="string", description="Assertion to verify, such as 'The page contains a login button'", required=True),
+            ToolParameter(name="session_id", type="string", description="Test session ID", default="mcp_session"),
         ],
     ),
     MCPTool(
         name="get_test_report",
-        description="获取指定会话的完整测试报告，包括步骤详情、截图、成功/失败状态。",
+        description="Get a session's complete test report, including step details, screenshots, and pass/fail status.",
         parameters=[
-            ToolParameter(name="session_id", type="string", description="测试会话ID", required=True),
+            ToolParameter(name="session_id", type="string", description="Test session ID", required=True),
         ],
     ),
     MCPTool(
         name="list_sessions",
-        description="列出当前平台上所有活跃的测试会话。",
+        description="List all active test sessions on the platform.",
         parameters=[],
     ),
     MCPTool(
         name="run_api_test",
-        description="执行API测试，支持REST/GraphQL/gRPC。",
+        description="Run API tests with support for REST/GraphQL/gRPC.",
         parameters=[
-            ToolParameter(name="method", type="string", description="HTTP方法", required=True, default="GET"),
+            ToolParameter(name="method", type="string", description="HTTP method", required=True, default="GET"),
             ToolParameter(name="url", type="string", description="API URL", required=True),
-            ToolParameter(name="headers", type="string", description="请求头（JSON字符串）", default="{}"),
-            ToolParameter(name="body", type="string", description="请求体（JSON字符串）", default=""),
-            ToolParameter(name="assertions", type="string", description="断言条件，如 'status_code == 200 and body.data is not empty'"),
+            ToolParameter(name="headers", type="string", description="Request headers (JSON string)", default="{}"),
+            ToolParameter(name="body", type="string", description="Request body (JSON string)", default=""),
+            ToolParameter(name="assertions", type="string", description="Assertion condition, such as 'status_code == 200 and body.data is not empty'"),
         ],
     ),
     MCPTool(
         name="evaluate_agent",
-        description="运行Agent质量评估，返回各维度的评分。",
+        description="Run agent quality evaluation and return scores for each dimension.",
         parameters=[
-            ToolParameter(name="scenario_id", type="string", description="基准场景ID（可选，不传则评估最近一次执行）"),
+            ToolParameter(name="scenario_id", type="string", description="Benchmark scenario ID (optional; evaluates the most recent execution if omitted)"),
         ],
     ),
-    # ── P1 新增工具 ──
+    # ── Tools added in P1 ──
     MCPTool(
         name="generate_test_data",
-        description="生成测试数据，支持用户/地址/支付/搜索词/边界值模板，自动包含边界值和安全攻击数据。",
+        description="Generate test data from user/address/payment/search/boundary templates, automatically including boundary values and security attack data.",
         parameters=[
-            ToolParameter(name="template", type="string", description="模板类型: user/address/payment/search/boundary", required=True, default="user"),
-            ToolParameter(name="count", type="integer", description="生成数量", default=5),
-            ToolParameter(name="include_edge", type="boolean", description="是否包含边界值/攻击数据", default=True),
+            ToolParameter(name="template", type="string", description="Template type: user/address/payment/search/boundary", required=True, default="user"),
+            ToolParameter(name="count", type="integer", description="Number to generate", default=5),
+            ToolParameter(name="include_edge", type="boolean", description="Whether to include boundary values and attack data", default=True),
         ],
     ),
     MCPTool(
         name="get_analytics",
-        description="获取测试平台的分析摘要：总执行数、通过率、平均耗时、今日/本周统计等。",
+        description="Get platform analytics: total executions, pass rate, average duration, today's and this week's statistics, and more.",
         parameters=[],
     ),
     MCPTool(
         name="get_execution_history",
-        description="获取最近的测试执行历史记录列表。",
+        description="Get a list of recent test execution records.",
         parameters=[
-            ToolParameter(name="limit", type="integer", description="返回条数", default=10),
+            ToolParameter(name="limit", type="integer", description="Number of results to return", default=10),
         ],
     ),
     MCPTool(
         name="trigger_ci_test",
-        description="从CI/CD系统触发测试执行，支持Jenkins/GitLab/GitHub Actions webhook格式。",
+        description="Trigger test execution from CI/CD, supporting Jenkins/GitLab/GitHub Actions webhook formats.",
         parameters=[
-            ToolParameter(name="source", type="string", description="触发源: github/gitlab/jenkins/manual", required=True),
-            ToolParameter(name="ref", type="string", description="分支/标签", default="main"),
-            ToolParameter(name="commit", type="string", description="提交哈希", default=""),
+            ToolParameter(name="source", type="string", description="Trigger source: github/gitlab/jenkins/manual", required=True),
+            ToolParameter(name="ref", type="string", description="Branch/tag", default="main"),
+            ToolParameter(name="commit", type="string", description="Commit hash", default=""),
         ],
     ),
 ]

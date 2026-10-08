@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-CI/CD Integration Module — 深度 CI/CD 融合
+CI/CD Integration Module — Deep CI/CD integration
 
-github_action.py: GitHub Actions 集成
-- Webhook 接收 PR 事件
-- 分析代码 diff，智能选择测试子集
-- 调用平台 API 执行测试
-- 回写 PR check 状态
+github_action.py: GitHub Actions integration
+- Receive PR events through webhooks
+- Analyze code diffs to select a relevant test subset
+- Call the platform API to run tests
+- Write back the PR check status
 """
 
 from typing import Dict, Any, List, Optional
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class PREvent:
-    """GitHub PR 事件"""
+    """GitHub PR event"""
     action: str = ""          # opened, synchronize, closed
     pr_number: int = 0
     repo: str = ""
@@ -36,11 +36,11 @@ class PREvent:
 
 @dataclass
 class TestSelectionResult:
-    """测试选择结果"""
+    """Test selection result"""
     selected_tests: List[str] = field(default_factory=list)
     reason: str = ""
     coverage_estimate: float = 0.0
-    impact_score: float = 0.0  # 0.0-1.0 变更影响度
+    impact_score: float = 0.0  # Change impact from 0.0 to 1.0
 
     def to_dict(self) -> Dict:
         return {
@@ -54,30 +54,30 @@ class TestSelectionResult:
 
 class ChangeImpactAnalyzer:
     """
-    变更影响分析器
+    Change impact analyzer
 
-    基于代码变更（diff）分析影响范围，智能选择需要运行的测试子集。
+    Analyze the impact of code changes (diffs) and select the test subset to run.
     """
 
-    # 文件类型 → 影响范围映射
+    # File type → impact area mapping
     IMPACT_MAP = {
-        # 前端变更
+        # Frontend changes
         r"\.tsx?$": {"area": "ui", "weight": 0.7},
         r"\.css$": {"area": "visual", "weight": 0.3},
         r"\.html$": {"area": "ui", "weight": 0.5},
-        # 后端变更
+        # Backend changes
         r"agents/.*\.py$": {"area": "agent", "weight": 0.9},
         r"core/.*\.py$": {"area": "core", "weight": 1.0},
         r"routers/.*\.py$": {"area": "api", "weight": 0.8},
         r"services/.*\.py$": {"area": "service", "weight": 0.8},
         r"skills/.*\.py$": {"area": "skill", "weight": 0.6},
-        # 配置变更
+        # Configuration changes
         r"\.env": {"area": "config", "weight": 0.5},
         r"config\.py$": {"area": "config", "weight": 0.7},
         r"requirements\.txt$": {"area": "dependency", "weight": 0.4},
     }
 
-    # 影响区域 → 推荐测试类型
+    # Impact area → recommended test types
     AREA_TESTS = {
         "ui": ["ui_functional", "visual_regression", "accessibility"],
         "visual": ["visual_regression"],
@@ -91,9 +91,9 @@ class ChangeImpactAnalyzer:
     }
 
     def analyze(self, changed_files: List[str]) -> TestSelectionResult:
-        """分析变更影响并选择测试"""
+        """Analyze change impact and select tests"""
         if not changed_files:
-            return TestSelectionResult(reason="无文件变更")
+            return TestSelectionResult(reason="No file changes")
 
         affected_areas = set()
         max_weight = 0.0
@@ -109,19 +109,19 @@ class ChangeImpactAnalyzer:
             affected_areas.add("general")
             max_weight = 0.3
 
-        # 收集推荐测试
+        # Collect recommended tests
         selected = set()
         for area in affected_areas:
             tests = self.AREA_TESTS.get(area, ["smoke"])
             selected.update(tests)
 
-        # 确定是否需要全量回归
+        # Determine whether a full regression run is needed
         if max_weight >= 0.9 or len(changed_files) > 20:
             selected.add("full_regression")
 
         return TestSelectionResult(
             selected_tests=sorted(selected),
-            reason=f"受影响区域: {', '.join(affected_areas)}",
+            reason=f"Affected areas: {', '.join(affected_areas)}",
             coverage_estimate=min(1.0, len(selected) * 0.15),
             impact_score=max_weight,
         )
@@ -129,9 +129,9 @@ class ChangeImpactAnalyzer:
 
 class GitHubIntegration:
     """
-    GitHub Actions 集成
+    GitHub Actions integration
 
-    处理 GitHub Webhook 事件，触发相应的测试流程。
+    Handle GitHub webhook events and trigger the corresponding test flow.
     """
 
     def __init__(self, webhook_secret: str = ""):
@@ -139,16 +139,16 @@ class GitHubIntegration:
         self.analyzer = ChangeImpactAnalyzer()
 
     def process_webhook(self, payload: Dict) -> Dict[str, Any]:
-        """处理 GitHub Webhook 事件"""
+        """Handle a GitHub webhook event"""
         event = self._parse_event(payload)
 
         if event.action not in ("opened", "synchronize", "reopened"):
-            return {"action": "skip", "reason": f"忽略 PR 事件: {event.action}"}
+            return {"action": "skip", "reason": f"Ignoring PR event: {event.action}"}
 
-        # 分析变更影响
+        # Analyze change impact
         selection = self.analyzer.analyze(event.changed_files)
 
-        # 构建测试计划
+        # Build a test plan
         test_plan = {
             "pr_number": event.pr_number,
             "repo": event.repo,
@@ -161,7 +161,7 @@ class GitHubIntegration:
         return {"action": "run_tests", "plan": test_plan}
 
     def _parse_event(self, payload: Dict) -> PREvent:
-        """解析 Webhook 负载"""
+        """Parse the webhook payload"""
         pr = payload.get("pull_request", {})
         return PREvent(
             action=payload.get("action", ""),
@@ -183,7 +183,7 @@ class GitHubIntegration:
             return "smoke_only"
 
     def create_check_result(self, run_result: Dict) -> Dict:
-        """创建 GitHub Check 结果（供 API 回调）"""
+        """Create a GitHub Check result for the API callback"""
         success = run_result.get("success", False)
         return {
             "status": "completed",

@@ -1,22 +1,22 @@
 /**
- * AI Test Platform - E2E 冒烟测试
- * 验证前端核心页面可正常加载，后端 API 可正常响应。
+ * AI Test Platform - E2E smoke tests
+ * Verify that core frontend pages load and backend APIs respond correctly.
  */
 import { test, expect } from '@playwright/test';
 
 const BACKEND_URL = 'http://localhost:8020';
 
-test.describe('平台冒烟测试', () => {
-    test('前端首页加载正常', async ({ page }) => {
+test.describe('Platform smoke tests', () => {
+    test('Frontend home page loads correctly', async ({ page }) => {
         await page.goto('/');
-        // 页面应包含顶部导航或标题
-        await expect(page).toHaveTitle(/AI|测试|Test/i);
-        // 页面应包含主要导航元素
+        // The page should contain top navigation or a title
+        await expect(page).toHaveTitle(/AI|Test/i);
+        // The page should contain the main navigation
         const body = await page.textContent('body');
         expect(body).toBeTruthy();
     });
 
-    test('后端健康检查', async ({ request }) => {
+    test('Backend health check', async ({ request }) => {
         const resp = await request.get(`${BACKEND_URL}/api/health`);
         expect(resp.ok()).toBeTruthy();
         const data = await resp.json();
@@ -24,7 +24,7 @@ test.describe('平台冒烟测试', () => {
         expect(data.checks.llm_configured).toBe(true);
     });
 
-    test('平台能力接口', async ({ request }) => {
+    test('Platform capabilities endpoint', async ({ request }) => {
         const resp = await request.get(`${BACKEND_URL}/api/platform/capabilities`);
         expect(resp.ok()).toBeTruthy();
         const data = await resp.json();
@@ -33,16 +33,16 @@ test.describe('平台冒烟测试', () => {
         expect(data.ai_features).toContain('self_healing');
     });
 
-    test('智能编排页面加载', async ({ page }) => {
+    test('Smart orchestration page loads', async ({ page }) => {
         await page.goto('/');
-        // 应能找到编排相关的入口
+        // An orchestration entry point should be available
         const pageContent = await page.textContent('body');
         expect(pageContent!.length).toBeGreaterThan(100);
     });
 
-    test('视觉回廊页面可访问', async ({ page }) => {
+    test('Visual gallery page is accessible', async ({ page }) => {
         await page.goto('/');
-        // 导航栏应存在多个功能入口
+        // The navigation should provide multiple feature entry points
         const navLinks = await page.locator('nav a, [role="navigation"] a, a[href]').count();
         expect(navLinks).toBeGreaterThan(0);
     });
