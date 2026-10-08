@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-E2E Scenario Chain Router — 场景链管理 API
+E2E Scenario Chain Router — Scenario chain management API
 """
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
@@ -16,18 +16,18 @@ router = APIRouter(tags=["scenario"])
 
 @router.get("/api/scenarios")
 async def list_scenarios():
-    """列出所有场景"""
+    """List all scenarios"""
     engine = get_scenario_engine()
     return {"scenarios": engine.list_scenarios()}
 
 
 @router.get("/api/scenarios/{scenario_id}")
 async def get_scenario(scenario_id: str):
-    """获取场景详情"""
+    """Get scenario details"""
     engine = get_scenario_engine()
     sc = engine.get_scenario(scenario_id)
     if not sc:
-        raise HTTPException(status_code=404, detail="场景不存在")
+        raise HTTPException(status_code=404, detail="Scenario does not exist")
     return sc
 
 
@@ -40,7 +40,7 @@ class CreateScenarioRequest(BaseModel):
 
 @router.post("/api/scenarios")
 async def create_scenario(req: CreateScenarioRequest):
-    """创建场景"""
+    """Create a scenario"""
     engine = get_scenario_engine()
     sc = engine.create_scenario(req.name, req.description, req.steps, req.tags)
     return {"status": "success", **sc}
@@ -48,11 +48,11 @@ async def create_scenario(req: CreateScenarioRequest):
 
 @router.post("/api/scenarios/import-playbook/{playbook_id}")
 async def import_scenario_playbook(playbook_id: str):
-    """导入项目级场景包。"""
+    """Import a project-level scenario package."""
     engine = get_scenario_engine()
     playbook = get_scenario_playbook(playbook_id)
     if not playbook:
-        raise HTTPException(status_code=404, detail="场景包不存在")
+        raise HTTPException(status_code=404, detail="Scenario package does not exist")
     playbook_meta = get_playbook_catalog_entry(playbook_id) or {}
     requirement_playbook = get_requirement_playbook(playbook_id) or {}
 
@@ -91,27 +91,27 @@ class UpdateScenarioRequest(BaseModel):
 
 @router.put("/api/scenarios/{scenario_id}")
 async def update_scenario(scenario_id: str, req: UpdateScenarioRequest):
-    """更新场景"""
+    """Update a scenario"""
     engine = get_scenario_engine()
     data = req.model_dump(exclude_none=True)
     sc = engine.update_scenario(scenario_id, data)
     if not sc:
-        raise HTTPException(status_code=404, detail="场景不存在")
+        raise HTTPException(status_code=404, detail="Scenario does not exist")
     return {"status": "success", **sc}
 
 
 @router.delete("/api/scenarios/{scenario_id}")
 async def delete_scenario(scenario_id: str):
-    """删除场景"""
+    """Delete a scenario"""
     engine = get_scenario_engine()
     if not engine.delete_scenario(scenario_id):
-        raise HTTPException(status_code=404, detail="场景不存在")
+        raise HTTPException(status_code=404, detail="Scenario does not exist")
     return {"status": "success"}
 
 
 @router.post("/api/scenarios/{scenario_id}/execute")
 async def execute_scenario(scenario_id: str):
-    """执行场景链"""
+    """Execute a scenario chain"""
     engine = get_scenario_engine()
     result = await engine.execute_scenario(scenario_id)
     if "error" in result:
@@ -121,7 +121,7 @@ async def execute_scenario(scenario_id: str):
 
 @router.get("/api/ci/templates")
 async def list_ci_templates():
-    """列出可用的 CI 配置模板"""
+    """List available CI configuration templates"""
     return {
         "templates": [
             {"id": "github-actions", "label": "GitHub Actions", "filename": "github-actions.yml", "icon": "🐙"},
@@ -133,7 +133,7 @@ async def list_ci_templates():
 
 @router.get("/api/ci/templates/{template_id}")
 async def get_ci_template(template_id: str):
-    """获取 CI 配置模板内容"""
+    """Get CI configuration template content"""
     import os
     template_map = {
         "github-actions": "github-actions.yml",
@@ -142,12 +142,12 @@ async def get_ci_template(template_id: str):
     }
     filename = template_map.get(template_id)
     if not filename:
-        raise HTTPException(status_code=404, detail="模板不存在")
+        raise HTTPException(status_code=404, detail="Template does not exist")
 
     from core.config import Config
     path = os.path.join(Config.PROJECT_ROOT, "templates", "ci", filename)
     if not os.path.exists(path):
-        raise HTTPException(status_code=404, detail="模板文件缺失")
+        raise HTTPException(status_code=404, detail="Template file is missing")
 
     with open(path, "r", encoding="utf-8") as f:
         content = f.read()

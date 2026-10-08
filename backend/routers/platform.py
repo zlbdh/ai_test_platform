@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-平台信息路由 - 平台信息、健康检查、指标、API 文档、环境验证
+Platform routes - information, health checks, metrics, API documentation, and environment validation
 """
 import datetime
 from fastapi import APIRouter, HTTPException
@@ -22,12 +22,12 @@ from services.platform_readiness_service import get_platform_readiness_service
 
 router = APIRouter(tags=["Platform"])
 
-# 需要在 main.py 中调用 setup_platform_routes(app) 来注入 app 引用
+# Call setup_platform_routes(app) in main.py to inject the app reference
 _app_ref = None
 
 
 def setup_platform_routes(app):
-    """注入 FastAPI app 引用，用于文档生成和端点列表"""
+    """Inject the FastAPI app reference for documentation generation and endpoint listing"""
     global _app_ref
     _app_ref = app
 
@@ -39,7 +39,7 @@ def _platform_version() -> str:
 
 @router.get("/api/platform/info")
 async def get_platform_info():
-    """获取平台信息"""
+    """Get platform information"""
     service = get_platform_maintenance_service()
     maintenance = service.get_status()
     db_observability = get_db_observability()
@@ -160,7 +160,7 @@ async def get_platform_info():
 
 @router.get("/api/platform/capabilities")
 async def get_platform_capabilities():
-    """获取平台能力清单"""
+    """Get platform capabilities"""
     return {
         "version": _platform_version(),
         "test_types": [
@@ -200,7 +200,7 @@ async def get_platform_maintenance(
     include_suspect: bool = False,
     include_archived: bool = False,
 ):
-    """获取平台维护状态与最近执行记录"""
+    """Get platform maintenance status and recent execution records"""
     service = get_platform_maintenance_service()
     return {
         "status": "success",
@@ -216,7 +216,7 @@ async def get_platform_maintenance(
 
 @router.post("/api/platform/maintenance/run")
 async def run_platform_maintenance(payload: MaintenanceRunRequest):
-    """手动触发平台统一维护"""
+    """Manually trigger unified platform maintenance"""
     service = get_platform_maintenance_service()
     result = service.run(force=payload.force, reason=payload.reason or "manual")
     return {"status": "success", "result": result}
@@ -224,7 +224,7 @@ async def run_platform_maintenance(payload: MaintenanceRunRequest):
 
 @router.post("/api/platform/maintenance/archive-suspect")
 async def archive_suspect_platform_maintenance(payload: MaintenanceArchiveRequest):
-    """归档可疑维护历史（非破坏性）"""
+    """Archive suspicious maintenance history (nondestructive)"""
     service = get_platform_maintenance_service()
     result = service.archive_suspect_runs(
         reason=payload.reason or "ops_archive",
@@ -235,7 +235,7 @@ async def archive_suspect_platform_maintenance(payload: MaintenanceArchiveReques
 
 @router.post("/api/platform/maintenance/export-archive")
 async def export_archived_platform_maintenance(payload: MaintenanceArchiveExportRequest):
-    """导出已归档的维护历史，便于离线留存与审计。"""
+    """Export archived maintenance history for offline retention and audits."""
     service = get_platform_maintenance_service()
     try:
         result = service.export_archived_runs(
@@ -249,7 +249,7 @@ async def export_archived_platform_maintenance(payload: MaintenanceArchiveExport
 
 @router.post("/api/platform/maintenance/cleanup-archive")
 async def cleanup_archived_platform_maintenance(payload: MaintenanceArchiveCleanupRequest):
-    """按保留策略 dry-run 或清理过期归档维护历史。"""
+    """Preview or clean up expired archived maintenance history according to the retention policy."""
     service = get_platform_maintenance_service()
     result = service.cleanup_archive_retention(
         reason=payload.reason or "ops_cleanup_archive",
@@ -261,14 +261,14 @@ async def cleanup_archived_platform_maintenance(payload: MaintenanceArchiveClean
 
 @router.post("/api/platform/shadow-db/quarantine")
 async def quarantine_platform_shadow_dbs(payload: ShadowDbQuarantineRequest):
-    """隔离影子业务库到归档目录（非破坏性）。"""
+    """Quarantine shadow business databases in the archive directory (nondestructive)."""
     result = quarantine_shadow_databases(reason=payload.reason or "ops_quarantine")
     return {"status": "success", "result": result}
 
 
 @router.get("/api/platform/readiness")
 async def get_platform_readiness():
-    """获取平台局部/全局就绪度评估"""
+    """Get local/global platform readiness assessments"""
     return {
         "status": "success",
         "readiness": get_platform_readiness_service().evaluate(),
@@ -277,19 +277,19 @@ async def get_platform_readiness():
 
 @router.get("/api/platform/remediation")
 async def get_platform_remediation():
-    """获取平台生产推进行动项"""
+    """Get platform production readiness action items"""
     return {
         "status": "success",
         "remediation": get_platform_remediation_service().evaluate(),
     }
 
 
-# NOTE: /api/health 保留在 main.py (含 DB 可达性检查)
+# NOTE: /api/health remains in main.py, including database reachability checks
 
 
 @router.get("/api/metrics")
 async def get_metrics():
-    """获取平台指标"""
+    """Get platform metrics"""
     import psutil
 
     app = _app_ref
@@ -307,7 +307,7 @@ async def get_metrics():
 
 @router.get("/api/docs/generate")
 async def generate_api_documentation(format: str = "json"):
-    """生成 API 文档"""
+    """Generate API documentation"""
     generator = ApiDocGenerator()
     if _app_ref:
         generator.extract_from_fastapi(_app_ref)
@@ -322,7 +322,7 @@ async def generate_api_documentation(format: str = "json"):
 
 @router.get("/api/docs/endpoints")
 async def list_all_endpoints():
-    """列出所有 API 端点"""
+    """List all API endpoints"""
     app = _app_ref
     endpoints = []
     if app:
@@ -346,7 +346,7 @@ async def list_all_endpoints():
 
 @router.get("/api/environment/validate")
 async def validate_environment():
-    """验证执行环境"""
+    """Validate the execution environment"""
     validator = get_validator()
     result = await validator.validate_all()
     return result

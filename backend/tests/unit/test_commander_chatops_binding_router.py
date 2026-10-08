@@ -119,7 +119,7 @@ def test_chatops_simulate_public_status_routes_to_gateway(monkeypatch):
     assert response.status_code == 200
     body = response.json()
     assert body["result"]["run"]["run_id"] == "run-status"
-    assert "军团状态" in body["result"]["response"]
+    assert "Legion status" in body["result"]["response"]
     gateway.execute_command.assert_awaited_once()
     _, kwargs = gateway.execute_command.await_args
     assert kwargs["source"] == "simulation"
@@ -150,7 +150,7 @@ def test_chatops_simulate_unbound_write_command_requires_binding(monkeypatch):
 
     assert response.status_code == 200
     body = response.json()
-    assert "尚未绑定平台账号" in body["result"]["response"]
+    assert "not linked to a platform account" in body["result"]["response"]
     gateway.execute_command.assert_not_called()
 
 

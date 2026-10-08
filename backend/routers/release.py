@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-发布风险评估 API 路由
+Release risk assessment API routes
 """
 
 from typing import List
@@ -17,15 +17,15 @@ from services.release_risk_service import (
 )
 
 
-router = APIRouter(prefix="/api/release", tags=["发布风险"])
+router = APIRouter(prefix="/api/release", tags=["Release risk"])
 
 
 class ReleaseRiskAssessmentCreateRequest(BaseModel):
-    project_key: str = Field("", description="项目标识")
-    environment: str = Field("test", description="目标环境")
-    exploration_session_ids: List[str] = Field(default_factory=list, description="探索会话 ID 列表")
-    required_tests_passed: bool = Field(True, description="所需测试是否通过")
-    change_summary: str = Field("", description="变更摘要")
+    project_key: str = Field("", description="Project identifier")
+    environment: str = Field("test", description="Target environment")
+    exploration_session_ids: List[str] = Field(default_factory=list, description="Exploration session ID list")
+    required_tests_passed: bool = Field(True, description="Whether required tests passed")
+    change_summary: str = Field("", description="Change summary")
 
 
 @router.post("/risk-assessments")
@@ -52,9 +52,9 @@ async def create_release_risk_assessment(
 
 @router.get("/risk-assessments")
 async def list_release_risk_assessments(
-    project_key: str = Query("", description="项目筛选"),
-    environment: str = Query("", description="环境筛选"),
-    auto_release_eligible: bool | None = Query(None, description="自动发布资格筛选"),
+    project_key: str = Query("", description="Project filter"),
+    environment: str = Query("", description="Environment filter"),
+    auto_release_eligible: bool | None = Query(None, description="Automatic release eligibility filter"),
     limit: int = Query(20, ge=1, le=200),
     user=Depends(require_authenticated_user),
 ):

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Routers Package - API 路由模块
+Routers Package - API routing modules
 """
 from .core import router as core_router, setup_core_routes
 from .testing import router as testing_router

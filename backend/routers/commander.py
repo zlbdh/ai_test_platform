@@ -1,14 +1,14 @@
 ﻿# -*- coding: utf-8 -*-
 """
-Commander API 路由
+Commander API routes
 
-提供 Commander 总指挥的 REST API：
-- POST /api/commander/run       一句话启动全面测试
-- GET  /api/commander/status    查询任务状态
-- POST /api/commander/cancel    取消任务
-- GET  /api/commander/missions  历史任务列表
-- GET  /api/commander/stream    SSE 流式进度
-- POST /api/commander/architect 测试架构师分析
+REST API for Commander:
+- POST /api/commander/run       Start comprehensive testing with one instruction
+- GET  /api/commander/status    Get mission status
+- POST /api/commander/cancel    Cancel a mission
+- GET  /api/commander/missions  Mission history list
+- GET  /api/commander/stream    SSE progress stream
+- POST /api/commander/architect Test architect analysis
 """
 
 import asyncio
@@ -56,7 +56,7 @@ from services.unified_task_service import get_unified_task_service
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/commander", tags=["Commander 总指挥"])
+router = APIRouter(prefix="/api/commander", tags=["Commander"])
 
 
 def _init_chatops_table():
@@ -149,25 +149,25 @@ def _init_chatops_table():
 _init_chatops_table()
 
 
-# ── 请求模型 ─────────────────────────────────────────────────────────────────
+# ── Request models ─────────────────────────────────────────────────────────────────
 
 
 from pydantic import BaseModel, Field
 
 
 class CommanderRunRequest(BaseModel):
-    """Commander 运行请求"""
-    user_input: str = Field(..., description="自然语言测试需求")
-    target_url: str = Field("", description="目标 URL（可选）")
-    parallel: bool = Field(True, description="是否并行执行测试线")
+    """Commander run request"""
+    user_input: str = Field(..., description="Natural-language test requirements")
+    target_url: str = Field("", description="Target URL (optional)")
+    parallel: bool = Field(True, description="Whether to execute test tracks in parallel")
 
 
 class PrototypeWorkerSwitches(BaseModel):
-    visual: bool = Field(True, description="是否启用 Visual Worker")
-    flow: bool = Field(True, description="是否启用 Flow Worker")
-    ab: bool = Field(True, description="是否启用 A/B Worker")
-    a11y: bool = Field(True, description="是否启用 A11y Worker")
-    perf: bool = Field(True, description="是否启用 Perf Worker")
+    visual: bool = Field(True, description="Whether to enable Visual Worker")
+    flow: bool = Field(True, description="Whether to enable Flow Worker")
+    ab: bool = Field(True, description="Whether to enable A/B Worker")
+    a11y: bool = Field(True, description="Whether to enable A11y Worker")
+    perf: bool = Field(True, description="Whether to enable Perf Worker")
 
 
 class PrototypeProviders(BaseModel):
@@ -179,54 +179,54 @@ class PrototypeProviders(BaseModel):
 
 
 class PrototypeRunRequest(BaseModel):
-    source_type: str = Field(..., description="来源类型: url | file | directory")
-    source: str = Field(..., description="原型 URL / 文件路径 / 目录路径")
-    compare_source: str = Field("", description="可选的 A/B 对比来源")
-    playbook_id: str = Field("", description="可选项目包 ID")
+    source_type: str = Field(..., description="Source type: url | file | directory")
+    source: str = Field(..., description="Prototype URL / file path / directory path")
+    compare_source: str = Field("", description="Optional A/B comparison source")
+    playbook_id: str = Field("", description="Optional playbook ID")
     worker_switches: PrototypeWorkerSwitches = Field(default_factory=PrototypeWorkerSwitches)
     providers: PrototypeProviders = Field(default_factory=PrototypeProviders)
-    wcag_level: str = Field("AA", description="A11y 目标级别")
+    wcag_level: str = Field("AA", description="A11y target level")
 
 
 class UnifiedTaskRequest(BaseModel):
-    """统一任务前门请求"""
-    task_kind: Literal["general", "prototype", "exploration"] = Field(..., description="任务类型")
-    user_goal: str = Field(..., description="用户目标/任务意图")
-    source_context: Dict[str, Any] = Field(default_factory=dict, description="输入上下文")
-    strategy: Dict[str, Any] = Field(default_factory=dict, description="执行策略")
+    """Unified task entry request"""
+    task_kind: Literal["general", "prototype", "exploration"] = Field(..., description="Task type")
+    user_goal: str = Field(..., description="User goal/task intent")
+    source_context: Dict[str, Any] = Field(default_factory=dict, description="Input context")
+    strategy: Dict[str, Any] = Field(default_factory=dict, description="Execution strategy")
 
 
 class UnifiedTaskActionResponse(BaseModel):
     task_id: str
-    cancelled: bool = Field(False, description="是否已停止")
-    status: str = Field(..., description="任务当前状态")
-    message: str = Field(..., description="动作反馈")
+    cancelled: bool = Field(False, description="Whether it has stopped")
+    status: str = Field(..., description="Current task status")
+    message: str = Field(..., description="Action feedback")
 
 
 class ArchitectRequest(BaseModel):
-    """TestArchitect 分析请求"""
-    input_text: str = Field("", description="需求描述/PRD")
-    target_url: str = Field("", description="目标 URL")
-    mode: Optional[str] = Field(None, description="发现模式: requirement/change/exploration/coverage/fault")
-    diff_text: str = Field("", description="Git diff 文本（变更驱动）")
+    """TestArchitect analysis request"""
+    input_text: str = Field("", description="Requirement description/PRD")
+    target_url: str = Field("", description="Target URL")
+    mode: Optional[str] = Field(None, description="Discovery mode: requirement/change/exploration/coverage/fault")
+    diff_text: str = Field("", description="Git diff text (change-driven)")
 
 
 class CancelRequest(BaseModel):
-    """取消请求"""
-    mission_id: str = Field(..., description="任务 ID")
+    """Cancellation request"""
+    mission_id: str = Field(..., description="Mission ID")
 
 
 class CommanderCommandExecuteRequest(BaseModel):
-    """统一命令网关执行请求"""
-    command_id: str = Field(..., description="命令 ID")
-    arguments: dict = Field(default_factory=dict, description="命令参数")
-    confirm: bool = Field(False, description="高风险命令显式确认")
+    """Unified command gateway execution request"""
+    command_id: str = Field(..., description="Command ID")
+    arguments: dict = Field(default_factory=dict, description="Command arguments")
+    confirm: bool = Field(False, description="Explicit confirmation for high-risk commands")
 
 
 class CommanderCommandApprovalDecisionRequest(BaseModel):
-    """统一命令审批决策请求"""
-    comment: str = Field("", description="审批备注/驳回原因")
-    confirm: bool = Field(True, description="审批执行时的显式确认")
+    """Unified command approval decision request"""
+    comment: str = Field("", description="Approval comment/rejection reason")
+    confirm: bool = Field(True, description="Explicit confirmation when approving execution")
 
 
 def _build_streaming_response(commander, mission_id: str) -> StreamingResponse:
@@ -244,7 +244,7 @@ def _build_streaming_response(commander, mission_id: str) -> StreamingResponse:
 
             mission = commander.get_mission(mission_id)
             if mission and mission.get("status") in ("completed", "failed", "cancelled"):
-                yield f"data: {json.dumps({'level': 'end', 'message': '任务结束'}, ensure_ascii=False)}\n\n"
+                yield f"data: {json.dumps({'level': 'end', 'message': 'Mission ended'}, ensure_ascii=False)}\n\n"
                 break
 
             heartbeat_count += 1
@@ -264,22 +264,22 @@ def _build_streaming_response(commander, mission_id: str) -> StreamingResponse:
     )
 
 
-# ── API 端点 ─────────────────────────────────────────────────────────────────
+# ── API endpoints ─────────────────────────────────────────────────────────────────
 
 
 @router.post("/run")
 async def commander_run(req: CommanderRunRequest):
     """
-    🚀 一句话启动全面测试（非阻塞）
+    🚀 Start comprehensive testing with one instruction (nonblocking)
 
-    立即返回 mission_id，任务在后台执行。
-    前端通过 GET /stream/{mission_id} 实时跟踪进度。
+    Return mission_id immediately and execute the mission in the background.
+    The frontend tracks progress in real time through GET /stream/{mission_id}.
     """
     from agents.commander import get_commander
 
     commander = get_commander()
     
-    # 先创建任务记录，获取 mission_id
+    # Create the mission record first to obtain mission_id
     import uuid
     import datetime
     mission_id = uuid.uuid4().hex[:8]
@@ -303,7 +303,7 @@ async def commander_run(req: CommanderRunRequest):
     }
     commander._missions[mission_id] = mission
     
-    # 后台执行任务
+    # Execute the mission in the background
     async def _run_in_background():
         try:
             result = await commander.run(
@@ -320,14 +320,14 @@ async def commander_run(req: CommanderRunRequest):
                 mission_obj.setdefault("logs", []).append({
                     "timestamp": datetime.datetime.now().isoformat(),
                     "level": "error",
-                    "message": f"❌ 任务异常: {e}",
+                    "message": f"❌ Mission error: {e}",
                     "data": {},
                 })
             elif mission_obj is not None:
                 from agents.commander import MissionStatus
 
                 mission_obj.status = MissionStatus.FAILED
-                mission_obj.log(f"❌ 任务异常: {e}", level="error")
+                mission_obj.log(f"❌ Mission error: {e}", level="error")
     
     asyncio.create_task(_run_in_background())
     
@@ -336,7 +336,7 @@ async def commander_run(req: CommanderRunRequest):
 
 @router.post("/prototype/run")
 async def commander_prototype_run(req: PrototypeRunRequest):
-    """启动原型测试 7 Agent 编排链。"""
+    """Start the seven-agent prototype testing orchestration flow."""
     from agents.commander import get_commander
 
     commander = get_commander()
@@ -358,7 +358,7 @@ async def commander_prototype_run(req: PrototypeRunRequest):
                     {
                         "timestamp": datetime.now().isoformat(),
                         "level": "error",
-                        "message": f"❌ 原型任务异常: {exc}",
+                        "message": f"❌ Prototype task error: {exc}",
                         "data": {"agent_id": "orchestrator", "agent_status": "error"},
                     }
                 )
@@ -376,7 +376,7 @@ async def commander_prototype_run(req: PrototypeRunRequest):
 
 @router.post("/tasks")
 async def commander_create_unified_task(req: UnifiedTaskRequest):
-    """统一前门任务入口。"""
+    """Unified task entry point."""
     from agents.commander import get_commander
 
     commander = get_commander()
@@ -393,11 +393,11 @@ async def commander_create_unified_task(req: UnifiedTaskRequest):
 @router.get("/tasks")
 async def commander_list_unified_tasks(
     limit: int = Query(20, ge=1, le=100),
-    task_kind: str = Query("", description="可选任务类型过滤"),
-    status: str = Query("", description="可选状态过滤"),
-    lineage_root_id: str = Query("", description="可选复跑链根任务过滤"),
+    task_kind: str = Query("", description="Optional task type filter"),
+    status: str = Query("", description="Optional status filter"),
+    lineage_root_id: str = Query("", description="Optional rerun lineage root task filter"),
 ):
-    """列出统一前门任务。"""
+    """List unified tasks."""
     from agents.commander import get_commander
 
     commander = get_commander()
@@ -413,7 +413,7 @@ async def commander_list_unified_tasks(
 
 @router.get("/tasks/{task_id}")
 async def commander_get_unified_task(task_id: str):
-    """查询统一前门任务详情。"""
+    """Get unified task details."""
     from agents.commander import get_commander
 
     commander = get_commander()
@@ -426,7 +426,7 @@ async def commander_get_unified_task(task_id: str):
 
 @router.get("/tasks/{task_id}/result")
 async def commander_get_unified_task_result(task_id: str):
-    """查询统一前门任务结果。"""
+    """Get unified task results."""
     from agents.commander import get_commander
 
     commander = get_commander()
@@ -439,7 +439,7 @@ async def commander_get_unified_task_result(task_id: str):
 
 @router.post("/tasks/{task_id}/cancel", response_model=UnifiedTaskActionResponse)
 async def commander_cancel_unified_task(task_id: str):
-    """停止统一前门任务。"""
+    """Stop a unified task."""
     from agents.commander import get_commander
 
     commander = get_commander()
@@ -452,7 +452,7 @@ async def commander_cancel_unified_task(task_id: str):
 
 @router.post("/tasks/{task_id}/rerun")
 async def commander_rerun_unified_task(task_id: str):
-    """按原任务上下文重新运行统一前门任务。"""
+    """Rerun a unified task with the original task context."""
     from agents.commander import get_commander
 
     commander = get_commander()
@@ -465,7 +465,7 @@ async def commander_rerun_unified_task(task_id: str):
 
 @router.get("/tasks/{task_id}/stream")
 async def commander_stream_unified_task(task_id: str):
-    """SSE 推送统一前门任务日志。"""
+    """Stream unified task logs over SSE."""
     from agents.commander import get_commander
 
     commander = get_commander()
@@ -478,7 +478,7 @@ async def commander_stream_unified_task(task_id: str):
 
 @router.get("/status/{mission_id}")
 async def commander_status(mission_id: str):
-    """查询任务状态"""
+    """Get mission status"""
     from agents.commander import get_commander
 
     commander = get_commander()
@@ -490,7 +490,7 @@ async def commander_status(mission_id: str):
 
 @router.get("/prototype/status/{mission_id}")
 async def commander_prototype_status(mission_id: str):
-    """查询原型测试任务状态。"""
+    """Get prototype testing task status."""
     from agents.commander import get_commander
 
     commander = get_commander()
@@ -502,7 +502,7 @@ async def commander_prototype_status(mission_id: str):
 
 @router.post("/cancel")
 async def commander_cancel(req: CancelRequest):
-    """取消任务"""
+    """Cancel a mission"""
     from agents.commander import get_commander
 
     commander = get_commander()
@@ -515,7 +515,7 @@ async def commander_cancel(req: CancelRequest):
 
 @router.get("/missions")
 async def commander_missions(limit: int = Query(20, ge=1, le=100)):
-    """获取最近的任务列表"""
+    """Get recent missions"""
     from agents.commander import get_commander
 
     commander = get_commander()
@@ -524,7 +524,7 @@ async def commander_missions(limit: int = Query(20, ge=1, le=100)):
 
 @router.get("/prototype/missions")
 async def commander_prototype_missions(limit: int = Query(20, ge=1, le=100)):
-    """获取最近的原型测试任务列表。"""
+    """Get recent prototype testing tasks."""
     from agents.commander import get_commander
 
     commander = get_commander()
@@ -533,7 +533,7 @@ async def commander_prototype_missions(limit: int = Query(20, ge=1, le=100)):
 
 @router.delete("/missions/{mission_id}")
 async def delete_mission(mission_id: str):
-    """删除单条任务记录"""
+    """Delete one mission record"""
     from agents.commander import get_commander
 
     commander = get_commander()
@@ -545,7 +545,7 @@ async def delete_mission(mission_id: str):
 
 @router.delete("/missions")
 async def clear_all_missions():
-    """清空全部任务记录"""
+    """Clear all mission records"""
     from agents.commander import get_commander
 
     commander = get_commander()
@@ -557,9 +557,9 @@ async def clear_all_missions():
 @router.get("/stream/{mission_id}")
 async def commander_stream(mission_id: str):
     """
-    SSE 流式推送任务进度日志
+    Stream mission progress logs over SSE
 
-    前端连接此端点后，会收到实时日志推送。
+    The frontend receives real-time logs after connecting to this endpoint.
     """
     from agents.commander import get_commander
 
@@ -570,7 +570,7 @@ async def commander_stream(mission_id: str):
 
 @router.get("/prototype/stream/{mission_id}")
 async def commander_prototype_stream(mission_id: str):
-    """SSE 推送原型测试任务日志。"""
+    """Stream prototype testing task logs over SSE."""
     from agents.commander import get_commander
 
     commander = get_commander()
@@ -583,9 +583,9 @@ async def commander_prototype_stream(mission_id: str):
 @router.post("/architect")
 async def architect_analyze(req: ArchitectRequest):
     """
-    🧠 测试架构师分析
+    🧠 Test architect analysis
 
-    输入需求/URL/diff → 自动发现测试需求列表
+    Input requirements/URL/diff → automatically discover testing needs
     """
     from agents.test_architect import get_test_architect
 
@@ -601,7 +601,7 @@ async def architect_analyze(req: ArchitectRequest):
 
 @router.get("/agents")
 async def list_agents():
-    """列出 AgentBus 上所有注册的 Agent"""
+    """List all agents registered on AgentBus"""
     from core.agent_bus import get_agent_bus
 
     bus = get_agent_bus()
@@ -616,7 +616,7 @@ async def list_commander_commands(
     request: Request,
     user=Depends(require_authenticated_user),
 ):
-    """列出统一命令网关中可用的命令定义。"""
+    """List command definitions available in the unified command gateway."""
     _ = request
     gateway = get_commander_command_gateway()
     return {
@@ -631,7 +631,7 @@ async def execute_commander_command(
     request: Request,
     user=Depends(require_authenticated_user),
 ):
-    """通过统一命令网关执行一个受控命令。"""
+    """Execute a controlled command through the unified command gateway."""
     gateway = get_commander_command_gateway()
     try:
         result = await gateway.execute_command(
@@ -659,15 +659,15 @@ async def execute_commander_command(
 
 @router.get("/commands/runs")
 async def list_commander_command_runs(
-    status: str = Query("", description="运行状态筛选"),
-    approval_status: str = Query("", description="审批状态筛选"),
-    command_id: str = Query("", description="命令 ID 筛选"),
-    project_key: str = Query("", description="项目筛选"),
-    source: str = Query("", description="来源筛选"),
+    status: str = Query("", description="Run status filter"),
+    approval_status: str = Query("", description="Approval status filter"),
+    command_id: str = Query("", description="Command ID filter"),
+    project_key: str = Query("", description="Project filter"),
+    source: str = Query("", description="Source filter"),
     limit: int = Query(20, ge=1, le=200),
     user=Depends(require_authenticated_user),
 ):
-    """列出统一命令运行记录。"""
+    """List unified command run records."""
     gateway = get_commander_command_gateway()
     try:
         payload = gateway.list_command_runs(
@@ -690,7 +690,7 @@ async def get_commander_command_run(
     run_id: str,
     user=Depends(require_authenticated_user),
 ):
-    """获取单条统一命令运行详情。"""
+    """Get details of one unified command run."""
     gateway = get_commander_command_gateway()
     try:
         payload = gateway.get_command_run(run_id, user=user)
@@ -708,7 +708,7 @@ async def approve_commander_command_run(
     req: CommanderCommandApprovalDecisionRequest,
     user=Depends(require_authenticated_user),
 ):
-    """审批并执行一条待审批命令。"""
+    """Approve and execute a pending command."""
     gateway = get_commander_command_gateway()
     try:
         payload = await gateway.approve_command_run(
@@ -734,7 +734,7 @@ async def reject_commander_command_run(
     req: CommanderCommandApprovalDecisionRequest,
     user=Depends(require_authenticated_user),
 ):
-    """驳回一条待审批命令。"""
+    """Reject a pending command."""
     gateway = get_commander_command_gateway()
     try:
         payload = gateway.reject_command_run(
@@ -755,7 +755,7 @@ async def reject_commander_command_run(
 
 @router.get("/chatops/bindings/me")
 async def get_commander_chatops_binding_me(user=Depends(require_authenticated_user)):
-    """获取当前登录用户的通知平台绑定状态与最新绑定码。"""
+    """Get the signed-in user's notification platform binding status and latest binding code."""
     service = get_commander_chatops_binding_service()
     return {
         "status": "success",
@@ -766,7 +766,7 @@ async def get_commander_chatops_binding_me(user=Depends(require_authenticated_us
 
 @router.post("/chatops/bindings/me/issue")
 async def issue_commander_chatops_binding_code(user=Depends(require_authenticated_user)):
-    """为当前登录用户签发一个一次性通知平台绑定码。"""
+    """Issue a one-time notification platform binding code for the signed-in user."""
     service = get_commander_chatops_binding_service()
     code = service.issue_binding_code(user, ttl_minutes=10)
     get_auth_service().record_audit_event(
@@ -785,7 +785,7 @@ async def issue_commander_chatops_binding_code(user=Depends(require_authenticate
 
 @router.post("/chatops/bindings/me/revoke")
 async def revoke_commander_chatops_binding(user=Depends(require_authenticated_user)):
-    """撤销当前登录用户的通知平台绑定与未使用绑定码。"""
+    """Revoke the signed-in user's notification platform binding and unused binding code."""
     service = get_commander_chatops_binding_service()
     revoked = service.revoke_binding_for_user(user)
     get_auth_service().record_audit_event(
@@ -806,7 +806,7 @@ async def revoke_commander_chatops_binding(user=Depends(require_authenticated_us
 
 @router.get("/tracing")
 async def tracing_summary(trace_id: Optional[str] = None):
-    """获取 LLM 调用链路追踪摘要"""
+    """Get an LLM call trace summary"""
     from core.tracing import get_tracer
 
     tracer = get_tracer()
@@ -814,20 +814,20 @@ async def tracing_summary(trace_id: Optional[str] = None):
 
 
 class SwarmRequest(BaseModel):
-    """蜂群模式请求"""
-    user_input: str = Field(..., description="自然语言测试需求")
-    target_url: str = Field("", description="目标 URL")
-    mode: Optional[str] = Field(None, description="发现模式: requirement/change/exploration/coverage/fault")
-    diff_text: str = Field("", description="Git diff 文本（变更驱动）")
+    """Swarm mode request"""
+    user_input: str = Field(..., description="Natural-language test requirements")
+    target_url: str = Field("", description="Target URL")
+    mode: Optional[str] = Field(None, description="Discovery mode: requirement/change/exploration/coverage/fault")
+    diff_text: str = Field("", description="Git diff text (change-driven)")
 
 
 @router.post("/swarm")
 async def commander_swarm(req: SwarmRequest):
     """
-    🐝 蜂群模式 — 战略层分析 + 智能并行执行
+    🐝 Swarm mode — strategic analysis and intelligent parallel execution
 
-    与 /run 的区别：先由 TestArchitect 做战略分析（5种发现模式），
-    再智能分解为多条并行测试线。
+    Unlike /run, TestArchitect first performs strategic analysis with five discovery modes,
+    then decomposes the task into parallel test tracks.
     """
     import datetime as dt
 
@@ -835,7 +835,7 @@ async def commander_swarm(req: SwarmRequest):
 
     commander = get_commander()
 
-    # 预创建 mission 记录
+    # Create the mission record in advance
     import uuid
     mission_id = uuid.uuid4().hex[:8]
 
@@ -853,7 +853,7 @@ async def commander_swarm(req: SwarmRequest):
     asyncio.create_task(_run_swarm())
 
     return {
-        "message": "🐝 蜂群模式已启动",
+        "message": "🐝 Swarm mode started",
         "mode": req.mode or "auto",
         "user_input": req.user_input,
     }
@@ -861,7 +861,7 @@ async def commander_swarm(req: SwarmRequest):
 
 @router.get("/health")
 async def agent_health():
-    """🏥 获取所有 Agent 的健康状态"""
+    """🏥 Get the health of all agents"""
     from core.agent_bus import get_agent_bus
 
     bus = get_agent_bus()
@@ -873,7 +873,7 @@ async def agent_health():
 
 @router.get("/profiles")
 async def list_profiles():
-    """📋 获取所有 Agent Profile"""
+    """📋 Get all agent profiles"""
     from core.agent_profile import get_profile_manager
 
     pm = get_profile_manager()
@@ -885,7 +885,7 @@ async def list_profiles():
 
 @router.get("/skills")
 async def list_skills():
-    """🧰 获取所有技能包"""
+    """🧰 Get all skill packages"""
     from core.skill_loader import get_skill_loader
 
     loader = get_skill_loader()
@@ -897,7 +897,7 @@ async def list_skills():
 
 @router.get("/skills/{skill_id}")
 async def get_skill_detail(skill_id: str):
-    """📖 获取技能包详情（含策略全文）"""
+    """📖 Get skill package details, including the full strategy"""
     from core.skill_loader import get_skill_loader
 
     loader = get_skill_loader()
@@ -919,11 +919,11 @@ async def get_skill_detail(skill_id: str):
 
 
 class WebhookMessage(BaseModel):
-    """企微/钉钉 Webhook 回调消息"""
-    msg_type: str = Field("text", description="消息类型")
-    content: str = Field("", description="消息内容")
-    from_user: str = Field("", description="发送人")
-    chat_id: str = Field("", description="群聊 ID")
+    """WeCom/DingTalk webhook callback message"""
+    msg_type: str = Field("text", description="Message type")
+    content: str = Field("", description="Message content")
+    from_user: str = Field("", description="Sender")
+    chat_id: str = Field("", description="Group chat ID")
 
 
 def _truncate_chatops_text(value: str, limit: int = 240) -> str:
@@ -1064,7 +1064,7 @@ def _record_app_bot_check(result: dict, source: str = "manual") -> None:
             """,
             (
                 1 if bool(result.get("ok")) else 0,
-                str(result.get("message") or ("应用机器人凭据校验通过" if result.get("ok") else "")),
+                str(result.get("message") or ("App bot credentials validated" if result.get("ok") else "")),
                 result.get("status_code"),
                 str(source or "manual"),
                 str(result.get("app_id_masked") or ""),
@@ -1073,7 +1073,7 @@ def _record_app_bot_check(result: dict, source: str = "manual") -> None:
 
 
 def _purge_app_bot_state(purge_history: bool = True) -> dict:
-    """清理当前项目误绑定应用机器人后残留的校验/联调痕迹。"""
+    """Clean up validation and integration traces left by an incorrectly bound app bot in the current project."""
     with get_connection() as conn:
         checks_removed = conn.execute("DELETE FROM commander_chatops_app_bot_checks").rowcount or 0
         bindings_removed = 0
@@ -1128,7 +1128,7 @@ def _extract_notification_platform_sender_identity(payload: dict) -> dict:
 
 
 def _detect_notification_platform_event_source(payload: dict, default_source: str = "event_subscription") -> str:
-    """识别当前通知平台事件是否来自平台公网自测，而不是真实群聊回流。"""
+    """Identify whether the notification event came from the platform's public endpoint self-test rather than a real group chat response."""
     header = payload.get("header") or {}
     event = payload.get("event") or {}
     message = event.get("message") or {}
@@ -1175,16 +1175,16 @@ _CHATOPS_REJECT_PATTERN = re.compile(r"^(驳回|reject)\s+([^\s]+)(?:\s+(.+))?$"
 
 def _build_chatops_help_response() -> str:
     return (
-        "👋 我是测试平台军团机器人。\n"
-        "可直接发送：\n"
-        "• 状态\n"
-        "• 报告 <任务ID>\n"
-        "• 测试 <URL/需求>\n"
-        "• 发现 <探索会话ID>\n"
-        "• 风险 <评估ID>\n"
-        "• 停止 <任务ID>\n"
-        "• 批准 <run_id> [备注] / 驳回 <run_id> [备注]\n"
-        "• 绑定 <绑定码>"
+        "👋 I'm the testing platform's legion bot.\n"
+        "Send a command:\n"
+        "• status\n"
+        "• report <mission-id>\n"
+        "• test <URL/requirements>\n"
+        "• findings <exploration-session-id>\n"
+        "• risk <assessment-id>\n"
+        "• stop <mission-id>\n"
+        "• approve <run_id> [comment] / reject <run_id> [comment]\n"
+        "• bind <binding-code>"
     )
 
 
@@ -1233,20 +1233,20 @@ def _format_platform_status_response(payload: dict) -> str:
     healthy = int(summary.get("healthy_agents") or 0)
     active = int(summary.get("active_agents") or 0)
     sync_text = (
-        "已联通"
+        "Connected"
         if chatops.get("ready")
-        else "平台侧已就绪，待通知平台联调"
+        else "Platform ready; notification platform integration pending"
         if chatops.get("platform_ready")
-        else str(chatops.get("summary") or "未就绪")
+        else str(chatops.get("summary") or "Not ready")
     )
-    heartbeat_note = "（空闲时为 0 属正常）" if registered and healthy == 0 else ""
+    heartbeat_note = " (zero is normal when idle)" if registered and healthy == 0 else ""
     return (
-        "📡 军团状态\n"
-        f"• 已注册 Agent: {registered}\n"
-        f"• 健康心跳: {healthy}/{registered}{heartbeat_note}\n"
-        f"• 活跃注册: {active}/{registered}\n"
-        f"• 通知平台双向: {sync_text}\n"
-        "• 指令: 状态 / 报告 <任务ID> / 测试 <URL/需求> / 绑定 <绑定码>"
+        "📡 Legion status\n"
+        f"• Registered agents: {registered}\n"
+        f"• Healthy heartbeats: {healthy}/{registered}{heartbeat_note}\n"
+        f"• Active registrations: {active}/{registered}\n"
+        f"• Notification platform two-way connection: {sync_text}\n"
+        "• Commands: status / report <mission-id> / test <URL/requirements> / bind <binding-code>"
     )
 
 
@@ -1261,64 +1261,64 @@ def _format_gateway_result_message(command_id: str, payload: dict) -> str:
         summary = (result or {}).get("summary") or {}
         mission_id = str(result.get("mission_id") or "")
         return (
-            f"📋 任务 #{mission_id}\n"
-            f"• 测试线: {summary.get('total_tests', 0)}\n"
-            f"• 通过: {summary.get('completed', 0)}\n"
-            f"• 失败: {summary.get('failed', 0)}\n"
-            f"• 成功率: {summary.get('success_rate', 0)}%"
+            f"📋 Mission #{mission_id}\n"
+            f"• Test tracks: {summary.get('total_tests', 0)}\n"
+            f"• Passed: {summary.get('completed', 0)}\n"
+            f"• Failed: {summary.get('failed', 0)}\n"
+            f"• Success rate: {summary.get('success_rate', 0)}%"
         )
 
     if command_id == "commander.mission.start":
         mission = result.get("mission") or {}
         return (
-            f"🐝 已启动蜂群测试任务\n"
+            f"🐝 Swarm testing mission started\n"
             f"• mission_id: {mission.get('mission_id', '-')}\n"
             f"• command_run: {run.get('run_id', '-')}\n"
-            f"• 目标: {mission.get('target_url') or '未指定 URL'}\n"
-            f"• 需求: {mission.get('user_input') or '-'}"
+            f"• Target: {mission.get('target_url') or 'No URL specified'}\n"
+            f"• Requirements: {mission.get('user_input') or '-'}"
         )
 
     if command_id == "commander.mission.cancel":
         mission = result.get("mission") or {}
         return (
-            f"🛑 任务已停止\n"
+            f"🛑 Mission stopped\n"
             f"• mission_id: {result.get('mission_id', '-')}\n"
-            f"• 当前状态: {mission.get('status') or 'cancelled'}"
+            f"• Current status: {mission.get('status') or 'cancelled'}"
         )
 
     if command_id == "exploration.findings.list":
         findings = list(result.get("findings") or [])
         session_id = str(result.get("session_id") or "")
         if not findings:
-            return f"🔎 会话 {session_id} 当前没有发现。"
+            return f"🔎 No findings for session {session_id} yet."
         top_lines = []
         for item in findings[:3]:
-            review_flag = " · 待人工复核" if item.get("requires_human_review") else ""
+            review_flag = " · Human review pending" if item.get("requires_human_review") else ""
             top_lines.append(
-                f"• [{item.get('severity', 'low')}] {item.get('title') or item.get('finding_type') or '未命名发现'}{review_flag}"
+                f"• [{item.get('severity', 'low')}] {item.get('title') or item.get('finding_type') or 'Untitled finding'}{review_flag}"
             )
         return (
-            f"🔎 会话 {session_id} 共 {len(findings)} 条发现\n"
+            f"🔎 Session {session_id}: {len(findings)} findings\n"
             + "\n".join(top_lines)
         )
 
     if command_id == "release.risk.get":
         assessment = result.get("assessment") or {}
         blockers = list(assessment.get("blockers") or [])
-        blocker_text = "无" if not blockers else "；".join(
-            str(item.get("message") or item.get("title") or item.get("type") or "未知阻断项")
+        blocker_text = "None" if not blockers else "; ".join(
+            str(item.get("message") or item.get("title") or item.get("type") or "Unknown blocker")
             for item in blockers[:3]
         )
         return (
-            f"🧭 发布风险评估 {assessment.get('assessment_id', '-')}\n"
-            f"• 业务风险: {assessment.get('business_risk', '-')}\n"
-            f"• 体验风险: {assessment.get('ux_risk', '-')}\n"
-            f"• 发布风险: {assessment.get('release_risk', '-')}\n"
-            f"• 自动发布资格: {'可自动' if assessment.get('auto_release_eligible') else '需人工'}\n"
+            f"🧭 Release risk assessment {assessment.get('assessment_id', '-')}\n"
+            f"• Business risk: {assessment.get('business_risk', '-')}\n"
+            f"• UX risk: {assessment.get('ux_risk', '-')}\n"
+            f"• Release risk: {assessment.get('release_risk', '-')}\n"
+            f"• Automatic release eligibility: {'Eligible' if assessment.get('auto_release_eligible') else 'Human review required'}\n"
             f"• Blockers: {blocker_text}"
         )
 
-    return f"✅ 命令 {command_id} 已执行，run_id={run.get('run_id', '-')}"
+    return f"✅ Command {command_id} executed, run_id={run.get('run_id', '-')}"
 
 
 def _parse_chatops_command(content: str) -> dict:
@@ -1397,7 +1397,7 @@ def _parse_chatops_command(content: str) -> dict:
     if _CHATOPS_EMPTY_TEST_PATTERN.match(text):
         return {
             "kind": "error",
-            "response": "请补充要测试的 URL 或测试需求，例如：测试 https://example.com 登录流程",
+            "response": "Provide a test URL or requirements, for example: test https://example.com login flow",
         }
 
     urls = re.findall(r'https?://\S+', text)
@@ -1423,7 +1423,7 @@ async def _handle_commander_chat_message(
     source: str = "event_subscription",
 ) -> dict:
     text = str(content or "").strip()
-    logger.info(f"[Webhook] 收到消息: {text} (from: {from_user}, source: {source})")
+    logger.info(f"[Webhook] Message received: {text} (from: {from_user}, source: {source})")
 
     parsed = _parse_chatops_command(text)
     if parsed["kind"] == "help":
@@ -1449,9 +1449,9 @@ async def _handle_commander_chat_message(
             }
         return {
             "response": (
-                f"🔗 绑定成功\n"
-                f"• 平台账号: {binding.get('username', '-')}\n"
-                f"• 通知平台身份: {binding.get('notification_platform_open_id', '-')}"
+                f"🔗 Binding successful\n"
+                f"• Platform account: {binding.get('username', '-')}\n"
+                f"• Notification platform identity: {binding.get('notification_platform_open_id', '-')}"
             ),
             "binding_status": "bound",
             "requester_id": binding.get("user_id", ""),
@@ -1462,7 +1462,7 @@ async def _handle_commander_chat_message(
     binding_status = "bound" if bound_user else "unbound"
     if not bound_user and not parsed.get("public_allowed"):
         return {
-            "response": "🔐 当前通知平台身份尚未绑定平台账号，请先在 Legion 控制中心生成绑定码，并发送：绑定 <绑定码>",
+            "response": "🔐 The notification platform identity is not linked to a platform account. Generate a binding code in the Legion control center, then send: bind <binding-code>",
             "binding_status": "unbound",
         }
 
@@ -1481,14 +1481,14 @@ async def _handle_commander_chat_message(
             payload = await gateway.approve_command_run(
                 parsed["run_id"],
                 user=acting_user,
-                comment=str(parsed.get("comment") or "通知平台批准执行"),
+                comment=str(parsed.get("comment") or "Execution approved through the notification platform"),
                 confirm=True,
                 source=normalized_source,
             )
             response = (
-                f"✅ 已批准命令 {parsed['run_id']}\n"
-                f"• 当前状态: {payload.get('run', {}).get('status', '-')}\n"
-                f"• 审批状态: {payload.get('approval', {}).get('status', '-')}"
+                f"✅ Command approved: {parsed['run_id']}\n"
+                f"• Current status: {payload.get('run', {}).get('status', '-')}\n"
+                f"• Approval status: {payload.get('approval', {}).get('status', '-')}"
             )
             return {
                 "response": response,
@@ -1503,13 +1503,13 @@ async def _handle_commander_chat_message(
             payload = gateway.reject_command_run(
                 parsed["run_id"],
                 user=acting_user,
-                reason=str(parsed.get("comment") or "通知平台驳回"),
+                reason=str(parsed.get("comment") or "Rejected through the notification platform"),
                 source=normalized_source,
             )
             response = (
-                f"🛑 已驳回命令 {parsed['run_id']}\n"
-                f"• 当前状态: {payload.get('run', {}).get('status', '-')}\n"
-                f"• 审批状态: {payload.get('approval', {}).get('status', '-')}"
+                f"🛑 Command rejected: {parsed['run_id']}\n"
+                f"• Current status: {payload.get('run', {}).get('status', '-')}\n"
+                f"• Approval status: {payload.get('approval', {}).get('status', '-')}"
             )
             return {
                 "response": response,
@@ -1573,12 +1573,12 @@ async def _deliver_commander_response_to_notification_platform(message: str) -> 
             "failed": 0,
             "sender": "webhook",
             "mode": "webhook_only",
-            "message": "未配置启用中的通知平台 Webhook，无法回发群消息。",
+            "message": "No enabled notification platform webhook is configured; cannot reply to the group.",
         }
 
     payload = _format_message(
         "notification_platform",
-        "军团中心",
+        "Legion center",
         "completed",
         message,
     )
@@ -1609,7 +1609,7 @@ async def _deliver_commander_response_to_notification_platform(message: str) -> 
         "failures": failures,
         "sender": "webhook",
         "mode": "webhook_only",
-        "message": "通知平台 Webhook 已回发消息。" if delivered > 0 else "通知平台 Webhook 回发失败。",
+        "message": "Notification platform webhook reply sent." if delivered > 0 else "Notification platform webhook reply failed.",
     }
 
 
@@ -1620,7 +1620,7 @@ async def _get_notification_platform_tenant_access_token() -> dict:
     if not app_id or not app_secret:
         return {
             "ok": False,
-            "message": "未配置通知平台应用机器人 App ID / Secret。",
+            "message": "Notification platform app bot App ID / Secret is not configured.",
             "app_bot_configured": False,
             "app_id_masked": app_id_masked,
         }
@@ -1635,7 +1635,7 @@ async def _get_notification_platform_tenant_access_token() -> dict:
     except Exception as exc:
         return {
             "ok": False,
-            "message": f"获取通知平台 tenant_access_token 失败：{exc}",
+            "message": f"Failed to obtain the notification platform tenant_access_token: {exc}",
             "app_bot_configured": True,
             "app_id_masked": app_id_masked,
         }
@@ -1655,7 +1655,7 @@ async def _get_notification_platform_tenant_access_token() -> dict:
     if not token:
         return {
             "ok": False,
-            "message": "通知平台未返回 tenant_access_token。",
+            "message": "The notification platform did not return tenant_access_token.",
             "app_bot_configured": True,
             "status_code": response.status_code,
             "app_id_masked": app_id_masked,
@@ -1664,7 +1664,7 @@ async def _get_notification_platform_tenant_access_token() -> dict:
         "ok": True,
         "token": token,
         "app_bot_configured": True,
-        "message": "应用机器人凭据校验通过，已成功获取 tenant_access_token。",
+        "message": "App bot credentials validated; tenant_access_token obtained successfully.",
         "status_code": response.status_code,
         "app_id_masked": app_id_masked,
     }
@@ -1679,7 +1679,7 @@ async def _deliver_commander_response_via_notification_platform_app_bot(message:
             "failed": 1,
             "sender": "app_bot",
             "mode": "app_bot",
-            "message": "缺少 chat_id，无法通过通知平台应用机器人回发。",
+            "message": "Missing chat_id; cannot reply through the notification platform app bot.",
             "failures": [{"error": "missing_chat_id"}],
         }
 
@@ -1691,7 +1691,7 @@ async def _deliver_commander_response_via_notification_platform_app_bot(message:
             "failed": 1,
             "sender": "app_bot",
             "mode": "app_bot",
-            "message": str(token_result.get("message") or "获取通知平台应用机器人凭据失败"),
+            "message": str(token_result.get("message") or "Failed to obtain notification platform app bot credentials"),
             "failures": [{"error": str(token_result.get("message") or "token_error")}],
         }
 
@@ -1718,7 +1718,7 @@ async def _deliver_commander_response_via_notification_platform_app_bot(message:
             "failed": 1,
             "sender": "app_bot",
             "mode": "app_bot",
-            "message": f"通知平台应用机器人回发失败：{exc}",
+            "message": f"Notification platform app bot reply failed: {exc}",
             "failures": [{"error": str(exc)}],
         }
 
@@ -1744,7 +1744,7 @@ async def _deliver_commander_response_via_notification_platform_app_bot(message:
         "failed": 0,
         "sender": "app_bot",
         "mode": "app_bot",
-        "message": "通知平台应用机器人已回发消息。",
+        "message": "Notification platform app bot reply sent.",
         "failures": [],
         "message_id": (body.get("data") or {}).get("message_id", ""),
     }
@@ -1780,15 +1780,15 @@ async def _deliver_commander_response(message: str, chat_id: str = "") -> dict:
 @router.post("/webhook/receive")
 async def webhook_receive(msg: WebhookMessage):
     """
-    📨 企微/钉钉双向交互 — 指令接收端点
+    📨 WeCom/DingTalk two-way interaction — command receiver endpoint
 
-    配置企微/钉钉机器人的「接收消息 URL」指向此端点。
-    收到 @机器人 消息后自动触发 Commander 执行。
+    Set the WeCom/DingTalk bot's message receiving URL to this endpoint.
+    Messages mentioning the bot automatically trigger Commander execution.
 
-    支持指令格式：
-    - "测试 https://xxx.com"  → 启动蜂群测试
-    - "状态"                  → 返回军团健康状态
-    - "报告 {mission_id}"     → 返回指定任务报告
+    Supported command formats:
+    - "test https://xxx.com" → Start swarm testing
+    - "status" → Return legion health
+    - "report {mission_id}" → Return the specified mission report
     """
     result = await _handle_commander_chat_message(
         msg.content,
@@ -1815,7 +1815,7 @@ async def webhook_receive(msg: WebhookMessage):
 
 
 async def _process_notification_platform_event(payload: dict, source: str = "event_subscription"):
-    """统一处理通知平台事件订阅 payload，支持真实回调和平台侧自检复用。"""
+    """Handle notification platform event subscription payloads consistently for real callbacks and platform self-checks."""
     if payload.get("type") == "url_verification":
         expected_token = (Config.NOTIFICATION_PLATFORM_EVENT_VERIFICATION_TOKEN or os.getenv("NOTIFICATION_PLATFORM_EVENT_VERIFICATION_TOKEN", "")).strip()
         actual_token = str(payload.get("token") or "").strip()
@@ -1957,11 +1957,11 @@ async def _process_notification_platform_event(payload: dict, source: str = "eve
 @router.post("/notification_platform/events")
 async def notification_platform_event_receive(payload: dict = Body(...)):
     """
-    🪽 通知平台事件订阅入口
+    🪽 Notification platform event subscription endpoint
 
-    用于接收通知平台应用机器人的消息事件。
-    注意：这不是自定义 Webhook 机器人本身的能力，仍需在通知平台开发者后台
-    配置事件订阅 URL 指向此端点。
+    Receives message events from the notification platform app bot.
+    Note: this is not a custom webhook bot capability. In the notification platform developer console,
+    configure the event subscription URL to point to this endpoint.
     """
     return await _process_notification_platform_event(
         payload,
@@ -1971,7 +1971,7 @@ async def notification_platform_event_receive(payload: dict = Body(...)):
 
 @router.get("/chatops/overview")
 async def commander_chatops_overview():
-    """返回通知平台 ChatOps 当前接入状态与最近消息摘要。"""
+    """Return the current notification platform ChatOps connection status and recent message summaries."""
     return {
         "status": "success",
         "overview": _get_chatops_overview(allow_live_probe=True),
@@ -1980,7 +1980,7 @@ async def commander_chatops_overview():
 
 @router.post("/chatops/probe-refresh")
 async def commander_chatops_probe_refresh():
-    """立即强制重试一次公网回调回探，并返回最新概览。"""
+    """Immediately retry the public callback probe and return the latest overview."""
     service = get_commander_chatops_service()
     result = service.refresh_callback_probe()
     return {
@@ -1992,7 +1992,7 @@ async def commander_chatops_probe_refresh():
 
 @router.post("/chatops/local-tunnel/restart")
 async def commander_chatops_local_tunnel_restart():
-    """重启本机 OpenSSH 反向隧道，用于恢复公网回调链路。"""
+    """Restart the local OpenSSH reverse tunnel to restore public callbacks."""
     service = get_commander_chatops_service()
     result = service.restart_local_tunnel()
     return {
@@ -2008,7 +2008,7 @@ async def commander_chatops_local_tunnel_restart():
 
 @router.post("/chatops/config/token")
 async def commander_chatops_config_token(req: CommanderChatOpsTokenConfigRequest):
-    """配置或重新生成通知平台事件订阅 verification token。"""
+    """Configure or regenerate the notification platform event subscription verification token."""
     provided = str(req.verification_token or "").strip()
     if req.regenerate or not provided:
         provided = secrets.token_urlsafe(24)
@@ -2025,7 +2025,7 @@ async def commander_chatops_config_token(req: CommanderChatOpsTokenConfigRequest
 
 @router.post("/chatops/config/callback-url")
 async def commander_chatops_config_callback_url(req: CommanderChatOpsCallbackConfigRequest):
-    """配置通知平台事件订阅使用的公网回调基地址。"""
+    """Configure the public callback base URL for notification platform event subscriptions."""
     raw = str(req.public_api_base_url or "").strip()
     normalized = raw.rstrip("/")
     if normalized:
@@ -2033,7 +2033,7 @@ async def commander_chatops_config_callback_url(req: CommanderChatOpsCallbackCon
         if parsed.scheme not in ("http", "https") or not parsed.netloc:
             return {
                 "status": "error",
-                "message": "PUBLIC_API_BASE_URL 必须是完整的 http(s) 地址",
+                "message": "PUBLIC_API_BASE_URL must be a complete http(s) URL",
                 "overview": _get_chatops_overview(),
             }
     updated_at = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
@@ -2054,7 +2054,7 @@ async def commander_chatops_config_callback_url(req: CommanderChatOpsCallbackCon
 
 @router.post("/chatops/config/app-bot")
 async def commander_chatops_config_app_bot(req: CommanderChatOpsAppBotConfigRequest):
-    """配置通知平台应用机器人凭据，用于判断真实群聊双向链路是否已具备接入条件。"""
+    """Configure notification platform app bot credentials to assess readiness for real two-way group chat integration."""
     app_id = str(req.app_id or "").strip()
     app_secret = str(req.app_secret or "").strip()
     config_result = Config.set_notification_platform_app_bot_credentials(app_id, app_secret)
@@ -2078,13 +2078,13 @@ async def commander_chatops_config_app_bot(req: CommanderChatOpsAppBotConfigRequ
 
 @router.post("/chatops/config/app-bot/unbind")
 async def commander_chatops_unbind_app_bot(req: CommanderChatOpsAppBotUnbindRequest):
-    """解绑当前项目串用的通知平台应用机器人，并可选清理校验/联调痕迹。"""
+    """Unbind the notification platform app bot incorrectly shared with the current project, optionally cleaning validation and integration traces."""
     config_result = Config.set_notification_platform_app_bot_credentials("", "")
     purge_result = _purge_app_bot_state(bool(req.purge_history))
     overview = _get_chatops_overview()
     return {
         "status": "success",
-        "message": "当前项目已解绑通知平台应用机器人，现仅保留 Webhook 通知通道。",
+        "message": "The notification platform app bot is unbound from this project; only the webhook notification channel remains.",
         "app_bot_configured": config_result.get("app_bot_configured", False),
         "app_bot_updated_at": config_result.get("app_bot_updated_at", ""),
         "purged": purge_result,
@@ -2094,7 +2094,7 @@ async def commander_chatops_unbind_app_bot(req: CommanderChatOpsAppBotUnbindRequ
 
 @router.post("/chatops/app-bot-self-check")
 async def commander_chatops_app_bot_self_check():
-    """立即验证当前通知平台应用机器人凭据是否能成功获取 tenant_access_token。"""
+    """Immediately verify whether the current notification platform app bot credentials can obtain tenant_access_token."""
     validation = await _get_notification_platform_tenant_access_token()
     _record_app_bot_check(validation, source="manual_self_check")
     return {
@@ -2111,12 +2111,12 @@ async def commander_chatops_app_bot_self_check():
 
 @router.post("/chatops/subscription-self-check")
 async def commander_chatops_subscription_self_check(req: CommanderChatOpsSubscriptionSelfCheckRequest):
-    """在平台内模拟一次通知平台 challenge 校验，确认事件订阅入口已可用。"""
+    """Simulate a notification platform challenge check internally to confirm the event subscription endpoint is available."""
     token = (Config.NOTIFICATION_PLATFORM_EVENT_VERIFICATION_TOKEN or os.getenv("NOTIFICATION_PLATFORM_EVENT_VERIFICATION_TOKEN", "")).strip()
     if not token:
         return {
             "status": "error",
-            "message": "尚未配置 NOTIFICATION_PLATFORM_EVENT_VERIFICATION_TOKEN",
+            "message": "NOTIFICATION_PLATFORM_EVENT_VERIFICATION_TOKEN is not configured",
             "overview": _get_chatops_overview(),
         }
     payload = {
@@ -2134,7 +2134,7 @@ async def commander_chatops_subscription_self_check(req: CommanderChatOpsSubscri
 
 @router.post("/chatops/external-self-check")
 async def commander_chatops_external_self_check():
-    """通过当前公网回调地址执行一次 challenge + 文本消息双验证。"""
+    """Verify both the challenge and a text message through the current public callback URL."""
     overview = _get_chatops_overview()
     callback_url = str(overview.get("callback_url") or "").strip()
     token = (Config.NOTIFICATION_PLATFORM_EVENT_VERIFICATION_TOKEN or os.getenv("NOTIFICATION_PLATFORM_EVENT_VERIFICATION_TOKEN", "")).strip()
@@ -2142,14 +2142,14 @@ async def commander_chatops_external_self_check():
     if not callback_url or not bool(overview.get("callback_url_public")):
         return {
             "status": "error",
-            "message": "当前还没有可用的公网回调地址，请先保存一个公网基地址。",
+            "message": "No public callback URL is available. Save a public base URL first.",
             "overview": overview,
         }
 
     if not token:
         return {
             "status": "error",
-            "message": "尚未配置 NOTIFICATION_PLATFORM_EVENT_VERIFICATION_TOKEN，无法执行外部 challenge 校验。",
+            "message": "NOTIFICATION_PLATFORM_EVENT_VERIFICATION_TOKEN is not configured; cannot run an external challenge check.",
             "overview": overview,
         }
 
@@ -2253,14 +2253,14 @@ async def commander_chatops_external_self_check():
 
 @router.post("/chatops/simulate")
 async def commander_chatops_simulate(req: CommanderChatOpsSimulateRequest):
-    """模拟一条通知平台文本指令，便于平台侧自检双向链路。"""
+    """Simulate a notification platform text command to self-check the two-way connection."""
     result = await _handle_commander_chat_message(
         req.message,
         from_user=req.from_user,
         chat_id=req.chat_id,
         source="simulation",
     )
-    delivery = {"configured": 0, "delivered": 0, "failed": 0, "message": "未触发回推"}
+    delivery = {"configured": 0, "delivered": 0, "failed": 0, "message": "No reply triggered"}
     if req.deliver:
         delivery = await _deliver_commander_response(result.get("response", ""), chat_id=req.chat_id)
 
@@ -2293,7 +2293,7 @@ async def commander_chatops_simulate(req: CommanderChatOpsSimulateRequest):
 
 @router.get("/scheduler/crons")
 async def list_cron_jobs():
-    """⏰ 获取定时巡检任务列表"""
+    """⏰ Get scheduled inspection tasks"""
     from core.test_scheduler import get_scheduler
 
     scheduler = get_scheduler()

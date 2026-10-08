@@ -1,6 +1,6 @@
 """
-History & Gallery Router — 从 main.py 迁移
-包含执行历史 CRUD + 截图画廊
+History & Gallery Router — Migrated from main.py
+Includes execution history CRUD and screenshot gallery
 """
 from fastapi import APIRouter, HTTPException
 import json
@@ -39,7 +39,7 @@ async def api_history(limit: int = 50, view: str = "flat"):
         if rows:
             return rows
     except Exception:
-        pass  # test_runs 表不存在，回退到旧表
+        pass  # The test_runs table does not exist; fall back to the legacy table
 
     try:
         return query_all("SELECT id, timestamp, goal, status FROM test_records ORDER BY timestamp DESC LIMIT ?", (limit,))
@@ -49,7 +49,7 @@ async def api_history(limit: int = 50, view: str = "flat"):
 
 @router.get("/api/history/{task_id}")
 async def api_history_detail(task_id: str):
-    """获取单条执行记录详情（含完整日志）"""
+    """Get one execution record with complete logs"""
     get_platform_maintenance_service().run(reason="history_detail")
     service = get_execution_center_service()
     try:
@@ -107,13 +107,13 @@ async def api_clear_history():
 
 @router.get("/api/gallery/{task_id}")
 async def api_gallery(task_id: str):
-    """获取任务的步骤截图时间线（用于视觉回廊）"""
+    """Get a task's step screenshot timeline for the visual gallery"""
     from core.db_helper import get_connection
 
     logs_json_str = None
 
     with get_connection() as conn:
-        # 优先从 test_runs 表按 task_id 查询（新表）
+        # Prefer querying the new test_runs table by task_id
         try:
             row = conn.execute("SELECT logs_json FROM test_runs WHERE task_id=?", (task_id,)).fetchone()
             if row:
@@ -121,7 +121,7 @@ async def api_gallery(task_id: str):
         except Exception:
             pass
 
-        # Fallback: 旧表 test_records 按 id 查询
+        # Fallback: Query the legacy test_records table by id
         if not logs_json_str:
             try:
                 row = conn.execute("SELECT logs_json FROM test_records WHERE id=?", (task_id,)).fetchone()
@@ -138,7 +138,7 @@ async def api_gallery(task_id: str):
     except (json.JSONDecodeError, TypeError):
         return []
 
-    # 提取所有带截图的日志条目，或 visual_result / assertion 类型
+    # Extract log entries with screenshots or type visual_result / assertion
     gallery = []
     step_index = 0
     for log in logs:
@@ -146,13 +146,13 @@ async def api_gallery(task_id: str):
         screenshot = log.get('screenshot')
         snapshots = log.get('snapshots', {})
 
-        # 跳过无截图且非关键类型的日志
+        # Skip noncritical log entries without screenshots
         if not screenshot and not snapshots and log_type not in ('visual_result', 'assertion'):
             continue
 
         step_name = log.get('step', '') or log.get('content', '') or f'Step {step_index + 1}'
 
-        # 映射 status
+        # Map status
         raw_status = log.get('status', '')
         if raw_status in ('success', 'pass'):
             status = 'pass'

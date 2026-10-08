@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TestData Router — 测试数据管理 API
+TestData Router — Test data management API
 """
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
@@ -16,7 +16,7 @@ router = APIRouter(tags=["testdata"])
 
 @router.get("/api/testdata/templates")
 async def list_templates():
-    """列出所有可用的测试数据模板"""
+    """List all available test data templates"""
     return {"templates": TestDataGenerator.list_templates()}
 
 
@@ -28,7 +28,7 @@ class GenerateRequest(BaseModel):
 
 @router.post("/api/testdata/generate")
 async def generate_data(req: GenerateRequest):
-    """按模板生成测试数据"""
+    """Generate test data from a template"""
     result = TestDataGenerator.generate(req.template, req.count, req.include_edge)
     if "error" in result:
         return {"status": "error", "message": result["error"]}
@@ -49,7 +49,7 @@ class CustomGenerateRequest(BaseModel):
 
 @router.post("/api/testdata/generate-custom")
 async def generate_custom_data(req: CustomGenerateRequest):
-    """自定义字段生成测试数据"""
+    """Generate test data with custom fields"""
     fields = [f.model_dump() for f in req.fields]
     result = TestDataGenerator.generate_custom(fields, req.count)
     return {"status": "success", **result}

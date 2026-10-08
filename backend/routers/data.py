@@ -1,6 +1,6 @@
 """
-Data Factory & Batch Runner Router — 从 main.py 迁移
-包含测试数据生成 + 批量测试执行
+Data Factory & Batch Runner Router — Migrated from main.py
+Includes test data generation and batch test execution
 """
 from fastapi import APIRouter, HTTPException
 import logging
@@ -15,7 +15,7 @@ router = APIRouter(tags=["data"])
 
 @router.post("/api/data/generate")
 async def api_data_generate(request: DataGenerateRequest):
-    """生成测试数据"""
+    """Generate test data"""
     try:
         if request.count == 1:
             data = generate_test_data(request.template)
@@ -30,14 +30,14 @@ async def api_data_generate(request: DataGenerateRequest):
 
 @router.get("/api/data/types")
 async def api_data_types():
-    """获取所有可用的数据类型"""
+    """Get all available data types"""
     factory = get_data_factory()
     return {"status": "success", "types": factory.get_available_types()}
 
 
 @router.post("/api/batch/run")
 async def api_batch_run(request: BatchRunRequest):
-    """启动批量测试任务"""
+    """Start a batch testing task"""
     try:
         runner = get_batch_runner(request.max_concurrency)
 

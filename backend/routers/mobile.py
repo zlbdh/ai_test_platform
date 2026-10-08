@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-移动端模拟路由
+Mobile emulation routes
 """
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -21,7 +21,7 @@ class MobileTestRequest(BaseModel):
 
 @router.post("/test")
 async def mobile_test(req: MobileTestRequest):
-    """运行移动端模拟测试"""
+    """Run mobile emulation tests"""
     from services.mobile_emulation import create_mobile_service
     try:
         service = create_mobile_service()
@@ -35,7 +35,7 @@ async def mobile_test(req: MobileTestRequest):
                     {
                         "target": result.get("device") or "device",
                         "passed": True,
-                        "message": "未发现移动端问题",
+                        "message": "No mobile issues found",
                     }
                 )
                 continue
@@ -44,15 +44,15 @@ async def mobile_test(req: MobileTestRequest):
                     {
                         "target": result.get("device") or issue.get("device") or "device",
                         "passed": False,
-                        "message": issue.get("description") or issue.get("rule_id") or "存在移动端问题",
+                        "message": issue.get("description") or issue.get("rule_id") or "Mobile issues found",
                     }
                 )
         get_execution_center_service().record_specialized_result(
             mode="mobile",
-            title=f"移动端测试 · {req.url}",
+            title=f"Mobile testing · {req.url}",
             target_url=req.url,
             success=int(report_dict.get("total_issues", 0) or 0) == 0 and float(report_dict.get("score", -1) or -1) >= 0,
-            summary=report_dict.get("summary") or f"设备 {report_dict.get('devices_tested', 0)} 台 · 问题 {report_dict.get('total_issues', 0)} 个",
+            summary=report_dict.get("summary") or f"Devices: {report_dict.get('devices_tested', 0)} · Issues: {report_dict.get('total_issues', 0)}",
             detail_items=detail_items,
             execution_group_id=req.execution_group_id,
             session_id=req.session_id,
@@ -63,7 +63,7 @@ async def mobile_test(req: MobileTestRequest):
     except Exception as e:
         get_execution_center_service().record_specialized_result(
             mode="mobile",
-            title=f"移动端测试 · {req.url}",
+            title=f"Mobile testing · {req.url}",
             target_url=req.url,
             success=False,
             summary=str(e),
@@ -77,7 +77,7 @@ async def mobile_test(req: MobileTestRequest):
 
 @router.get("/devices")
 async def mobile_list_devices():
-    """列出预定义设备"""
+    """List predefined devices"""
     from services.mobile_emulation import create_mobile_service
     service = create_mobile_service()
     return {"devices": service.list_devices()}

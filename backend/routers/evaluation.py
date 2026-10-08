@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 """
-Evaluation Router — Agent 评估体系 API
+Evaluation Router — Agent evaluation API
 
-端点：
-- POST /api/evaluation/run       运行基准评估
-- GET  /api/evaluation/results    获取评估结果
-- GET  /api/evaluation/compare    模型对比报告
-- GET  /api/evaluation/metrics    获取指标定义
-- GET  /api/evaluation/scenarios  获取可用场景
-- POST /api/evaluation/scenarios  添加自定义场景
-- GET  /api/evaluation/trend      趋势报告
+Endpoints:
+- POST /api/evaluation/run       Run benchmark evaluation
+- GET  /api/evaluation/results    Get evaluation results
+- GET  /api/evaluation/compare    Model comparison report
+- GET  /api/evaluation/metrics    Get metric definitions
+- GET  /api/evaluation/scenarios  Get available scenarios
+- POST /api/evaluation/scenarios  Add a custom scenario
+- GET  /api/evaluation/trend      Trend report
 """
 
 from fastapi import APIRouter, HTTPException
@@ -22,13 +22,13 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/evaluation", tags=["evaluation"])
 
 
-# ── 请求模型 ──────────────────────────────────────────────────────────────────
+# ── Request models ──────────────────────────────────────────────────────────────────
 
 class RunBenchmarkRequest(BaseModel):
-    scenario_ids: List[str] = []          # 空 = 运行所有
-    category: str = ""                     # 按分类过滤
-    use_judge: bool = False                # 是否启用 LLM-as-Judge
-    model_override: str = ""               # 指定模型
+    scenario_ids: List[str] = []          # Empty = run all
+    category: str = ""                     # Filter by category
+    use_judge: bool = False                # Whether to enable LLM-as-Judge
+    model_override: str = ""               # Model override
 
 class AddScenarioRequest(BaseModel):
     name: str
@@ -42,11 +42,11 @@ class AddScenarioRequest(BaseModel):
     tags: List[str] = []
 
 
-# ── 路由 ──────────────────────────────────────────────────────────────────────
+# ── Routes ──────────────────────────────────────────────────────────────────────
 
 @router.get("/metrics")
 async def list_metrics():
-    """获取所有可用的评估指标"""
+    """Get all available evaluation metrics"""
     from evaluation.metrics import ALL_METRICS
     return {
         "status": "success",
@@ -59,7 +59,7 @@ async def list_metrics():
 
 @router.get("/scenarios")
 async def list_scenarios(category: str = ""):
-    """获取可用的基准测试场景"""
+    """Get available benchmark scenarios"""
     from evaluation.benchmark_suite import BenchmarkSuite
     suite = BenchmarkSuite()
     scenarios = suite.list_scenarios(category=category)
@@ -68,7 +68,7 @@ async def list_scenarios(category: str = ""):
 
 @router.post("/scenarios")
 async def add_scenario(req: AddScenarioRequest):
-    """添加自定义基准场景"""
+    """Add a custom benchmark scenario"""
     from evaluation.benchmark_suite import BenchmarkSuite, BenchmarkScenario
     suite = BenchmarkSuite()
     scenario = BenchmarkScenario(
@@ -89,13 +89,13 @@ async def add_scenario(req: AddScenarioRequest):
 @router.post("/run")
 async def run_benchmark(req: RunBenchmarkRequest):
     """
-    运行基准评估。
+    Run benchmark evaluation.
 
-    注意：这是一个轻量级评估，不会真正启动浏览器执行。
-    完整的基准测试需要通过 Commander 触发。
-    此端点主要用于：
-    - 对已有的 trace 数据运行评估指标
-    - 获取历史数据对比
+    Note: this lightweight evaluation does not launch a browser.
+    A full benchmark run must be triggered through Commander.
+    This endpoint primarily supports:
+    - Run evaluation metrics on existing trace data
+    - Compare historical data
     """
     from evaluation.benchmark_suite import BenchmarkSuite
     from evaluation.reporter import EvaluationReporter
@@ -103,7 +103,7 @@ async def run_benchmark(req: RunBenchmarkRequest):
     suite = BenchmarkSuite()
     reporter = EvaluationReporter()
 
-    # 获取要评估的场景
+    # Get the scenarios to evaluate
     if req.scenario_ids:
         scenarios = [s for s in suite.list_scenarios() if s["id"] in req.scenario_ids]
     elif req.category:
@@ -112,18 +112,18 @@ async def run_benchmark(req: RunBenchmarkRequest):
         scenarios = suite.list_scenarios()
 
     if not scenarios:
-        raise HTTPException(status_code=404, detail="未找到匹配的基准场景")
+        raise HTTPException(status_code=404, detail="No matching benchmark scenarios found")
 
     return ok({
-        "message": f"找到 {len(scenarios)} 个基准场景。使用 Commander 执行后，评估指标将自动计算。",
+        "message": f"Found {len(scenarios)} benchmark scenarios. Evaluation metrics are calculated automatically after execution through Commander.",
         "scenarios": scenarios,
-        "hint": "POST /api/commander/execute 并传入基准场景的 goal 来执行完整评估",
+        "hint": "POST /api/commander/execute with the benchmark scenario's goal to run a full evaluation",
     })
 
 
 @router.get("/results")
 async def get_results(scenario_id: str = "", limit: int = 50):
-    """获取评估历史结果"""
+    """Get historical evaluation results"""
     from evaluation.benchmark_suite import BenchmarkSuite
     suite = BenchmarkSuite()
     results = suite.get_results(scenario_id=scenario_id, limit=limit)
@@ -132,7 +132,7 @@ async def get_results(scenario_id: str = "", limit: int = 50):
 
 @router.get("/compare")
 async def compare_models(scenario_id: str = ""):
-    """模型对比报告"""
+    """Model comparison report"""
     from evaluation.benchmark_suite import BenchmarkSuite
     from evaluation.reporter import EvaluationReporter
 
@@ -141,7 +141,7 @@ async def compare_models(scenario_id: str = ""):
 
     comparison = suite.compare_models(scenario_id=scenario_id)
 
-    # 获取详细结果生成对比报告
+    # Get detailed results to generate a comparison report
     results = suite.get_results(scenario_id=scenario_id, limit=200)
     report = reporter.generate_comparison(results)
 
@@ -150,7 +150,7 @@ async def compare_models(scenario_id: str = ""):
 
 @router.get("/trend")
 async def get_trend(scenario_id: str = "", limit: int = 100):
-    """趋势分析报告"""
+    """Trend analysis report"""
     from evaluation.benchmark_suite import BenchmarkSuite
     from evaluation.reporter import EvaluationReporter
 

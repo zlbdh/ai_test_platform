@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-API 工作台路由 — 使用 api_workbench_service 持久化后端
+API workbench routes — uses the persistent api_workbench_service backend
 """
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -62,14 +62,14 @@ def _get_service():
 
 @router.get("/collections")
 async def list_collections():
-    """列出所有集合"""
+    """List all collections"""
     service = _get_service()
     return {"status": "success", "collections": service.list_collections()}
 
 
 @router.post("/collections")
 async def create_collection(req: CollectionCreate):
-    """创建新集合"""
+    """Create a collection"""
     service = _get_service()
     coll = service.create_collection(req.name, req.description)
     return {"status": "success", "collection": coll}
@@ -77,7 +77,7 @@ async def create_collection(req: CollectionCreate):
 
 @router.get("/collections/{collection_id}")
 async def get_collection(collection_id: str):
-    """获取集合详情"""
+    """Get collection details"""
     service = _get_service()
     coll = service.get_collection(collection_id)
     if not coll:
@@ -87,7 +87,7 @@ async def get_collection(collection_id: str):
 
 @router.put("/collections/{collection_id}")
 async def update_collection(collection_id: str, req: CollectionCreate):
-    """更新集合"""
+    """Update a collection"""
     service = _get_service()
     coll = service.update_collection(collection_id, {"name": req.name, "description": req.description})
     if not coll:
@@ -97,7 +97,7 @@ async def update_collection(collection_id: str, req: CollectionCreate):
 
 @router.delete("/collections/{collection_id}")
 async def delete_collection(collection_id: str):
-    """删除集合"""
+    """Delete a collection"""
     service = _get_service()
     if service.delete_collection(collection_id):
         return {"status": "success", "message": "Collection deleted"}
@@ -108,7 +108,7 @@ async def delete_collection(collection_id: str):
 
 @router.get("/collections/{collection_id}/requests")
 async def list_requests(collection_id: str):
-    """列出集合中的请求"""
+    """List requests in a collection"""
     service = _get_service()
     coll = service.get_collection(collection_id)
     if not coll:
@@ -118,7 +118,7 @@ async def list_requests(collection_id: str):
 
 @router.post("/collections/{collection_id}/requests")
 async def create_request(collection_id: str, req: RequestCreate):
-    """在集合中创建请求"""
+    """Create a request in a collection"""
     service = _get_service()
     result = service.add_request(collection_id, req.dict())
     if not result:
@@ -128,7 +128,7 @@ async def create_request(collection_id: str, req: RequestCreate):
 
 @router.put("/collections/{collection_id}/requests/{request_id}")
 async def update_request(collection_id: str, request_id: str, req: RequestUpdate):
-    """更新请求"""
+    """Update a request"""
     service = _get_service()
     update_data = {k: v for k, v in req.dict().items() if v is not None}
     result = service.update_request(collection_id, request_id, update_data)
@@ -139,7 +139,7 @@ async def update_request(collection_id: str, request_id: str, req: RequestUpdate
 
 @router.delete("/collections/{collection_id}/requests/{request_id}")
 async def delete_request(collection_id: str, request_id: str):
-    """删除请求"""
+    """Delete a request"""
     service = _get_service()
     if service.delete_request(collection_id, request_id):
         return {"status": "success"}
@@ -150,14 +150,14 @@ async def delete_request(collection_id: str, request_id: str):
 
 @router.get("/environments")
 async def list_environments():
-    """列出所有环境"""
+    """List all environments"""
     service = _get_service()
     return {"status": "success", "environments": service.list_environments()}
 
 
 @router.get("/environments/active")
 async def get_active_environment():
-    """获取当前活动环境"""
+    """Get the active environment"""
     service = _get_service()
     env = service.get_active_environment()
     return {"status": "success", "environment": env}
@@ -165,7 +165,7 @@ async def get_active_environment():
 
 @router.post("/environments")
 async def create_environment(req: EnvironmentCreate):
-    """创建新环境"""
+    """Create an environment"""
     service = _get_service()
     env = service.create_environment(req.name, req.variables)
     return {"status": "success", "environment": env}
@@ -173,7 +173,7 @@ async def create_environment(req: EnvironmentCreate):
 
 @router.put("/environments/{env_id}")
 async def update_environment(env_id: str, req: EnvironmentCreate):
-    """更新环境"""
+    """Update an environment"""
     service = _get_service()
     env = service.update_environment(env_id, {"name": req.name, "variables": req.variables})
     if not env:
@@ -183,7 +183,7 @@ async def update_environment(env_id: str, req: EnvironmentCreate):
 
 @router.post("/environments/{env_id}/activate")
 async def activate_environment(env_id: str):
-    """设置活动环境"""
+    """Set the active environment"""
     service = _get_service()
     if service.set_active_environment(env_id):
         return {"status": "success", "message": "Environment activated"}
@@ -192,7 +192,7 @@ async def activate_environment(env_id: str):
 
 @router.delete("/environments/{env_id}")
 async def delete_environment(env_id: str):
-    """删除环境"""
+    """Delete an environment"""
     service = _get_service()
     if service.delete_environment(env_id):
         return {"status": "success", "message": "Environment deleted"}
@@ -203,7 +203,7 @@ async def delete_environment(env_id: str):
 
 @router.post("/execute")
 async def execute_request(req: ExecuteRequest):
-    """执行 HTTP 请求"""
+    """Execute an HTTP request"""
     try:
         service = _get_service()
         result = await service.execute_request(req.request, req.extra_vars or {})
@@ -211,20 +211,20 @@ async def execute_request(req: ExecuteRequest):
         success = bool(result.get("success")) and 200 <= status_code < 400
         summary = (
             result.get("error")
-            or f"HTTP {status_code} · {int(result.get('response_time_ms') or 0)}ms · 断言通过 {result.get('assertions_passed', 0)} / 失败 {result.get('assertions_failed', 0)}"
+            or f"HTTP {status_code} · {int(result.get('response_time_ms') or 0)}ms · Assertions passed {result.get('assertions_passed', 0)} / failed {result.get('assertions_failed', 0)}"
         )
         detail_items = [
             {
                 "target": str(item.get("type") or item.get("path") or "assertion"),
                 "passed": item.get("passed", False),
-                "message": item.get("message") or f"期望 {item.get('expected')}，实际 {item.get('actual')}",
+                "message": item.get("message") or f"Expected {item.get('expected')}, actual {item.get('actual')}",
             }
             for item in result.get("assertion_details", []) or []
         ]
         request_name = str(req.request.get("name") or f"{req.request.get('method', 'GET')} {req.request.get('url', '')}")
         get_execution_center_service().record_specialized_result(
             mode="api_workbench",
-            title=f"API 工作台 · {request_name}",
+            title=f"API workbench · {request_name}",
             target_url=str(req.request.get("url") or ""),
             success=success,
             summary=summary,
@@ -241,7 +241,7 @@ async def execute_request(req: ExecuteRequest):
         traceback.print_exc()
         get_execution_center_service().record_specialized_result(
             mode="api_workbench",
-            title=f"API 工作台 · {req.request.get('name') or req.request.get('method', 'GET')}",
+            title=f"API workbench · {req.request.get('name') or req.request.get('method', 'GET')}",
             target_url=str(req.request.get("url") or ""),
             success=False,
             summary=str(e),
@@ -250,18 +250,18 @@ async def execute_request(req: ExecuteRequest):
             group_title=req.group_title,
             task_prefix="api_workbench",
         )
-        raise HTTPException(500, detail=f"执行请求失败: {str(e)}")
+        raise HTTPException(500, detail=f"Request execution failed: {str(e)}")
 
 
 @router.post("/run-collection")
 async def run_collection(req: RunCollectionRequest):
-    """运行集合中的所有请求"""
+    """Run all requests in a collection"""
     service = _get_service()
     result = await service.run_collection(req.collection_id, req.stop_on_failure)
     if "error" in result:
         get_execution_center_service().record_specialized_result(
             mode="api_workbench",
-            title=f"API 集合执行 · {req.collection_id}",
+            title=f"API collection execution · {req.collection_id}",
             target_url=req.collection_id,
             success=False,
             summary=str(result["error"]),
@@ -282,10 +282,10 @@ async def run_collection(req: RunCollectionRequest):
     ]
     get_execution_center_service().record_specialized_result(
         mode="api_workbench",
-        title=f"API 集合执行 · {result.get('collection_name') or req.collection_id}",
+        title=f"API collection execution · {result.get('collection_name') or req.collection_id}",
         target_url=str(result.get("collection_name") or req.collection_id),
         success=success,
-        summary=f"共执行 {result.get('executed', 0)} 个请求，成功 {result.get('passed', 0)}，失败 {result.get('failed', 0)}",
+        summary=f"Executed {result.get('executed', 0)} requests: {result.get('passed', 0)} passed, {result.get('failed', 0)} failed",
         detail_items=detail_items,
         duration_ms=int(result.get("total_time_ms") or 0),
         execution_group_id=req.execution_group_id,

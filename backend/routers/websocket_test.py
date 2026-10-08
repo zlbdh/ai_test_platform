@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-WebSocket 测试路由 — 串联 services/websocket_testing.py
+WebSocket testing routes — integrates services/websocket_testing.py
 """
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -64,12 +64,12 @@ class WSScenarioRequest(BaseModel):
 
 @router.post("/scenario")
 async def ws_run_scenario(req: WSScenarioRequest):
-    """运行 WebSocket 测试场景（连接→发送/接收→断言→断开）"""
+    """Run a WebSocket scenario (connect → send/receive → assert → disconnect)"""
     from services.websocket_testing import create_ws_test_service, WSAssertion
     try:
         service = create_ws_test_service(req.url, req.headers)
 
-        # 转换断言
+        # Convert assertions
         assertions = None
         if req.assertions:
             assertions = [
@@ -85,13 +85,13 @@ async def ws_run_scenario(req: WSScenarioRequest):
         result = await service.run_scenario(req.scenario, assertions)
         get_execution_center_service().record_specialized_result(
             mode="websocket",
-            title=f"WebSocket 场景 · {req.url}",
+            title=f"WebSocket scenario · {req.url}",
             target_url=req.url,
             success=result.connected and not result.error and result.assertions_failed == 0,
-            summary=f"消息 {len(result.messages)} 条 · 断言成功 {result.assertions_passed} / 失败 {result.assertions_failed}",
+            summary=f"Messages: {len(result.messages)} · Assertions passed {result.assertions_passed} / failed {result.assertions_failed}",
             detail_items=[
                 {
-                    "target": f"消息 {index + 1}",
+                    "target": f"Message {index + 1}",
                     "passed": True,
                     "message": f"{item.direction}: {str(item.content)[:120]}",
                 }
@@ -123,7 +123,7 @@ async def ws_run_scenario(req: WSScenarioRequest):
     except Exception as e:
         get_execution_center_service().record_specialized_result(
             mode="websocket",
-            title=f"WebSocket 场景 · {req.url}",
+            title=f"WebSocket scenario · {req.url}",
             target_url=req.url,
             success=False,
             summary=str(e),
@@ -137,12 +137,12 @@ async def ws_run_scenario(req: WSScenarioRequest):
 
 @router.post("/quick-test")
 async def ws_quick_test(req: WSSendRequest):
-    """快速测试：连接→发送一条消息→接收响应→断开"""
+    """Quick test: connect → send one message → receive a response → disconnect"""
     from services.websocket_testing import create_ws_test_service
     try:
         service = create_ws_test_service(req.url, req.headers)
         
-        # 简单场景：connect → send → receive → disconnect
+        # Simple scenario: connect → send → receive → disconnect
         scenario = [
             {"action": "send", "data": req.message, "is_json": req.is_json},
             {"action": "receive", "timeout": 5.0}
@@ -150,13 +150,13 @@ async def ws_quick_test(req: WSSendRequest):
         result = await service.run_scenario(scenario)
         get_execution_center_service().record_specialized_result(
             mode="websocket",
-            title=f"WebSocket 快速测试 · {req.url}",
+            title=f"WebSocket quick test · {req.url}",
             target_url=req.url,
             success=result.connected and not result.error,
-            summary=f"消息 {len(result.messages)} 条 · 总耗时 {result.total_time_ms}ms",
+            summary=f"Messages: {len(result.messages)} · Total duration: {result.total_time_ms}ms",
             detail_items=[
                 {
-                    "target": f"消息 {index + 1}",
+                    "target": f"Message {index + 1}",
                     "passed": True,
                     "message": f"{item.direction}: {str(item.content)[:120]}",
                 }
@@ -186,7 +186,7 @@ async def ws_quick_test(req: WSSendRequest):
     except Exception as e:
         get_execution_center_service().record_specialized_result(
             mode="websocket",
-            title=f"WebSocket 快速测试 · {req.url}",
+            title=f"WebSocket quick test · {req.url}",
             target_url=req.url,
             success=False,
             summary=str(e),

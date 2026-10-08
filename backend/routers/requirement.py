@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-需求解析路由 - 需求文档解析、测试用例生成
+Requirement parsing routes - document parsing and test case generation
 """
 import os
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
@@ -17,13 +17,13 @@ router = APIRouter(prefix="/api/requirement", tags=["Requirement Parsing"])
 
 @router.get("/playbooks")
 async def list_requirement_playbooks():
-    """列出可用的项目级需求回归包。"""
+    """List available project-level requirements regression packages."""
     return {"playbooks": list_playbooks()}
 
 
 @router.get("/playbooks/{playbook_id}")
 async def get_requirement_playbook_detail(playbook_id: str):
-    """获取项目级需求回归包详情。"""
+    """Get a project-level requirements regression package."""
     playbook = get_requirement_playbook(playbook_id)
     if not playbook:
         raise HTTPException(status_code=404, detail="Playbook not found")
@@ -162,20 +162,20 @@ def _build_parse_response(content: str, title: str, references=None) -> dict:
 
 @router.post("/analyze")
 async def analyze_requirement(req: RequirementParseRequest):
-    """检测并解析需求/开发文档，返回结构化分析结果。"""
+    """Detect and parse requirements/development documents, returning structured analysis."""
     return _build_parse_response(req.content, req.title, req.references)
 
 
 @router.post("/parse")
 async def parse_requirement(req: RequirementParseRequest):
-    """解析需求文档，提取业务规则和生成测试用例"""
+    """Parse a requirements document, extract business rules, and generate test cases"""
     return _build_parse_response(req.content, req.title, req.references)
 
 
 @router.post("/parse-file")
 async def parse_requirement_file(req: FileParseRequest):
-    """解析需求文档文件"""
-    # 安全校验: 防止路径遍历攻击
+    """Parse a requirements document file"""
+    # Security check: prevent path traversal attacks
     safe_base = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
     abs_path = os.path.abspath(req.file_path)
     if not abs_path.startswith(safe_base):
@@ -199,7 +199,7 @@ async def parse_requirement_upload(
     file: UploadFile = File(...),
     title: str = Form(""),
 ):
-    """上传并解析需求 / 开发文档文件。"""
+    """Upload and parse requirements/development document files."""
     filename = file.filename or "uploaded_document"
     data = await file.read()
     if not data:
@@ -219,7 +219,7 @@ async def parse_requirement_upload(
 
 @router.post("/generate-tests")
 async def generate_tests_from_requirement(req: RequirementParseRequest):
-    """从需求直接生成可执行的测试用例"""
+    """Generate executable test cases directly from requirements"""
     parser = get_requirement_parser()
     analyzer = get_document_analyzer()
     bundle_analyzer = get_document_bundle_analyzer()

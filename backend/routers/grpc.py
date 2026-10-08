@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-gRPC 测试路由 — 串联 services/grpc_testing.py
+gRPC testing routes — integrates services/grpc_testing.py
 """
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -58,7 +58,7 @@ class GrpcTestSuiteRequest(BaseModel):
 
 @router.post("/call")
 async def grpc_call(req: GrpcCallRequest):
-    """执行 gRPC Unary 调用"""
+    """Execute a unary gRPC call"""
     from services.grpc_testing import create_grpc_service, GrpcRequest
     try:
         service = create_grpc_service(req.host, req.port, req.use_tls)
@@ -71,15 +71,15 @@ async def grpc_call(req: GrpcCallRequest):
         response = await service.call(grpc_req)
         get_execution_center_service().record_specialized_result(
             mode="grpc",
-            title=f"gRPC 调用 · {req.service}/{req.method}",
+            title=f"gRPC call · {req.service}/{req.method}",
             target_url=f"{req.host}:{req.port}",
             success=response.success,
-            summary=response.error or f"状态码 {response.status_code} · {response.response_time_ms}ms",
+            summary=response.error or f"Status code {response.status_code} · {response.response_time_ms}ms",
             detail_items=[
                 {
                     "target": f"{req.service}/{req.method}",
                     "passed": response.success,
-                    "message": response.error or "调用成功",
+                    "message": response.error or "Call succeeded",
                 }
             ],
             duration_ms=int(response.response_time_ms or 0),
@@ -98,7 +98,7 @@ async def grpc_call(req: GrpcCallRequest):
     except Exception as e:
         get_execution_center_service().record_specialized_result(
             mode="grpc",
-            title=f"gRPC 调用 · {req.service}/{req.method}",
+            title=f"gRPC call · {req.service}/{req.method}",
             target_url=f"{req.host}:{req.port}",
             success=False,
             summary=str(e),
@@ -112,19 +112,19 @@ async def grpc_call(req: GrpcCallRequest):
 
 @router.post("/services")
 async def grpc_list_services(req: GrpcReflectRequest):
-    """列出 gRPC 可用服务（反射）"""
+    """List available gRPC services through reflection"""
     from services.grpc_testing import create_grpc_service
     try:
         service = create_grpc_service(req.host, req.port, req.use_tls)
         services = await service.list_services()
         get_execution_center_service().record_specialized_result(
             mode="grpc",
-            title=f"gRPC 反射 · {req.host}:{req.port}",
+            title=f"gRPC reflection · {req.host}:{req.port}",
             target_url=f"{req.host}:{req.port}",
             success=len(services) > 0,
-            summary=f"发现 {len(services)} 个服务",
+            summary=f"Found {len(services)} services",
             detail_items=[
-                {"target": item, "passed": True, "message": "服务可见"}
+                {"target": item, "passed": True, "message": "Service is visible"}
                 for item in services
             ],
             execution_group_id=req.execution_group_id,
@@ -136,7 +136,7 @@ async def grpc_list_services(req: GrpcReflectRequest):
     except Exception as e:
         get_execution_center_service().record_specialized_result(
             mode="grpc",
-            title=f"gRPC 反射 · {req.host}:{req.port}",
+            title=f"gRPC reflection · {req.host}:{req.port}",
             target_url=f"{req.host}:{req.port}",
             success=False,
             summary=str(e),
@@ -150,17 +150,17 @@ async def grpc_list_services(req: GrpcReflectRequest):
 
 @router.post("/describe")
 async def grpc_describe_service(req: GrpcDescribeRequest):
-    """描述 gRPC 服务方法"""
+    """Describe gRPC service methods"""
     from services.grpc_testing import create_grpc_service
     try:
         service = create_grpc_service(req.host, req.port, req.use_tls)
         description = await service.describe_service(req.service)
         get_execution_center_service().record_specialized_result(
             mode="grpc",
-            title=f"gRPC 描述 · {req.service}",
+            title=f"gRPC description · {req.service}",
             target_url=f"{req.host}:{req.port}",
             success=bool(description),
-            summary="服务描述已获取" if description else "服务描述为空",
+            summary="Service description retrieved" if description else "Service description is empty",
             execution_group_id=req.execution_group_id,
             session_id=req.session_id,
             group_title=req.group_title,
@@ -170,7 +170,7 @@ async def grpc_describe_service(req: GrpcDescribeRequest):
     except Exception as e:
         get_execution_center_service().record_specialized_result(
             mode="grpc",
-            title=f"gRPC 描述 · {req.service}",
+            title=f"gRPC description · {req.service}",
             target_url=f"{req.host}:{req.port}",
             success=False,
             summary=str(e),
@@ -184,7 +184,7 @@ async def grpc_describe_service(req: GrpcDescribeRequest):
 
 @router.post("/test-suite")
 async def grpc_test_suite(req: GrpcTestSuiteRequest):
-    """运行 gRPC 测试套件"""
+    """Run a gRPC test suite"""
     from services.grpc_testing import create_grpc_service
     try:
         service = create_grpc_service(req.host, req.port, req.use_tls)
@@ -194,15 +194,15 @@ async def grpc_test_suite(req: GrpcTestSuiteRequest):
         failed = int(suite.get("failed", 0) or 0)
         get_execution_center_service().record_specialized_result(
             mode="grpc",
-            title=f"gRPC 测试套件 · {req.host}:{req.port}",
+            title=f"gRPC test suite · {req.host}:{req.port}",
             target_url=f"{req.host}:{req.port}",
             success=failed == 0 and len(results) > 0,
-            summary=f"共执行 {len(results)} 个测试，成功 {passed}，失败 {failed}",
+            summary=f"Executed {len(results)} tests: {passed} passed, {failed} failed",
             detail_items=[
                 {
-                    "target": item.get("name") or "gRPC 测试",
+                    "target": item.get("name") or "gRPC test",
                     "passed": item.get("passed", False),
-                    "message": item.get("error") or f"耗时 {item.get('response_time_ms', 0)}ms",
+                    "message": item.get("error") or f"Duration: {item.get('response_time_ms', 0)}ms",
                 }
                 for item in results
             ],
@@ -221,7 +221,7 @@ async def grpc_test_suite(req: GrpcTestSuiteRequest):
     except Exception as e:
         get_execution_center_service().record_specialized_result(
             mode="grpc",
-            title=f"gRPC 测试套件 · {req.host}:{req.port}",
+            title=f"gRPC test suite · {req.host}:{req.port}",
             target_url=f"{req.host}:{req.port}",
             success=False,
             summary=str(e),

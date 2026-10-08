@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Cookie 管理路由 — REST API 端点
-支持: 导出/导入 Cookie、管理预置 Auth Profile
+Cookie management routes — REST API endpoints
+Supports cookie export/import and preset Auth Profile management
 """
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -27,7 +27,7 @@ class PresetSaveRequest(BaseModel):
 
 
 def setup_cookie_routes(SharedBrowserState):
-    """注册 Cookie 管理路由，注入 SharedBrowserState 依赖"""
+    """Register cookie management routes with a SharedBrowserState dependency"""
     from core.session_manager import session_manager
 
     def _get_session(session_id: str):
@@ -35,13 +35,13 @@ def setup_cookie_routes(SharedBrowserState):
 
     @router.get("/api/cookies/list")
     async def list_cookies():
-        """列出所有已保存的 Cookie 文件"""
+        """List all saved cookie files"""
         from core.cookie_manager import cookie_manager
         return {"cookies": cookie_manager.list_saved()}
 
     @router.post("/api/cookies/export")
     async def export_cookies(req: CookieExportRequest, session_id: str = "default_session"):
-        """从当前浏览器页面导出 Cookie"""
+        """Export cookies from the current browser page"""
         session = _get_session(session_id)
         if not session.get_page():
             raise HTTPException(status_code=400, detail="No active browser page")
@@ -52,7 +52,7 @@ def setup_cookie_routes(SharedBrowserState):
 
     @router.post("/api/cookies/import")
     async def import_cookies(req: CookieImportRequest, session_id: str = "default_session"):
-        """导入 Cookie 到当前浏览器上下文"""
+        """Import cookies into the current browser context"""
         session = _get_session(session_id)
         if not session.get_page():
             raise HTTPException(status_code=400, detail="No active browser page")
@@ -67,23 +67,23 @@ def setup_cookie_routes(SharedBrowserState):
 
     @router.delete("/api/cookies/{name}")
     async def delete_cookie(name: str):
-        """删除已保存的 Cookie 文件"""
+        """Delete a saved cookie file"""
         from core.cookie_manager import cookie_manager
         if cookie_manager.delete_saved(name):
             return {"status": "deleted", "name": name}
         raise HTTPException(status_code=404, detail=f"Cookie file not found: {name}")
 
-    # --- Preset 端点 ---
+    # --- Preset endpoints ---
 
     @router.get("/api/cookies/presets")
     async def list_presets():
-        """列出预置 Auth Profile"""
+        """List preset Auth Profiles"""
         from core.cookie_manager import cookie_manager
         return {"presets": cookie_manager.list_presets()}
 
     @router.post("/api/cookies/presets")
     async def save_preset(req: PresetSaveRequest):
-        """保存预置 Auth Profile"""
+        """Save a preset Auth Profile"""
         from core.cookie_manager import cookie_manager
         try:
             cookie_manager.save_preset(req.preset_name, req.cookie_name)
@@ -93,7 +93,7 @@ def setup_cookie_routes(SharedBrowserState):
 
     @router.delete("/api/cookies/presets/{preset_name}")
     async def delete_preset(preset_name: str):
-        """删除预置 Auth Profile"""
+        """Delete a preset Auth Profile"""
         from core.cookie_manager import cookie_manager
         if cookie_manager.delete_preset(preset_name):
             return {"status": "deleted", "preset": preset_name}
@@ -101,7 +101,7 @@ def setup_cookie_routes(SharedBrowserState):
 
     @router.post("/api/cookies/presets/{preset_name}/inject")
     async def inject_preset(preset_name: str, session_id: str = "default_session"):
-        """注入预置 Cookie 到当前浏览器（跳过登录流程）"""
+        """Inject preset cookies into the current browser (skip the login flow)"""
         session = _get_session(session_id)
         if not session.get_page():
             raise HTTPException(status_code=400, detail="No active browser page")

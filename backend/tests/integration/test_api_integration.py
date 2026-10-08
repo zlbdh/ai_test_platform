@@ -1310,10 +1310,10 @@ class TestCommanderWebhookAPI:
         assert resp.status_code == 200
         data = resp.json()
         message = data["result"]["response"]
-        assert "已注册 Agent: 6" in message
-        assert "健康心跳: 0/6" in message
-        assert "空闲时为 0 属正常" in message
-        assert "通知平台双向: 平台侧已就绪，待通知平台联调" in message
+        assert "Registered agents: 6" in message
+        assert "Healthy heartbeats: 0/6" in message
+        assert "zero is normal when idle" in message
+        assert "Notification platform two-way connection: Platform ready; notification platform integration pending" in message
 
     def test_commander_chatops_simulate_greeting_returns_help_instead_of_starting_swarm(self):
         resp = client.post("/api/commander/chatops/simulate", json={
@@ -1326,10 +1326,10 @@ class TestCommanderWebhookAPI:
         assert resp.status_code == 200
         data = resp.json()
         message = data["result"]["response"]
-        assert "我是测试平台军团机器人" in message
-        assert "状态" in message
-        assert "报告 <任务ID>" in message
-        assert "测试 <URL>" in message
+        assert "testing platform's legion bot" in message
+        assert "status" in message
+        assert "report <mission-id>" in message
+        assert "test <URL/requirements>" in message
 
     def test_notification_platform_message_event_ignores_empty_text_payload(self):
         resp = client.post("/api/commander/notification_platform/events", json={

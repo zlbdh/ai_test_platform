@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-i18n 测试路由
+i18n testing routes
 """
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -28,7 +28,7 @@ class I18nQuickCheckRequest(BaseModel):
 
 @router.post("/test")
 async def i18n_test(req: I18nTestRequest):
-    """多语言测试（需要 Playwright）"""
+    """Multilingual testing (requires Playwright)"""
     from services.i18n_testing import create_i18n_service
     try:
         service = create_i18n_service()
@@ -55,7 +55,7 @@ async def i18n_test(req: I18nTestRequest):
 
 @router.post("/quick-check")
 async def i18n_quick_check(req: I18nQuickCheckRequest):
-    """快速 i18n 检查（HTTP 静态分析）"""
+    """Quick i18n check (static HTTP analysis)"""
     from services.i18n_testing import create_i18n_service
     try:
         service = create_i18n_service()

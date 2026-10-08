@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-无障碍测试路由
+Accessibility testing routes
 """
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -27,7 +27,7 @@ class A11yQuickCheckRequest(BaseModel):
 
 @router.post("/audit")
 async def a11y_audit(req: A11yAuditRequest):
-    """执行 WCAG 无障碍审计（需要 Playwright）"""
+    """Run a WCAG accessibility audit (requires Playwright)"""
     from services.accessibility_testing import create_accessibility_service
     try:
         service = create_accessibility_service()
@@ -54,7 +54,7 @@ async def a11y_audit(req: A11yAuditRequest):
 
 @router.post("/quick-check")
 async def a11y_quick_check(req: A11yQuickCheckRequest):
-    """快速无障碍检查（HTTP 静态分析，无需 Playwright）"""
+    """Run a quick accessibility check (static HTTP analysis; no Playwright required)"""
     from services.accessibility_testing import create_accessibility_service
     try:
         service = create_accessibility_service()

@@ -40,17 +40,17 @@ async def bootstrap_auth(req: AuthBootstrapRequest):
     result = None
     if req.apply_now:
         if session.get_page() is None:
-            raise HTTPException(status_code=400, detail="当前会话没有活跃浏览器页面，无法立即应用预认证")
+            raise HTTPException(status_code=400, detail="The current session has no active browser page; cannot apply preauthentication immediately")
         try:
             result = await session.run_browser(lambda page: apply_auth_bootstrap(page, payload), timeout=45.0)
             session.set_context("auth_bootstrap_applied", True)
             session.set_context("auth_bootstrap_result", result)
         except Exception as exc:
-            raise HTTPException(status_code=500, detail=f"预认证应用失败: {exc}") from exc
+            raise HTTPException(status_code=500, detail=f"Failed to apply preauthentication: {exc}") from exc
 
     return {
         "status": "success",
-        "message": "会话预认证配置已保存",
+        "message": "Session preauthentication configuration saved",
         "data": {
             "session_id": payload["session_id"],
             "stored": True,

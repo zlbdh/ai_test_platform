@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""待测项目部署路由 — /api/deploy/*"""
+"""Routes for deploying projects under test — /api/deploy/*"""
 import asyncio
 import json
 from dataclasses import asdict
@@ -17,7 +17,7 @@ from core.auth_dependencies import (
 )
 from services.auth_service import get_auth_service
 
-router = APIRouter(prefix="/api/deploy", tags=["项目部署"])
+router = APIRouter(prefix="/api/deploy", tags=["Project deployment"])
 
 ADMIN_ONLY = [Depends(require_admin_user)]
 DEPLOY_VIEW_ONLY = [Depends(require_deploy_view_user)]
@@ -116,9 +116,9 @@ def _serialize_deploy_audit_log(log) -> dict:
     }
 
 
-# ── 请求模型 ──────────────────────────────────────────────────────────────────
+# ── Request models ──────────────────────────────────────────────────────────────────
 class RepoInput(BaseModel):
-    label: str = "默认"
+    label: str = "Default"
     repo_url: str
     branch: str = "master"
     install_cmd: str = ""
@@ -147,7 +147,7 @@ class ApprovalReviewRequest(BaseModel):
     comment: str = ""
 
 
-# ── 项目 CRUD ─────────────────────────────────────────────────────────────────
+# ── Project CRUD ─────────────────────────────────────────────────────────────────
 @router.get("/projects", dependencies=DEPLOY_VIEW_ONLY)
 async def get_projects(request: Request):
     svc = get_deploy_service()
@@ -159,7 +159,7 @@ async def get_projects(request: Request):
 async def add_project(req: AddProjectRequest, request: Request):
     svc = get_deploy_service()
     if not req.name or not req.repos:
-        raise ValueError("项目名称和至少一个仓库不能为空")
+        raise ValueError("A project name and at least one repository are required")
     repos = [r.model_dump() for r in req.repos]
     if req.git_token and repos:
         repos[0]["git_token"] = req.git_token
@@ -204,15 +204,15 @@ async def delete_project(project_key: str, request: Request):
         project_key,
         {"project_key": project_key},
     )
-    return ok(message="项目已删除")
+    return ok(message="Project deleted")
 
 
-# ── Git Token (项目级) ─────────────────────────────────────────────────────────
+# ── Git Token (Project-level) ─────────────────────────────────────────────────────────
 @router.patch("/projects/{project_key}/token", dependencies=ADMIN_ONLY)
 @safe_handler
 async def set_project_token(project_key: str, req: GitTokenRequest, request: Request):
     if not req.git_token:
-        raise ValueError("git_token 不能为空")
+        raise ValueError("git_token is required")
     _require_project_scope(request, project_key)
     svc = get_deploy_service()
     svc.set_project_token(project_key, req.git_token)
@@ -223,10 +223,10 @@ async def set_project_token(project_key: str, req: GitTokenRequest, request: Req
         project_key,
         {"project_key": project_key},
     )
-    return ok(message="Git 令牌已保存")
+    return ok(message="Git token saved")
 
 
-# ── AI 智能分析 ───────────────────────────────────────────────────────────────
+# ── AI analysis ───────────────────────────────────────────────────────────────
 @router.post("/repo/{project_key}/{repo_id}/ai-analyze", dependencies=ADMIN_ONLY)
 @safe_handler
 async def ai_analyze_repo(project_key: str, repo_id: str, request: Request):
@@ -240,23 +240,23 @@ class ApplyAIConfigRequest(BaseModel):
     install_cmd: str = ""
     start_cmd: str = ""
     port: int = 0
-    deploy_context: dict = {}    # 用户补充的部署上下文
+    deploy_context: dict = {}    # User-provided deployment context
 
 class AIRefineRequest(BaseModel):
-    """AI 二次确认请求 — 用户补充的部署上下文"""
+    """AI follow-up confirmation request — user-provided deployment context"""
     server_address: str = ""
     db_connection: str = ""
-    env_vars: str = ""       # KEY=VALUE 格式，每行一个
+    env_vars: str = ""       # KEY=VALUE format, one per line
     user_notes: str = ""
-    initial_config: dict = {}  # 当前 AI 分析结果
+    initial_config: dict = {}  # Current AI analysis result
 
 @router.post("/repo/{project_key}/{repo_id}/ai-refine", dependencies=ADMIN_ONLY)
 @safe_handler
 async def ai_refine_config(project_key: str, repo_id: str, req: AIRefineRequest, request: Request):
-    """AI 二次确认 — 结合用户补充的部署上下文优化配置"""
+    """AI follow-up confirmation — refine configuration with user-provided deployment context"""
     _require_project_scope(request, project_key)
     svc = get_deploy_service()
-    svc._find_repo(project_key, repo_id)  # ValueError 由 @safe_handler 捕获
+    svc._find_repo(project_key, repo_id)  # ValueError is caught by @safe_handler
 
     from services.ai_deploy_analyzer import refine_deploy_config
     deploy_context = {
@@ -284,7 +284,7 @@ async def apply_ai_config(project_key: str, repo_id: str, req: ApplyAIConfigRequ
     return ok({"repo": repo_status})
 
 
-# ── 仓库级部署操作 (以 project_key + repo_id 为粒度) ──────────────────────────
+# ── Repository-level deployment operations (scoped by project_key + repo_id) ──────────────────────────
 @router.post("/repo/{project_key}/{repo_id}/clone", dependencies=ADMIN_ONLY)
 @safe_handler
 async def clone_repo(project_key: str, repo_id: str, request: Request, req: DeployActionRequest = None):
@@ -348,7 +348,7 @@ async def stop_repo(project_key: str, repo_id: str, request: Request):
 @router.post("/repo/{project_key}/{repo_id}/full", dependencies=ADMIN_ONLY)
 @safe_handler
 async def full_deploy_repo(project_key: str, repo_id: str, request: Request, req: DeployActionRequest = None):
-    """一键部署 — 后台执行，立即返回 record_id / job_id"""
+    """One-click deployment — run in the background and return record_id / job_id immediately"""
     _require_project_scope(request, project_key)
     svc = get_deploy_service()
     branch = req.branch if req else ""
@@ -365,7 +365,7 @@ async def full_deploy_repo(project_key: str, repo_id: str, request: Request, req
 @router.post("/repo/{project_key}/deploy-all", dependencies=ADMIN_ONLY)
 @safe_handler
 async def full_deploy_all(project_key: str, request: Request):
-    """一键部署项目下所有仓库（后台执行）"""
+    """Deploy all repositories in a project with one click (background execution)"""
     _require_project_scope(request, project_key)
     svc = get_deploy_service()
     job = svc.schedule_full_deploy_all(project_key)
@@ -387,7 +387,7 @@ async def full_deploy_all(project_key: str, request: Request):
 @router.post("/repo/{project_key}/{repo_id}/full/request", dependencies=DEPLOY_REQUEST_ONLY)
 @safe_handler
 async def request_full_deploy_repo(project_key: str, repo_id: str, request: Request, req: DeployActionRequest = None):
-    """创建仓库一键部署审批单"""
+    """Create an approval request for one-click repository deployment"""
     _require_project_scope(request, project_key)
     svc = get_deploy_service()
     user = getattr(request.state, "authenticated_user", None)
@@ -413,7 +413,7 @@ async def request_full_deploy_repo(project_key: str, repo_id: str, request: Requ
 @router.post("/repo/{project_key}/deploy-all/request", dependencies=DEPLOY_REQUEST_ONLY)
 @safe_handler
 async def request_full_deploy_all(project_key: str, request: Request):
-    """创建项目级一键部署审批单"""
+    """Create an approval request for one-click project deployment"""
     _require_project_scope(request, project_key)
     svc = get_deploy_service()
     user = getattr(request.state, "authenticated_user", None)
@@ -435,7 +435,7 @@ async def request_full_deploy_all(project_key: str, request: Request):
 
 @router.get("/approvals", dependencies=DEPLOY_VIEW_ONLY)
 async def list_approvals(request: Request, limit: int = 30, status: str = ""):
-    """查询部署审批单"""
+    """Get deployment approval requests"""
     svc = get_deploy_service()
     approvals = _filter_scoped_items(request, svc.list_approvals(limit=limit, status=status))
     return ok({"approvals": approvals})
@@ -443,11 +443,11 @@ async def list_approvals(request: Request, limit: int = 30, status: str = ""):
 
 @router.get("/approvals/{approval_id}", dependencies=DEPLOY_VIEW_ONLY)
 async def get_approval_detail(approval_id: str, request: Request):
-    """查询单条部署审批单"""
+    """Get one deployment approval request"""
     svc = get_deploy_service()
     approval = svc.get_approval_detail(approval_id)
     if not approval:
-        raise HTTPException(status_code=404, detail="审批单不存在")
+        raise HTTPException(status_code=404, detail="Approval request does not exist")
     _require_project_scope(request, approval.get("project_key", ""))
     return ok({"approval": approval})
 
@@ -455,12 +455,12 @@ async def get_approval_detail(approval_id: str, request: Request):
 @router.post("/approvals/{approval_id}/approve", dependencies=DEPLOY_APPROVE_ONLY)
 @safe_handler
 async def approve_approval(approval_id: str, request: Request, req: ApprovalReviewRequest):
-    """审批通过并触发部署作业"""
+    """Approve and trigger a deployment job"""
     svc = get_deploy_service()
     user = getattr(request.state, "authenticated_user", None)
     current = svc.get_approval_detail(approval_id)
     if not current:
-        raise HTTPException(status_code=404, detail="审批单不存在")
+        raise HTTPException(status_code=404, detail="Approval request does not exist")
     _require_project_scope(request, current.get("project_key", ""))
     approval = svc.review_approval(
         approval_id,
@@ -487,12 +487,12 @@ async def approve_approval(approval_id: str, request: Request, req: ApprovalRevi
 @router.post("/approvals/{approval_id}/reject", dependencies=DEPLOY_APPROVE_ONLY)
 @safe_handler
 async def reject_approval(approval_id: str, request: Request, req: ApprovalReviewRequest):
-    """驳回部署审批单"""
+    """Reject a deployment approval request"""
     svc = get_deploy_service()
     user = getattr(request.state, "authenticated_user", None)
     current = svc.get_approval_detail(approval_id)
     if not current:
-        raise HTTPException(status_code=404, detail="审批单不存在")
+        raise HTTPException(status_code=404, detail="Approval request does not exist")
     _require_project_scope(request, current.get("project_key", ""))
     approval = svc.review_approval(
         approval_id,
@@ -523,7 +523,7 @@ async def list_deploy_audit_logs(
     project_key: str = "",
     user_id: str = "",
 ):
-    """查询部署相关审计日志，支持按项目范围自动收口。"""
+    """Query deployment audit logs with automatic project scoping."""
     auth = get_auth_service()
     logs = auth.get_audit_logs(
         user_id=user_id or None,
@@ -546,10 +546,10 @@ async def list_deploy_audit_logs(
     return ok({"logs": filtered})
 
 
-# ── SSE 实时事件流 ────────────────────────────────────────────────────────────
+# ── SSE real-time event stream ────────────────────────────────────────────────────────────
 @router.get("/repo/{project_key}/{repo_id}/stream", dependencies=DEPLOY_VIEW_ONLY)
 async def deploy_stream(project_key: str, repo_id: str, request: Request):
-    """SSE 端点：实时推送部署进度事件"""
+    """SSE endpoint: stream deployment progress events in real time"""
     _require_project_scope(request, project_key)
     svc = get_deploy_service()
 
@@ -564,32 +564,32 @@ async def deploy_stream(project_key: str, repo_id: str, request: Request):
     )
 
 
-# ── 单条记录详情 ──────────────────────────────────────────────────────────────
+# ── Individual record details ──────────────────────────────────────────────────────────────
 @router.get("/record/{record_id}", dependencies=DEPLOY_VIEW_ONLY)
 async def get_record_detail(record_id: str, request: Request):
-    """查询单条部署记录（含子步骤）"""
+    """Get one deployment record, including substeps"""
     svc = get_deploy_service()
     for r in reversed(svc.history):
         if r.id == record_id:
             _require_project_scope(request, r.project_key)
             return ok({"record": asdict(r)})
-    raise HTTPException(status_code=404, detail="记录不存在")
+    raise HTTPException(status_code=404, detail="Record does not exist")
 
 
 @router.get("/jobs/{job_id}", dependencies=DEPLOY_VIEW_ONLY)
 async def get_job_detail(job_id: str, request: Request):
-    """查询后台部署作业状态"""
+    """Get background deployment job status"""
     svc = get_deploy_service()
     job = svc.get_job_detail(job_id)
     if not job:
-        raise HTTPException(status_code=404, detail="作业不存在")
+        raise HTTPException(status_code=404, detail="Job does not exist")
     _require_project_scope(request, job.get("project_key", ""))
     return ok({"job": job})
 
 
 @router.get("/jobs", dependencies=DEPLOY_VIEW_ONLY)
 async def list_jobs(request: Request, limit: int = 30, status: str = ""):
-    """查询后台部署作业列表"""
+    """List background deployment jobs"""
     svc = get_deploy_service()
     jobs = _filter_scoped_items(request, svc.list_jobs(limit=limit, status=status))
     return ok({"jobs": jobs})
@@ -598,11 +598,11 @@ async def list_jobs(request: Request, limit: int = 30, status: str = ""):
 @router.post("/jobs/{job_id}/cancel", dependencies=ADMIN_ONLY)
 @safe_handler
 async def cancel_job(job_id: str, request: Request):
-    """取消后台部署作业"""
+    """Cancel a background deployment job"""
     svc = get_deploy_service()
     current = svc.get_job_detail(job_id)
     if not current:
-        raise HTTPException(status_code=404, detail="作业不存在")
+        raise HTTPException(status_code=404, detail="Job does not exist")
     _require_project_scope(request, current.get("project_key", ""))
     job = svc.cancel_job(job_id)
     _audit_deploy_action(
@@ -619,13 +619,13 @@ async def cancel_job(job_id: str, request: Request):
     return ok({"job": job})
 
 
-# ── 日志/历史 ─────────────────────────────────────────────────────────────────
+# ── Logs/history ─────────────────────────────────────────────────────────────────
 @router.get("/logs/{repo_id}", dependencies=DEPLOY_VIEW_ONLY)
 async def get_logs(repo_id: str, request: Request, lines: int = 100):
     svc = get_deploy_service()
     project_key = _find_project_key_for_repo(svc, repo_id)
     if not project_key:
-        raise HTTPException(status_code=404, detail="仓库不存在")
+        raise HTTPException(status_code=404, detail="Repository does not exist")
     _require_project_scope(request, project_key)
     return ok({"logs": svc.get_logs(repo_id, lines)})
 
@@ -637,11 +637,11 @@ async def get_history(request: Request):
 
 @router.delete("/history/{record_id}", dependencies=ADMIN_ONLY)
 async def delete_history_record(record_id: str, request: Request):
-    """删除单条部署记录"""
+    """Delete one deployment record"""
     svc = get_deploy_service()
     record = next((item for item in reversed(svc.history) if item.id == record_id), None)
     if not record:
-        raise HTTPException(status_code=404, detail="记录不存在")
+        raise HTTPException(status_code=404, detail="Record does not exist")
     _require_project_scope(request, record.project_key)
     svc.history = [r for r in svc.history if r.id != record_id]
     svc._save_history()
@@ -652,11 +652,11 @@ async def delete_history_record(record_id: str, request: Request):
         record_id,
         {"record_id": record_id, "project_key": record.project_key},
     )
-    return ok(message="记录已删除")
+    return ok(message="Record deleted")
 
 @router.delete("/history", dependencies=ADMIN_ONLY)
 async def clear_history(request: Request):
-    """清空全部部署历史"""
+    """Clear all deployment history"""
     svc = get_deploy_service()
     svc.history.clear()
     svc._save_history()
@@ -667,13 +667,13 @@ async def clear_history(request: Request):
         "all",
         {"scope": "all"},
     )
-    return ok(message="历史已清空")
+    return ok(message="History cleared")
 
 
-# ── 部署记忆 ─────────────────────────────────────────────────────────────────
+# ── Deployment memory ─────────────────────────────────────────────────────────────────
 @router.get("/repo/{project_key}/{repo_id}/memory", dependencies=DEPLOY_VIEW_ONLY)
 async def get_repo_memory(project_key: str, repo_id: str, request: Request):
-    """获取仓库的部署记忆"""
+    """Get a repository's deployment memory"""
     _require_project_scope(request, project_key)
     svc = get_deploy_service()
     mem = svc._load_memory(repo_id)
@@ -682,7 +682,7 @@ async def get_repo_memory(project_key: str, repo_id: str, request: Request):
 
 @router.delete("/repo/{project_key}/{repo_id}/memory", dependencies=ADMIN_ONLY)
 async def clear_repo_memory(project_key: str, repo_id: str, request: Request):
-    """清除仓库的部署记忆"""
+    """Clear a repository's deployment memory"""
     _require_project_scope(request, project_key)
     svc = get_deploy_service()
     svc.memory.pop(repo_id, None)
@@ -696,4 +696,4 @@ async def clear_repo_memory(project_key: str, repo_id: str, request: Request):
         repo_id,
         {"project_key": project_key, "repo_id": repo_id},
     )
-    return ok(message="记忆已清除")
+    return ok(message="Memory cleared")

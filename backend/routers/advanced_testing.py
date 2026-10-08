@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-高级测试路由 - gRPC、安全扫描、契约测试、报告、调度器、压测、视觉回归
+Advanced testing routes - gRPC, security scanning, contract testing, reports, scheduling, load testing, and visual regression
 """
 from fastapi import APIRouter, HTTPException
 from core.models import (
@@ -24,7 +24,7 @@ router = APIRouter(tags=["Advanced Testing"])
 
 @router.post("/api/test/grpc")
 async def test_grpc(req: GrpcTestRequest):
-    """执行 gRPC 测试"""
+    """Run gRPC tests"""
     service = create_grpc_service(req.host, req.port, req.use_tls)
     request = GrpcRequest(
         service=req.service,
@@ -43,7 +43,7 @@ async def test_grpc(req: GrpcTestRequest):
 
 @router.get("/api/test/grpc/services")
 async def list_grpc_services(host: str, port: int = 50051):
-    """列出 gRPC 服务"""
+    """List gRPC services"""
     service = create_grpc_service(host, port)
     services = await service.list_services()
     return {"status": "success", "services": services}
@@ -53,7 +53,7 @@ async def list_grpc_services(host: str, port: int = 50051):
 
 @router.post("/api/security/scan-enhanced")
 async def enhanced_security_scan(req: EnhancedSecurityScanRequest):
-    """执行增强安全扫描"""
+    """Run enhanced security scanning"""
     scanner = get_enhanced_scanner()
     result = await scanner.scan(req.target_url, req.scan_types)
     report = scanner.generate_report(result)
@@ -64,7 +64,7 @@ async def enhanced_security_scan(req: EnhancedSecurityScanRequest):
 
 @router.post("/api/contract/create")
 async def create_contract(req: ContractCreateRequest):
-    """创建 API 契约"""
+    """Create an API contract"""
     service = get_contract_service()
     contract = service.create_contract(
         req.consumer, req.provider, req.interactions, req.version
@@ -79,7 +79,7 @@ async def create_contract(req: ContractCreateRequest):
 
 @router.post("/api/contract/{contract_id}/verify")
 async def verify_contract(contract_id: str, provider_url: str):
-    """验证契约"""
+    """Validate a contract"""
     service = get_contract_service()
     result = await service.verify_contract(contract_id, provider_url)
     return {
@@ -93,7 +93,7 @@ async def verify_contract(contract_id: str, provider_url: str):
 
 @router.get("/api/contract/stats")
 async def get_contract_stats():
-    """获取契约统计"""
+    """Get contract statistics"""
     return get_contract_service().get_statistics()
 
 
@@ -101,7 +101,7 @@ async def get_contract_stats():
 
 @router.post("/api/report/generate-enhanced")
 async def api_generate_enhanced_report(req: ReportRequest):
-    """生成测试报告"""
+    """Generate a test report"""
     generator = create_report_generator()
 
     test_results = [
@@ -136,7 +136,7 @@ async def api_generate_enhanced_report(req: ReportRequest):
 
 @router.post("/api/scheduler/schedule")
 async def schedule_test(req: ScheduleRequest):
-    """调度测试任务"""
+    """Schedule a test task"""
     scheduler = get_scheduler()
     priority = TaskPriority(req.priority)
     task = scheduler.schedule(req.name, req.test_config, priority, req.scheduled_at)
@@ -150,7 +150,7 @@ async def schedule_test(req: ScheduleRequest):
 
 @router.get("/api/scheduler/queue")
 async def get_scheduler_queue():
-    """获取调度队列"""
+    """Get the scheduling queue"""
     scheduler = get_scheduler()
     return {
         "status": "success",
@@ -162,7 +162,7 @@ async def get_scheduler_queue():
 
 @router.delete("/api/scheduler/{task_id}")
 async def cancel_scheduled_task(task_id: str):
-    """取消调度任务"""
+    """Cancel a scheduled task"""
     scheduler = get_scheduler()
     cancelled = scheduler.cancel(task_id)
     return {"status": "success" if cancelled else "not_found"}
@@ -172,7 +172,7 @@ async def cancel_scheduled_task(task_id: str):
 
 @router.post("/api/loadtest/run")
 async def run_load_test(req: LoadTestRequest):
-    """运行压测"""
+    """Run a load test"""
     tester = get_load_tester()
     config = DistLoadTestConfig(
         target_url=req.target_url,
@@ -186,13 +186,13 @@ async def run_load_test(req: LoadTestRequest):
 
 @router.get("/api/loadtest/status")
 async def get_loadtest_status():
-    """获取压测状态"""
+    """Get load test status"""
     return get_load_tester().get_status()
 
 
 @router.post("/api/loadtest/stop")
 async def stop_load_test():
-    """停止压测"""
+    """Stop a load test"""
     get_load_tester().stop_test()
     return {"status": "stopped"}
 
@@ -201,7 +201,7 @@ async def stop_load_test():
 
 @router.post("/api/visual/baseline")
 async def save_visual_baseline(name: str, image: bytes = None):
-    """保存基线图片"""
+    """Save a baseline image"""
     tester = get_visual_tester()
     if image:
         result = tester.save_baseline(name, image)
@@ -211,7 +211,7 @@ async def save_visual_baseline(name: str, image: bytes = None):
 
 @router.get("/api/visual/baselines")
 async def list_visual_baselines():
-    """列出所有基线"""
+    """List all baselines"""
     return {
         "status": "success",
         "baselines": get_visual_tester().list_baselines()
@@ -220,6 +220,6 @@ async def list_visual_baselines():
 
 @router.delete("/api/visual/baseline/{name}")
 async def delete_visual_baseline(name: str):
-    """删除基线"""
+    """Delete a baseline"""
     deleted = get_visual_tester().delete_baseline(name)
     return {"status": "success" if deleted else "not_found"}

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-合规测试路由
+Compliance testing routes
 """
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -20,7 +20,7 @@ class ComplianceAuditRequest(BaseModel):
 
 @router.post("/audit")
 async def compliance_audit(req: ComplianceAuditRequest):
-    """执行合规审计"""
+    """Run a compliance audit"""
     from services.compliance_testing import create_compliance_service
     try:
         service = create_compliance_service()

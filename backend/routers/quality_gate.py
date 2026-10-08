@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-Quality Gate Router — 质量门禁 API
+Quality Gate Router — Quality gate API
 
-端点：
-- POST /api/quality-gate/check     执行质量门禁检查
-- GET  /api/quality-gate/rules     获取规则列表
-- POST /api/quality-gate/rules     添加/更新规则
-- GET  /api/quality-gate/history   门禁历史
-- POST /api/quality-gate/webhook   GitHub Webhook 入口
+Endpoints:
+- POST /api/quality-gate/check     Run quality gate checks
+- GET  /api/quality-gate/rules     Get the rule list
+- POST /api/quality-gate/rules     Add or update rules
+- GET  /api/quality-gate/history   Quality gate history
+- POST /api/quality-gate/webhook   GitHub webhook entry point
 """
 
 from fastapi import APIRouter, HTTPException, Request
@@ -36,7 +36,7 @@ class AddRuleRequest(BaseModel):
 
 @router.post("/check")
 async def check_quality_gate(req: CheckRequest):
-    """执行质量门禁检查"""
+    """Run quality gate checks"""
     from cicd.quality_gate import get_quality_gate
     gate = get_quality_gate()
     verdict = gate.check(req.metric_scores, req.run_id)
@@ -45,7 +45,7 @@ async def check_quality_gate(req: CheckRequest):
 
 @router.get("/rules")
 async def list_rules():
-    """获取所有门禁规则"""
+    """Get all quality gate rules"""
     from cicd.quality_gate import get_quality_gate
     gate = get_quality_gate()
     return ok({"rules": gate.list_rules()})
@@ -53,7 +53,7 @@ async def list_rules():
 
 @router.post("/rules")
 async def add_rule(req: AddRuleRequest):
-    """添加/更新质量门禁规则"""
+    """Add or update a quality gate rule"""
     from cicd.quality_gate import get_quality_gate, GateRule
     gate = get_quality_gate()
     rule = GateRule(
@@ -70,12 +70,12 @@ async def add_rule(req: AddRuleRequest):
 
 @router.post("/rules/import/{playbook_id}")
 async def import_rules_from_playbook(playbook_id: str):
-    """导入项目级质量门禁规则。"""
+    """Import project-level quality gate rules."""
     from cicd.quality_gate import get_quality_gate, GateRule
 
     rules = get_quality_gate_rules(playbook_id)
     if not rules:
-        raise HTTPException(status_code=404, detail="门禁规则包不存在")
+        raise HTTPException(status_code=404, detail="Quality gate rule package does not exist")
 
     gate = get_quality_gate()
     playbook_meta = get_playbook_catalog_entry(playbook_id) or {}
@@ -102,7 +102,7 @@ async def gate_history(
     run_id: str = "",
     status: str = "",
 ):
-    """获取门禁检查历史"""
+    """Get quality gate check history"""
     from cicd.quality_gate import get_quality_gate
     gate = get_quality_gate()
     history = gate.get_history(limit=limit, run_id=run_id, status=status)
@@ -111,7 +111,7 @@ async def gate_history(
 
 @router.post("/webhook")
 async def github_webhook(request: Request):
-    """GitHub Webhook 入口 — 接收 PR 事件"""
+    """GitHub webhook entry point — Receive PR events"""
     try:
         payload = await request.json()
         from cicd import GitHubIntegration
@@ -120,5 +120,5 @@ async def github_webhook(request: Request):
         result = gh.process_webhook(payload)
         return {"status": "success", **result}
     except Exception as e:
-        logger.error(f"Webhook 处理失败: {e}")
+        logger.error(f"Webhook processing failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))

@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-Semantic Router — 语义驱动测试 API
+Semantic Router — Semantic testing API
 
-端点：
-- POST /api/semantic/action  执行语义操作
-- POST /api/semantic/assert  语义断言
-- POST /api/semantic/query   语义查询
-- POST /api/semantic/analyze 页面语义分析
+Endpoints:
+- POST /api/semantic/action  Execute a semantic action
+- POST /api/semantic/assert  Semantic assertion
+- POST /api/semantic/query   Semantic query
+- POST /api/semantic/analyze Semantic page analysis
 """
 
 from fastapi import APIRouter, HTTPException
@@ -22,7 +22,7 @@ router = APIRouter(prefix="/api/semantic", tags=["semantic"])
 
 
 async def _resolve_page_attr(page, attr_name: str, *args, default=None, **kwargs):
-    """兼容 async/sync Playwright Page 的属性与方法读取。"""
+    """Support reading properties and methods on async and sync Playwright Page objects."""
     try:
         value = getattr(page, attr_name)
         if callable(value):
@@ -57,7 +57,7 @@ async def _capture_semantic_frames(session_id: str, session, page):
 
 @router.get("/sessions")
 async def list_active_sessions():
-    """列出所有有活跃浏览器页面的会话"""
+    """List all sessions with an active browser page"""
     from core.session_manager import session_manager
     all_ids = session_manager.list_sessions()
     active = []
@@ -79,13 +79,13 @@ class StartBrowserRequest(BaseModel):
     url: str = ""
     session_id: str = "semantic_session"
 
-# 存储语义测试的 Playwright 实例（用于清理）
+# Store the semantic testing Playwright instance for cleanup
 _semantic_browsers: Dict[str, Dict[str, Any]] = {}
 
 
 @router.post("/start-browser")
 async def start_semantic_browser(req: StartBrowserRequest):
-    """为语义测试独立启动一个浏览器"""
+    """Launch a separate browser for semantic testing"""
     from core.session_manager import session_manager
     from playwright.async_api import async_playwright
 
@@ -151,12 +151,12 @@ async def start_semantic_browser(req: StartBrowserRequest):
         if pw is not None:
             with suppress(Exception):
                 await pw.stop()
-        raise HTTPException(status_code=500, detail=f"浏览器启动失败: {e}")
+        raise HTTPException(status_code=500, detail=f"Browser launch failed: {e}")
 
 
 @router.post("/stop-browser")
 async def stop_semantic_browser(session_id: str = "semantic_session"):
-    """停止语义测试浏览器"""
+    """Stop the semantic testing browser"""
     from core.session_manager import session_manager
 
     if session_id in _semantic_browsers:
@@ -198,13 +198,13 @@ class SemanticQueryRequest(BaseModel):
 
 @router.post("/action")
 async def semantic_action(req: SemanticActionRequest):
-    """执行语义操作：如 '点击登录按钮', '在搜索框中输入AI测试'"""
+    """Execute a semantic action, such as 'Click the login button' or 'Enter AI testing in the search box'"""
     from core.session_manager import session_manager
 
     session = session_manager.get_session(req.session_id)
     page = session.get_page()
     if not page:
-        raise HTTPException(status_code=400, detail="当前无活跃浏览器会话")
+        raise HTTPException(status_code=400, detail="No active browser session")
 
     from core.semantic_actions import ai_action
     result = await ai_action(page, req.instruction)
@@ -213,13 +213,13 @@ async def semantic_action(req: SemanticActionRequest):
 
 @router.post("/assert")
 async def semantic_assert(req: SemanticAssertRequest):
-    """执行语义断言：如 '页面显示登录成功', '搜索结果至少5条'"""
+    """Evaluate a semantic assertion, such as 'The page shows a successful login' or 'There are at least five search results'"""
     from core.session_manager import session_manager
 
     session = session_manager.get_session(req.session_id)
     page = session.get_page()
     if not page:
-        raise HTTPException(status_code=400, detail="当前无活跃浏览器会话")
+        raise HTTPException(status_code=400, detail="No active browser session")
 
     from core.semantic_actions import ai_assert
     result = await ai_assert(page, req.assertion)
@@ -228,13 +228,13 @@ async def semantic_assert(req: SemanticAssertRequest):
 
 @router.post("/query")
 async def semantic_query(req: SemanticQueryRequest):
-    """语义查询页面数据：如 '获取搜索结果标题列表'"""
+    """Query page data semantically, such as 'Get the list of search result titles'"""
     from core.session_manager import session_manager
 
     session = session_manager.get_session(req.session_id)
     page = session.get_page()
     if not page:
-        raise HTTPException(status_code=400, detail="当前无活跃浏览器会话")
+        raise HTTPException(status_code=400, detail="No active browser session")
 
     from core.semantic_actions import ai_query
     result = await ai_query(page, req.query)
@@ -243,7 +243,7 @@ async def semantic_query(req: SemanticQueryRequest):
 
 @router.post("/analyze")
 async def semantic_analyze(session_id: str = "default_session"):
-    """分析当前页面的语义上下文"""
+    """Analyze the current page's semantic context"""
     import base64
     from core.session_manager import session_manager
     from core.semantic_engine import get_visual_analyzer
@@ -251,13 +251,13 @@ async def semantic_analyze(session_id: str = "default_session"):
     session = session_manager.get_session(session_id)
     page = session.get_page()
     if not page:
-        raise HTTPException(status_code=400, detail="当前无活跃浏览器会话")
+        raise HTTPException(status_code=400, detail="No active browser session")
 
     try:
-        # 截图
+        # Take a screenshot
         screenshot = await _resolve_page_attr(page, "screenshot", type="jpeg", quality=60, default=None)
         if not screenshot:
-            raise RuntimeError("无法获取页面截图")
+            raise RuntimeError("Cannot capture a page screenshot")
         b64 = base64.b64encode(screenshot).decode("utf-8")
 
         analyzer = get_visual_analyzer()
@@ -272,4 +272,4 @@ async def semantic_analyze(session_id: str = "default_session"):
             "analysis": analysis,
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"分析失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")

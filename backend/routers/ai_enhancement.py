@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-AI 增强路由 - 智能策略、自愈、知识库
+AI enhancement routes - intelligent strategies, healing, and knowledge base
 """
 from fastapi import APIRouter
 from core.models import StrategyRequest, KnowledgeRecordRequest
@@ -13,7 +13,7 @@ router = APIRouter(prefix="/api/ai", tags=["AI Enhancement"])
 
 @router.post("/strategy")
 async def ai_select_strategy(req: StrategyRequest):
-    """AI 智能选择测试策略"""
+    """Select a test strategy with AI"""
     selector = get_strategy_selector()
     strategy = selector.select_strategy(req.requirement, req.target_url)
     return {
@@ -33,21 +33,21 @@ async def ai_select_strategy(req: StrategyRequest):
 
 @router.get("/healing/stats")
 async def get_healing_stats():
-    """获取自愈引擎统计"""
+    """Get healing engine statistics"""
     engine = get_healing_engine()
     return {"status": "success", "stats": engine.get_statistics()}
 
 
 @router.get("/knowledge/stats")
 async def get_knowledge_stats():
-    """获取知识库统计"""
+    """Get knowledge base statistics"""
     kb = get_knowledge_base()
     return {"status": "success", "stats": kb.get_statistics()}
 
 
 @router.post("/knowledge/record")
 async def record_test_knowledge(req: KnowledgeRecordRequest):
-    """记录测试结果到知识库"""
+    """Record test results in the knowledge base"""
     kb = get_knowledge_base()
     case = kb.record_test(
         requirement=req.requirement,
@@ -62,7 +62,7 @@ async def record_test_knowledge(req: KnowledgeRecordRequest):
 
 @router.post("/knowledge/recommend")
 async def recommend_test_types(req: StrategyRequest):
-    """根据历史推荐测试类型"""
+    """Recommend test types based on history"""
     kb = get_knowledge_base()
     recommendations = kb.recommend_test_types(req.requirement)
     return {"status": "success", "recommendations": recommendations}
@@ -70,6 +70,6 @@ async def recommend_test_types(req: StrategyRequest):
 
 @router.get("/knowledge/report")
 async def export_knowledge_report():
-    """导出知识库报告"""
+    """Export a knowledge base report"""
     kb = get_knowledge_base()
     return {"status": "success", "report": kb.export_report()}

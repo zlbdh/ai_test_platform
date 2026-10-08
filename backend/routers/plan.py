@@ -1,6 +1,6 @@
 """
-Plan & AI Config Router — 从 main.py 迁移
-包含测试计划生成 + AI/LLM 配置管理
+Plan & AI Config Router — Migrated from main.py
+Includes test plan generation and AI/LLM configuration management
 """
 from fastapi import APIRouter
 import logging
@@ -14,7 +14,7 @@ router = APIRouter(tags=["plan"])
 
 @router.post("/api/plan/generate")
 async def generate_test_plan(req: PlanGenerateRequest):
-    """生成测试计划"""
+    """Generate a test plan"""
     try:
         result = await planner_service.generate_plan(
             req.requirement,
@@ -41,7 +41,7 @@ async def generate_test_plan(req: PlanGenerateRequest):
         if not steps:
             return {
                 "status": "error",
-                "message": "LLM 未能生成有效的测试步骤，请检查 API Key 配置或网络连接",
+                "message": "The LLM could not generate valid test steps. Check the API key configuration and network connection",
                 "steps": [],
                 "scenarios": [],
                 "sources": [],
@@ -65,14 +65,14 @@ async def generate_test_plan(req: PlanGenerateRequest):
 
 @router.get("/api/config/ai")
 async def get_ai_config():
-    """获取当前 AI/LLM 配置（API Key 脱敏）"""
+    """Get current AI/LLM configuration with API keys redacted"""
     from core.config import Config
     return {"status": "success", "config": Config.get_llm_config()}
 
 
 @router.post("/api/config/ai")
 async def update_ai_config(req: AIConfigUpdate):
-    """动态更新 AI/LLM 配置"""
+    """Update AI/LLM configuration dynamically"""
     from core.config import Config
     Config.update_llm_config(
         provider=req.provider,

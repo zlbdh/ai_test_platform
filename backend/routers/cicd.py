@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-CI/CD 集成路由 - Jenkins/GitLab Webhook & Reports
+CI/CD integration routes - Jenkins/GitLab Webhook & Reports
 """
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse

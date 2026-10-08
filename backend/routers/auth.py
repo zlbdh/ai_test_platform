@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-认证系统路由 - 用户认证、项目管理、审计日志
+Authentication routes - user authentication, project management, and audit logs
 """
 from fastapi import APIRouter, HTTPException, Depends
 from core.models import LoginRequest, RegisterRequest, CreateProjectRequest
@@ -12,7 +12,7 @@ router = APIRouter(tags=["Authentication"])
 
 @router.post("/api/auth/login")
 async def auth_login(req: LoginRequest):
-    """用户登录"""
+    """User login"""
     auth = get_auth_service()
     session = auth.authenticate(req.username, req.password)
     if not session:
@@ -26,7 +26,7 @@ async def auth_login(req: LoginRequest):
 
 @router.post("/api/auth/register")
 async def auth_register(req: RegisterRequest):
-    """用户注册"""
+    """User registration"""
     auth = get_auth_service()
     for u in auth.users.values():
         if u.username == req.username:
@@ -37,7 +37,7 @@ async def auth_register(req: RegisterRequest):
 
 @router.post("/api/auth/logout")
 async def auth_logout(token: str = Depends(extract_request_token)):
-    """用户登出"""
+    """User logout"""
     if not token:
         raise HTTPException(status_code=401, detail="Authentication token required")
     auth = get_auth_service()
@@ -47,7 +47,7 @@ async def auth_logout(token: str = Depends(extract_request_token)):
 
 @router.get("/api/auth/me")
 async def auth_me(user: User = Depends(require_authenticated_user)):
-    """获取当前用户信息"""
+    """Get the current user's information"""
     return {
         "status": "success",
         "user": {
@@ -63,7 +63,7 @@ async def auth_me(user: User = Depends(require_authenticated_user)):
 
 @router.post("/api/projects")
 async def create_project(req: CreateProjectRequest, token: str):
-    """创建项目"""
+    """Create a project"""
     auth = get_auth_service()
     user = auth.validate_token(token)
     if not user:
@@ -74,7 +74,7 @@ async def create_project(req: CreateProjectRequest, token: str):
 
 @router.get("/api/projects")
 async def list_projects(token: str):
-    """获取项目列表"""
+    """Get the project list"""
     auth = get_auth_service()
     user = auth.validate_token(token)
     if not user:
@@ -93,7 +93,7 @@ async def list_projects(token: str):
 
 @router.get("/api/audit/logs")
 async def get_audit_logs(token: str, limit: int = 100):
-    """获取审计日志 (仅管理员)"""
+    """Get audit logs (administrators only)"""
     auth = get_auth_service()
     user = auth.validate_token(token)
     if not user or not auth.check_permission(user, Permission.ADMIN):

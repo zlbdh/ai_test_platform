@@ -25,7 +25,7 @@ async def test_db_execute_records_success_to_execution_center():
     assert result["status"] == "success"
     recorder.record_database_result.assert_called_once()
     kwargs = recorder.record_database_result.call_args.kwargs
-    assert kwargs["action"] == "SQL 执行"
+    assert kwargs["action"] == "SQL execution"
     assert kwargs["success"] is True
     assert kwargs["execution_group_id"] == "batch_demo"
     assert kwargs["session_id"] == "sess_demo"
@@ -49,7 +49,7 @@ async def test_db_execute_records_failure_to_execution_center():
 
     recorder.record_database_result.assert_called_once()
     kwargs = recorder.record_database_result.call_args.kwargs
-    assert kwargs["action"] == "SQL 执行"
+    assert kwargs["action"] == "SQL execution"
     assert kwargs["success"] is False
     assert kwargs["message"] == "boom"
 
@@ -89,7 +89,7 @@ async def test_managed_query_post_records_success_to_execution_center():
     manager.query_data.assert_called_once_with("conn_demo", "SELECT COUNT(*) AS total FROM distributor", 50)
     recorder.record_database_result.assert_called_once()
     kwargs = recorder.record_database_result.call_args.kwargs
-    assert kwargs["action"] == "查询"
+    assert kwargs["action"] == "Query"
     assert kwargs["success"] is True
     assert "128 ms" in kwargs["message"]
     assert kwargs["execution_group_id"] == "batch_demo"
@@ -123,6 +123,6 @@ async def test_managed_query_get_keeps_backwards_compatibility():
     manager.query_data.assert_called_once_with("conn_demo", "DELETE FROM distributor", 10)
     recorder.record_database_result.assert_called_once()
     kwargs = recorder.record_database_result.call_args.kwargs
-    assert kwargs["action"] == "查询"
+    assert kwargs["action"] == "Query"
     assert kwargs["success"] is False
     assert "Only SELECT" in kwargs["message"]

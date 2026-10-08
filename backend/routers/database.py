@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-数据库测试路由 — 整合 core/db_tools.py + services/database_manager.py
+Database testing routes — integrates core/db_tools.py and services/database_manager.py
 """
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -58,7 +58,7 @@ class ManagedQueryRequest(BaseModel):
 
 @router.post("/execute")
 async def db_execute(req: SQLExecuteRequest):
-    """执行 SQL 查询（安全模式）"""
+    """Execute an SQL query (safe mode)"""
     from core.db_tools import execute_sql
     try:
         result = execute_sql(req.sql, allow_unsafe=req.allow_unsafe)
@@ -66,14 +66,14 @@ async def db_execute(req: SQLExecuteRequest):
         preview = preview[:120] + ("..." if len(preview) > 120 else "")
         success = str(result.get("status", "success")) != "error"
         if success and result.get("count") is not None:
-            message = f"{preview} · 返回 {result.get('count', 0)} 行"
+            message = f"{preview} · {result.get('count', 0)} rows returned"
         elif success and result.get("affected_rows") is not None:
-            message = f"{preview} · 影响 {result.get('affected_rows', 0)} 行"
+            message = f"{preview} · {result.get('affected_rows', 0)} rows affected"
         else:
-            message = str(result.get("message") or result.get("error") or preview or "SQL 执行完成")
+            message = str(result.get("message") or result.get("error") or preview or "SQL execution completed")
         get_execution_center_service().record_database_result(
-            action="SQL 执行",
-            connection_name="内置数据库",
+            action="SQL execution",
+            connection_name="Built-in database",
             db_type="sqlite",
             database="platform",
             success=success,
@@ -85,8 +85,8 @@ async def db_execute(req: SQLExecuteRequest):
         return result
     except Exception as e:
         get_execution_center_service().record_database_result(
-            action="SQL 执行",
-            connection_name="内置数据库",
+            action="SQL execution",
+            connection_name="Built-in database",
             db_type="sqlite",
             database="platform",
             success=False,
@@ -100,7 +100,7 @@ async def db_execute(req: SQLExecuteRequest):
 
 @router.get("/schema")
 async def db_schema():
-    """获取数据库 Schema"""
+    """Get the database schema"""
     from core.db_tools import get_db_schema
     try:
         schema = get_db_schema()
@@ -111,17 +111,17 @@ async def db_schema():
 
 @router.post("/snapshot")
 async def db_snapshot(req: SnapshotRequest):
-    """创建数据快照"""
+    """Create a data snapshot"""
     from core.db_tools import snapshot_db
     try:
         result = snapshot_db(req.table, req.condition)
         get_execution_center_service().record_database_result(
-            action="数据快照",
-            connection_name="内置数据库",
+            action="Data snapshot",
+            connection_name="Built-in database",
             db_type="sqlite",
             database="platform",
             success=bool(result.get("status") == "success"),
-            message=result.get("message") or f"{req.table} · 条件 {req.condition or '1=1'}",
+            message=result.get("message") or f"{req.table} · Condition: {req.condition or '1=1'}",
             execution_group_id=req.execution_group_id,
             session_id=req.session_id,
             group_title=req.group_title,
@@ -129,8 +129,8 @@ async def db_snapshot(req: SnapshotRequest):
         return result
     except Exception as e:
         get_execution_center_service().record_database_result(
-            action="数据快照",
-            connection_name="内置数据库",
+            action="Data snapshot",
+            connection_name="Built-in database",
             db_type="sqlite",
             database="platform",
             success=False,
@@ -144,7 +144,7 @@ async def db_snapshot(req: SnapshotRequest):
 
 @router.post("/diff")
 async def db_diff(req: DiffRequest):
-    """与快照比对差异"""
+    """Compare differences against a snapshot"""
     from core.db_tools import diff_db
     try:
         result = diff_db(req.snapshot_data, req.table, req.condition)
@@ -152,12 +152,12 @@ async def db_diff(req: DiffRequest):
         removed = len(result.get("removed", []) or [])
         changed = len(result.get("changed", []) or [])
         get_execution_center_service().record_database_result(
-            action="快照比对",
-            connection_name="内置数据库",
+            action="Snapshot comparison",
+            connection_name="Built-in database",
             db_type="sqlite",
             database="platform",
             success=bool(result.get("status") == "success"),
-            message=result.get("message") or f"{req.table} · 新增 {added} / 删除 {removed} / 变更 {changed}",
+            message=result.get("message") or f"{req.table} · Added {added} / removed {removed} / changed {changed}",
             execution_group_id=req.execution_group_id,
             session_id=req.session_id,
             group_title=req.group_title,
@@ -165,8 +165,8 @@ async def db_diff(req: DiffRequest):
         return result
     except Exception as e:
         get_execution_center_service().record_database_result(
-            action="快照比对",
-            connection_name="内置数据库",
+            action="Snapshot comparison",
+            connection_name="Built-in database",
             db_type="sqlite",
             database="platform",
             success=False,
@@ -180,17 +180,17 @@ async def db_diff(req: DiffRequest):
 
 @router.post("/backup")
 async def db_backup(req: BackupRequest):
-    """备份数据库"""
+    """Back up the database"""
     from core.db_tools import backup_db
     try:
         result = backup_db(req.table_name)
         get_execution_center_service().record_database_result(
-            action="数据库备份",
-            connection_name="内置数据库",
+            action="Database backup",
+            connection_name="Built-in database",
             db_type="sqlite",
             database="platform",
             success=bool(result.get("status") == "success"),
-            message=result.get("message") or f"备份 {req.table_name or '全部表'}",
+            message=result.get("message") or f"Back up {req.table_name or 'all tables'}",
             execution_group_id=req.execution_group_id,
             session_id=req.session_id,
             group_title=req.group_title,
@@ -198,8 +198,8 @@ async def db_backup(req: BackupRequest):
         return result
     except Exception as e:
         get_execution_center_service().record_database_result(
-            action="数据库备份",
-            connection_name="内置数据库",
+            action="Database backup",
+            connection_name="Built-in database",
             db_type="sqlite",
             database="platform",
             success=False,
@@ -213,7 +213,7 @@ async def db_backup(req: BackupRequest):
 
 @router.get("/tables")
 async def db_list_tables():
-    """列出所有表"""
+    """List all tables"""
     from core.db_tools import list_db_tables
     try:
         result = list_db_tables()
@@ -271,12 +271,12 @@ async def test_db_connection(
     conn_meta = mgr.connections.get(conn_id)
     if conn_meta:
         get_execution_center_service().record_database_result(
-            action="连接测试",
+            action="Connection test",
             connection_name=conn_meta.name,
             db_type=conn_meta.db_type,
             database=conn_meta.database,
             success=bool(result.get("success")),
-            message=result.get("message") or result.get("error") or "数据库连接测试完成",
+            message=result.get("message") or result.get("error") or "Database connection test completed",
             execution_group_id=execution_group_id,
             session_id=session_id,
             group_title=group_title,
@@ -321,7 +321,7 @@ def _run_managed_query(
     session_id: str = "default_session",
     group_title: Optional[str] = None,
 ):
-    """执行托管数据库 SELECT 查询，并统一记录到执行中心。"""
+    """Run a SELECT query on a managed database and record it in the execution center."""
     mgr = get_database_manager()
     result = mgr.query_data(conn_id, sql, limit)
     conn_meta = mgr.connections.get(conn_id)
@@ -329,12 +329,12 @@ def _run_managed_query(
         preview = sql.strip().replace("\n", " ")
         preview = preview[:120] + ("..." if len(preview) > 120 else "")
         get_execution_center_service().record_database_result(
-            action="查询",
+            action="Query",
             connection_name=conn_meta.name,
             db_type=conn_meta.db_type,
             database=conn_meta.database,
             success=bool(result.get("success")),
-            message=result.get("error") or result.get("message") or f"{preview} · 返回 {result.get('count', 0)} 行",
+            message=result.get("error") or result.get("message") or f"{preview} · {result.get('count', 0)} rows returned",
             duration_ms=int(result.get("elapsed_ms") or 0),
             execution_group_id=execution_group_id,
             session_id=session_id,
@@ -397,12 +397,12 @@ async def validate_data(
             for rule, item in zip(req.rules, result.get("results", []))
         ]
         get_execution_center_service().record_database_result(
-            action="验证",
+            action="Validation",
             connection_name=conn_meta.name,
             db_type=conn_meta.db_type,
             database=conn_meta.database,
             success=bool(result.get("success")),
-            message=f"通过 {result.get('passed', 0)} / 失败 {result.get('failed', 0)}",
+            message=f"Passed {result.get('passed', 0)} / failed {result.get('failed', 0)}",
             detail_items=detail_items,
             execution_group_id=execution_group_id,
             session_id=session_id,

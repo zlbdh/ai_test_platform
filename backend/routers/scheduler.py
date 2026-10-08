@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-定时任务路由 — 支持 Cron 表达式定时执行测试
-数据持久化到 SQLite
+Scheduled task routes — supports scheduled tests with Cron expressions
+Persist data to SQLite
 """
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/scheduler", tags=["scheduler"])
 
 
-# ── 初始化表 ──
+# ── Initialize tables ──
 
 def _init_table():
     with get_connection() as conn:
@@ -39,7 +39,7 @@ def _init_table():
 _init_table()
 
 
-# ── 数据模型 ──
+# ── Data models ──
 
 class ScheduledTask(BaseModel):
     name: str
@@ -52,7 +52,7 @@ class ScheduledTask(BaseModel):
 
 
 def _row_to_dict(row: dict) -> dict:
-    """将数据库行转为前端格式"""
+    """Convert a database row to the frontend format"""
     result = dict(row)
     result["enabled"] = bool(result.pop("enabled", 1))
     result["notify_on_complete"] = bool(result.pop("notify_on_complete", 1))
@@ -65,14 +65,14 @@ def _row_to_dict(row: dict) -> dict:
 
 @router.get("/tasks")
 async def list_tasks():
-    """列出所有定时任务"""
+    """List all scheduled tasks"""
     rows = query_all("SELECT * FROM scheduler_tasks ORDER BY created_at DESC")
     return {"tasks": [_row_to_dict(r) for r in rows]}
 
 
 @router.post("/tasks")
 async def create_task(task: ScheduledTask):
-    """创建定时任务"""
+    """Create a scheduled task"""
     tid = f"sched_{uuid.uuid4().hex[:8]}"
     next_run = _calc_next_run(task.cron)
     execute(
@@ -91,7 +91,7 @@ async def create_task(task: ScheduledTask):
 
 @router.put("/tasks/{task_id}")
 async def update_task(task_id: str, task: ScheduledTask):
-    """更新定时任务"""
+    """Update a scheduled task"""
     existing = query_one("SELECT id FROM scheduler_tasks WHERE id=?", (task_id,))
     if not existing:
         raise HTTPException(status_code=404, detail="Task not found")
@@ -110,7 +110,7 @@ async def update_task(task_id: str, task: ScheduledTask):
 
 @router.delete("/tasks/{task_id}")
 async def delete_task(task_id: str):
-    """删除定时任务"""
+    """Delete a scheduled task"""
     affected = execute("DELETE FROM scheduler_tasks WHERE id=?", (task_id,))
     if affected == 0:
         raise HTTPException(status_code=404, detail="Task not found")
@@ -119,7 +119,7 @@ async def delete_task(task_id: str):
 
 @router.post("/tasks/{task_id}/toggle")
 async def toggle_task(task_id: str):
-    """启用/禁用定时任务"""
+    """Enable/disable a scheduled task"""
     row = query_one("SELECT enabled FROM scheduler_tasks WHERE id=?", (task_id,))
     if not row:
         raise HTTPException(status_code=404, detail="Task not found")
@@ -130,7 +130,7 @@ async def toggle_task(task_id: str):
 
 @router.post("/tasks/{task_id}/run-now")
 async def run_task_now(task_id: str):
-    """立即执行定时任务"""
+    """Run a scheduled task immediately"""
     row = query_one("SELECT * FROM scheduler_tasks WHERE id=?", (task_id,))
     if not row:
         raise HTTPException(status_code=404, detail="Task not found")
@@ -138,7 +138,7 @@ async def run_task_now(task_id: str):
     execute("UPDATE scheduler_tasks SET last_run=?, status='running' WHERE id=?", (now, task_id))
     logger.info(f"[Scheduler] Manual trigger: {row['name']}")
 
-    # 后台异步执行
+    # Execute asynchronously in the background
     import asyncio
     task_data = _row_to_dict(row)
     asyncio.create_task(_execute_task(task_id, task_data))
@@ -148,7 +148,7 @@ async def run_task_now(task_id: str):
 
 
 async def _execute_task(task_id: str, task_data: dict):
-    """后台执行定时任务"""
+    """Run a scheduled task in the background"""
     task_type = task_data.get("task_type", "exploratory")
     config = task_data.get("config", {})
     name = task_data.get("name", "unknown")
@@ -157,7 +157,7 @@ async def _execute_task(task_id: str, task_data: dict):
         logger.info(f"[Scheduler] Executing {name} (type={task_type})")
 
         if task_type == "exploratory":
-            # 调用探索性测试 API
+            # Call the exploratory testing API
             import httpx
             url = config.get("url", "")
             if url:
@@ -167,7 +167,7 @@ async def _execute_task(task_id: str, task_data: dict):
                     resp = await client.post(
                         "http://localhost:8020/api/start",
                         json={
-                            "requirement": f"探索性测试 {url}",
+                            "requirement": f"Exploratory testing {url}",
                             "target_url": url,
                             "planner_mode": planner_mode,
                             "session_id": session_id,
@@ -179,7 +179,7 @@ async def _execute_task(task_id: str, task_data: dict):
 
         elif task_type == "commander":
             import httpx
-            goal = config.get("goal", f"全面测试 {config.get('url', '')}")
+            goal = config.get("goal", f"Comprehensive testing {config.get('url', '')}")
             async with httpx.AsyncClient(timeout=300) as client:
                 resp = await client.post(
                     "http://localhost:8020/api/commander/run",
@@ -199,14 +199,14 @@ async def _execute_task(task_id: str, task_data: dict):
         execute("UPDATE scheduler_tasks SET status='completed', next_run=? WHERE id=?",
                 (_calc_next_run(task_data.get("cron", "0 8 * * *")), task_id))
 
-        # 发送通知
+        # Send notifications
         if task_data.get("notify_on_complete", True):
             try:
                 from core.notify_helper import send_completion_notification
                 await send_completion_notification(
-                    title=f"定时任务完成: {name}",
+                    title=f"Scheduled task completed: {name}",
                     status="completed",
-                    summary=f"任务类型: {task_type}\n配置: {json.dumps(config, ensure_ascii=False)[:200]}",
+                    summary=f"Task type: {task_type}\nConfiguration: {json.dumps(config, ensure_ascii=False)[:200]}",
                 )
             except Exception:
                 pass
@@ -216,10 +216,10 @@ async def _execute_task(task_id: str, task_data: dict):
         execute("UPDATE scheduler_tasks SET status='failed' WHERE id=?", (task_id,))
 
 
-# ── Cron 计算 (简化版) ──
+# ── Cron calculation (simplified) ──
 
 def _calc_next_run(cron: str) -> str:
-    """简化版 cron 下次执行时间计算"""
+    """Simplified calculation of the next Cron execution time"""
     try:
         parts = cron.split()
         if len(parts) == 5:
@@ -234,11 +234,11 @@ def _calc_next_run(cron: str) -> str:
     return datetime.now().isoformat()
 
 
-# ── 调度器状态 ──
+# ── Scheduler status ──
 
 @router.get("/status")
 async def scheduler_status():
-    """获取调度器运行状态"""
+    """Get scheduler runtime status"""
     rows = query_all("SELECT enabled FROM scheduler_tasks")
     return {
         "running": True,

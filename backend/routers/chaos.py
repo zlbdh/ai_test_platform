@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-混沌工程路由
+Chaos engineering routes
 """
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -20,7 +20,7 @@ class ChaosRunRequest(BaseModel):
 
 @router.post("/run")
 async def chaos_run(req: ChaosRunRequest):
-    """运行混沌测试场景"""
+    """Run chaos testing scenarios"""
     from services.chaos_engineering import create_chaos_service
     try:
         service = create_chaos_service()
@@ -28,15 +28,15 @@ async def chaos_run(req: ChaosRunRequest):
         report_dict = report.to_dict()
         get_execution_center_service().record_specialized_result(
             mode="chaos",
-            title=f"混沌测试 · {req.url}",
+            title=f"Chaos testing · {req.url}",
             target_url=req.url,
             success=int(report_dict.get("failed", 0) or 0) == 0 and int(report_dict.get("errors", 0) or 0) == 0,
-            summary=report_dict.get("summary") or f"场景 {report_dict.get('scenarios_run', 0)} 个",
+            summary=report_dict.get("summary") or f"{report_dict.get('scenarios_run', 0)} scenarios",
             detail_items=[
                 {
                     "target": item.get("scenario") or "chaos-scenario",
                     "passed": item.get("status") == "passed",
-                    "message": item.get("details") or f"耗时 {int(item.get('duration_ms', 0) or 0)}ms",
+                    "message": item.get("details") or f"Duration: {int(item.get('duration_ms', 0) or 0)}ms",
                 }
                 for item in (report_dict.get("results", []) or [])
             ],
@@ -50,7 +50,7 @@ async def chaos_run(req: ChaosRunRequest):
     except Exception as e:
         get_execution_center_service().record_specialized_result(
             mode="chaos",
-            title=f"混沌测试 · {req.url}",
+            title=f"Chaos testing · {req.url}",
             target_url=req.url,
             success=False,
             summary=str(e),
@@ -64,7 +64,7 @@ async def chaos_run(req: ChaosRunRequest):
 
 @router.get("/scenarios")
 async def chaos_list_scenarios():
-    """列出可用混沌场景"""
+    """List available chaos scenarios"""
     from services.chaos_engineering import create_chaos_service
     service = create_chaos_service()
     return {"scenarios": service.list_scenarios()}

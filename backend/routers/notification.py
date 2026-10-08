@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-通知服务路由 — 测试完成后发送 Webhook 通知
-支持钉钉、企业微信、通知平台、自定义 Webhook
-数据持久化到 SQLite
+Notification routes — send webhook notifications after tests finish
+Supports DingTalk, WeCom, the notification platform, and custom webhooks
+Persist data to SQLite
 """
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/notify", tags=["notification"])
 
 
-# ── 初始化表 ──
+# ── Initialize tables ──
 
 def _get_columns(conn, table_name: str) -> set[str]:
     rows = conn.execute(f"PRAGMA table_info({table_name})").fetchall()
@@ -54,7 +54,7 @@ def _init_table():
 _init_table()
 
 
-# ── 数据模型 ──
+# ── Data models ──
 
 class WebhookConfig(BaseModel):
     name: str
@@ -73,7 +73,7 @@ class WebhookUpdateRequest(BaseModel):
 
 
 class NotificationPayload(BaseModel):
-    title: str = "AI 测试报告"
+    title: str = "AI test report"
     status: str = "completed"
     summary: str = ""
     details: Optional[dict] = None
@@ -81,9 +81,9 @@ class NotificationPayload(BaseModel):
 
 
 class NotificationDrillPayload(BaseModel):
-    title: str = "平台告警演练"
+    title: str = "Platform alert drill"
     status: str = "warning"
-    summary: str = "这是一条平台生产告警演练消息，用于验证启用中的 Webhook 是否真正可达。"
+    summary: str = "This production alert drill checks whether enabled webhooks are actually reachable."
 
 
 # ── CRUD ──
@@ -96,13 +96,13 @@ def _build_overview(rows: List[dict]) -> dict:
     production_ready = len(healthy_enabled) > 0
 
     if not enabled:
-        summary = "尚未配置启用中的生产告警 Webhook"
+        summary = "No enabled production alert webhook is configured"
     elif not tested_enabled:
-        summary = f"已配置 {len(enabled)} 个 Webhook，但还没有任何已验证的告警通道"
+        summary = f"{len(enabled)} webhooks configured, but no alert channel has been verified"
     elif not healthy_enabled:
-        summary = f"已配置 {len(enabled)} 个 Webhook，但最近测试都未通过"
+        summary = f"{len(enabled)} webhooks configured, but all recent tests failed"
     else:
-        summary = f"已配置 {len(enabled)} 个 Webhook，其中 {len(healthy_enabled)} 个最近测试通过"
+        summary = f"{len(enabled)} webhooks configured; {len(healthy_enabled)} passed recent tests"
 
     return {
         "total": total,
@@ -173,7 +173,7 @@ async def _deliver_webhook_test(row: dict, title: str, status: str, summary: str
         async with httpx.AsyncClient(timeout=10) as client:
             resp = await client.post(row["url"], json=payload)
             ok = resp.status_code < 300
-            message = "发送成功" if ok else f"HTTP {resp.status_code}"
+            message = "Sent successfully" if ok else f"HTTP {resp.status_code}"
             execute(
                 """
                 UPDATE notification_webhooks
@@ -216,7 +216,7 @@ async def _deliver_webhook_test(row: dict, title: str, status: str, summary: str
 
 @router.get("/webhooks")
 async def list_webhooks():
-    """列出所有 Webhook 配置"""
+    """List all webhook configurations"""
     rows = query_all(
         """
         SELECT id, name, url, type, enabled, secret,
@@ -231,7 +231,7 @@ async def list_webhooks():
 
 @router.get("/overview")
 async def get_notification_overview():
-    """获取通知配置生产就绪概览"""
+    """Get notification configuration production readiness"""
     rows = query_all(
         """
         SELECT id, name, url, type, enabled,
@@ -255,7 +255,7 @@ async def get_notification_overview():
 
 @router.post("/webhooks")
 async def add_webhook(config: WebhookConfig):
-    """添加 Webhook"""
+    """Add a webhook"""
     wid = f"wh_{uuid.uuid4().hex[:8]}"
     execute(
         "INSERT INTO notification_webhooks (id, name, url, type, enabled, secret) VALUES (?, ?, ?, ?, ?, ?)",
@@ -279,7 +279,7 @@ async def add_webhook(config: WebhookConfig):
 
 @router.patch("/webhooks/{webhook_id}")
 async def update_webhook(webhook_id: str, payload: WebhookUpdateRequest):
-    """更新 Webhook 配置，可用于启用/停用或修正 URL。"""
+    """Update a webhook configuration to enable/disable it or correct its URL."""
     row = query_one("SELECT * FROM notification_webhooks WHERE id=?", (webhook_id,))
     if not row:
         raise HTTPException(status_code=404, detail="Webhook not found")
@@ -335,7 +335,7 @@ async def update_webhook(webhook_id: str, payload: WebhookUpdateRequest):
 
 @router.delete("/webhooks/{webhook_id}")
 async def remove_webhook(webhook_id: str):
-    """删除 Webhook"""
+    """Delete a webhook"""
     affected = execute("DELETE FROM notification_webhooks WHERE id=?", (webhook_id,))
     if affected == 0:
         raise HTTPException(status_code=404, detail="Webhook not found")
@@ -344,15 +344,15 @@ async def remove_webhook(webhook_id: str):
 
 @router.post("/webhooks/{webhook_id}/test")
 async def test_webhook(webhook_id: str):
-    """测试 Webhook 连通性"""
+    """Test webhook connectivity"""
     row = query_one("SELECT * FROM notification_webhooks WHERE id=?", (webhook_id,))
     if not row:
         raise HTTPException(status_code=404, detail="Webhook not found")
     result = await _deliver_webhook_test(
         row,
-        "🔔 测试通知",
+        "🔔 Test notification",
         "success",
-        "这是一条测试消息，确认 Webhook 可用。",
+        "This test message confirms that the webhook works.",
     )
     if result["success"]:
         return {
@@ -371,7 +371,7 @@ async def test_webhook(webhook_id: str):
 
 @router.post("/drill")
 async def drill_notification_webhooks(payload: NotificationDrillPayload):
-    """对所有启用中的 Webhook 执行一次生产告警演练"""
+    """Run a production alert drill for all enabled webhooks"""
     rows = query_all("SELECT * FROM notification_webhooks WHERE enabled=1 ORDER BY created_at DESC")
     if not rows:
         return {
@@ -380,7 +380,7 @@ async def drill_notification_webhooks(payload: NotificationDrillPayload):
             "delivered": 0,
             "failed": 0,
             "results": [],
-            "summary": "当前没有启用中的 Webhook，无法执行告警演练。",
+            "summary": "No webhooks are enabled; cannot run an alert drill.",
         }
 
     results = []
@@ -401,17 +401,17 @@ async def drill_notification_webhooks(payload: NotificationDrillPayload):
         "failed": failed,
         "results": results,
         "summary": (
-            f"已完成 {len(rows)} 个启用通道的告警演练，成功 {delivered} 个，失败 {failed} 个。"
-            if rows else "当前没有启用中的 Webhook，无法执行告警演练。"
+            f"Alert drill completed for {len(rows)} enabled channels: {delivered} succeeded, {failed} failed."
+            if rows else "No webhooks are enabled; cannot run an alert drill."
         ),
     }
 
 
-# ── 发送通知 ──
+# ── Send notifications ──
 
 @router.post("/send")
 async def send_notification(payload: NotificationPayload):
-    """发送通知到指定或全部 Webhook"""
+    """Send a notification to selected webhooks or all webhooks"""
     if payload.webhook_ids:
         placeholders = ",".join("?" for _ in payload.webhook_ids)
         rows = query_all(f"SELECT * FROM notification_webhooks WHERE id IN ({placeholders})", tuple(payload.webhook_ids))
@@ -437,7 +437,7 @@ async def send_notification(payload: NotificationPayload):
     return {"sent": len(results), "results": results}
 
 
-# ── 消息格式化 ──
+# ── Message formatting ──
 
 def _format_message(webhook_type: str, title: str, status: str, summary: str, details: dict = None) -> dict:
     status_emoji = {"completed": "✅", "failed": "❌", "stopped": "⏹️"}.get(status, "📋")
@@ -445,9 +445,9 @@ def _format_message(webhook_type: str, title: str, status: str, summary: str, de
 
     if details:
         if "total_steps" in details:
-            text += f"\n\n📊 步骤: {details['total_steps']} | 通过: {details.get('passed', 0)} | 失败: {details.get('failed', 0)}"
+            text += f"\n\n📊 Steps: {details['total_steps']} | Passed: {details.get('passed', 0)} | Failed: {details.get('failed', 0)}"
         if "duration" in details:
-            text += f"\n⏱️ 耗时: {details['duration']}"
+            text += f"\n⏱️ Duration: {details['duration']}"
 
     if webhook_type == "dingtalk":
         return {

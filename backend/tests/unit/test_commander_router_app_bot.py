@@ -90,4 +90,4 @@ async def test_deliver_commander_response_via_notification_platform_app_bot_acce
     assert result["delivered"] == 1
     assert result["failed"] == 0
     assert result["mode"] == "app_bot"
-    assert "已回发消息" in result["message"]
+    assert "reply sent" in result["message"]

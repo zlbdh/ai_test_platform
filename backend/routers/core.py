@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-核心路由: 任务启动/停止/SSE流/状态/控制
+Core routes: task start/stop/SSE stream/status/control
 """
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse
@@ -11,7 +11,7 @@ router = APIRouter(tags=["core"])
 
 
 def setup_core_routes(orchestrator, SharedBrowserState, TestRequest):
-    """注册核心路由，注入 orchestrator 依赖"""
+    """Register core routes with an orchestrator dependency"""
 
     def resolve_runtime(session_id: str = ""):
         sid = session_id or SessionManager.DEFAULT_SESSION_ID
@@ -21,7 +21,7 @@ def setup_core_routes(orchestrator, SharedBrowserState, TestRequest):
 
     @router.post("/api/start")
     async def start_task(request: TestRequest):
-        """启动测试任务"""
+        """Start a test task"""
         _, orch, _ = resolve_runtime(request.session_id or "")
         if orch.is_running:
             raise HTTPException(status_code=409, detail="Task already running")
@@ -45,14 +45,14 @@ def setup_core_routes(orchestrator, SharedBrowserState, TestRequest):
 
     @router.post("/api/stop")
     async def stop_task(session_id: str = SessionManager.DEFAULT_SESSION_ID):
-        """强制停止任务"""
+        """Force a task to stop"""
         _, orch, _ = resolve_runtime(session_id)
         orch.stop_task()
         return {"status": "stopped"}
 
     @router.get("/api/stream")
     async def stream_logs(request: Request):
-        """SSE Log Stream — 支持 Last-Event-ID 断线重连"""
+        """SSE Log Stream — Supports Last-Event-ID reconnection"""
         session_id = request.query_params.get("session_id", SessionManager.DEFAULT_SESSION_ID)
         start_seq = 0
         if request:
@@ -70,7 +70,7 @@ def setup_core_routes(orchestrator, SharedBrowserState, TestRequest):
 
     @router.get("/api/status")
     async def api_status(session_id: str = SessionManager.DEFAULT_SESSION_ID):
-        """获取系统状态"""
+        """Get system status"""
         _, orch, session = resolve_runtime(session_id)
         status, task = session.get_status()
         signal = session.get_signal()

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-知识库路由 — 使用 KnowledgeBase 单例
+Knowledge base routes — uses the KnowledgeBase singleton
 """
 from fastapi import APIRouter, HTTPException
 from fastapi import UploadFile, File, Form
@@ -24,21 +24,21 @@ class KnowledgeQueryRequest(BaseModel):
 
 
 def _get_kb():
-    """获取 KnowledgeBase 单例"""
+    """Get the KnowledgeBase singleton"""
     from services.knowledge import KnowledgeBase
     return KnowledgeBase.get_instance()
 
 
 @router.get("/api/knowledge/status")
 async def api_knowledge_status():
-    """获取知识库状态"""
+    """Get knowledge base status"""
     kb = _get_kb()
     return {"status": "success", **kb.get_status()}
 
 
 @router.post("/api/knowledge/add")
 async def api_knowledge_add(request: KnowledgeAddRequest):
-    """添加知识条目"""
+    """Add a knowledge entry"""
     kb = _get_kb()
     success = kb.add_knowledge(request.content, request.metadata)
     if success:
@@ -48,7 +48,7 @@ async def api_knowledge_add(request: KnowledgeAddRequest):
 
 @router.post("/api/knowledge/query")
 async def api_knowledge_query(request: KnowledgeQueryRequest):
-    """查询相关知识"""
+    """Query related knowledge"""
     kb = _get_kb()
     results = kb.query_knowledge(request.query, request.k)
     return {"status": "success", "results": results}
@@ -56,7 +56,7 @@ async def api_knowledge_query(request: KnowledgeQueryRequest):
 
 @router.get("/api/knowledge/list")
 async def api_knowledge_list(limit: int = 100):
-    """列出所有知识"""
+    """List all knowledge entries"""
     kb = _get_kb()
     items = kb.list_knowledge(limit)
     return {"status": "success", "items": items, "count": len(items)}
@@ -64,7 +64,7 @@ async def api_knowledge_list(limit: int = 100):
 
 @router.get("/api/knowledge/{doc_id}/content")
 async def api_knowledge_content(doc_id: str):
-    """获取单条知识内容用于预览"""
+    """Get one knowledge entry for preview"""
     kb = _get_kb()
     item = kb.get_knowledge_item(doc_id)
     if not item:
@@ -81,10 +81,10 @@ async def api_knowledge_upload(
     file: UploadFile = File(...),
     description: str = Form(""),
 ):
-    """上传并摄入知识文件"""
+    """Upload and ingest a knowledge file"""
     suffix = Path(file.filename or "upload.txt").suffix.lower()
     if suffix == ".pdf":
-        raise HTTPException(status_code=400, detail="暂不支持 PDF 上传，请先转换为 Markdown、TXT 或 JSON")
+        raise HTTPException(status_code=400, detail="PDF uploads are not supported yet. Convert the file to Markdown, TXT, or JSON first")
 
     kb = _get_kb()
     fd, temp_path = tempfile.mkstemp(prefix="kb-upload-", suffix=suffix or ".txt")
@@ -109,7 +109,7 @@ async def api_knowledge_upload(
 
 @router.delete("/api/knowledge/{doc_id}")
 async def api_knowledge_delete(doc_id: str):
-    """删除知识条目"""
+    """Delete a knowledge entry"""
     kb = _get_kb()
     success = kb.delete_knowledge(doc_id)
     if success:
@@ -119,7 +119,7 @@ async def api_knowledge_delete(doc_id: str):
 
 @router.post("/api/knowledge/clear")
 async def api_knowledge_clear():
-    """清空所有知识"""
+    """Clear all knowledge entries"""
     kb = _get_kb()
     if not kb.enabled:
         return {"status": "success", "message": "Knowledge base not enabled, nothing to clear"}

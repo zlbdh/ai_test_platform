@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Analytics Router — Dashboard 趋势分析 API
-提供：30天趋势、失败Top10热图、Flaky检测、失败原因分类
+Analytics Router — Dashboard trend analysis API
+Provides 30-day trends, a top-10 failure heatmap, flaky test detection, and failure classification
 """
 from fastapi import APIRouter
 import json
@@ -18,7 +18,7 @@ router = APIRouter(tags=["analytics"])
 
 @router.get("/api/analytics/trends")
 async def api_analytics_trends(days: int = 30):
-    """获取 N 天的每日通过率/执行数/耗时趋势"""
+    """Get daily pass rate, execution count, and duration trends for N days"""
     try:
         rows = query_all(
             "SELECT status, duration_ms, created_at FROM test_runs "
@@ -28,7 +28,7 @@ async def api_analytics_trends(days: int = 30):
     except Exception:
         rows = []
 
-    # 按日期聚合
+    # Aggregate by date
     daily: Dict[str, Dict] = {}
     for i in range(days):
         d = (datetime.now() - timedelta(days=days - 1 - i)).strftime("%Y-%m-%d")
@@ -68,7 +68,7 @@ async def api_analytics_trends(days: int = 30):
 
 @router.get("/api/analytics/failures")
 async def api_analytics_failures(limit: int = 10):
-    """获取失败 Top N 用例（按需求分组）"""
+    """Get the top N failing cases, grouped by requirement"""
     try:
         rows = query_all(
             "SELECT requirement, status, error_count, created_at FROM test_runs "
@@ -77,7 +77,7 @@ async def api_analytics_failures(limit: int = 10):
     except Exception:
         rows = []
 
-    # 按需求名统计失败次数
+    # Count failures by requirement name
     fail_counts: Counter = Counter()
     last_failure: Dict[str, str] = {}
     for r in rows or []:
@@ -99,7 +99,7 @@ async def api_analytics_failures(limit: int = 10):
 
 @router.get("/api/analytics/flaky")
 async def api_analytics_flaky():
-    """检测 Flaky 用例（相同需求的通过率在 20-80% 之间视为 Flaky）"""
+    """Detect flaky cases (a pass rate of 20-80% for the same requirement is considered flaky)"""
     try:
         rows = query_all(
             "SELECT requirement, status FROM test_runs ORDER BY created_at DESC LIMIT 500"
@@ -107,7 +107,7 @@ async def api_analytics_flaky():
     except Exception:
         rows = []
 
-    # 按需求名统计通过/失败
+    # Count passes and failures by requirement name
     req_stats: Dict[str, Dict] = defaultdict(lambda: {"total": 0, "passed": 0})
     for r in rows or []:
         name = r.get("requirement") or "Unknown"
@@ -117,9 +117,9 @@ async def api_analytics_flaky():
 
     flaky_tests = []
     for name, stats in req_stats.items():
-        if stats["total"] >= 2:  # 至少 2 次执行
+        if stats["total"] >= 2:  # At least two executions
             rate = stats["passed"] / stats["total"] * 100
-            if 20 <= rate <= 80:  # 通过率在 20-80% 视为 Flaky
+            if 20 <= rate <= 80:  # A 20-80% pass rate is considered flaky
                 flaky_tests.append({
                     "name": name[:80],
                     "total": stats["total"],
@@ -129,13 +129,13 @@ async def api_analytics_flaky():
                     "severity": "high" if 40 <= rate <= 60 else "medium",
                 })
 
-    flaky_tests.sort(key=lambda x: abs(x["passRate"] - 50))  # 越接近 50% 越 Flaky
+    flaky_tests.sort(key=lambda x: abs(x["passRate"] - 50))  # Closer to 50% means more flaky
     return {"count": len(flaky_tests), "tests": flaky_tests[:20]}
 
 
 @router.get("/api/analytics/failure-reasons")
 async def api_analytics_failure_reasons():
-    """分析失败原因分类"""
+    """Analyze failure categories"""
     try:
         rows = query_all(
             "SELECT logs_json FROM test_runs WHERE status='failed' "
@@ -158,28 +158,28 @@ async def api_analytics_failure_reasons():
                 continue
             content = (log.get("content") or "").lower()
             if any(k in content for k in ["timeout", "超时", "timed out"]):
-                reasons["超时"] += 1
+                reasons["Timeout"] += 1
                 classified = True
                 break
             elif any(k in content for k in ["not found", "locator", "element", "selector", "找不到", "定位"]):
-                reasons["元素定位"] += 1
+                reasons["Element location"] += 1
                 classified = True
                 break
             elif any(k in content for k in ["assert", "断言", "expect", "mismatch"]):
-                reasons["断言失败"] += 1
+                reasons["Assertion failure"] += 1
                 classified = True
                 break
             elif any(k in content for k in ["network", "connection", "网络", "refused", "dns", "fetch"]):
-                reasons["网络错误"] += 1
+                reasons["Network error"] += 1
                 classified = True
                 break
             elif any(k in content for k in ["permission", "auth", "403", "401", "权限"]):
-                reasons["权限/认证"] += 1
+                reasons["Permissions/authentication"] += 1
                 classified = True
                 break
 
         if not classified:
-            reasons["其他"] += 1
+            reasons["Other"] += 1
 
     total = sum(reasons.values())
     result = [
@@ -191,7 +191,7 @@ async def api_analytics_failure_reasons():
 
 @router.get("/api/analytics/summary")
 async def api_analytics_summary():
-    """全局分析摘要"""
+    """Global analytics summary"""
     try:
         total_row = query_one("SELECT COUNT(*) as c FROM test_runs")
         total = total_row["c"] if total_row else 0

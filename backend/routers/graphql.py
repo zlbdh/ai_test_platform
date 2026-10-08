@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-GraphQL 测试路由 — 串联 services/graphql_testing.py
+GraphQL testing routes — integrates services/graphql_testing.py
 """
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -55,7 +55,7 @@ class GraphQLGenerateQueryRequest(BaseModel):
 
 @router.post("/execute")
 async def graphql_execute(req: GraphQLExecuteRequest):
-    """执行 GraphQL 查询"""
+    """Execute a GraphQL query"""
     from services.graphql_testing import create_graphql_service, GraphQLRequest
     try:
         service = create_graphql_service(req.endpoint, req.headers)
@@ -76,10 +76,10 @@ async def graphql_execute(req: GraphQLExecuteRequest):
         ]
         get_execution_center_service().record_specialized_result(
             mode="graphql",
-            title=f"GraphQL 执行 · {req.endpoint}",
+            title=f"GraphQL execution · {req.endpoint}",
             target_url=req.endpoint,
             success=success,
-            summary=f"HTTP {response.status_code} · {response.response_time_ms}ms · 错误 {len(response.errors or [])}",
+            summary=f"HTTP {response.status_code} · {response.response_time_ms}ms · Errors: {len(response.errors or [])}",
             detail_items=detail_items,
             duration_ms=int(response.response_time_ms or 0),
             execution_group_id=req.execution_group_id,
@@ -97,7 +97,7 @@ async def graphql_execute(req: GraphQLExecuteRequest):
     except Exception as e:
         get_execution_center_service().record_specialized_result(
             mode="graphql",
-            title=f"GraphQL 执行 · {req.endpoint}",
+            title=f"GraphQL execution · {req.endpoint}",
             target_url=req.endpoint,
             success=False,
             summary=str(e),
@@ -110,17 +110,17 @@ async def graphql_execute(req: GraphQLExecuteRequest):
 
 @router.post("/introspect")
 async def graphql_introspect(req: GraphQLIntrospectRequest):
-    """自省查询获取 GraphQL Schema"""
+    """Get the GraphQL schema through introspection"""
     from services.graphql_testing import create_graphql_service
     try:
         service = create_graphql_service(req.endpoint, req.headers)
         schema = await service.introspect()
         get_execution_center_service().record_specialized_result(
             mode="graphql",
-            title=f"GraphQL 自省 · {req.endpoint}",
+            title=f"GraphQL introspection · {req.endpoint}",
             target_url=req.endpoint,
             success=bool(schema),
-            summary=f"获取到 {len(schema.get('types', []) or []) if isinstance(schema, dict) else 0} 个类型定义",
+            summary=f"Retrieved {len(schema.get('types', []) or []) if isinstance(schema, dict) else 0} type definitions",
             execution_group_id=req.execution_group_id,
             session_id=req.session_id,
             group_title=req.group_title,
@@ -130,7 +130,7 @@ async def graphql_introspect(req: GraphQLIntrospectRequest):
     except Exception as e:
         get_execution_center_service().record_specialized_result(
             mode="graphql",
-            title=f"GraphQL 自省 · {req.endpoint}",
+            title=f"GraphQL introspection · {req.endpoint}",
             target_url=req.endpoint,
             success=False,
             summary=str(e),
@@ -144,7 +144,7 @@ async def graphql_introspect(req: GraphQLIntrospectRequest):
 
 @router.post("/test-suite")
 async def graphql_test_suite(req: GraphQLTestSuiteRequest):
-    """运行 GraphQL 测试套件"""
+    """Run a GraphQL test suite"""
     from services.graphql_testing import create_graphql_service
     try:
         service = create_graphql_service(req.endpoint, req.headers)
@@ -155,16 +155,16 @@ async def graphql_test_suite(req: GraphQLTestSuiteRequest):
             {
                 "target": item.get("name") or item.get("query") or "graphql-test",
                 "passed": item.get("passed", False),
-                "message": item.get("error") or f"断言通过 {item.get('assertions_passed', 0)} / 失败 {item.get('assertions_failed', 0)}",
+                "message": item.get("error") or f"Assertions passed {item.get('assertions_passed', 0)} / failed {item.get('assertions_failed', 0)}",
             }
             for item in results
         ]
         get_execution_center_service().record_specialized_result(
             mode="graphql",
-            title=f"GraphQL 测试套件 · {req.endpoint}",
+            title=f"GraphQL test suite · {req.endpoint}",
             target_url=req.endpoint,
             success=failed == 0,
-            summary=f"共执行 {len(results)} 个测试，成功 {passed}，失败 {failed}",
+            summary=f"Executed {len(results)} tests: {passed} passed, {failed} failed",
             detail_items=detail_items,
             execution_group_id=req.execution_group_id,
             session_id=req.session_id,
@@ -181,7 +181,7 @@ async def graphql_test_suite(req: GraphQLTestSuiteRequest):
     except Exception as e:
         get_execution_center_service().record_specialized_result(
             mode="graphql",
-            title=f"GraphQL 测试套件 · {req.endpoint}",
+            title=f"GraphQL test suite · {req.endpoint}",
             target_url=req.endpoint,
             success=False,
             summary=str(e),
@@ -195,7 +195,7 @@ async def graphql_test_suite(req: GraphQLTestSuiteRequest):
 
 @router.post("/generate-query")
 async def graphql_generate_query(req: GraphQLGenerateQueryRequest):
-    """根据 Schema 自动生成查询"""
+    """Generate queries automatically from the schema"""
     from services.graphql_testing import create_graphql_service
     try:
         service = create_graphql_service(req.endpoint, req.headers)

@@ -1,6 +1,6 @@
 """
-Report Router — 从 main.py 迁移
-包含测试报告生成 + 历史查询 + 清除
+Report Router — Migrated from main.py
+Includes test report generation, history queries, and cleanup
 """
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
@@ -17,7 +17,7 @@ router = APIRouter(tags=["report"])
 
 @router.post("/api/report/generate")
 async def api_generate_report(payload: Optional[ReportGenerateRequest] = None):
-    """生成测试报告，支持单条记录或整批测试批次输出专属报告"""
+    """Generate a dedicated report for an individual record or an entire test batch"""
     try:
         get_platform_maintenance_service().run(reason="report_generate")
         reporter = get_reporter()
@@ -33,7 +33,7 @@ async def api_generate_report(payload: Optional[ReportGenerateRequest] = None):
 
 @router.get("/api/report/history")
 async def api_report_history(limit: int = 10):
-    """获取报告历史"""
+    """Get report history"""
     get_platform_maintenance_service().run(reason="report_history")
     reporter = get_reporter()
     return {"status": "success", "history": reporter.get_history(limit)}
@@ -41,7 +41,7 @@ async def api_report_history(limit: int = 10):
 
 @router.get("/api/report/view/{report_id}")
 async def api_view_report(report_id: str):
-    """查看指定报告 HTML 快照"""
+    """View a report's HTML snapshot"""
     reporter = get_reporter()
     report_path = reporter.get_report_path(report_id)
     if not report_path:
@@ -51,7 +51,7 @@ async def api_view_report(report_id: str):
 
 @router.delete("/api/report/{report_id}")
 async def api_delete_report(report_id: str):
-    """删除指定报告"""
+    """Delete a report"""
     reporter = get_reporter()
     deleted = reporter.delete_report(report_id)
     if not deleted:
@@ -61,7 +61,7 @@ async def api_delete_report(report_id: str):
 
 @router.post("/api/report/clear")
 async def api_clear_results():
-    """清除测试结果"""
+    """Clear test results"""
     reporter = get_reporter()
     reporter.clear_results()
     return {"status": "success", "message": "Results cleared"}

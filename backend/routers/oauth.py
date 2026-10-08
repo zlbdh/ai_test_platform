@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-OAuth 认证助手路由
+OAuth authentication helper routes
 """
 from fastapi import APIRouter
 from core.models import OAuthConfigRequest, SaveTokenRequest
@@ -11,7 +11,7 @@ router = APIRouter(prefix="/api/oauth", tags=["OAuth"])
 
 @router.post("/configure")
 async def configure_oauth(req: OAuthConfigRequest):
-    """配置 OAuth 提供商"""
+    """Configure an OAuth provider"""
     helper = get_oauth_helper()
     provider = OAuthProvider(req.provider) if req.provider in [p.value for p in OAuthProvider] else OAuthProvider.CUSTOM
     config = helper.configure_provider(provider, req.client_id, req.client_secret, req.redirect_uri)
@@ -24,7 +24,7 @@ async def configure_oauth(req: OAuthConfigRequest):
 
 @router.post("/token/save")
 async def save_oauth_token(req: SaveTokenRequest):
-    """保存测试用 Token"""
+    """Save a test token"""
     helper = get_oauth_helper()
     token = helper.save_test_token(req.name, req.access_token, req.provider, req.expires_hours)
     return {
@@ -36,7 +36,7 @@ async def save_oauth_token(req: SaveTokenRequest):
 
 @router.get("/token/{name}")
 async def get_oauth_token(name: str):
-    """获取已保存的 Token"""
+    """Get a saved token"""
     helper = get_oauth_helper()
     token = helper.get_test_token(name)
     if token:
@@ -51,7 +51,7 @@ async def get_oauth_token(name: str):
 
 @router.get("/tokens")
 async def list_oauth_tokens():
-    """列出所有 Token"""
+    """List all tokens"""
     return {
         "status": "success",
         "tokens": get_oauth_helper().list_tokens()
@@ -60,6 +60,6 @@ async def list_oauth_tokens():
 
 @router.post("/cleanup")
 async def cleanup_oauth_tokens():
-    """清理过期 Token"""
+    """Clean up expired tokens"""
     count = get_oauth_helper().clear_expired()
     return {"status": "success", "cleared": count}

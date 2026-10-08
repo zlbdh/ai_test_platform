@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-探索性测试 API 路由
+Exploratory testing API routes
 """
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -16,19 +16,19 @@ from services.exploration_service import (
 )
 
 
-router = APIRouter(prefix="/api/exploration", tags=["探索性测试"])
+router = APIRouter(prefix="/api/exploration", tags=["Exploratory testing"])
 
 
 class ExplorationSessionCreateRequest(BaseModel):
-    group_id: str = Field("", description="可选执行分组 ID")
-    project_key: str = Field("", description="项目标识")
-    target_url: str = Field(..., description="目标 URL")
-    charter: str = Field(..., description="探索性测试章程")
+    group_id: str = Field("", description="Optional execution group ID")
+    project_key: str = Field("", description="Project identifier")
+    target_url: str = Field(..., description="Target URL")
+    charter: str = Field(..., description="Exploratory testing charter")
 
 
 class ExplorationFindingReviewRequest(BaseModel):
-    decision: str = Field(..., description="复核结论：confirmed / dismissed")
-    comment: str = Field("", description="复核备注")
+    decision: str = Field(..., description="Review decision: confirmed / dismissed")
+    comment: str = Field("", description="Review comment")
 
 
 @router.post("/sessions")
@@ -54,8 +54,8 @@ async def create_exploration_session(
 
 @router.get("/sessions")
 async def list_exploration_sessions(
-    project_key: str = Query("", description="项目筛选"),
-    status: str = Query("", description="会话状态筛选"),
+    project_key: str = Query("", description="Project filter"),
+    status: str = Query("", description="Session status filter"),
     limit: int = Query(20, ge=1, le=200),
     user=Depends(require_authenticated_user),
 ):
@@ -107,9 +107,9 @@ async def stop_exploration_session(
 @router.get("/sessions/{session_id}/findings")
 async def list_exploration_findings(
     session_id: str,
-    severity: str = Query("", description="严重级别筛选"),
-    review_only: bool = Query(False, description="仅返回需人工复核的发现"),
-    review_status: str = Query("", description="复核状态筛选"),
+    severity: str = Query("", description="Severity filter"),
+    review_only: bool = Query(False, description="Return only findings requiring human review"),
+    review_status: str = Query("", description="Review status filter"),
     user=Depends(require_authenticated_user),
 ):
     svc = get_exploration_service()
@@ -130,9 +130,9 @@ async def list_exploration_findings(
 
 @router.get("/review-queue")
 async def list_exploration_review_queue(
-    project_key: str = Query("", description="项目筛选"),
-    severity: str = Query("", description="严重级别筛选"),
-    review_status: str = Query("", description="复核状态筛选，默认 pending"),
+    project_key: str = Query("", description="Project filter"),
+    severity: str = Query("", description="Severity filter"),
+    review_status: str = Query("", description="Review status filter; defaults to pending"),
     limit: int = Query(20, ge=1, le=200),
     user=Depends(require_authenticated_user),
 ):
