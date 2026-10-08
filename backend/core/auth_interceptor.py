@@ -1,22 +1,22 @@
 # -*- coding: utf-8 -*-
 """
-Auth Interceptor — OTP/TOTP/CAPTCHA 认证拦截器
+Auth Interceptor — OTP/TOTP/CAPTCHA authentication interceptor
 
-提供三种认证辅助能力：
-1. TOTPGenerator: 基于 TOTP 秘钥自动生成 6 位验证码
-2. OTPInterceptor: 拦截 API 响应提取短信/邮件验证码
-3. CaptchaWaiter: CAPTCHA 检测后暂停等待人工介入（WebSocket 通知）
+Provides three authentication support capabilities:
+1. TOTPGenerator: Generate six-digit verification codes from a TOTP secret
+2. OTPInterceptor: Extract SMS/email verification codes from API responses
+3. CaptchaWaiter: Pause for human intervention after CAPTCHA detection, with WebSocket notification
 
-使用方式:
+Usage:
     from core.auth_interceptor import totp_generator, otp_interceptor, captcha_waiter
 
-    # TOTP 自动生成
+    # Automatic TOTP generation
     code = totp_generator.generate("JBSWY3DPEHPK3PXP")
 
-    # OTP 拦截（从页面请求中提取验证码）
+    # OTP interception (extract verification codes from page requests)
     code = otp_interceptor.extract_from_page(page, pattern=r'\d{4,6}')
 
-    # CAPTCHA 等待（阻塞直到人工处理完成）
+    # CAPTCHA wait (block until human handling is complete)
     captcha_waiter.wait_for_human(bus, timeout=120)
 """
 
@@ -53,41 +53,41 @@ CAPTCHA_IMAGE_SELECTORS = [
 ]
 
 
-# ── TOTP 自动生成器 ──────────────────────────────────────────────────────────
+# ── Automatic TOTP generator ──────────────────────────────────────────────────────────
 
 class TOTPGenerator:
     """
-    基于 TOTP 秘钥自动生成 6 位验证码。
-    底层使用 pyotp 库（可选依赖）。
+    Generate six-digit verification codes from a TOTP secret.
+    Uses the optional pyotp library.
     """
 
     def generate(self, secret: str, digits: int = 6, interval: int = 30) -> Optional[str]:
         """
-        生成当前时刻的 TOTP 验证码。
+        Generate the current TOTP verification code.
 
         Args:
-            secret: Base32 编码的 TOTP 秘钥
-            digits: 验证码位数（默认 6）
-            interval: 时间窗口秒数（默认 30）
+            secret: Base32-encoded TOTP secret
+            digits: Number of code digits (default 6)
+            interval: Time window in seconds (default 30)
 
         Returns:
-            验证码字符串，若 pyotp 未安装则返回 None
+            Verification code string, or None if pyotp is not installed
         """
         try:
             import pyotp
             totp = pyotp.TOTP(secret, digits=digits, interval=interval)
             code = totp.now()
-            logger.info(f"[TOTPGenerator] 生成验证码: {code} (剩余 {totp.interval - int(time.time()) % totp.interval}s)")
+            logger.info(f"[TOTPGenerator] Generated verification code: {code} ({totp.interval - int(time.time()) % totp.interval}s remaining)")
             return code
         except ImportError:
-            logger.warning("[TOTPGenerator] pyotp 未安装，无法生成 TOTP。请执行: pip install pyotp")
+            logger.warning("[TOTPGenerator] pyotp is not installed; cannot generate TOTP. Run: pip install pyotp")
             return None
         except Exception as e:
-            logger.error(f"[TOTPGenerator] 生成失败: {e}")
+            logger.error(f"[TOTPGenerator] Generation failed: {e}")
             return None
 
     def verify(self, secret: str, code: str) -> bool:
-        """验证 TOTP 是否正确"""
+        """Verify a TOTP code"""
         try:
             import pyotp
             return pyotp.TOTP(secret).verify(code)
@@ -95,16 +95,16 @@ class TOTPGenerator:
             return False
 
 
-# ── OTP 拦截器 ───────────────────────────────────────────────────────────────
+# ── OTP interceptor ───────────────────────────────────────────────────────────────
 
 class OTPInterceptor:
     """
-    从页面网络请求/SMS API 响应中自动提取验证码。
+    Extract verification codes from page network requests or SMS API responses.
 
-    支持策略：
-    1. 页面 DOM 扫描（短信验证码输入框附近的提示文本）
-    2. 网络请求拦截（监听验证码下发 API 的响应）
-    3. 正则表达式提取（从可见文本中匹配数字验证码）
+    Supported strategies:
+    1. Page DOM scanning (hints near SMS verification inputs)
+    2. Network interception (listen to responses from code delivery APIs)
+    3. Regular-expression extraction (match numeric verification codes in visible text)
     """
 
     SMS_API_PATTERNS = [
@@ -116,7 +116,7 @@ class OTPInterceptor:
     PURE_CODE_REGEX = re.compile(r'\b(\d{4,6})\b')
 
     def extract_from_page(self, page, pattern: Optional[str] = None) -> Optional[str]:
-        """从页面可见文本中提取验证码。"""
+        """Extract a verification code from visible page text."""
         try:
             visible_text = page.evaluate("""
             () => {
@@ -143,17 +143,17 @@ class OTPInterceptor:
             match = regex.search(visible_text)
             if match:
                 code = match.group(1)
-                logger.info(f"[OTPInterceptor] 从页面文本提取到验证码: {code}")
+                logger.info(f"[OTPInterceptor] Extracted a verification code from page text: {code}")
                 return code
 
-            logger.debug("[OTPInterceptor] 页面内未找到验证码")
+            logger.debug("[OTPInterceptor] No verification code found on the page")
             return None
         except Exception as e:
-            logger.error(f"[OTPInterceptor] 提取失败: {e}")
+            logger.error(f"[OTPInterceptor] Extraction failed: {e}")
             return None
 
     def setup_network_intercept(self, page, callback=None):
-        """设置网络拦截器，监听验证码 API 响应自动提取。"""
+        """Set up a network interceptor to extract codes from verification API responses."""
         captured_codes = []
 
         def on_response(response):
@@ -165,7 +165,7 @@ class OTPInterceptor:
                     if match:
                         code = match.group(1)
                         captured_codes.append(code)
-                        logger.info(f"[OTPInterceptor] 网络拦截到验证码: {code} (from {url})")
+                        logger.info(f"[OTPInterceptor] Intercepted verification code: {code} (from {url})")
                         if callback:
                             callback(code)
                 except Exception:
@@ -244,7 +244,7 @@ def _build_captcha_variants(image_bytes: bytes):
             _image_to_png_bytes(threshold),
         ]
     except Exception as exc:
-        logger.debug(f"[CaptchaOCR] 图像预处理失败，退回原图: {exc}")
+        logger.debug(f"[CaptchaOCR] Image preprocessing failed; using the original image: {exc}")
         return [image_bytes]
 
 
@@ -259,10 +259,10 @@ def _solve_captcha_with_vision(image_bytes: bytes) -> Optional[str]:
 
         payload = base64.b64encode(image_bytes).decode("utf-8")
         prompt = (
-            "你是验证码 OCR。请识别图片中的验证码，只返回 JSON，格式为 "
-            '{"code":"验证码"}。'
-            "不要解释，不要输出多余文字；如果看不清则返回 "
-            '{"code":""}。'
+            "Perform verification-code OCR. Read the code in the image and return only JSON in this format: "
+            '{"code":"verification code"}. '
+            "Do not explain or add text; if the code is unreadable, return "
+            '{"code":""}.'
         )
         message = HumanMessage(content=[
             {"type": "text", "text": prompt},
@@ -272,29 +272,29 @@ def _solve_captcha_with_vision(image_bytes: bytes) -> Optional[str]:
         content = response.content if hasattr(response, "content") else str(response)
         return _sanitize_captcha_code(content)
     except Exception as exc:
-        logger.warning(f"[CaptchaOCR] Vision OCR 调用失败: {exc}")
+        logger.warning(f"[CaptchaOCR] Vision OCR call failed: {exc}")
         return None
 
 
 def solve_captcha_from_page(page) -> Optional[str]:
     locator = _find_first_visible_locator(page, CAPTCHA_IMAGE_SELECTORS)
     if locator is None:
-        logger.info("[CaptchaOCR] 页面中未发现可见验证码图片")
+        logger.info("[CaptchaOCR] No visible verification-code image found on the page")
         return None
 
     try:
         raw = locator.screenshot(type="png", timeout=5000)
     except Exception as exc:
-        logger.warning(f"[CaptchaOCR] 验证码截图失败: {exc}")
+        logger.warning(f"[CaptchaOCR] Verification-code screenshot failed: {exc}")
         return None
 
     for variant in _build_captcha_variants(raw):
         code = _solve_captcha_with_vision(variant)
         if code:
-            logger.info(f"[CaptchaOCR] 识别成功: {code}")
+            logger.info(f"[CaptchaOCR] Recognition succeeded: {code}")
             return code
 
-    logger.warning("[CaptchaOCR] 验证码识别失败")
+    logger.warning("[CaptchaOCR] Verification-code recognition failed")
     return None
 
 
@@ -325,14 +325,14 @@ def fill_captcha_if_present(page) -> Optional[str]:
             page.keyboard.type(code, delay=30)
             return code
         except Exception as exc:
-            logger.warning(f"[CaptchaOCR] 验证码自动填写失败: {exc}")
+            logger.warning(f"[CaptchaOCR] Automatic verification-code entry failed: {exc}")
             return None
 
 
-# ── CAPTCHA 等待器 ───────────────────────────────────────────────────────────
+# ── CAPTCHA waiter ───────────────────────────────────────────────────────────
 
 class CaptchaWaiter:
-    """CAPTCHA 检测后暂停等待人工介入。"""
+    """Pause for human intervention after CAPTCHA detection."""
 
     def wait_for_human(
         self,
@@ -341,16 +341,16 @@ class CaptchaWaiter:
         timeout: int = 120,
         poll_interval: float = 2.0,
     ) -> bool:
-        """发送 CAPTCHA 通知并等待人工处理。"""
+        """Send a CAPTCHA notification and wait for human handling."""
         bus.publish_log_sync({
             "type": "captcha_intervention",
             "event": "captcha_detected",
-            "content": "🔐 检测到验证码/CAPTCHA，请手动处理后点击「继续执行」",
+            "content": "🔐 Verification code/CAPTCHA detected. Handle it manually, then click Resume.",
             "timeout": timeout,
             "status": "waiting",
         })
 
-        logger.warning(f"[CaptchaWaiter] ⏸️ CAPTCHA 检测到，等待人工介入（超时 {timeout}s）...")
+        logger.warning(f"[CaptchaWaiter] ⏸️ CAPTCHA detected; waiting for human intervention (timeout {timeout}s)...")
 
         original_signal = session.get_signal()
         session.set_signal("PAUSED")
@@ -360,33 +360,33 @@ class CaptchaWaiter:
             signal = session.get_signal()
             if signal == "RUNNING":
                 elapsed = time.time() - start
-                logger.info(f"[CaptchaWaiter] ✅ 人工已处理 CAPTCHA（等待 {elapsed:.1f}s）")
+                logger.info(f"[CaptchaWaiter] ✅ CAPTCHA handled manually after {elapsed:.1f}s")
                 bus.publish_log_sync({
                     "type": "captcha_intervention",
                     "event": "captcha_resolved",
-                    "content": f"✅ CAPTCHA 已处理，继续执行（等待 {elapsed:.1f}s）",
+                    "content": f"✅ CAPTCHA handled; resuming after {elapsed:.1f}s",
                     "status": "resolved",
                 })
                 return True
 
             if signal == "STOPPED":
-                logger.info("[CaptchaWaiter] 用户中止执行")
+                logger.info("[CaptchaWaiter] Execution canceled by the user")
                 return False
 
             time.sleep(poll_interval)
 
-        logger.warning(f"[CaptchaWaiter] ⏰ CAPTCHA 等待超时 ({timeout}s)，恢复执行")
+        logger.warning(f"[CaptchaWaiter] ⏰ CAPTCHA wait timed out ({timeout}s); resuming execution")
         session.set_signal(original_signal if original_signal != "PAUSED" else "RUNNING")
         bus.publish_log_sync({
             "type": "captcha_intervention",
             "event": "captcha_timeout",
-            "content": f"⏰ CAPTCHA 等待超时 ({timeout}s)，自动恢复执行",
+            "content": f"⏰ CAPTCHA wait timed out ({timeout}s); resuming automatically",
             "status": "timeout",
         })
         return False
 
 
-# ── 单例 ─────────────────────────────────────────────────────────────────────
+# ── Singleton ─────────────────────────────────────────────────────────────────────
 
 totp_generator = TOTPGenerator()
 otp_interceptor = OTPInterceptor()

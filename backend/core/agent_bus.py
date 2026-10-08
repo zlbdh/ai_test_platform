@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 """
-AgentBus — 跨 Agent 通信总线
+AgentBus — inter-agent communication bus
 
-设计：
-- 发布/订阅模式：Agent 通过 topic 订阅感兴趣的事件
-- 请求/响应模式：Commander 向特定 Agent 发送任务并等待结果
-- Agent 注册表：每个 Agent 启动时注册自己的类型和能力
-- 消息日志：所有消息持久化，支持审计
+Design:
+- Publish/subscribe: agents subscribe to topics of interest
+- Request/response: Commander sends tasks to specific agents and waits for results
+- Agent registry: agents register their type and capabilities at startup
+- Message log: persist all messages for auditing
 
-与现有 EventBus 的关系：
-- EventBus 是会话级的 Planner↔Executor 通信（queue.Queue）
-- AgentBus 是全局级的跨 Agent 通信网络
+Relationship with the existing EventBus:
+- EventBus provides session-level Planner↔Executor communication through queue.Queue
+- AgentBus provides the global inter-agent communication network
 """
 
 import asyncio
@@ -27,20 +27,20 @@ from typing import (
 logger = logging.getLogger(__name__)
 
 
-# ── 数据结构 ──────────────────────────────────────────────────────────────────
+# ── Data structures ──────────────────────────────────────────────────────────────────
 
 
 class MessageType(Enum):
-    """消息类型"""
-    EVENT = "event"         # 广播事件（发布/订阅）
-    REQUEST = "request"     # 任务请求（请求/响应）
-    RESPONSE = "response"   # 任务响应
-    HANDOFF = "handoff"     # Agent 间任务交接
-    LOG = "log"             # 日志消息
+    """Message type"""
+    EVENT = "event"         # Broadcast event (publish/subscribe)
+    REQUEST = "request"     # Task request (request/response)
+    RESPONSE = "response"   # Task response
+    HANDOFF = "handoff"     # Inter-agent task handoff
+    LOG = "log"             # Log message
 
 
 class MessagePriority(Enum):
-    """消息优先级"""
+    """Message priority"""
     LOW = 1
     NORMAL = 2
     HIGH = 3
@@ -49,16 +49,16 @@ class MessagePriority(Enum):
 
 @dataclass
 class AgentMessage:
-    """统一消息格式"""
+    """Unified message format"""
     message_id: str = field(default_factory=lambda: str(uuid.uuid4())[:12])
     msg_type: MessageType = MessageType.EVENT
-    topic: str = ""               # 事件主题，如 "test.completed"
-    sender: str = ""              # 发送方 Agent 名称
-    receiver: str = ""            # 接收方（空 = 广播）
+    topic: str = ""               # Event topic, such as "test.completed"
+    sender: str = ""              # Sender agent name
+    receiver: str = ""            # Receiver (empty means broadcast)
     payload: Dict[str, Any] = field(default_factory=dict)
     priority: MessagePriority = MessagePriority.NORMAL
     timestamp: float = field(default_factory=time.time)
-    correlation_id: str = ""      # 请求/响应关联 ID
+    correlation_id: str = ""      # Request/response correlation ID
 
     def to_dict(self) -> dict:
         d = asdict(self)
@@ -69,82 +69,82 @@ class AgentMessage:
 
 @dataclass
 class AgentRegistration:
-    """Agent 注册信息"""
+    """Agent registration information"""
     agent_name: str
-    agent_type: str               # 如 "ui_tester", "api_tester", "security_scanner"
+    agent_type: str               # For example: "ui_tester", "api_tester", "security_scanner"
     supported_test_types: List[str] = field(default_factory=list)
     description: str = ""
     registered_at: float = field(default_factory=time.time)
     is_active: bool = True
     last_heartbeat: float = field(default_factory=time.time)
-    profile_id: str = ""          # 关联 AgentProfile
+    profile_id: str = ""          # Linked AgentProfile
 
 
-# ── 预定义 Topic ─────────────────────────────────────────────────────────────
+# ── Predefined topics ─────────────────────────────────────────────────────────────
 
 
 class Topics:
-    """预定义事件主题"""
-    # 测试生命周期
+    """Predefined event topics"""
+    # Test lifecycle
     TEST_STARTED = "test.started"
     TEST_COMPLETED = "test.completed"
     TEST_FAILED = "test.failed"
     TEST_CANCELLED = "test.cancelled"
 
-    # 任务分发
+    # Task dispatch
     TASK_DISPATCHED = "task.dispatched"
     TASK_ACCEPTED = "task.accepted"
 
-    # 异常与告警
+    # Errors and alerts
     ANOMALY_FOUND = "anomaly.found"
     CRITICAL_FAILURE = "critical.failure"
 
-    # 编排
+    # Orchestration
     MISSION_STARTED = "mission.started"
     MISSION_COMPLETED = "mission.completed"
     MISSION_PROGRESS = "mission.progress"
 
-    # 系统
+    # System
     AGENT_REGISTERED = "agent.registered"
     AGENT_UNREGISTERED = "agent.unregistered"
 
 
-# ── 回调类型别名 ─────────────────────────────────────────────────────────────
+# ── Callback type alias ─────────────────────────────────────────────────────────────
 
 SubscriberCallback = Callable[[AgentMessage], Coroutine[Any, Any, None]]
 
 
-# ── AgentBus 核心 ────────────────────────────────────────────────────────────
+# ── AgentBus core ────────────────────────────────────────────────────────────
 
 
 class AgentBus:
     """
-    跨 Agent 通信总线
+    Inter-agent communication bus
 
-    功能：
-    1. Agent 注册表（谁在线、擅长什么）
-    2. 发布/订阅（广播事件）
-    3. 请求/响应（定向任务）
-    4. 消息日志（审计追踪）
+    Features:
+    1. Agent registry (availability and capabilities)
+    2. Publish/subscribe (broadcast events)
+    3. Request/response (targeted tasks)
+    4. Message log (audit trail)
     """
 
     def __init__(self):
-        # Agent 注册表
+        # Agent registry
         self._agents: Dict[str, AgentRegistration] = {}
 
-        # 订阅表：topic -> [callback]
+        # Subscriptions: topic -> [callback]
         self._subscribers: Dict[str, List[SubscriberCallback]] = {}
 
-        # 等待中的请求：correlation_id -> Future
+        # Pending requests: correlation_id -> Future
         self._pending_requests: Dict[str, asyncio.Future] = {}
 
-        # 消息日志（最近 N 条）
+        # Message log (latest N entries)
         self._message_log: List[Dict] = []
         self._max_log_size = 500
 
-        logger.info("[AgentBus] 初始化完成")
+        logger.info("[AgentBus] Initialization complete")
 
-    # ── Agent 注册 ────────────────────────────────────────────────────────
+    # ── Agent registration ────────────────────────────────────────────────────────
 
     def register_agent(
         self,
@@ -154,7 +154,7 @@ class AgentBus:
         description: str = "",
         profile_id: str = "",
     ) -> AgentRegistration:
-        """注册 Agent 到总线（支持关联 Profile）"""
+        """Register an agent with the bus, optionally linking a profile"""
         reg = AgentRegistration(
             agent_name=agent_name,
             agent_type=agent_type,
@@ -163,9 +163,9 @@ class AgentBus:
             profile_id=profile_id,
         )
         self._agents[agent_name] = reg
-        logger.info(f"[AgentBus] Agent 注册: {agent_name} ({agent_type})")
+        logger.info(f"[AgentBus] Agent registered: {agent_name} ({agent_type})")
 
-        # 广播注册事件
+        # Broadcast registration event
         try:
             asyncio.ensure_future(self.publish(AgentMessage(
                 topic=Topics.AGENT_REGISTERED,
@@ -173,35 +173,35 @@ class AgentBus:
                 payload={"agent_name": agent_name, "agent_type": agent_type, "profile_id": profile_id},
             )))
         except RuntimeError:
-            pass  # 无事件循环时静默（启动阶段）
+            pass  # Ignore the absence of an event loop during startup
         return reg
 
     def unregister_agent(self, agent_name: str) -> bool:
-        """注销 Agent"""
+        """Unregister an agent"""
         if agent_name in self._agents:
             self._agents[agent_name].is_active = False
             del self._agents[agent_name]
-            logger.info(f"[AgentBus] Agent 注销: {agent_name}")
+            logger.info(f"[AgentBus] Agent unregistered: {agent_name}")
             return True
         return False
 
     def get_agent(self, agent_name: str) -> Optional[AgentRegistration]:
-        """获取 Agent 注册信息"""
+        """Get agent registration information"""
         return self._agents.get(agent_name)
 
     def get_agents_by_type(self, agent_type: str) -> List[AgentRegistration]:
-        """按类型查找 Agent"""
+        """Find agents by type"""
         return [a for a in self._agents.values() if a.agent_type == agent_type and a.is_active]
 
     def get_agent_for_test_type(self, test_type: str) -> Optional[AgentRegistration]:
-        """找到能处理指定测试类型的 Agent"""
+        """Find agents capable of the requested test type"""
         for agent in self._agents.values():
             if agent.is_active and test_type in agent.supported_test_types:
                 return agent
         return None
 
     def list_agents(self) -> List[Dict]:
-        """列出所有在线 Agent"""
+        """List all online agents"""
         return [
             {
                 "name": a.agent_name,
@@ -212,29 +212,29 @@ class AgentBus:
             for a in self._agents.values()
         ]
 
-    # ── 发布/订阅 ────────────────────────────────────────────────────────
+    # ── Publish/subscribe ────────────────────────────────────────────────────────
 
     def subscribe(self, topic: str, callback: SubscriberCallback) -> None:
-        """订阅事件主题"""
+        """Subscribe to an event topic"""
         if topic not in self._subscribers:
             self._subscribers[topic] = []
         self._subscribers[topic].append(callback)
-        logger.debug(f"[AgentBus] 订阅: {topic} (共 {len(self._subscribers[topic])} 个)")
+        logger.debug(f"[AgentBus] Subscribed: {topic} ({len(self._subscribers[topic])} total)")
 
     def unsubscribe(self, topic: str, callback: SubscriberCallback) -> None:
-        """取消订阅"""
+        """Unsubscribe"""
         if topic in self._subscribers and callback in self._subscribers[topic]:
             self._subscribers[topic].remove(callback)
 
     async def publish(self, message: AgentMessage) -> None:
-        """发布事件到所有订阅者"""
+        """Publish an event to all subscribers"""
         self._log_message(message)
 
         callbacks = self._subscribers.get(message.topic, [])
         if not callbacks:
             return
 
-        # 并行通知所有订阅者
+        # Notify all subscribers concurrently
         tasks = []
         for cb in callbacks:
             tasks.append(self._safe_call(cb, message))
@@ -243,13 +243,13 @@ class AgentBus:
             await asyncio.gather(*tasks, return_exceptions=True)
 
     async def _safe_call(self, callback: SubscriberCallback, message: AgentMessage) -> None:
-        """安全调用回调，捕获异常"""
+        """Call a callback safely, catching exceptions"""
         try:
             await callback(message)
         except Exception as e:
-            logger.error(f"[AgentBus] 订阅回调异常: {e}", exc_info=True)
+            logger.error(f"[AgentBus] Subscriber callback failed: {e}", exc_info=True)
 
-    # ── 请求/响应 ─────────────────────────────────────────────────────────
+    # ── Request/response ─────────────────────────────────────────────────────────
 
     async def request(
         self,
@@ -259,23 +259,23 @@ class AgentBus:
         timeout: float = 300.0,
     ) -> Optional[Dict[str, Any]]:
         """
-        向指定 Agent 发送任务请求并等待响应。
+        Send a task request to an agent and wait for its response.
 
         Args:
-            receiver: 目标 Agent 名称
-            payload: 任务参数
-            sender: 发送方名称
-            timeout: 超时时间（秒）
+            receiver: Target agent name
+            payload: Task parameters
+            sender: Sender name
+            timeout: Timeout in seconds
 
         Returns:
-            响应 payload，超时返回 None
+            Response payload, or None on timeout
         """
         correlation_id = str(uuid.uuid4())[:12]
         loop = asyncio.get_running_loop()
         future = loop.create_future()
         self._pending_requests[correlation_id] = future
 
-        # 发送请求消息
+        # Send the request message
         request_msg = AgentMessage(
             msg_type=MessageType.REQUEST,
             topic=Topics.TASK_DISPATCHED,
@@ -286,12 +286,12 @@ class AgentBus:
         )
         await self.publish(request_msg)
 
-        # 等待响应
+        # Wait for the response
         try:
             result = await asyncio.wait_for(future, timeout=timeout)
             return result
         except asyncio.TimeoutError:
-            logger.warning(f"[AgentBus] 请求超时: {receiver} (correlation={correlation_id})")
+            logger.warning(f"[AgentBus] Request timed out: {receiver} (correlation={correlation_id})")
             return None
         finally:
             self._pending_requests.pop(correlation_id, None)
@@ -303,19 +303,19 @@ class AgentBus:
         sender: str = "",
     ) -> None:
         """
-        响应一个请求。
+        Respond to a request.
 
         Args:
-            correlation_id: 关联 ID（与请求一致）
-            payload: 响应数据
-            sender: 响应方名称
+            correlation_id: Correlation ID matching the request
+            payload: Response data
+            sender: Responder name
         """
-        # 通过 Future 直接唤醒等待方
+        # Wake the waiting caller directly through its Future
         future = self._pending_requests.get(correlation_id)
         if future and not future.done():
             future.set_result(payload)
 
-        # 同时发布响应事件（供审计/追踪）
+        # Also publish the response event for auditing and tracing
         response_msg = AgentMessage(
             msg_type=MessageType.RESPONSE,
             topic=Topics.TEST_COMPLETED,
@@ -325,7 +325,7 @@ class AgentBus:
         )
         self._log_message(response_msg)
 
-    # ── 批量分发与收集 ────────────────────────────────────────────────────
+    # ── Batch dispatch and collection ────────────────────────────────────────────────────
 
     async def dispatch_and_collect(
         self,
@@ -334,20 +334,20 @@ class AgentBus:
         timeout: float = 600.0,
     ) -> List[Dict[str, Any]]:
         """
-        批量分发任务到对应 Agent 并收集结果。
+        Dispatch tasks to matching agents and collect the results.
 
         Args:
-            tasks: 任务列表，每个任务需包含 "test_type" 和 "config"
-            parallel: 是否并行执行
-            timeout: 单任务超时
+            tasks: Task list; each task must include "test_type" and "config"
+            parallel: Whether to run concurrently
+            timeout: Per-task timeout
 
         Returns:
-            结果列表
+            Result list
         """
         results = []
 
         if parallel:
-            # 并行分发
+            # Concurrent dispatch
             coros = []
             for task in tasks:
                 test_type = task.get("test_type", "")
@@ -359,7 +359,7 @@ class AgentBus:
                         timeout=timeout,
                     ))
                 else:
-                    logger.warning(f"[AgentBus] 没有 Agent 能处理: {test_type}")
+                    logger.warning(f"[AgentBus] No agent can handle: {test_type}")
                     results.append({
                         "test_type": test_type,
                         "status": "skipped",
@@ -383,7 +383,7 @@ class AgentBus:
                     else:
                         results.append(res)
         else:
-            # 串行执行
+            # Sequential execution
             for task in tasks:
                 test_type = task.get("test_type", "")
                 agent_reg = self.get_agent_for_test_type(test_type)
@@ -406,7 +406,7 @@ class AgentBus:
 
         return results
 
-    # ── Agent 间任务交接（Handoff）────────────────────────────────────────
+    # ── Inter-agent task handoff(Handoff)────────────────────────────────────────
 
     async def handoff(
         self,
@@ -416,19 +416,19 @@ class AgentBus:
         context: Optional[Dict[str, Any]] = None,
     ) -> Optional[Dict[str, Any]]:
         """
-        Agent 间任务交接（携带上下文）。
+        Hand off tasks between agents, including context.
 
-        类似 OpenClaw 的 agentToAgent handoff。
-        sender 将任务连同上下文一起转交给 receiver。
+        Similar to OpenClaw agentToAgent handoff.
+        The sender forwards the task and context to the receiver.
 
         Args:
-            sender: 交接方 Agent
-            receiver: 接收方 Agent
-            task: 任务数据
-            context: 上下文（前置 Agent 的执行结果等）
+            sender: Handing-off agent
+            receiver: Receiving agent
+            task: Task data
+            context: Context, including prior agent results
 
         Returns:
-            接收方的执行结果
+            Execution result from the receiving agent
         """
         handoff_payload = {
             "handoff_from": sender,
@@ -436,7 +436,7 @@ class AgentBus:
             "context": context or {},
         }
 
-        # 记录 handoff 消息
+        # Record the handoff message
         handoff_msg = AgentMessage(
             msg_type=MessageType.HANDOFF,
             topic="agent.handoff",
@@ -447,7 +447,7 @@ class AgentBus:
         self._log_message(handoff_msg)
         logger.info(f"[AgentBus] Handoff: {sender} → {receiver}")
 
-        # 通过 request 机制转发
+        # Forward through the request mechanism
         return await self.request(
             receiver=receiver,
             payload=handoff_payload,
@@ -455,10 +455,10 @@ class AgentBus:
             timeout=task.get("timeout", 300),
         )
 
-    # ── 心跳 & 健康检查 ───────────────────────────────────────────────────
+    # ── Heartbeats and health checks ───────────────────────────────────────────────────
 
     def heartbeat(self, agent_name: str) -> bool:
-        """Agent 心跳上报"""
+        """Report an agent heartbeat"""
         agent = self._agents.get(agent_name)
         if agent:
             agent.last_heartbeat = time.time()
@@ -467,7 +467,7 @@ class AgentBus:
         return False
 
     def get_health(self, timeout_threshold: float = 120.0) -> List[Dict]:
-        """获取所有 Agent 的健康状态"""
+        """Get health status for all agents"""
         now = time.time()
         return [
             {
@@ -481,7 +481,7 @@ class AgentBus:
             for a in self._agents.values()
         ]
 
-    # ── 按测试类型广播 ────────────────────────────────────────────────────
+    # ── Broadcast by test type ────────────────────────────────────────────────────
 
     async def broadcast_by_type(
         self,
@@ -489,7 +489,7 @@ class AgentBus:
         message: Dict[str, Any],
         sender: str = "commander",
     ) -> None:
-        """向所有能处理指定测试类型的 Agent 广播消息"""
+        """Broadcast to every agent capable of the requested test type"""
         for agent in self._agents.values():
             if not agent.is_active:
                 continue
@@ -501,27 +501,27 @@ class AgentBus:
                     payload=message,
                 ))
 
-    # ── 消息日志 ──────────────────────────────────────────────────────────
+    # ── Message log ──────────────────────────────────────────────────────────
 
     def _log_message(self, message: AgentMessage) -> None:
-        """记录消息到内存日志"""
+        """Record a message in the in-memory log"""
         entry = message.to_dict()
         entry["logged_at"] = datetime.now().isoformat()
         self._message_log.append(entry)
 
-        # 限制日志大小
+        # Limit log size
         if len(self._message_log) > self._max_log_size:
             self._message_log = self._message_log[-self._max_log_size:]
 
     def get_message_log(self, limit: int = 50, topic: Optional[str] = None) -> List[Dict]:
-        """获取消息日志"""
+        """Get the message log"""
         logs = self._message_log
         if topic:
             logs = [m for m in logs if m.get("topic") == topic]
         return logs[-limit:]
 
     def get_statistics(self) -> Dict[str, Any]:
-        """获取通信统计"""
+        """Get communication statistics"""
         return {
             "registered_agents": len(self._agents),
             "active_agents": sum(1 for a in self._agents.values() if a.is_active),
@@ -531,13 +531,13 @@ class AgentBus:
         }
 
 
-# ── 单例 ─────────────────────────────────────────────────────────────────────
+# ── Singleton ─────────────────────────────────────────────────────────────────────
 
 _agent_bus: Optional[AgentBus] = None
 
 
 def get_agent_bus() -> AgentBus:
-    """获取 AgentBus 单例"""
+    """Get the AgentBus singleton"""
     global _agent_bus
     if _agent_bus is None:
         _agent_bus = AgentBus()

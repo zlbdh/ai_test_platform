@@ -1,11 +1,11 @@
 """
-Self-Healing Test Engine - 自愈测试引擎
+Self-Healing Test Engine
 
-实现测试失败时的自动修复机制：
-- 元素定位失败 -> 智能查找替代元素
-- 超时失败 -> 动态调整等待时间
-- 断言失败 -> 分析根因并建议修复
-- 网络失败 -> 自动重试
+Automatic recovery from test failures:
+- Element location failure -> find alternative elements
+- Timeout -> adjust wait duration dynamically
+- Assertion failure -> analyze the root cause and suggest fixes
+- Network failure -> retry automatically
 """
 
 from typing import Dict, Any, List, Optional, Callable
@@ -33,7 +33,7 @@ class FailureType(Enum):
 
 @dataclass
 class HealingAction:
-    """修复动作"""
+    """Healing action"""
     action_type: str
     description: str
     parameters: Dict[str, Any]
@@ -42,7 +42,7 @@ class HealingAction:
 
 @dataclass
 class HealingResult:
-    """修复结果"""
+    """Healing result"""
     success: bool
     action_taken: Optional[HealingAction]
     retry_count: int
@@ -52,7 +52,7 @@ class HealingResult:
 
 
 class SelfHealingEngine:
-    """自愈测试引擎"""
+    """Self-healing test engine"""
     
     def __init__(self, max_retries: int = 3, base_delay: float = 1.0):
         self.max_retries = max_retries
@@ -70,7 +70,7 @@ class SelfHealingEngine:
         return os.path.join(db_dir, 'healing_history.db')
 
     def _init_db(self):
-        """初始化自愈历史表"""
+        """Initialize the healing history table"""
         try:
             conn = sqlite3.connect(self._db_path)
             conn.execute('''
@@ -88,10 +88,10 @@ class SelfHealingEngine:
             conn.commit()
             conn.close()
         except Exception as e:
-            logger.warning(f"自愈历史 DB 初始化失败: {e}")
+            logger.warning(f"Healing history database initialization failed: {e}")
 
     def _load_learned_patterns(self):
-        """从 SQLite 加载历史成功模式到内存"""
+        """Load successful historical patterns from SQLite into memory"""
         try:
             conn = sqlite3.connect(self._db_path)
             cursor = conn.execute(
@@ -106,16 +106,16 @@ class SelfHealingEngine:
                         action_type=action_type,
                         description=action_desc or '',
                         parameters=params,
-                        success_probability=0.9  # 历史成功模式高置信
+                        success_probability=0.9  # High confidence for historically successful patterns
                     )
             conn.close()
             if self.learned_patterns:
-                logger.info(f"[SelfHealing] 加载 {len(self.learned_patterns)} 个历史修复模式")
+                logger.info(f"[SelfHealing] Loaded {len(self.learned_patterns)} historical healing patterns")
         except Exception as e:
-            logger.warning(f"[SelfHealing] 加载历史模式失败: {e}")
+            logger.warning(f"[SelfHealing] Failed to load historical patterns: {e}")
     
     def classify_failure(self, error: Exception, context: Dict[str, Any]) -> FailureType:
-        """分类失败类型"""
+        """Classify the failure type"""
         error_str = str(error).lower()
         
         if any(kw in error_str for kw in ["not found", "no such element", "找不到"]):
@@ -139,46 +139,46 @@ class SelfHealingEngine:
         error: Exception,
         context: Dict[str, Any]
     ) -> List[HealingAction]:
-        """根据失败类型建议修复动作"""
+        """Suggest healing actions based on the failure type"""
         actions = []
         
         if failure_type == FailureType.ELEMENT_NOT_FOUND:
-            # 优先检查历史学习的成功模式
+            # Check learned successful patterns first
             error_key = str(error)[:100]
             if error_key in self.learned_patterns:
                 learned = self.learned_patterns[error_key]
                 actions.append(HealingAction(
                     action_type=learned.action_type,
-                    description=f"[历史学习] {learned.description}",
+                    description=f"[Learned history] {learned.description}",
                     parameters=learned.parameters,
                     success_probability=0.9
                 ))
             
-            # LLM 辅助定位 (SoM 集成)
+            # LLM-assisted location (SoM integration)
             actions.append(HealingAction(
                 action_type="llm_relocate",
-                description="LLM 分析 DOM 推理替代选择器",
+                description="Use LLM DOM analysis to infer alternative selectors",
                 parameters={"use_som": True},
                 success_probability=0.75
             ))
             
-            # 原有规则策略
+            # Existing rule-based strategies
             actions.extend([
                 HealingAction(
                     action_type="retry_with_wait",
-                    description="增加等待时间后重试",
+                    description="Wait longer and retry",
                     parameters={"wait_seconds": 3},
                     success_probability=0.6
                 ),
                 HealingAction(
                     action_type="find_similar_element",
-                    description="查找相似元素",
+                    description="Find similar elements",
                     parameters={"similarity_threshold": 0.7},
                     success_probability=0.5
                 ),
                 HealingAction(
                     action_type="scroll_and_retry",
-                    description="滚动页面后重试",
+                    description="Scroll the page and retry",
                     parameters={"scroll_amount": 500},
                     success_probability=0.4
                 )
@@ -188,13 +188,13 @@ class SelfHealingEngine:
             actions.extend([
                 HealingAction(
                     action_type="increase_timeout",
-                    description="增加超时时间",
+                    description="Increase the timeout",
                     parameters={"multiplier": 2},
                     success_probability=0.7
                 ),
                 HealingAction(
                     action_type="wait_for_network_idle",
-                    description="等待网络空闲",
+                    description="Wait for network idle",
                     parameters={"idle_time": 2000},
                     success_probability=0.6
                 )
@@ -204,13 +204,13 @@ class SelfHealingEngine:
             actions.extend([
                 HealingAction(
                     action_type="retry_with_backoff",
-                    description="指数退避重试",
+                    description="Retry with exponential backoff",
                     parameters={"initial_delay": 1, "max_delay": 30},
                     success_probability=0.8
                 ),
                 HealingAction(
                     action_type="check_connectivity",
-                    description="检查网络连接",
+                    description="Check the network connection",
                     parameters={},
                     success_probability=0.3
                 )
@@ -220,13 +220,13 @@ class SelfHealingEngine:
             actions.extend([
                 HealingAction(
                     action_type="refresh_token",
-                    description="刷新认证令牌",
+                    description="Refresh the authentication token",
                     parameters={},
                     success_probability=0.7
                 ),
                 HealingAction(
                     action_type="re_login",
-                    description="重新登录",
+                    description="Sign in again",
                     parameters={},
                     success_probability=0.8
                 )
@@ -236,27 +236,27 @@ class SelfHealingEngine:
             actions.extend([
                 HealingAction(
                     action_type="retry_with_refresh",
-                    description="刷新页面后重试断言",
+                    description="Refresh the page and retry the assertion",
                     parameters={},
                     success_probability=0.4
                 ),
                 HealingAction(
                     action_type="loosen_assertion",
-                    description="放宽断言条件 (需人工确认)",
+                    description="Relax assertion conditions (requires human confirmation)",
                     parameters={"threshold": 0.9},
                     success_probability=0.3
                 )
             ])
         
-        # 通用重试
+        # General retry
         actions.append(HealingAction(
             action_type="simple_retry",
-            description="简单重试",
+            description="Simple retry",
             parameters={},
             success_probability=0.3
         ))
         
-        # 按成功概率排序
+        # Sort by success probability
         return sorted(actions, key=lambda a: -a.success_probability)
     
     async def execute_with_healing(
@@ -267,16 +267,16 @@ class SelfHealingEngine:
         **kwargs
     ) -> HealingResult:
         """
-        执行函数并在失败时自动修复
+        Execute a function and recover automatically on failure
         
         Args:
-            func: 要执行的函数
-            *args: 函数参数
-            context: 执行上下文
-            **kwargs: 函数关键字参数
+            func: Function to execute
+            *args: Function arguments
+            context: Execution context
+            **kwargs: Function keyword arguments
         
         Returns:
-            HealingResult: 修复结果
+            HealingResult: Healing result
         """
         context = context or {}
         start_time = time.time()
@@ -286,17 +286,17 @@ class SelfHealingEngine:
         
         while retry_count <= self.max_retries:
             try:
-                # 执行函数
+                # Execute the function
                 if asyncio.iscoroutinefunction(func):
                     result = await func(*args, **kwargs)
                 else:
                     result = func(*args, **kwargs)
                 
-                # 成功
+                # Success
                 total_time = int((time.time() - start_time) * 1000)
                 
                 if retry_count > 0:
-                    # 记录成功的修复模式
+                    # Record the successful healing pattern
                     self._record_success(last_error, action_taken)
                 
                 return HealingResult(
@@ -314,25 +314,25 @@ class SelfHealingEngine:
                 if retry_count > self.max_retries:
                     break
                 
-                # 分类失败
+                # Classify the failure
                 failure_type = self.classify_failure(e, context)
                 logger.warning(f"Failure detected: {failure_type.value} - {e}")
                 
-                # 获取修复动作
+                # Get healing actions
                 actions = self.suggest_healing_actions(failure_type, e, context)
                 
                 if actions:
                     action_taken = actions[0]
                     logger.info(f"Attempting healing: {action_taken.description}")
                     
-                    # 执行修复动作
+                    # Execute healing actions
                     await self._execute_healing_action(action_taken, context)
                 else:
-                    # 默认延迟重试
+                    # Retry after the default delay
                     delay = self.base_delay * (2 ** (retry_count - 1))
                     await asyncio.sleep(delay)
         
-        # 所有重试失败
+        # All retries failed
         total_time = int((time.time() - start_time) * 1000)
         return HealingResult(
             success=False,
@@ -347,7 +347,7 @@ class SelfHealingEngine:
         action: HealingAction,
         context: Dict[str, Any]
     ):
-        """执行修复动作"""
+        """Execute healing actions"""
         if action.action_type == "retry_with_wait":
             wait = action.parameters.get("wait_seconds", 3)
             await asyncio.sleep(wait)
@@ -362,16 +362,16 @@ class SelfHealingEngine:
             await asyncio.sleep(initial)
         
         elif action.action_type == "scroll_and_retry":
-            # 需要浏览器上下文
+            # Requires browser context
             if "browser" in context:
                 await context["browser"].scroll(action.parameters.get("scroll_amount", 500))
         
         else:
-            # 默认等待
+            # Default wait
             await asyncio.sleep(self.base_delay)
     
     def _record_success(self, error: Exception, action: Optional[HealingAction]):
-        """记录成功的修复模式 → 内存 + SQLite 持久化"""
+        """Record successful healing patterns in memory and SQLite"""
         if action:
             error_key = str(error)[:100]
             self.learned_patterns[error_key] = action
@@ -381,7 +381,7 @@ class SelfHealingEngine:
                 "success": True
             }
             self.healing_history.append(record)
-            # SQLite 持久化
+            # SQLite persistence
             try:
                 conn = sqlite3.connect(self._db_path)
                 conn.execute(
@@ -398,12 +398,12 @@ class SelfHealingEngine:
                 )
                 conn.commit()
                 conn.close()
-                logger.info(f"[SelfHealing] 修复模式已持久化: {action.action_type}")
+                logger.info(f"[SelfHealing] Healing pattern persisted: {action.action_type}")
             except Exception as e:
-                logger.warning(f"[SelfHealing] 持久化失败: {e}")
+                logger.warning(f"[SelfHealing] Persistence failed: {e}")
 
     async def llm_relocate_element(self, original_selector: str, error_msg: str, dom_snapshot: str = "") -> Optional[List[Dict]]:
-        """使用 LLM 分析 DOM 推理替代选择器（SoM 深度集成）"""
+        """Use LLM DOM analysis to infer alternative selectors with deep SoM integration"""
         try:
             from langchain_core.prompts import ChatPromptTemplate
             from langchain_core.output_parsers import JsonOutputParser
@@ -416,19 +416,19 @@ class SelfHealingEngine:
                 "original_selector": original_selector,
                 "failure_type": "element_not_found",
                 "error_message": error_msg[:300],
-                "dom_snapshot": dom_snapshot[:3000] if dom_snapshot else "(无 DOM 快照)"
+                "dom_snapshot": dom_snapshot[:3000] if dom_snapshot else "(No DOM snapshot)"
             })
             alternatives = result.get("alternative_selectors", [])
             analysis = result.get("analysis", "")
-            logger.info(f"[SelfHealing/LLM] 分析: {analysis} | 替代选择器: {len(alternatives)} 个")
+            logger.info(f"[SelfHealing/LLM] Analysis: {analysis}; alternative selectors: {len(alternatives)}")
             return alternatives
         except Exception as e:
-            logger.warning(f"[SelfHealing/LLM] LLM 定位失败: {e}")
+            logger.warning(f"[SelfHealing/LLM] LLM location failed: {e}")
             return None
 
     
     def get_statistics(self) -> Dict[str, Any]:
-        """获取自愈统计"""
+        """Get healing statistics"""
         total = len(self.healing_history)
         success = sum(1 for h in self.healing_history if h.get("success"))
         
@@ -439,7 +439,7 @@ class SelfHealingEngine:
             "learned_patterns": len(self.learned_patterns)
         }
 
-    # === Sync 接口（供 Executor sync 线程调用） ===
+    # === Sync interface for the Executor sync thread ===
     
     def execute_with_healing_sync(
         self,
@@ -449,8 +449,8 @@ class SelfHealingEngine:
         **kwargs
     ) -> HealingResult:
         """
-        同步版本：执行函数并在失败时自动修复。
-        适用于 Executor 的 sync Playwright 线程。
+        Synchronous version: execute a function and recover automatically on failure.
+        For the Executor sync Playwright thread.
         """
         context = context or {}
         start_time = time.time()
@@ -495,7 +495,7 @@ class SelfHealingEngine:
                     time.sleep(delay)
         
         total_time = int((time.time() - start_time) * 1000)
-        # 记录失败的修复尝试
+        # Record failed healing attempts
         self.healing_history.append({
             "error": str(last_error),
             "action": action_taken,
@@ -514,7 +514,7 @@ class SelfHealingEngine:
         action: HealingAction,
         context: Dict[str, Any]
     ):
-        """同步执行修复动作"""
+        """Execute healing actions synchronously"""
         if action.action_type == "retry_with_wait":
             wait = action.parameters.get("wait_seconds", 3)
             time.sleep(wait)
@@ -541,11 +541,11 @@ class SelfHealingEngine:
             time.sleep(self.base_delay)
 
 
-# 单例
+# Singleton
 _healing_engine: Optional[SelfHealingEngine] = None
 
 def get_healing_engine() -> SelfHealingEngine:
-    """获取自愈引擎单例"""
+    """Get the healing engine singleton"""
     global _healing_engine
     if _healing_engine is None:
         _healing_engine = SelfHealingEngine()
