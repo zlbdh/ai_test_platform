@@ -1,7 +1,7 @@
-﻿"""
-TestGenerationService (planner_service) 单元测试
-覆盖: generate_plan 全流程, _discover_scenarios, _generate_steps,
-      plan_next_step 单步推理, semantic_verify 语义验证
+"""
+TestGenerationService (planner_service) unit tests
+Coverage: the complete generate_plan flow, _discover_scenarios, _generate_steps,
+          plan_next_step reasoning, and semantic_verify validation.
 """
 import pytest
 from unittest.mock import patch, MagicMock, AsyncMock, PropertyMock
@@ -13,17 +13,17 @@ import asyncio
 # ---------------------------------------------------------------------------
 @pytest.fixture(autouse=True)
 def _patch_externals():
-    """Mock planner_service 的所有重量级依赖 (LLM, KB, Scout, ContextAnalyzer)"""
+    """Mock all heavyweight planner_service dependencies (LLM, KB, Scout, ContextAnalyzer)."""
     with patch("services.planner_service.get_llm_for_role") as mock_get_llm, \
          patch("services.planner_service.kb") as mock_kb, \
          patch("services.planner_service.Config") as mock_config:
-        # 默认 LLM mock
+        # Default LLM mock
         mock_llm = MagicMock()
         mock_get_llm.return_value = mock_llm
-        # 默认 KB mock
+        # Default KB mock
         mock_kb.enabled = False
         mock_kb.initialize = MagicMock()
-        # 默认 Config mock
+        # Default Config mock
         mock_config.PLANNER_MODEL = None
         yield {
             "get_llm": mock_get_llm,
@@ -34,20 +34,20 @@ def _patch_externals():
 
 
 def _make_service():
-    """创建一个干净的 TestGenerationService 实例"""
+    """Create a clean TestGenerationService instance."""
     from services.planner_service import TestGenerationService
     return TestGenerationService()
 
 
 # ---------------------------------------------------------------------------
-# generate_plan 测试
+# generate_plan tests
 # ---------------------------------------------------------------------------
 class TestGeneratePlan:
-    """测试 generate_plan() 全流程"""
+    """Test the complete generate_plan() flow."""
 
     @pytest.mark.asyncio
     async def test_empty_requirement_returns_error(self, _patch_externals):
-        """空需求应直接返回错误"""
+        """An empty requirement should return an error immediately."""
         svc = _make_service()
         result = await svc.generate_plan("")
         assert result["error"] == "Requirement cannot be empty"
@@ -56,31 +56,31 @@ class TestGeneratePlan:
 
     @pytest.mark.asyncio
     async def test_whitespace_requirement_returns_error(self, _patch_externals):
-        """纯空格需求应直接返回错误"""
+        """A whitespace-only requirement should return an error immediately."""
         svc = _make_service()
         result = await svc.generate_plan("   ")
         assert result["error"] == "Requirement cannot be empty"
 
     @pytest.mark.asyncio
     async def test_rag_disabled(self, _patch_externals):
-        """RAG 禁用时不应调用知识库"""
+        """Do not call the knowledge base when RAG is disabled."""
         svc = _make_service()
         with patch.object(svc, "_discover_scenarios", new_callable=AsyncMock, return_value=[]), \
              patch("services.context_analyzer.ContextAnalyzer") as mock_ca:
             mock_ca.analyze.return_value = {"strategy": "TDD", "reasoning": "No URL"}
-            result = await svc.generate_plan("测试登录", enable_rag=False)
+            result = await svc.generate_plan("Test login", enable_rag=False)
             _patch_externals["kb"].initialize.assert_not_called()
             assert result["test_cases"] == []
             assert result["sources"] == []
 
     @pytest.mark.asyncio
     async def test_rag_enabled_with_kb(self, _patch_externals):
-        """RAG 启用且 KB 可用时应检索知识"""
+        """Retrieve knowledge when RAG is enabled and the KB is available."""
         kb_mock = _patch_externals["kb"]
         kb_mock.enabled = True
-        # 模拟向量搜索结果
+        # Simulate vector search results.
         mock_doc = MagicMock()
-        mock_doc.page_content = "测试知识文档内容"
+        mock_doc.page_content = "Test knowledge document content"
         mock_doc.metadata = {"filename": "prd.md"}
         mock_vs = MagicMock()
         mock_vs.similarity_search_with_score = MagicMock(return_value=[(mock_doc, 0.5)])
@@ -90,30 +90,30 @@ class TestGeneratePlan:
         with patch.object(svc, "_discover_scenarios", new_callable=AsyncMock, return_value=[]) as mock_disc, \
              patch("services.context_analyzer.ContextAnalyzer") as mock_ca:
             mock_ca.analyze.return_value = {"strategy": "TDD", "reasoning": "test"}
-            result = await svc.generate_plan("测试登录", enable_rag=True)
+            result = await svc.generate_plan("Test login", enable_rag=True)
             assert "prd.md" in result["sources"]
 
     @pytest.mark.asyncio
     async def test_rag_retrieval_failure_is_graceful(self, _patch_externals):
-        """RAG 检索失败时应优雅降级，不影响主流程"""
+        """A RAG retrieval failure should degrade gracefully without interrupting the main flow."""
         kb_mock = _patch_externals["kb"]
         kb_mock.enabled = True
         mock_vs = MagicMock()
-        mock_vs.similarity_search_with_score = MagicMock(side_effect=Exception("Vector DB 连接失败"))
+        mock_vs.similarity_search_with_score = MagicMock(side_effect=Exception("Vector DB connection failed"))
         kb_mock.vector_store = mock_vs
 
         svc = _make_service()
         with patch.object(svc, "_discover_scenarios", new_callable=AsyncMock, return_value=[]) as mock_disc, \
              patch("services.context_analyzer.ContextAnalyzer") as mock_ca:
             mock_ca.analyze.return_value = {"strategy": "TDD", "reasoning": "test"}
-            result = await svc.generate_plan("测试异常处理", enable_rag=True)
-            # 不应因 RAG 失败而抛异常
+            result = await svc.generate_plan("Test exception handling", enable_rag=True)
+            # A RAG failure should not raise an exception.
             assert "error" not in result
             assert result["sources"] == []
 
     @pytest.mark.asyncio
     async def test_with_target_url_dispatches_scout(self, _patch_externals):
-        """提供 URL 时应调用 ScoutAgent"""
+        """Call ScoutAgent when a URL is provided."""
         svc = _make_service()
         with patch.object(svc, "_discover_scenarios", new_callable=AsyncMock, return_value=[]) as mock_disc, \
              patch("services.context_analyzer.ContextAnalyzer") as mock_ca, \
@@ -121,33 +121,33 @@ class TestGeneratePlan:
             mock_ca.analyze.return_value = {"strategy": "VERIFICATION", "reasoning": "test"}
             mock_scout.scout = AsyncMock(return_value={
                 "status": "success",
-                "title": "百度",
-                "visible_text": "搜索框",
+                "title": "Baidu",
+                "visible_text": "Search field",
                 "interactive_summary": "button, input"
             })
-            result = await svc.generate_plan("测试百度搜索", target_url="https://baidu.com")
+            result = await svc.generate_plan("Test Baidu search", target_url="https://baidu.com")
             mock_scout.scout.assert_called_once_with("https://baidu.com")
 
     @pytest.mark.asyncio
     async def test_scout_failure_is_graceful(self, _patch_externals):
-        """Scout 失败不应影响计划生成"""
+        """A Scout failure should not prevent plan generation."""
         svc = _make_service()
         with patch.object(svc, "_discover_scenarios", new_callable=AsyncMock, return_value=[]) as mock_disc, \
              patch("services.context_analyzer.ContextAnalyzer") as mock_ca, \
              patch("agents.scout_agent.ScoutAgent") as mock_scout:
             mock_ca.analyze.return_value = {"strategy": "VERIFICATION", "reasoning": "test"}
-            mock_scout.scout = AsyncMock(side_effect=Exception("Scout 超时"))
-            result = await svc.generate_plan("测试", target_url="https://example.com")
-            # 不应抛异常
+            mock_scout.scout = AsyncMock(side_effect=Exception("Scout timed out"))
+            result = await svc.generate_plan("Test", target_url="https://example.com")
+            # Do not raise an exception.
             assert "test_cases" in result
 
     @pytest.mark.asyncio
     async def test_parallel_step_generation(self, _patch_externals):
-        """多个场景应并行生成步骤"""
+        """Generate steps for multiple scenarios concurrently."""
         svc = _make_service()
         scenarios = [
-            {"name": "场景A", "description": "描述A", "priority": "P0", "dimension": "核心流程", "precondition": "", "test_data": []},
-            {"name": "场景B", "description": "描述B", "priority": "P1", "dimension": "异常流程", "precondition": "", "test_data": []},
+            {"name": "Scenario A", "description": "Description A", "priority": "P0", "dimension": "Core workflow", "precondition": "", "test_data": []},
+            {"name": "Scenario B", "description": "Description B", "priority": "P1", "dimension": "Error workflow", "precondition": "", "test_data": []},
         ]
         steps_a = [{"action": "goto", "target": "https://example.com"}]
         steps_b = [{"action": "click", "target": "button"}]
@@ -156,37 +156,37 @@ class TestGeneratePlan:
              patch.object(svc, "_generate_steps_for_scenario", new_callable=AsyncMock, side_effect=[steps_a, steps_b]), \
              patch("services.context_analyzer.ContextAnalyzer") as mock_ca:
             mock_ca.analyze.return_value = {"strategy": "TDD", "reasoning": "test"}
-            result = await svc.generate_plan("测试功能", enable_rag=False)
+            result = await svc.generate_plan("Test functionality", enable_rag=False)
             assert len(result["test_cases"]) == 2
-            assert result["test_cases"][0]["scenario"] == "场景A"
+            assert result["test_cases"][0]["scenario"] == "Scenario A"
             assert result["test_cases"][0]["priority"] == "P0"
-            assert result["test_cases"][1]["scenario"] == "场景B"
+            assert result["test_cases"][1]["scenario"] == "Scenario B"
             assert result["coverage_summary"]["total_scenarios"] == 2
             assert result["coverage_summary"]["by_priority"]["P0"] == 1
-            assert "核心流程" in result["coverage_summary"]["dimensions_covered"]
+            assert "Core workflow" in result["coverage_summary"]["dimensions_covered"]
 
     @pytest.mark.asyncio
     async def test_step_generation_error_is_isolated(self, _patch_externals):
-        """单个场景步骤生成失败不应影响其他场景"""
+        """Step generation failure for one scenario should not affect other scenarios."""
         svc = _make_service()
         scenarios = [
-            {"name": "成功场景", "description": "ok", "priority": "P0", "dimension": "核心", "precondition": "", "test_data": []},
-            {"name": "失败场景", "description": "fail", "priority": "P1", "dimension": "边界", "precondition": "", "test_data": []},
+            {"name": "Successful scenario", "description": "ok", "priority": "P0", "dimension": "Core", "precondition": "", "test_data": []},
+            {"name": "Failed scenario", "description": "fail", "priority": "P1", "dimension": "Boundary", "precondition": "", "test_data": []},
         ]
 
         with patch.object(svc, "_discover_scenarios", new_callable=AsyncMock, return_value=scenarios), \
              patch.object(svc, "_generate_steps_for_scenario", new_callable=AsyncMock, 
-                          side_effect=[[{"action": "click"}], Exception("LLM 超时")]), \
+                          side_effect=[[{"action": "click"}], Exception("LLM timed out")]), \
              patch("services.context_analyzer.ContextAnalyzer") as mock_ca:
             mock_ca.analyze.return_value = {"strategy": "TDD", "reasoning": "test"}
-            result = await svc.generate_plan("测试", enable_rag=False)
-            # 只有一个场景成功
+            result = await svc.generate_plan("Test", enable_rag=False)
+            # Only one scenario succeeds.
             assert len(result["test_cases"]) == 1
-            assert result["test_cases"][0]["scenario"] == "成功场景"
+            assert result["test_cases"][0]["scenario"] == "Successful scenario"
 
     @pytest.mark.asyncio
     async def test_step_generation_error_uses_local_fallback(self, _patch_externals):
-        """当 URL 已知且步骤生成失败时，应退回到本地 fallback 步骤"""
+        """Use local fallback steps when the URL is known and step generation fails."""
         svc = _make_service()
         scenarios = [
             {"name": "首页检查", "description": "确认登录入口存在", "priority": "P0", "dimension": "核心", "precondition": "", "test_data": []},
@@ -399,17 +399,17 @@ class TestGeneratePlan:
 
 
 # ---------------------------------------------------------------------------
-# _discover_scenarios 测试
+# _discover_scenarios tests
 # ---------------------------------------------------------------------------
 class TestDiscoverScenarios:
-    """测试 _discover_scenarios() 场景发现"""
+    """Test _discover_scenarios() scenario discovery."""
 
     @pytest.mark.asyncio
     async def test_successful_discovery(self, _patch_externals):
-        """LLM 正常返回场景列表"""
+        """The LLM returns a valid scenario list."""
         svc = _make_service()
         expected_scenarios = [
-            {"name": "登录成功", "description": "用正确密码登录", "priority": "P0", "dimension": "核心", "precondition": "", "test_data": []}
+            {"name": "Successful login", "description": "Log in with the correct password", "priority": "P0", "dimension": "Core", "precondition": "", "test_data": []}
         ]
         # Mock LangChain chain
         mock_chain = MagicMock()
@@ -420,17 +420,17 @@ class TestDiscoverScenarios:
              patch("services.planner_service.JsonOutputParser") as mock_jp:
             mock_prompt = MagicMock()
             mock_pt.from_template.return_value = mock_prompt
-            # 模拟 prompt | llm | parser 链
+            # Mock the prompt | llm | parser chain.
             mock_prompt.__or__ = MagicMock(return_value=MagicMock())
             mock_prompt.__or__.return_value.__or__ = MagicMock(return_value=mock_chain)
 
-            result = await svc._discover_scenarios("测试登录", "知识上下文")
+            result = await svc._discover_scenarios("Test login", "Knowledge context")
             assert result == expected_scenarios
             _patch_externals["get_llm"].assert_called_once_with("planner")
 
     @pytest.mark.asyncio
     async def test_discovery_failure_returns_default(self, _patch_externals):
-        """LLM 调用失败应返回默认场景"""
+        """Return a default scenario when the LLM call fails."""
         svc = _make_service()
         with patch("services.planner_service.ChatPromptTemplate") as mock_pt, \
              patch("services.planner_service.JsonOutputParser"):
@@ -438,16 +438,16 @@ class TestDiscoverScenarios:
             mock_pt.from_template.return_value = mock_prompt
             mock_prompt.__or__ = MagicMock(return_value=MagicMock())
             mock_prompt.__or__.return_value.__or__ = MagicMock(
-                return_value=MagicMock(ainvoke=AsyncMock(side_effect=Exception("LLM 不可达")))
+                return_value=MagicMock(ainvoke=AsyncMock(side_effect=Exception("LLM unavailable")))
             )
-            result = await svc._discover_scenarios("测试", "")
+            result = await svc._discover_scenarios("Test", "")
             assert len(result) == 1
             assert result[0]["name"] == "Default Scenario"
             assert result[0]["priority"] == "P1"
 
     @pytest.mark.asyncio
     async def test_url_hint_injected(self, _patch_externals):
-        """提供 target_url 时应在 prompt 中注入 URL 提示"""
+        """Inject a URL hint into the prompt when target_url is provided."""
         svc = _make_service()
         mock_chain = MagicMock()
         mock_chain.ainvoke = AsyncMock(return_value=[])
@@ -459,21 +459,21 @@ class TestDiscoverScenarios:
             mock_prompt.__or__ = MagicMock(return_value=MagicMock())
             mock_prompt.__or__.return_value.__or__ = MagicMock(return_value=mock_chain)
 
-            await svc._discover_scenarios("测试百度", "", target_url="https://baidu.com")
-            # 验证 ainvoke 被调用时传入了包含 url_hint 的参数
+            await svc._discover_scenarios("Test Baidu", "", target_url="https://baidu.com")
+            # Verify that the ainvoke arguments include url_hint.
             call_args = mock_chain.ainvoke.call_args[0][0]
             assert "baidu.com" in call_args.get("url_hint", "")
 
 
 # ---------------------------------------------------------------------------
-# _generate_steps 测试
+# _generate_steps tests
 # ---------------------------------------------------------------------------
 class TestGenerateSteps:
-    """测试 _generate_steps() 步骤生成核心逻辑"""
+    """Test the core _generate_steps() logic."""
 
     @pytest.mark.asyncio
     async def test_successful_generation(self, _patch_externals):
-        """正常生成步骤"""
+        """Generate steps normally."""
         svc = _make_service()
         expected_steps = [
             {"action": "goto", "target": "https://example.com", "value": ""},
@@ -489,13 +489,13 @@ class TestGenerateSteps:
             mock_prompt.__or__ = MagicMock(return_value=MagicMock())
             mock_prompt.__or__.return_value.__or__ = MagicMock(return_value=mock_chain)
 
-            scenario = {"name": "登录", "description": "用正确密码登录"}
+            scenario = {"name": "Login", "description": "Log in with the correct password"}
             result = await svc._generate_steps(scenario, "")
             assert result == expected_steps
 
     @pytest.mark.asyncio
     async def test_generation_with_url_rule(self, _patch_externals):
-        """提供 target_url 时应注入 URL 规则"""
+        """Inject URL rules when target_url is provided."""
         svc = _make_service()
         mock_chain = MagicMock()
         mock_chain.ainvoke = AsyncMock(return_value=[])
@@ -507,14 +507,14 @@ class TestGenerateSteps:
             mock_prompt.__or__ = MagicMock(return_value=MagicMock())
             mock_prompt.__or__.return_value.__or__ = MagicMock(return_value=mock_chain)
 
-            scenario = {"name": "搜索", "description": "测试搜索功能"}
+            scenario = {"name": "Search", "description": "Test search functionality"}
             await svc._generate_steps(scenario, "", target_url="https://baidu.com")
             call_args = mock_chain.ainvoke.call_args[0][0]
             assert "baidu.com" in call_args.get("url_rule", "")
 
     @pytest.mark.asyncio
     async def test_generation_failure_raises(self, _patch_externals):
-        """步骤生成失败应抛出异常 (供 gather 捕获)"""
+        """Step generation failure should raise an exception for gather to capture."""
         svc = _make_service()
         with patch("services.planner_service.ChatPromptTemplate") as mock_pt, \
              patch("services.planner_service.JsonOutputParser"):
@@ -522,41 +522,41 @@ class TestGenerateSteps:
             mock_pt.from_template.return_value = mock_prompt
             mock_prompt.__or__ = MagicMock(return_value=MagicMock())
             mock_prompt.__or__.return_value.__or__ = MagicMock(
-                return_value=MagicMock(ainvoke=AsyncMock(side_effect=Exception("解析失败")))
+                return_value=MagicMock(ainvoke=AsyncMock(side_effect=Exception("Parsing failed")))
             )
-            with pytest.raises(Exception, match="解析失败"):
+            with pytest.raises(Exception, match="Parsing failed"):
                 await svc._generate_steps({"name": "x", "description": "y"}, "")
 
 
 # ---------------------------------------------------------------------------
-# _generate_steps_for_scenario 测试
+# _generate_steps_for_scenario tests
 # ---------------------------------------------------------------------------
 class TestGenerateStepsForScenario:
-    """测试 _generate_steps_for_scenario() — thin wrapper"""
+    """Test the _generate_steps_for_scenario() wrapper."""
 
     @pytest.mark.asyncio
     async def test_delegates_to_generate_steps(self, _patch_externals):
-        """应委托给 _generate_steps 并返回其结果"""
+        """Delegate to _generate_steps and return its result."""
         svc = _make_service()
         expected = [{"action": "click"}]
         with patch.object(svc, "_generate_steps", new_callable=AsyncMock, return_value=expected):
             result = await svc._generate_steps_for_scenario(
-                {"name": "测试", "description": "d"}, "ctx", "https://x.com"
+                {"name": "Test", "description": "d"}, "ctx", "https://x.com"
             )
             assert result == expected
             svc._generate_steps.assert_called_once_with(
-                {"name": "测试", "description": "d"}, "ctx", "https://x.com"
+                {"name": "Test", "description": "d"}, "ctx", "https://x.com"
             )
 
 
 # ---------------------------------------------------------------------------
-# plan_next_step 测试
+# plan_next_step tests
 # ---------------------------------------------------------------------------
 class TestPlanNextStep:
-    """测试 plan_next_step() 单步推理"""
+    """Test plan_next_step() reasoning."""
 
     def _make_llm_response(self, data: dict):
-        """构造 LLM 返回的 Message 对象（content 为 JSON 字符串）"""
+        """Build an LLM Message response with a JSON string as its content."""
         import json
         msg = MagicMock()
         msg.content = json.dumps(data, ensure_ascii=False)
@@ -580,9 +580,9 @@ class TestPlanNextStep:
 
     @pytest.mark.asyncio
     async def test_successful_planning(self, _patch_externals):
-        """正常推理下一步"""
+        """Infer the next step normally."""
         svc = _make_service()
-        expected = {"thinking": "需要点击登录按钮", "action": "click", "target": "[1]", "value": ""}
+        expected = {"thinking": "Click the Login button", "action": "click", "target": "[1]", "value": ""}
         mock_chain = MagicMock()
         mock_chain.ainvoke = AsyncMock(return_value=self._make_llm_response(expected))
 
@@ -592,8 +592,8 @@ class TestPlanNextStep:
             mock_prompt.__or__ = MagicMock(return_value=mock_chain)
 
             result = await svc.plan_next_step(
-                goal="登录测试",
-                page_state={"url": "https://example.com", "title": "登录页", "interactive_elements": "[1] button \"登录\"", "visible_text": "请输入用户名"},
+                goal="Login test",
+                page_state={"url": "https://example.com", "title": "Login page", "interactive_elements": "[1] button \"Login\"", "visible_text": "Enter a username"},
                 history=[]
             )
             assert result["action"] == "click"
@@ -601,9 +601,9 @@ class TestPlanNextStep:
 
     @pytest.mark.asyncio
     async def test_with_history(self, _patch_externals):
-        """有操作历史时应正确构建历史摘要"""
+        """Build the history summary correctly when prior actions are present."""
         svc = _make_service()
-        expected = {"thinking": "已输入用户名，需输入密码", "action": "fill", "target": "[2]", "value": "123456"}
+        expected = {"thinking": "The username is entered; enter the password next", "action": "fill", "target": "[2]", "value": "123456"}
         mock_chain = MagicMock()
         mock_chain.ainvoke = AsyncMock(return_value=self._make_llm_response(expected))
 
@@ -613,24 +613,24 @@ class TestPlanNextStep:
             mock_prompt.__or__ = MagicMock(return_value=mock_chain)
 
             history = [
-                {"action": "goto", "target": "https://example.com", "status": "success", "message": "导航成功"},
-                {"action": "fill", "target": "#username", "status": "success", "message": "输入admin"},
+                {"action": "goto", "target": "https://example.com", "status": "success", "message": "Navigation succeeded"},
+                {"action": "fill", "target": "#username", "status": "success", "message": "Entered admin"},
             ]
             result = await svc.plan_next_step(
-                goal="登录测试",
-                page_state={"url": "https://example.com/login", "title": "登录", "interactive_elements": "[2] input (type='password')", "visible_text": "密码"},
+                goal="Login test",
+                page_state={"url": "https://example.com/login", "title": "Login", "interactive_elements": "[2] input (type='password')", "visible_text": "Password"},
                 history=history
             )
-            # 验证 ainvoke 被调用时传入了 history
+            # Verify that the ainvoke arguments include history.
             call_args = mock_chain.ainvoke.call_args[0][0]
             assert "goto" in call_args.get("history", "")
             assert "fill" in call_args.get("history", "")
 
     @pytest.mark.asyncio
     async def test_empty_page_state(self, _patch_externals):
-        """page_state 缺失字段时应使用默认值"""
+        """Use defaults when page_state fields are missing."""
         svc = _make_service()
-        expected = {"thinking": "页面未加载", "action": "goto", "target": "https://x.com", "value": ""}
+        expected = {"thinking": "Page not loaded", "action": "goto", "target": "https://x.com", "value": ""}
         mock_chain = MagicMock()
         mock_chain.ainvoke = AsyncMock(return_value=self._make_llm_response(expected))
 
@@ -640,8 +640,8 @@ class TestPlanNextStep:
             mock_prompt.__or__ = MagicMock(return_value=mock_chain)
 
             result = await svc.plan_next_step(
-                goal="测试",
-                page_state={},  # 空 page_state
+                goal="Test",
+                page_state={},  # Empty page_state
                 history=[]
             )
             call_args = mock_chain.ainvoke.call_args[0][0]
@@ -650,7 +650,7 @@ class TestPlanNextStep:
 
     @pytest.mark.asyncio
     async def test_llm_failure_returns_error_action(self, _patch_externals):
-        """LLM 推理失败应返回 error action"""
+        """Return an error action when LLM reasoning fails."""
         svc = _make_service()
         mock_chain = MagicMock()
         mock_chain.ainvoke = AsyncMock(side_effect=Exception("API 429 Too Many Requests"))
@@ -660,9 +660,9 @@ class TestPlanNextStep:
             mock_pt.from_template.return_value = mock_prompt
             mock_prompt.__or__ = MagicMock(return_value=mock_chain)
 
-            # 传入非空 history 以避免 goto 降级路径
+            # Pass nonempty history to avoid the goto fallback path.
             result = await svc.plan_next_step(
-                goal="测试",
+                goal="Test",
                 page_state={"url": "x", "title": "t"},
                 history=[{"action": "goto", "target": "x", "status": "success", "message": "ok"}]
             )
@@ -671,7 +671,7 @@ class TestPlanNextStep:
 
     @pytest.mark.asyncio
     async def test_history_truncation(self, _patch_externals):
-        """超过 20 步的历史应只保留最近 20 步"""
+        """Retain only the 20 most recent steps when history exceeds 20 steps."""
         svc = _make_service()
         expected = {"thinking": "", "action": "done", "target": "", "value": ""}
         mock_chain = MagicMock()
@@ -682,25 +682,25 @@ class TestPlanNextStep:
             mock_pt.from_template.return_value = mock_prompt
             mock_prompt.__or__ = MagicMock(return_value=mock_chain)
 
-            # 创建 25 步历史
+            # Create a 25-step history.
             long_history = [
                 {"action": f"step_{i}", "target": f"t{i}", "status": "success", "message": f"msg{i}"}
                 for i in range(25)
             ]
-            await svc.plan_next_step(goal="测试", page_state={}, history=long_history)
+            await svc.plan_next_step(goal="Test", page_state={}, history=long_history)
             call_args = mock_chain.ainvoke.call_args[0][0]
-            # 只应包含 step_5 到 step_24 (最后20步)
+            # Only step_5 through step_24 should remain (the last 20 steps).
             assert "step_5" in call_args["history"]
             assert "step_24" in call_args["history"]
-            # step_0 到 step_4 不应出现
+            # step_0 through step_4 should be absent.
             assert "step_0" not in call_args["history"]
 
     @pytest.mark.asyncio
     async def test_markdown_codeblock_json(self, _patch_externals):
-        """LLM 返回 markdown 代码块包裹的 JSON 应能正确解析"""
+        """Parse LLM JSON wrapped in a Markdown code block."""
         svc = _make_service()
         msg = MagicMock()
-        msg.content = '```json\n{"thinking": "分析完毕", "action": "click", "target": "[3]", "value": ""}\n```'
+        msg.content = '```json\n{"thinking": "Analysis complete", "action": "click", "target": "[3]", "value": ""}\n```'
         mock_chain = MagicMock()
         mock_chain.ainvoke = AsyncMock(return_value=msg)
 
@@ -710,23 +710,23 @@ class TestPlanNextStep:
             mock_prompt.__or__ = MagicMock(return_value=mock_chain)
 
             result = await svc.plan_next_step(
-                goal="测试", page_state={"url": "x"}, history=[]
+                goal="Test", page_state={"url": "x"}, history=[]
             )
             assert result["action"] == "click"
             assert result["target"] == "[3]"
 
 
 # ---------------------------------------------------------------------------
-# semantic_verify 测试
+# semantic_verify tests
 # ---------------------------------------------------------------------------
 class TestSemanticVerify:
-    """测试 semantic_verify() 语义验证"""
+    """Test semantic_verify() validation."""
 
     def test_verify_pass(self, _patch_externals):
-        """验证通过"""
+        """Verification passes."""
         svc = _make_service()
         mock_chain = MagicMock()
-        mock_chain.invoke = MagicMock(return_value={"passed": True, "reason": "页面包含预期内容"})
+        mock_chain.invoke = MagicMock(return_value={"passed": True, "reason": "The page contains the expected content"})
 
         with patch("services.planner_service.ChatPromptTemplate") as mock_pt, \
              patch("services.planner_service.JsonOutputParser"):
@@ -735,15 +735,15 @@ class TestSemanticVerify:
             mock_prompt.__or__ = MagicMock(return_value=MagicMock())
             mock_prompt.__or__.return_value.__or__ = MagicMock(return_value=mock_chain)
 
-            result = svc.semantic_verify("页面应显示欢迎字样", "欢迎回来，admin！")
+            result = svc.semantic_verify("The page should display a welcome message", "Welcome back, admin!")
             assert result["passed"] is True
-            assert result["reason"] == "页面包含预期内容"
+            assert result["reason"] == "The page contains the expected content"
 
     def test_verify_fail(self, _patch_externals):
-        """验证失败"""
+        """Verification fails."""
         svc = _make_service()
         mock_chain = MagicMock()
-        mock_chain.invoke = MagicMock(return_value={"passed": False, "reason": "页面无错误提示"})
+        mock_chain.invoke = MagicMock(return_value={"passed": False, "reason": "The page has no error message"})
 
         with patch("services.planner_service.ChatPromptTemplate") as mock_pt, \
              patch("services.planner_service.JsonOutputParser"):
@@ -752,11 +752,11 @@ class TestSemanticVerify:
             mock_prompt.__or__ = MagicMock(return_value=MagicMock())
             mock_prompt.__or__.return_value.__or__ = MagicMock(return_value=mock_chain)
 
-            result = svc.semantic_verify("应提示密码错误", "登录成功")
+            result = svc.semantic_verify("An incorrect-password message should appear", "Login successful")
             assert result["passed"] is False
 
     def test_dict_page_context(self, _patch_externals):
-        """page_context 为 dict 时应正确解析 url 和 visible_text"""
+        """Extract url and visible_text correctly when page_context is a dictionary."""
         svc = _make_service()
         mock_chain = MagicMock()
         mock_chain.invoke = MagicMock(return_value={"passed": True, "reason": "ok"})
@@ -769,15 +769,15 @@ class TestSemanticVerify:
             mock_prompt.__or__.return_value.__or__ = MagicMock(return_value=mock_chain)
 
             result = svc.semantic_verify(
-                "首页正常",
-                {"url": "https://example.com", "visible_text": "欢迎"}
+                "The home page works",
+                {"url": "https://example.com", "visible_text": "Welcome"}
             )
             call_args = mock_chain.invoke.call_args[0][0]
             assert call_args["url"] == "https://example.com"
-            assert "欢迎" in call_args["visible_text"]
+            assert "Welcome" in call_args["visible_text"]
 
     def test_llm_failure_returns_false(self, _patch_externals):
-        """LLM 调用失败应返回 passed=False"""
+        """Return passed=False when the LLM call fails."""
         svc = _make_service()
         with patch("services.planner_service.ChatPromptTemplate") as mock_pt, \
              patch("services.planner_service.JsonOutputParser"):
@@ -785,15 +785,15 @@ class TestSemanticVerify:
             mock_pt.from_template.return_value = mock_prompt
             mock_prompt.__or__ = MagicMock(return_value=MagicMock())
             mock_prompt.__or__.return_value.__or__ = MagicMock(
-                return_value=MagicMock(invoke=MagicMock(side_effect=Exception("API 错误")))
+                return_value=MagicMock(invoke=MagicMock(side_effect=Exception("API error")))
             )
-            result = svc.semantic_verify("检查内容", "页面文本")
+            result = svc.semantic_verify("Check the content", "Page text")
             assert result["passed"] is False
             assert "Semantic verification error" in result["reason"]
             _patch_externals["get_llm"].assert_called_once_with("executor")
 
     def test_long_page_context_is_truncated(self, _patch_externals):
-        """超长页面文本应被截断到 2000 字符"""
+        """Truncate page text longer than 2000 characters."""
         svc = _make_service()
         mock_chain = MagicMock()
         mock_chain.invoke = MagicMock(return_value={"passed": True, "reason": "ok"})
@@ -806,24 +806,24 @@ class TestSemanticVerify:
             mock_prompt.__or__.return_value.__or__ = MagicMock(return_value=mock_chain)
 
             long_text = "x" * 5000
-            svc.semantic_verify("检查", long_text)
+            svc.semantic_verify("Check", long_text)
             call_args = mock_chain.invoke.call_args[0][0]
             assert len(call_args["visible_text"]) == 2000
 
 
 # ---------------------------------------------------------------------------
-# 模块级单例测试
+# Module-level singleton tests
 # ---------------------------------------------------------------------------
 class TestModuleSingleton:
-    """测试模块级 planner_service 单例"""
+    """Test the module-level planner_service singleton."""
 
     def test_singleton_instance_exists(self, _patch_externals):
-        """模块级 planner_service 实例应存在"""
+        """The module-level planner_service instance should exist."""
         from services.planner_service import planner_service
         assert planner_service is not None
 
     def test_singleton_is_correct_type(self, _patch_externals):
-        """planner_service 应是 TestGenerationService 的实例"""
+        """planner_service should be a TestGenerationService instance."""
         from services.planner_service import planner_service, TestGenerationService
         assert isinstance(planner_service, TestGenerationService)
 

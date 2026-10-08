@@ -197,7 +197,7 @@ def test_platform_maintenance_tracks_notification_and_filters_suspect_history(tm
                 (name, url, type, enabled, last_test_at, last_test_success, last_test_status, last_test_message)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """,
-                ("ops", "http://127.0.0.1/webhook", "generic", 1, "2026-03-16T11:05:00", 1, 200, "发送成功"),
+                ("ops", "http://127.0.0.1/webhook", "generic", 1, "2026-03-16T11:05:00", 1, 200, "Sent successfully"),
             )
             conn.execute(
                 """
@@ -373,7 +373,7 @@ def test_platform_maintenance_get_status_refreshes_live_notification_snapshot(tm
                 (name, url, type, enabled, last_test_at, last_test_success, last_test_status, last_test_message)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """,
-                ("ops", "http://127.0.0.1/webhook", "generic", 1, "2026-03-16T11:05:00", 1, 200, "发送成功"),
+                ("ops", "http://127.0.0.1/webhook", "generic", 1, "2026-03-16T11:05:00", 1, 200, "Sent successfully"),
             )
             conn.commit()
 

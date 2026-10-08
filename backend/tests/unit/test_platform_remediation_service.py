@@ -10,23 +10,23 @@ def test_platform_remediation_service_builds_local_and_global_action_items():
     maintenance_service.get_status.return_value = {
         "status": "success",
         "reason": "startup",
-        "notification": {"webhook_count": 0, "ready": False, "summary": "未配置告警 Webhook"},
+        "notification": {"webhook_count": 0, "ready": False, "summary": "No alert webhook configured"},
         "data_quality": {
             "suspect_history_count": 0,
             "archived_history_count": 52,
             "clean": True,
-            "summary": "已归档 52 条历史维护记录",
+            "summary": "Archived 52 maintenance history records",
         },
         "risk": {
             "shadow_count": 1,
-            "summary": "检测到 1 个影子业务库",
+            "summary": "Detected 1 shadow business database",
         },
     }
     readiness_service = MagicMock()
     readiness_service.evaluate.return_value = {
         "stage": "pre-production",
         "score": 75,
-        "summary": "主能力已收口到准生产阶段，但告警接出与环境治理仍是主要约束。",
+        "summary": "Core capabilities are ready for staging, but alert integration and environment governance remain the main constraints.",
     }
     chatops_service = MagicMock()
     chatops_service.get_overview.return_value = {
@@ -37,7 +37,7 @@ def test_platform_remediation_service_builds_local_and_global_action_items():
         "subscription_endpoint_verified": False,
         "ready": False,
         "healthy_notification_platform_webhook_count": 0,
-        "summary": "已提供通知平台事件回调入口，但还没有健康的通知平台回推通道。",
+        "summary": "The notification platform event callback endpoint is available, but there is no healthy reply channel yet.",
     }
 
     with patch("services.platform_remediation_service.get_platform_maintenance_service", return_value=maintenance_service), \
@@ -67,7 +67,7 @@ def test_platform_remediation_skips_archive_governance_when_export_is_fresh():
     maintenance_service.get_status.return_value = {
         "status": "success",
         "reason": "startup",
-        "notification": {"webhook_count": 1, "tested_enabled": 1, "healthy_enabled": 1, "ready": True, "summary": "已配置告警 Webhook"},
+        "notification": {"webhook_count": 1, "tested_enabled": 1, "healthy_enabled": 1, "ready": True, "summary": "Alert webhook configured"},
         "data_quality": {
             "suspect_history_count": 0,
             "archived_history_count": 52,
@@ -75,18 +75,18 @@ def test_platform_remediation_skips_archive_governance_when_export_is_fresh():
             "archive_export_fresh": True,
             "last_archive_export_at": "2026-03-16T16:00:00",
             "clean": True,
-            "summary": "已归档 52 条历史维护记录，最近已完成导出",
+            "summary": "Archived 52 maintenance history records; the latest export is complete",
         },
         "risk": {
             "shadow_count": 0,
-            "summary": "未发现影子业务库",
+            "summary": "No shadow business database detected",
         },
     }
     readiness_service = MagicMock()
     readiness_service.evaluate.return_value = {
         "stage": "pre-production",
         "score": 88,
-        "summary": "平台整体接近生产级运行基线。",
+        "summary": "The platform is close to the production operations baseline.",
     }
     chatops_service = MagicMock()
     chatops_service.get_overview.return_value = {
@@ -97,7 +97,7 @@ def test_platform_remediation_skips_archive_governance_when_export_is_fresh():
         "subscription_endpoint_verified": True,
         "ready": True,
         "healthy_notification_platform_webhook_count": 1,
-        "summary": "最近一条通知平台指令已接收并成功回推到群里。",
+        "summary": "The latest notification platform command was received and successfully sent back to the group.",
     }
 
     with patch("services.platform_remediation_service.get_platform_maintenance_service", return_value=maintenance_service), \
@@ -120,15 +120,15 @@ def test_platform_remediation_adds_chatops_subscription_task_when_notification_i
     maintenance_service.get_status.return_value = {
         "status": "success",
         "reason": "startup",
-        "notification": {"webhook_count": 1, "tested_enabled": 1, "healthy_enabled": 1, "ready": True, "summary": "已配置告警 Webhook"},
-        "data_quality": {"suspect_history_count": 0, "archived_history_count": 0, "clean": True, "summary": "维护历史正常"},
-        "risk": {"shadow_count": 0, "summary": "未发现影子业务库"},
+        "notification": {"webhook_count": 1, "tested_enabled": 1, "healthy_enabled": 1, "ready": True, "summary": "Alert webhook configured"},
+        "data_quality": {"suspect_history_count": 0, "archived_history_count": 0, "clean": True, "summary": "Maintenance history is normal"},
+        "risk": {"shadow_count": 0, "summary": "No shadow business database detected"},
     }
     readiness_service = MagicMock()
     readiness_service.evaluate.return_value = {
         "stage": "production-ready",
         "score": 92,
-        "summary": "平台整体已接近生产级运行基线。",
+        "summary": "The platform is close to the production operations baseline.",
     }
     chatops_service = MagicMock()
     chatops_service.get_overview.return_value = {
@@ -139,7 +139,7 @@ def test_platform_remediation_adds_chatops_subscription_task_when_notification_i
         "subscription_endpoint_verified": False,
         "ready": False,
         "healthy_notification_platform_webhook_count": 1,
-        "summary": "通知平台回推通道已健康，但还缺少事件订阅 verification token，群消息还不能稳定回流到平台。",
+        "summary": "The notification platform reply channel is healthy, but the event subscription verification token is missing, so group messages cannot reliably return to the platform.",
     }
 
     with patch("services.platform_remediation_service.get_platform_maintenance_service", return_value=maintenance_service), \
@@ -161,15 +161,15 @@ def test_platform_remediation_guides_fixing_public_callback_when_probe_fails():
     maintenance_service.get_status.return_value = {
         "status": "success",
         "reason": "startup",
-        "notification": {"webhook_count": 1, "tested_enabled": 1, "healthy_enabled": 1, "ready": True, "summary": "已配置告警 Webhook"},
-        "data_quality": {"suspect_history_count": 0, "archived_history_count": 0, "clean": True, "summary": "维护历史正常"},
-        "risk": {"shadow_count": 0, "summary": "未发现影子业务库"},
+        "notification": {"webhook_count": 1, "tested_enabled": 1, "healthy_enabled": 1, "ready": True, "summary": "Alert webhook configured"},
+        "data_quality": {"suspect_history_count": 0, "archived_history_count": 0, "clean": True, "summary": "Maintenance history is normal"},
+        "risk": {"shadow_count": 0, "summary": "No shadow business database detected"},
     }
     readiness_service = MagicMock()
     readiness_service.evaluate.return_value = {
         "stage": "production-ready",
         "score": 92,
-        "summary": "平台整体已接近生产级运行基线。",
+        "summary": "The platform is close to the production operations baseline.",
     }
     chatops_service = MagicMock()
     chatops_service.get_overview.return_value = {
@@ -186,9 +186,9 @@ def test_platform_remediation_guides_fixing_public_callback_when_probe_fails():
             "attempted": True,
             "success": False,
             "issue": "interstitial_page",
-            "summary": "公网回调地址返回了隧道警告页，通知平台云侧大概率无法直接命中平台回调。",
+            "summary": "The public callback URL returned a tunnel warning page; the notification platform's cloud service likely cannot reach the platform callback directly.",
         },
-        "summary": "公网回调地址返回了隧道警告页，通知平台云侧大概率无法直接命中平台回调。",
+        "summary": "The public callback URL returned a tunnel warning page; the notification platform's cloud service likely cannot reach the platform callback directly.",
     }
 
     with patch("services.platform_remediation_service.get_platform_maintenance_service", return_value=maintenance_service), \
@@ -212,15 +212,15 @@ def test_platform_remediation_guides_event_subscription_after_external_self_chec
     maintenance_service.get_status.return_value = {
         "status": "success",
         "reason": "startup",
-        "notification": {"webhook_count": 1, "tested_enabled": 1, "healthy_enabled": 1, "ready": True, "summary": "已配置告警 Webhook"},
-        "data_quality": {"suspect_history_count": 0, "archived_history_count": 0, "clean": True, "summary": "维护历史正常"},
-        "risk": {"shadow_count": 0, "summary": "未发现影子业务库"},
+        "notification": {"webhook_count": 1, "tested_enabled": 1, "healthy_enabled": 1, "ready": True, "summary": "Alert webhook configured"},
+        "data_quality": {"suspect_history_count": 0, "archived_history_count": 0, "clean": True, "summary": "Maintenance history is normal"},
+        "risk": {"shadow_count": 0, "summary": "No shadow business database detected"},
     }
     readiness_service = MagicMock()
     readiness_service.evaluate.return_value = {
         "stage": "production-ready",
         "score": 96,
-        "summary": "平台整体已接近生产级运行基线。",
+        "summary": "The platform is close to the production operations baseline.",
     }
     chatops_service = MagicMock()
     chatops_service.get_overview.return_value = {
@@ -234,7 +234,7 @@ def test_platform_remediation_guides_event_subscription_after_external_self_chec
             "attempted": True,
             "success": False,
             "issue": "timeout",
-            "summary": "公网回调地址回探超时，通知平台云侧当前大概率无法稳定访问该入口。",
+            "summary": "The public callback probe timed out; the notification platform's cloud service likely cannot reach this endpoint reliably.",
         },
         "external_connection_stale": False,
         "external_callback_ready": True,
@@ -243,9 +243,9 @@ def test_platform_remediation_guides_event_subscription_after_external_self_chec
         "latest_external_success_at": "",
         "app_bot_configured": True,
         "app_bot_ready": True,
-        "app_bot_check": {"success": True, "message": "应用机器人凭据校验通过，已成功获取 tenant_access_token。"},
+        "app_bot_check": {"success": True, "message": "App bot credentials validated; tenant_access_token obtained successfully."},
         "app_bot_id_masked": "cli...bcb",
-        "summary": "最近一次平台公网自测已经通过，说明公网回调入口、challenge 和文本消息链路都可用。",
+        "summary": "The latest public platform self-check passed, confirming that the public callback endpoint, challenge, and text-message flow are available.",
     }
 
     with patch("services.platform_remediation_service.get_platform_maintenance_service", return_value=maintenance_service), \

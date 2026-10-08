@@ -10,14 +10,14 @@ def test_platform_readiness_evaluate_reports_local_and_global_views():
     maintenance_service.get_status.return_value = {
         "status": "success",
         "reason": "startup",
-        "notification": {"webhook_count": 0, "ready": False, "summary": "未配置告警 Webhook"},
+        "notification": {"webhook_count": 0, "ready": False, "summary": "No alert webhook configured"},
         "data_quality": {
             "suspect_history_count": 0,
             "archived_history_count": 52,
             "raw_history_count": 138,
             "visible_history_count": 86,
             "clean": True,
-            "summary": "已归档 52 条历史维护记录",
+            "summary": "Archived 52 maintenance history records",
         },
         "report_history": {"history_entries": 17, "updated_entries": 0},
     }
@@ -30,7 +30,7 @@ def test_platform_readiness_evaluate_reports_local_and_global_views():
         "ready": False,
         "enabled_notification_platform_webhook_count": 0,
         "healthy_notification_platform_webhook_count": 0,
-        "summary": "已提供通知平台事件回调入口，但还没有健康的通知平台回推通道。",
+        "summary": "The notification platform event callback endpoint is available, but there is no healthy reply channel yet.",
     }
 
     with patch("services.platform_readiness_service.get_platform_maintenance_service", return_value=maintenance_service), \
@@ -67,7 +67,7 @@ def test_platform_readiness_treats_archived_history_as_governed_after_export():
     maintenance_service.get_status.return_value = {
         "status": "success",
         "reason": "startup",
-        "notification": {"webhook_count": 1, "tested_enabled": 1, "healthy_enabled": 1, "ready": True, "summary": "已配置 1 个 Webhook，其中 1 个最近测试通过"},
+        "notification": {"webhook_count": 1, "tested_enabled": 1, "healthy_enabled": 1, "ready": True, "summary": "1 webhook configured; 1 passed its most recent test"},
         "data_quality": {
             "suspect_history_count": 0,
             "archived_history_count": 52,
@@ -75,7 +75,7 @@ def test_platform_readiness_treats_archived_history_as_governed_after_export():
             "archive_export_fresh": True,
             "last_archive_export_at": "2026-03-16T16:00:00",
             "clean": True,
-            "summary": "已归档 52 条历史维护记录，最近已完成导出",
+            "summary": "Archived 52 maintenance history records; the latest export is complete",
         },
         "report_history": {"history_entries": 17, "updated_entries": 0},
     }
@@ -88,7 +88,7 @@ def test_platform_readiness_treats_archived_history_as_governed_after_export():
         "ready": True,
         "enabled_notification_platform_webhook_count": 1,
         "healthy_notification_platform_webhook_count": 1,
-        "summary": "最近一条通知平台指令已接收并成功回推到群里。",
+        "summary": "The latest notification platform command was received and successfully sent back to the group.",
     }
 
     with patch("services.platform_readiness_service.get_platform_maintenance_service", return_value=maintenance_service), \
@@ -119,8 +119,8 @@ def test_platform_readiness_recommends_notification_platform_subscription_when_w
     maintenance_service.get_status.return_value = {
         "status": "success",
         "reason": "startup",
-        "notification": {"webhook_count": 1, "tested_enabled": 1, "healthy_enabled": 1, "ready": True, "summary": "已配置 1 个 Webhook，其中 1 个最近测试通过"},
-        "data_quality": {"suspect_history_count": 0, "archived_history_count": 0, "clean": True, "summary": "维护历史正常"},
+        "notification": {"webhook_count": 1, "tested_enabled": 1, "healthy_enabled": 1, "ready": True, "summary": "1 webhook configured; 1 passed its most recent test"},
+        "data_quality": {"suspect_history_count": 0, "archived_history_count": 0, "clean": True, "summary": "Maintenance history is normal"},
         "report_history": {"history_entries": 17, "updated_entries": 0},
     }
     chatops_service = MagicMock()
@@ -132,7 +132,7 @@ def test_platform_readiness_recommends_notification_platform_subscription_when_w
         "ready": False,
         "enabled_notification_platform_webhook_count": 1,
         "healthy_notification_platform_webhook_count": 1,
-        "summary": "通知平台回推通道已健康，但还缺少事件订阅 verification token，群消息还不能稳定回流到平台。",
+        "summary": "The notification platform reply channel is healthy, but the event subscription verification token is missing, so group messages cannot reliably return to the platform.",
     }
 
     with patch("services.platform_readiness_service.get_platform_maintenance_service", return_value=maintenance_service), \
@@ -158,8 +158,8 @@ def test_platform_readiness_recommends_fixing_public_callback_when_probe_fails()
     maintenance_service.get_status.return_value = {
         "status": "success",
         "reason": "startup",
-        "notification": {"webhook_count": 1, "tested_enabled": 1, "healthy_enabled": 1, "ready": True, "summary": "已配置 1 个 Webhook，其中 1 个最近测试通过"},
-        "data_quality": {"suspect_history_count": 0, "archived_history_count": 0, "clean": True, "summary": "维护历史正常"},
+        "notification": {"webhook_count": 1, "tested_enabled": 1, "healthy_enabled": 1, "ready": True, "summary": "1 webhook configured; 1 passed its most recent test"},
+        "data_quality": {"suspect_history_count": 0, "archived_history_count": 0, "clean": True, "summary": "Maintenance history is normal"},
         "report_history": {"history_entries": 17, "updated_entries": 0},
     }
     chatops_service = MagicMock()
@@ -174,11 +174,11 @@ def test_platform_readiness_recommends_fixing_public_callback_when_probe_fails()
             "attempted": True,
             "success": False,
             "issue": "interstitial_page",
-            "summary": "公网回调地址返回了隧道警告页，通知平台云侧大概率无法直接命中平台回调。",
+            "summary": "The public callback URL returned a tunnel warning page; the notification platform's cloud service likely cannot reach the platform callback directly.",
         },
         "enabled_notification_platform_webhook_count": 1,
         "healthy_notification_platform_webhook_count": 1,
-        "summary": "公网回调地址返回了隧道警告页，通知平台云侧大概率无法直接命中平台回调。",
+        "summary": "The public callback URL returned a tunnel warning page; the notification platform's cloud service likely cannot reach the platform callback directly.",
     }
 
     with patch("services.platform_readiness_service.get_platform_maintenance_service", return_value=maintenance_service), \

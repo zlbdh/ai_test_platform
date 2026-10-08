@@ -1,7 +1,7 @@
 """
-PlannerAgent 单元测试
-覆盖: __init__, _resolve_variables, run (mode dispatch), stop,
-       _initialize_plan, _run_quick_mode (非空计划), _handle_result
+PlannerAgent unit tests
+Coverage: __init__, _resolve_variables, run (mode dispatch), stop,
+          _initialize_plan, _run_quick_mode (nonempty plan), and _handle_result.
 """
 import pytest
 import base64
@@ -10,11 +10,11 @@ import asyncio
 
 
 # ---------------------------------------------------------------------------
-# 公用 fixture：mock 掉所有外部依赖后再 import
+# Shared fixture: mock all external dependencies before importing.
 # ---------------------------------------------------------------------------
 @pytest.fixture(autouse=True)
 def _patch_externals():
-    """Mock planner_agent 的所有重量级依赖"""
+    """Mock all heavyweight planner_agent dependencies."""
     mock_session = MagicMock()
     mock_session.get_context = MagicMock(return_value=None)
     mock_session.get_page = MagicMock(return_value=None)
@@ -37,18 +37,18 @@ def _make_planner(**kwargs):
     bus.publish_task = AsyncMock()
     bus.get_result = AsyncMock(return_value=None)
     bus.shutdown = AsyncMock()
-    defaults = {"task_goal": "测试登录功能", "bus": bus, "mode": "quick", "session_id": "test_session", "target_url": ""}
+    defaults = {"task_goal": "Test login functionality", "bus": bus, "mode": "quick", "session_id": "test_session", "target_url": ""}
     defaults.update(kwargs)
     return PlannerAgent(**defaults)
 
 
 # ---------------------------------------------------------------------------
-# 测试初始化
+# Initialization tests
 # ---------------------------------------------------------------------------
 class TestInit:
     def test_default_attributes(self):
         planner = _make_planner()
-        assert planner.task_goal == "测试登录功能"
+        assert planner.task_goal == "Test login functionality"
         assert planner.mode == "quick"
         assert planner.running is True
         assert planner.plan == []
@@ -60,7 +60,7 @@ class TestInit:
 
 
 # ---------------------------------------------------------------------------
-# 测试 _resolve_variables
+# _resolve_variables tests
 # ---------------------------------------------------------------------------
 class TestResolveVariables:
     def test_no_variables(self):
@@ -93,7 +93,7 @@ class TestResolveVariables:
         planner = _make_planner()
         planner.context = {}
         result = planner._resolve_variables("val=${unknown_var}")
-        # 无法解析的变量保持不变
+        # Unresolved variables remain unchanged.
         assert "${unknown_var}" in result
 
     def test_non_string_input(self):
@@ -108,7 +108,7 @@ class TestResolveVariables:
 
 
 # ---------------------------------------------------------------------------
-# 测试 run (模式分发)
+# run tests (mode dispatch)
 # ---------------------------------------------------------------------------
 class TestRun:
     @pytest.mark.asyncio
@@ -131,7 +131,7 @@ class TestRun:
 
 
 # ---------------------------------------------------------------------------
-# 测试 stop
+# stop tests
 # ---------------------------------------------------------------------------
 class TestStop:
     def test_stop_sets_running_false(self):
@@ -142,21 +142,21 @@ class TestStop:
 
 
 # ---------------------------------------------------------------------------
-# 测试 _run_quick_mode（空计划 → 立即终止）
+# _run_quick_mode tests: an empty plan terminates immediately.
 # ---------------------------------------------------------------------------
 class TestRunQuickModeEmptyPlan:
     @pytest.mark.asyncio
     async def test_empty_plan_aborts(self):
         planner = _make_planner(mode="quick")
         with patch.object(planner, '_initialize_plan', new_callable=AsyncMock):
-            planner.plan = []  # 空计划
+            planner.plan = []  # Empty plan
             await planner._run_quick_mode()
             assert planner.running is False
             planner.bus.shutdown.assert_called_once()
 
 
 # ---------------------------------------------------------------------------
-# 测试 _initialize_plan
+# _initialize_plan tests
 # ---------------------------------------------------------------------------
 class TestInitializePlan:
     @pytest.mark.asyncio
@@ -164,8 +164,8 @@ class TestInitializePlan:
         mock_ps, _ = _patch_externals
         mock_ps.generate_plan = MagicMock(return_value={
             "test_cases": [
-                {"scenario": "登录", "steps": [{"action": "goto", "target": "http://example.com"}]},
-                {"scenario": "搜索", "steps": [{"action": "click", "target": "#btn"}]},
+                {"scenario": "Login", "steps": [{"action": "goto", "target": "http://example.com"}]},
+                {"scenario": "Search", "steps": [{"action": "click", "target": "#btn"}]},
             ]
         })
         planner = _make_planner()
@@ -177,7 +177,7 @@ class TestInitializePlan:
         mock_ps, _ = _patch_externals
         mock_ps.generate_plan = AsyncMock(return_value={
             "test_cases": [
-                {"scenario": "登录", "steps": [{"action": "goto", "target": "http://example.com"}]},
+                {"scenario": "Login", "steps": [{"action": "goto", "target": "http://example.com"}]},
             ]
         })
         planner = _make_planner()
@@ -191,7 +191,7 @@ class TestInitializePlan:
         planner = _make_planner(target_url="http://127.0.0.1:81")
         await planner._initialize_plan()
         mock_ps.generate_plan.assert_awaited_once_with(
-            "测试登录功能",
+            "Test login functionality",
             True,
             "http://127.0.0.1:81",
             execution_mode="default",
@@ -212,7 +212,7 @@ class TestInitializePlan:
         mock_ps.generate_plan = AsyncMock(return_value={
             "test_cases": [
                 {
-                    "scenario": "登录页首屏",
+                    "scenario": "Initial login page",
                     "steps": [
                         {"action": "goto", "target": "https://example.com/login"},
                         {"action": "wait", "target": "1"},
@@ -220,9 +220,9 @@ class TestInitializePlan:
                     ],
                 },
                 {
-                    "scenario": "深层页面",
+                    "scenario": "Nested page",
                     "steps": [
-                        {"action": "click", "target": "进入后台"},
+                        {"action": "click", "target": "Open the administration page"},
                     ],
                 },
             ]
@@ -250,28 +250,28 @@ class TestInitializePlan:
 
 
 # ---------------------------------------------------------------------------
-# 测试 _run_quick_mode（非空计划 — 浅层验证，不进入完整循环）
+# _run_quick_mode tests: shallow verification with a nonempty plan, without entering the full loop.
 # ---------------------------------------------------------------------------
 class TestRunQuickModeWithPlan:
     @pytest.mark.asyncio
     async def test_plan_not_empty_no_immediate_shutdown(self):
-        """有计划时，不会在 _initialize_plan 后立即 shutdown"""
+        """A nonempty plan prevents immediate shutdown after _initialize_plan."""
         planner = _make_planner(mode="quick")
-        # 预设非空计划
+        # Set up a nonempty plan.
         planner.plan = [
             {"id": "s1", "action": "goto", "target": "http://example.com", "value": ""},
         ]
-        # 但让 planner 立即停止，避免进入异步等待循环
+        # Stop the planner immediately to avoid entering the asynchronous wait loop.
         planner.running = False
         with patch.object(planner, '_initialize_plan', new_callable=AsyncMock):
             await planner._run_quick_mode()
-            # 有计划，所以不应该因为"空计划"而 shutdown
-            # （而是因为 running=False 退出循环）
+            # The nonempty plan should not cause shutdown.
+            # Instead, running=False exits the loop.
             assert len(planner.plan) == 1
 
     @pytest.mark.asyncio
     async def test_stopped_planner_exits_loop(self):
-        """running=False 时 quick mode 应立即退出循环"""
+        """quick mode should exit the loop immediately when running=False."""
         planner = _make_planner(mode="quick")
         planner.plan = [
             {"id": "s1", "action": "goto", "target": "http://x.com", "value": ""},
@@ -280,13 +280,13 @@ class TestRunQuickModeWithPlan:
         planner.running = False
         with patch.object(planner, '_initialize_plan', new_callable=AsyncMock):
             await planner._run_quick_mode()
-            # 因为 running=False，循环不执行，不发布 task
+            # With running=False, the loop does not run and no task is published.
 
     @pytest.mark.asyncio
     async def test_published_task_contains_step_index_and_scenario(self):
         planner = _make_planner(mode="quick")
         planner.plan = [
-            {"action": "goto", "target": "http://example.com", "value": "", "_scenario": "登录"},
+            {"action": "goto", "target": "http://example.com", "value": "", "_scenario": "Login"},
         ]
 
         published_tasks = []
@@ -314,13 +314,13 @@ class TestRunQuickModeWithPlan:
 
         assert len(published_tasks) == 1
         assert published_tasks[0]["step_index"] == 0
-        assert published_tasks[0]["scenario"] == "登录"
+        assert published_tasks[0]["scenario"] == "Login"
         planner.bus.shutdown.assert_called_once()
 
 
 
 # ---------------------------------------------------------------------------
-# 测试 _handle_result
+# _handle_result tests
 # ---------------------------------------------------------------------------
 class TestHandleResult:
     def test_success_result(self):
