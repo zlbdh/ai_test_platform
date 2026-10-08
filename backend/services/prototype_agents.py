@@ -218,7 +218,7 @@ class ResolvedPrototypeSource:
 
 
 class PrototypeSourceResolver:
-    """解析 URL / 本地文件 / 目录，并注入项目包上下文。"""
+    """Resolve a URL, local file, or directory and incorporate project bundle context."""
 
     def resolve(
         self,
@@ -230,13 +230,13 @@ class PrototypeSourceResolver:
         normalized_type = str(source_type or "").strip().lower()
         normalized_source = str(source or "").strip()
         if normalized_type not in {"url", "file", "directory"}:
-            raise ValueError(f"不支持的 source_type: {source_type}")
+            raise ValueError(f"Unsupported source_type: {source_type}")
         if not normalized_source:
-            raise ValueError("source 不能为空")
+            raise ValueError("source must not be empty")
 
         if normalized_type == "url":
             if not _is_url(normalized_source):
-                raise ValueError("URL 来源必须以 http:// 或 https:// 开头")
+                raise ValueError("A URL source must start with http:// or https://")
             parsed = urlparse(normalized_source)
             source_label = f"{parsed.netloc}{parsed.path or '/'}".strip()
             pages = [
@@ -261,7 +261,7 @@ class PrototypeSourceResolver:
             path = Path(normalized_source).expanduser().resolve()
             if normalized_type == "file":
                 if not path.exists() or not path.is_file():
-                    raise ValueError(f"原型文件不存在: {path}")
+                    raise ValueError(f"Prototype file not found: {path}")
                 pages = [
                     {
                         "title": path.stem,
@@ -282,10 +282,10 @@ class PrototypeSourceResolver:
                 )
             else:
                 if not path.exists() or not path.is_dir():
-                    raise ValueError(f"原型目录不存在: {path}")
+                    raise ValueError(f"Prototype directory not found: {path}")
                 html_files = sorted(path.rglob("*.html"))
                 if not html_files:
-                    raise ValueError(f"目录中未找到 HTML 原型: {path}")
+                    raise ValueError(f"No HTML prototypes found in directory: {path}")
                 entry = next((item for item in html_files if item.name.lower() == "index.html"), html_files[0])
                 pages = [
                     {
@@ -358,7 +358,7 @@ class PrototypeSourceResolver:
 
 
 class PrototypeReporter:
-    """将 Worker 输出归一为最终报告。"""
+    """Normalize Worker output into the final report."""
 
     def build_report(
         self,
@@ -445,21 +445,21 @@ class PrototypeReporter:
         categories = {str(item.get("category") or "") for item in findings}
 
         if "blocking" in severities:
-            recommendations.append("优先补齐阻断级原型差异和关键页面，先恢复主流程骨架，再处理样式细节。")
+            recommendations.append("Resolve blocking prototype discrepancies and critical pages first. Restore the primary workflow structure before addressing styling details.")
         if "flow" in agent_ids:
-            recommendations.append("先处理 Flow Worker 标记的流程断点，确保入口页、关键跳转和页面骨架可连通。")
+            recommendations.append("Resolve workflow breaks identified by the Flow Worker so entry pages, critical transitions, and page structures are connected.")
         if "a11y" in agent_ids:
-            recommendations.append("优先修复无障碍问题中的 label、alt、lang 与对比度问题，先清理 WCAG A/AA 阻断项。")
+            recommendations.append("Prioritize accessibility labels, alt text, language declarations, and contrast; resolve WCAG A/AA blockers first.")
         if "visual" in agent_ids:
-            recommendations.append("对视觉差异先确认是否为预期变更；若为预期，补充基线，否则回退关键布局改动。")
+            recommendations.append("Confirm whether visual differences are intended. Update the baseline for intended changes; otherwise revert critical layout changes.")
         if "perf" in agent_ids:
-            recommendations.append("当前性能结果来自 Mock Lighthouse，先把它作为预警信号，再决定是否接入真实 Lighthouse 复核。")
+            recommendations.append("Performance results currently come from Mock Lighthouse. Treat them as warning signals before deciding whether to validate with real Lighthouse.")
         if "ab" in agent_ids:
-            recommendations.append("A/B 差异优先关注结构性组件变化，样式细调建议进入视觉回归基线流程统一处理。")
+            recommendations.append("Prioritize structural component changes in A/B comparisons. Handle styling adjustments through the visual regression baseline workflow.")
         if "critical_state_transition_gap" in categories:
-            recommendations.append("补齐关键状态流转的承载页和反馈区，避免审批、上下架、异常闭环等路径出现断层。")
+            recommendations.append("Add pages and feedback areas for critical state transitions to avoid gaps in approvals, listing/unlisting, and exception resolution.")
 
-        return recommendations[:6] or ["当前未发现明显问题，可继续补充真实 Percy / Chromatic / Lighthouse Provider 以提高可信度。"]
+        return recommendations[:6] or ["No obvious issues were found. Add real Percy, Chromatic, or Lighthouse providers to improve confidence."]
 
 
 class PrototypeAgentsService:
@@ -475,11 +475,11 @@ class PrototypeAgentsService:
         now = _now_iso()
         mission_id = mission_id or uuid.uuid4().hex[:8]
         source = str(payload.get("source") or "").strip()
-        label = source or "未命名原型"
+        label = source or "Untitled Prototype"
         return {
             "mission_id": mission_id,
             "mission_kind": MISSION_KIND,
-            "user_input": f"原型测试 · {label}",
+            "user_input": f"Prototype Test · {label}",
             "target_url": source if payload.get("source_type") == "url" else "",
             "status": "pending",
             "created_at": now,
@@ -524,13 +524,13 @@ class PrototypeAgentsService:
     async def run_mission(self, commander: Any, mission_id: str, payload: Dict[str, Any]) -> Dict[str, Any]:
         mission = getattr(commander, "_missions", {}).get(mission_id)
         if not isinstance(mission, dict):
-            raise ValueError(f"未找到 prototype mission: {mission_id}")
+            raise ValueError(f"Prototype mission not found: {mission_id}")
 
         mission["started_at"] = _now_iso()
         mission["status"] = "parsing"
         self._set_agent_state(mission, "orchestrator", "running")
         self._sync_execution_group(mission, mission["status"])
-        self._append_log(mission, "开始解析原型来源与项目包上下文", data={"agent_id": "orchestrator", "agent_status": "running"})
+        self._append_log(mission, "Resolving prototype source and project bundle context", data={"agent_id": "orchestrator", "agent_status": "running"})
         self._save(commander)
 
         resolved_source = self._resolver.resolve(
@@ -550,7 +550,7 @@ class PrototypeAgentsService:
         mission["source_context"] = resolved_source.to_dict()
         self._append_log(
             mission,
-            "原型来源已解析",
+            "Prototype source resolved",
             data={
                 "agent_id": "orchestrator",
                 "resolved_pages": len(resolved_source.discovered_pages),
@@ -568,7 +568,7 @@ class PrototypeAgentsService:
         mission["test_tasks_count"] = len(enabled_workers)
         self._append_log(
             mission,
-            f"Orchestrator 已广播 {len(enabled_workers)} 个 Worker 任务",
+            f"Orchestrator dispatched {len(enabled_workers)} Worker tasks",
             data={"agent_id": "orchestrator", "workers": enabled_workers},
         )
         self._save(commander)
@@ -596,7 +596,7 @@ class PrototypeAgentsService:
         mission["status"] = "reporting"
         self._set_agent_state(mission, "reporter", "running")
         self._sync_execution_group(mission, mission["status"])
-        self._append_log(mission, "Reporter 开始汇总 Worker 结果", data={"agent_id": "reporter", "agent_status": "running"})
+        self._append_log(mission, "Reporter is aggregating Worker results", data={"agent_id": "reporter", "agent_status": "running"})
         report = self._reporter.build_report(
             mission=mission,
             resolved_source=resolved_source,
@@ -611,7 +611,7 @@ class PrototypeAgentsService:
         self._persist_summary_record(mission)
         self._append_log(
             mission,
-            "原型测试任务已完成",
+            "Prototype testing mission completed",
             data={
                 "agent_id": "reporter",
                 "finding_count": len(report.findings),
@@ -650,7 +650,7 @@ class PrototypeAgentsService:
         self._set_agent_state(mission, worker_id, "running")
         self._append_log(
             mission,
-            f"{worker_id} Worker 开始执行",
+            f"{worker_id} Worker started",
             data={"agent_id": worker_id, "agent_status": "running", "provider": provider},
         )
         self._save(commander)
@@ -667,9 +667,9 @@ class PrototypeAgentsService:
             elif worker_id == "perf":
                 result = await self._run_perf_worker(mission, resolved_source, provider)
             else:
-                raise ValueError(f"未知 worker_id: {worker_id}")
+                raise ValueError(f"Unknown worker_id: {worker_id}")
         except Exception as exc:
-            logger.exception("[PrototypeAgents] Worker %s 执行失败", worker_id)
+            logger.exception("[PrototypeAgents] Worker %s failed", worker_id)
             finished_at = _now_iso()
             result = PrototypeWorkerResult(
                 agent_id=worker_id,
@@ -682,7 +682,7 @@ class PrototypeAgentsService:
                     PrototypeFinding(
                         agent_id=worker_id,
                         severity="high",
-                        title=f"{worker_id} Worker 执行失败",
+                        title=f"{worker_id} Worker failed",
                         summary=str(exc),
                         category="worker_runtime_error",
                         provider=provider,
@@ -771,8 +771,8 @@ class PrototypeAgentsService:
                 PrototypeFinding(
                     agent_id="visual",
                     severity=severity,
-                    title="视觉回归存在明显差异",
-                    summary=f"像素差异 {comparison.diff_percentage:.2f}%（约 {diff_pixels} px）",
+                    title="Significant visual regression differences",
+                    summary=f"Pixel difference: {comparison.diff_percentage:.2f}% (approximately {diff_pixels} px)",
                     category="visual_regression_gap",
                     provider=provider,
                     evidence={
@@ -843,7 +843,7 @@ class PrototypeAgentsService:
                 {
                     "type": "critical_page_missing",
                     "page": str(missing_page),
-                    "message": f"关键页面未映射到原型：{missing_page}",
+                    "message": f"Critical pages not mapped to a prototype: {missing_page}",
                 }
             )
 
@@ -856,8 +856,8 @@ class PrototypeAgentsService:
                 PrototypeFinding(
                     agent_id="flow",
                     severity=severity,
-                    title="流程连通性存在问题",
-                    summary=str(failure.get("message") or "关键流程无法继续执行"),
+                    title="Workflow connectivity issues",
+                    summary=str(failure.get("message") or "A critical workflow cannot continue"),
                     category=category,
                     provider=provider,
                     evidence=failure,
@@ -892,7 +892,7 @@ class PrototypeAgentsService:
                 started_at=started_at,
                 finished_at=finished_at,
                 payload={
-                    "reason": "未提供 compare_source，A/B 结构对比已跳过",
+                    "reason": "compare_source was not provided; A/B structural comparison skipped",
                     "changedComponents": [],
                     "comparedVersions": [],
                 },
@@ -913,8 +913,8 @@ class PrototypeAgentsService:
                 PrototypeFinding(
                     agent_id="ab",
                     severity=severity,
-                    title="A/B 版本结构存在差异",
-                    summary=f"{component.get('name')} 发生 {component.get('changeType')} 变化",
+                    title="A/B versions differ structurally",
+                    summary=f"{component.get('name')} has a {component.get('changeType')} change",
                     category="ab_structural_diff",
                     provider=provider,
                     evidence=component,
@@ -963,7 +963,7 @@ class PrototypeAgentsService:
                     agent_id="a11y",
                     severity=severity,
                     title=str(issue.get("rule_id") or "a11y issue"),
-                    summary=str(issue.get("description") or "发现无障碍问题"),
+                    summary=str(issue.get("description") or "Accessibility issues found"),
                     category="wcag_violation",
                     provider=provider,
                     evidence=issue,
@@ -1002,8 +1002,8 @@ class PrototypeAgentsService:
                 PrototypeFinding(
                     agent_id="perf",
                     severity="medium" if score < 75 else "low",
-                    title="性能预警（Mock Lighthouse）",
-                    summary=f"当前 mock 性能评分为 {score}，建议后续接入真实 Lighthouse 复核。",
+                    title="Performance warning (Mock Lighthouse)",
+                    summary=f"Current mock performance score: {score}; validate with real Lighthouse later.",
                     category="mock_perf_warning",
                     provider=provider,
                     evidence=perf_snapshot,
@@ -1211,7 +1211,7 @@ class PrototypeAgentsService:
         try:
             get_execution_center_service().ensure_group(
                 group_id=mission["execution_group_id"],
-                title=f"原型测试 · {str(mission.get('source') or '').strip()[:48] or mission['mission_id']}",
+                title=f"Prototype Test · {str(mission.get('source') or '').strip()[:48] or mission['mission_id']}",
                 requirement=str(mission.get("source") or mission.get("user_input") or mission["mission_id"]),
                 target_url=str(mission.get("target_url") or ""),
                 mode=MISSION_KIND,
@@ -1222,7 +1222,7 @@ class PrototypeAgentsService:
                 status=status,
             )
         except Exception as exc:
-            logger.warning("[PrototypeAgents] 同步执行中心批次失败: %s", exc)
+            logger.warning("[PrototypeAgents] Failed to synchronize execution-center batch: %s", exc)
 
     def _persist_worker_record(
         self,
@@ -1234,14 +1234,14 @@ class PrototypeAgentsService:
             logs = [
                 {
                     "type": "system",
-                    "content": f"{result.agent_id} Worker 完成，provider={result.provider}，status={result.status}",
+                    "content": f"{result.agent_id} Worker finished; provider={result.provider}, status={result.status}",
                 }
             ]
             if result.status == "skipped":
                 logs.append(
                     {
                         "type": "observation",
-                        "content": str(result.payload.get("reason") or "已跳过"),
+                        "content": str(result.payload.get("reason") or "Skipped"),
                     }
                 )
             for finding in result.normalized_findings[:6]:
@@ -1263,7 +1263,7 @@ class PrototypeAgentsService:
                         "action": "assert",
                         "step": f"{result.agent_id}-summary",
                         "target": result.agent_id,
-                        "content": "未发现显著问题",
+                        "content": "No significant issues found",
                     }
                 )
 
@@ -1277,7 +1277,7 @@ class PrototypeAgentsService:
             record_id = f"prototype_{mission['mission_id']}_{result.agent_id}"
             get_execution_center_service().upsert_run(
                 task_id=record_id,
-                requirement=f"原型专项 · {result.agent_id}",
+                requirement=f"Prototype Specialized Test · {result.agent_id}",
                 status="success" if result.status in SUCCESS_STATUSES else ("skipped" if result.status == "skipped" else "failed"),
                 target_url=resolved_source.entry_url,
                 mode=mode_map.get(result.agent_id, result.agent_id),
@@ -1285,12 +1285,12 @@ class PrototypeAgentsService:
                 duration_ms=_duration_ms(result.started_at, result.finished_at),
                 execution_group_id=mission["execution_group_id"],
                 session_id=f"{MISSION_KIND}_{mission['mission_id']}",
-                group_title=f"原型测试 · {resolved_source.source_label}",
+                group_title=f"Prototype Test · {resolved_source.source_label}",
                 record_kind="child",
             )
             return record_id
         except Exception as exc:
-            logger.warning("[PrototypeAgents] 持久化 Worker 记录失败: %s", exc)
+            logger.warning("[PrototypeAgents] Failed to persist Worker record: %s", exc)
             return None
 
     def _persist_summary_record(self, mission: Dict[str, Any]) -> None:
@@ -1299,14 +1299,14 @@ class PrototypeAgentsService:
         findings = report.get("findings") or []
         try:
             logs = [
-                {"type": "system", "content": f"原型测试任务完成：{mission.get('source') or mission.get('user_input')}"},
+                {"type": "system", "content": f"Prototype testing mission completed: {mission.get('source') or mission.get('user_input')}"},
                 {
                     "type": "assertion",
                     "status": "pass" if not findings else "fail",
                     "action": "assert",
                     "step": "prototype-report",
                     "target": "prototype_agents",
-                    "content": f"Worker {summary.get('total_workers', 0)} 个，发现问题 {summary.get('finding_count', 0)} 个",
+                    "content": f"Worker {summary.get('total_workers', 0)}; issues found: {summary.get('finding_count', 0)}",
                 },
             ]
             for finding in findings[:8]:
@@ -1322,7 +1322,7 @@ class PrototypeAgentsService:
                 )
             get_execution_center_service().upsert_run(
                 task_id=mission["mission_id"],
-                requirement=f"原型测试 · {mission.get('source') or mission.get('mission_id')}",
+                requirement=f"Prototype Test · {mission.get('source') or mission.get('mission_id')}",
                 status="success" if not findings else "failed",
                 target_url=str(mission.get("target_url") or ""),
                 mode=MISSION_KIND,
@@ -1330,11 +1330,11 @@ class PrototypeAgentsService:
                 duration_ms=_duration_ms(str(mission.get("started_at") or ""), str(mission.get("completed_at") or "")),
                 execution_group_id=mission["execution_group_id"],
                 session_id=f"{MISSION_KIND}_{mission['mission_id']}",
-                group_title=f"原型测试 · {mission.get('source') or mission['mission_id']}",
+                group_title=f"Prototype Test · {mission.get('source') or mission['mission_id']}",
                 record_kind="child",
             )
         except Exception as exc:
-            logger.warning("[PrototypeAgents] 持久化摘要记录失败: %s", exc)
+            logger.warning("[PrototypeAgents] Failed to persist summary record: %s", exc)
 
     def _build_bug_summary(self, report: PrototypeReport) -> List[Dict[str, Any]]:
         bug_items = []
@@ -1363,7 +1363,7 @@ class PrototypeAgentsService:
             try:
                 commander._save_missions()
             except Exception as exc:
-                logger.warning("[PrototypeAgents] 持久化 mission 失败: %s", exc)
+                logger.warning("[PrototypeAgents] Failed to persist mission: %s", exc)
 
 
 _prototype_agents_service: Optional[PrototypeAgentsService] = None

@@ -128,7 +128,7 @@ class PlannerAgent:
             page_state = self.session.get_page_state() or {}
             current_url = str(page_state.get("url") or "").strip()
             current_title = str(page_state.get("title") or "").strip()
-            if current_url and current_url != "（未导航）":
+            if current_url and current_url not in {"(Not navigated)", "（未导航）"}:
                 interactive_elements = str(page_state.get("interactive_elements") or "")
                 interactive_count = interactive_elements.count("[")
                 summary = (
@@ -172,7 +172,7 @@ class PlannerAgent:
                 "target": "Detected a CAPTCHA or human verification page; stopped automatic recovery and requested human intervention",
                 "value": "",
                 "override_msg": (
-                    f"🧠 [Planner/Smart] ➡️ Repeated action '{repeated_action}' and a CAPTCHA was detected;"
+                    f"🧠 [Planner/Smart] ➡️ Repeated action '{repeated_action}' and a CAPTCHA was detected; "
                     "stop automatic recovery and request human intervention"
                 ),
             }
@@ -428,7 +428,7 @@ class PlannerAgent:
             page_state = self.session.get_page_state()
 
             if not page_state:
-                page_state = {"url": "（未导航）", "title": "", "interactive_elements": "", "visible_text": ""}
+                page_state = {"url": "(Not navigated)", "title": "", "interactive_elements": "", "visible_text": ""}
 
             # 1.5 ★ L1: Capture a page screenshot for multimodal VLM reasoning
             screenshot_b64 = await self._capture_page_screenshot()

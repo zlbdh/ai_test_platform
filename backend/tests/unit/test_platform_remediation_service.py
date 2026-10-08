@@ -202,7 +202,7 @@ def test_platform_remediation_guides_fixing_public_callback_when_probe_fails():
         result = service.evaluate()
 
     chatops_item = next(item for item in result["items"] if item["key"] == "notification_platform_chatops_subscription")
-    assert "修复当前公网回调地址的外部可达性" in chatops_item["next_step"]
+    assert "Restore public callback reachability" in chatops_item["next_step"]
     assert chatops_item["evidence"]["callback_probe_success"] is False
 
 
@@ -259,7 +259,7 @@ def test_platform_remediation_guides_event_subscription_after_external_self_chec
         result = service.evaluate()
 
     chatops_item = next(item for item in result["items"] if item["key"] == "notification_platform_chatops_subscription")
-    assert "通知平台开放平台启用事件订阅" in chatops_item["next_step"]
-    assert "加入目标群" in chatops_item["next_step"]
+    assert "Enable event subscription in the notification provider's developer console" in chatops_item["next_step"]
+    assert "add the app bot to the target group" in chatops_item["next_step"]
     assert chatops_item["evidence"]["external_callback_ready"] is True
     assert chatops_item["evidence"]["external_self_check_recent_success"] is True

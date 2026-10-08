@@ -1,9 +1,5 @@
-# -*- coding: utf-8 -*-
-"""
-项目回归包预置能力
-
-为平台内的需求解析、场景链、质量门禁和测试数据提供统一的项目级预置。
-"""
+﻿# -*- coding: utf-8 -*-
+'\nProject regression package presets\n\nProvide shared project presets for requirements, scenario chains, quality gates, and test data.\n'
 from __future__ import annotations
 
 from copy import deepcopy
@@ -28,6 +24,7 @@ _FRONTEND_REPO_URL = "https://example.com/example-org/sample-product-qd.git"
 _BACKEND_REPO_URL = "https://example.com/example-org/sample-product-hd.git"
 _DOCS_REPO_URL = "https://example.com/example-org/sample_platform.git"
 _TEST_DATA_PREFIX = "TEST_SAMPLE"
+# Preserve the target role name and existing scenario names as external/persisted identifiers.
 _ROLE_NAME = "业务运营角色"
 
 
@@ -65,28 +62,28 @@ def _docs_entry(relative_path: str, title: str, role: str = "reference") -> dict
 _SAMPLE_PLATFORM_DOCS = [
     _docs_entry(
         r"docx\XQ\Second\企业平台端需求\00-项目总览与技术架构.md",
-        "企业平台端-项目总览与技术架构",
+        'Enterprise platform - Project overview and technical architecture',
         "primary",
     ),
     _docs_entry(
         r"docx\XQ\Second\企业平台端需求\01-登录与认证模块.md",
-        "企业平台端-登录与认证模块",
+        'Enterprise platform - Sign-in and authentication',
     ),
     _docs_entry(
         r"docx\XQ\Second\企业平台端需求\03-工单调度模块.md",
-        "企业平台端-工单调度模块",
+        'Enterprise platform - Work order dispatch',
     ),
     _docs_entry(
         r"docx\XQ\Second\企业平台端需求\07-智慧物业模块.md",
-        "企业平台端-智慧物业模块",
+        'Enterprise platform - Property management',
     ),
     _docs_entry(
         r"docx\XQ\Second\企业平台端需求\06-养老管理模块.md",
-        "企业平台端-养老管理模块",
+        'Enterprise platform - Senior care management',
     ),
     _docs_entry(
         r"docx\XQ\Second\企业平台端需求\09-系统管理模块.md",
-        "企业平台端-系统管理模块",
+        'Enterprise platform - System administration',
     ),
 ]
 
@@ -94,79 +91,37 @@ _SAMPLE_PLATFORM_DOCS = [
 def _build_requirement_content() -> str:
     available_docs = [doc for doc in _SAMPLE_PLATFORM_DOCS if doc["exists"]]
     available_doc_lines = "\n".join(
-        f"- {doc['title']}：{doc['relative_path']}" for doc in available_docs
-    ) or "- 当前工作区尚未同步需求文档仓，请先拉取 sample_platform 仓库"
+        f"- {doc['title']}: {doc['relative_path']}" for doc in available_docs
+    ) or '- The requirements repository is not available in this workspace. Clone the sample_platform repository first.'
 
-    return f"""# 示例项目企业平台端首轮真实回归
-
-## 项目定位
-- 被测系统：示例项目企业平台端后台管理系统（示例系统管理系统）
-- 登录地址：{_TARGET_URL}
-- 目标用户：企业管理员与模块业务操作人员
-- 业务范围：工单调度、智慧物业、养老管理、系统管理、商城管理、财务管理、培训中心
-
-## 仓库信息
-- 前端仓库：{_FRONTEND_REPO_URL}
-- 后端仓库：{_BACKEND_REPO_URL}
-- 需求文档仓：{_DOCS_REPO_URL}
-
-## 首轮回归目标
-- 按需求文档做真实回归测试
-- 以 {_ROLE_NAME} 为主角色
-- 允许创建与回收测试数据
-- 优先产出 ui_e2e、business_flow、api_rest、data_validation 四类测试
-- 首轮不纳入性能与安全专项阻断
-
-## 优先级与波次
-1. Wave 0：登录与会话基线
-2. Wave 1：工单调度、智慧物业、公告/报事主流程
-3. Wave 2：停车、安防、能耗、设备/告警
-4. Wave 3：养老管理与商家能力
-5. Wave 4：系统管理、个人中心、密码修改、菜单权限差异
-
-## 默认准入标准
-- 登录主流程通过
-- 一级核心业务流通过率 >= 95%
-- 阻断级缺陷数 <= 0
-- 未解释 5xx 数 <= 0
-- 关键页面白屏/死链/严重控制台错误 <= 0
-
-## 推荐导入文档
-{available_doc_lines}
-
-## 执行约束
-- 场景命名格式固定为 `[角色]-[模块]-[场景]-[环境]`
-- 所有新增数据必须使用 `{_TEST_DATA_PREFIX}` 前缀
-- 所有可删除对象在任务末尾清理；不可删除对象记录回收清单
-- 每条场景都要写清角色、前置数据、入口 URL、关键断言、失败截图要求
-"""
+    return f"# Sample Enterprise Platform Initial Live Regression\n\n## Project overview\n- System under test: Sample Enterprise Platform administration system\n- Sign-in URL: {_TARGET_URL}\n- Target users: Enterprise administrators and module operators\n- Scope: Work order dispatch, property management, senior care, system administration, store management, finance, and training\n\n## Repositories\n- Frontend repository: {_FRONTEND_REPO_URL}\n- Backend repository: {_BACKEND_REPO_URL}\n- Requirements repository: {_DOCS_REPO_URL}\n\n## Initial regression goals\n- Run live regression tests against the requirements\n- Use {_ROLE_NAME} as the primary role\n- Test data may be created and cleaned up\n- Prioritize ui_e2e, business_flow, api_rest, and data_validation tests\n- Performance and security checks do not block this initial regression\n\n## Priorities and waves\n1. Wave 0: Authentication and session baseline\n2. Wave 1: Work order dispatch, property management, announcements, and incident flows\n3. Wave 2: Parking, security, energy use, equipment, and alerts\n4. Wave 3: Senior care and merchant capabilities\n5. Wave 4: System administration, profile, password changes, and role-specific menu permissions\n\n## Default acceptance criteria\n- Primary sign-in flow passes\n- Core business flow pass rate >= 95%\n- Blocking defects <= 0\n- Unexplained 5xx errors <= 0\n- Blank pages, broken links, or severe console errors on key pages <= 0\n\n## Recommended documents\n{available_doc_lines}\n\n## Execution constraints\n- Use the scenario naming pattern `[role]-[module]-[scenario]-[environment]`\n- All newly created data must use the `{_TEST_DATA_PREFIX}` prefix\n- Delete removable test objects at the end; record nonremovable objects in the cleanup list\n- Specify each scenario's role, prerequisite data, entry URL, key assertions, and failure screenshot requirements\n"
 
 
 _SAMPLE_PLATFORM_WAVES = [
     {
         "id": "wave0",
-        "name": "Wave 0 认证与会话基线",
-        "focus": ["登录与认证", "验证码", "菜单加载", "会话保持", "退出登录"],
+        "name": 'Wave 0 Authentication and session baseline',
+        "focus": ['Sign-in and authentication', 'Verification codes', 'Menu loading', 'Session persistence', 'Sign-out'],
     },
     {
         "id": "wave1",
-        "name": "Wave 1 核心业务流",
-        "focus": ["工单调度", "智慧物业", "公告/报事"],
+        "name": 'Wave 1 Core business flows',
+        "focus": ['Work order dispatch', 'Property management', 'Announcements and incidents'],
     },
     {
         "id": "wave2",
-        "name": "Wave 2 资产与现场能力",
-        "focus": ["停车", "安防", "能耗", "设备维护", "告警处理"],
+        "name": 'Wave 2 Assets and on-site capabilities',
+        "focus": ['Parking', 'Security', 'Energy use', 'Equipment maintenance', 'Alert handling'],
     },
     {
         "id": "wave3",
-        "name": "Wave 3 养老与商户能力",
-        "focus": ["老人档案", "养老设备", "养老告警", "商户入驻与审核"],
+        "name": 'Wave 3 Senior care and merchants',
+        "focus": ['Senior resident records', 'Care devices', 'Care alerts', 'Merchant onboarding and review'],
     },
     {
         "id": "wave4",
-        "name": "Wave 4 系统侧回归",
-        "focus": ["个人中心", "密码修改", "系统配置读取", "业务角色菜单权限"],
+        "name": 'Wave 4 System regression',
+        "focus": ['Profile', 'Password changes', 'System configuration reads', 'Business-role menu permissions'],
     },
 ]
 
@@ -196,52 +151,25 @@ _SAMPLE_PLATFORM_SCENARIOS = [
     {
         "name": f"[{_ROLE_NAME}]-登录认证-Wave0基线-测试环境",
         "description": (
-            "覆盖登录页基线、验证码、正确/错误登录、菜单拉取、刷新会话保持和退出登录。"
-            "使用真实测试账号执行，失败时保留登录页和首页截图。"
+            'Cover the sign-in page baseline, verification codes, valid and invalid sign-in, menu loading, session persistence after refresh, and sign-out. Use a real test account and retain sign-in/homepage screenshots on failure.'
         ),
-        "tags": ["示例项目", "真实回归", "wave0", "登录认证"],
+        "tags": ['Sample project', 'Live regression', "wave0", 'Authentication'],
         "steps": [
             _step(
-                "登录页基线检查",
+                'Sign-in page baseline',
                 _TARGET_URL,
-                f"""
-角色：{_ROLE_NAME}
-前置数据：无需登录；记录当前验证码是否启用
-目标：验证登录页可访问、输入框/验证码/记住我/协议勾选控件是否可见
-关键断言：
-1. 页面标题或品牌标识可见
-2. 用户名、密码、验证码（若启用）输入控件存在
-3. 登录按钮可点击且无白屏、死链、严重控制台报错
-失败截图要求：保留整页截图和控制台错误摘要
-""",
+                f'\nRole: {_ROLE_NAME}\nPrerequisites: No sign-in required; record whether verification codes are enabled\nGoal: Verify that the sign-in page is reachable and the input, verification-code, Remember Me, and agreement controls are visible\nKey assertions:\n1. The page title or brand is visible\n2. Username, password, and verification-code inputs exist when enabled\n3. The sign-in button is clickable; there are no blank pages, broken links, or severe console errors\nFailure screenshots: Retain a full-page screenshot and console error summary\n',
             ),
             _step(
-                "正确登录并验证首页菜单",
+                'Valid sign-in and homepage menu checks',
                 _TARGET_URL,
-                f"""
-角色：{_ROLE_NAME}
-前置数据：准备有效测试账号、验证码识别方式、允许访问业务菜单
-目标：完成登录并验证 `/system/user/getInfo`、`/system/menu/getRouters` 对应的首页与一级菜单加载
-关键断言：
-1. 登录成功后跳转到首页或默认工作台
-2. 至少能看到工单调度、智慧物业、养老管理、系统管理中的角色可见菜单
-3. 刷新页面后保持已登录态
-失败截图要求：保留登录前、登录后首页、菜单异常状态截图
-""",
+                f'\nRole: {_ROLE_NAME}\nPrerequisites: A valid test account, verification-code handling method, and permission to access business menus\nGoal: Sign in and verify the homepage and top-level menus associated with `/system/user/getInfo` and `/system/menu/getRouters`\nKey assertions:\n1. Successful sign-in opens the homepage or default workspace\n2. The role can see its permitted menus among work order dispatch, property management, senior care, and system administration\n3. Refreshing the page preserves the signed-in session\nFailure screenshots: Retain screenshots before sign-in, after sign-in, and of any menu errors\n',
                 depends_on=None,
             ),
             _step(
-                "退出登录回到登录页",
+                'Sign out to the sign-in page',
                 _TARGET_URL,
-                f"""
-角色：{_ROLE_NAME}
-前置数据：保持已登录态
-目标：从个人中心或系统入口执行退出登录
-关键断言：
-1. 退出后回到登录页
-2. 再访问受限页面会被拦截
-失败截图要求：保留退出前后页面截图
-""",
+                f'\nRole: {_ROLE_NAME}\nPrerequisites: An active signed-in session\nGoal: Sign out through the profile or system entry point\nKey assertions:\n1. Sign-out returns to the sign-in page\n2. Restricted pages cannot be accessed afterward\nFailure screenshots: Retain the pages before and after sign-out\n',
                 depends_on=None,
                 on_failure="continue",
             ),
@@ -250,206 +178,96 @@ _SAMPLE_PLATFORM_SCENARIOS = [
     {
         "name": f"[{_ROLE_NAME}]-工单调度-Wave1主流程-测试环境",
         "description": (
-            "按需求文档覆盖工单列表、筛选、详情、创建、编辑、状态流转、派单和导出。"
+            'Use the requirements to cover work order lists, filters, details, creation, editing, status transitions, dispatch, and export.'
         ),
-        "tags": ["示例项目", "真实回归", "wave1", "工单调度"],
+        "tags": ['Sample project', 'Live regression', "wave1", 'Work order dispatch'],
         "steps": [
             _step(
-                "工单列表与筛选基线",
+                'Work order list and filter baseline',
                 _TARGET_URL,
-                f"""
-角色：{_ROLE_NAME}
-前置数据：已登录；确保当前账号有工单调度访问权限
-入口：从一级菜单进入 `工单调度 > 工单管理`
-目标：验证统计看板、状态 Tab、搜索筛选、分页和导出入口
-关键断言：
-1. 顶部统计卡片可见，包含工单总数/处理中/今日完成等指标
-2. 业务类型、工单类型、紧急程度、创建时间、关键词筛选可用
-3. 平台订单 Tab 可见且切换后列表刷新
-失败截图要求：保留统计区、筛选区、列表区截图
-""",
+                f'\nRole: {_ROLE_NAME}\nPrerequisites: Signed in with work order dispatch permission\nEntry: Open `工单调度 > 工单管理` from the top-level menu\nGoal: Verify statistics, status tabs, search filters, pagination, and the export entry point\nKey assertions:\n1. Summary cards show total work orders, in-progress orders, completed-today counts, and related metrics\n2. Business type, work order type, urgency, creation time, and keyword filters work\n3. The platform orders tab is visible and switching to it refreshes the list\nFailure screenshots: Retain the statistics, filters, and list areas\n',
             ),
             _step(
-                "工单新增编辑与详情",
+                'Work order creation, editing, and details',
                 _TARGET_URL,
-                f"""
-角色：{_ROLE_NAME}
-前置数据：准备测试数据前缀 `{_TEST_DATA_PREFIX}_WO_`
-目标：创建一条测试工单，查看详情，再修改标题或紧急程度
-关键断言：
-1. 创建成功后列表可按测试前缀检索到
-2. 详情页展示工单编号、标题、客户、地址、状态、支付状态等字段
-3. 编辑成功后列表与详情数据一致
-回滚动作：如支持删除则删除；否则登记回收清单
-失败截图要求：保留表单校验、成功提示、详情回显截图
-""",
+                f'\nRole: {_ROLE_NAME}\nPrerequisites: Prepare the test-data prefix `{_TEST_DATA_PREFIX}_WO_`\nGoal: Create a test work order, inspect its details, then edit its title or urgency\nKey assertions:\n1. The created order can be found using its test prefix\n2. Details include order number, title, customer, address, status, and payment status\n3. After editing, the list and detail values agree\nRollback: Delete the order if supported; otherwise add it to the cleanup list\nFailure screenshots: Retain form validation, success feedback, and displayed details\n',
             ),
             _step(
-                "工单状态流转与派单",
+                'Work order status transitions and dispatch',
                 _TARGET_URL,
-                f"""
-角色：{_ROLE_NAME}
-前置数据：存在一条待分配或待接单测试工单
-目标：验证派单、处理、验收、取消/审核取消中的至少一条完整状态流转
-关键断言：
-1. 状态按文档定义流转，异常状态有明确提示
-2. 派单或处理后工单详情的处理记录更新
-3. 批量操作若不可执行，应给出明确提示，不允许静默失败
-失败截图要求：保留流转前后状态和处理记录截图
-""",
+                f"\nRole: {_ROLE_NAME}\nPrerequisites: A test work order awaiting assignment or acceptance\nGoal: Verify at least one complete transition through dispatch, handling, acceptance, cancellation, or cancellation review\nKey assertions:\n1. Status transitions follow the requirements, with clear feedback for invalid states\n2. Dispatch or handling updates the order's handling history\n3. Unavailable batch operations show clear feedback and never fail silently\nFailure screenshots: Retain states before and after the transition and handling history\n",
                 on_failure="continue",
             ),
         ],
     },
     {
         "name": f"[{_ROLE_NAME}]-智慧物业-Wave1社区公告报事-测试环境",
-        "description": "覆盖社区/物业管理、报事报修、公告通知的高频查询与写操作。",
-        "tags": ["示例项目", "真实回归", "wave1", "智慧物业", "公告报事"],
+        "description": 'Cover frequent queries and writes in community/property management, incident reporting, repairs, and announcements.',
+        "tags": ['Sample project', 'Live regression', "wave1", 'Property management', 'Announcements and incidents'],
         "steps": [
             _step(
-                "社区与物业列表基线",
+                'Community and property list baseline',
                 _TARGET_URL,
-                f"""
-角色：{_ROLE_NAME}
-前置数据：已登录；具备物业模块权限
-入口：`智慧物业 > 小区/社区管理` 与 `物业管理`
-目标：验证社区列表、楼栋/房屋入口、分页、搜索和详情入口
-关键断言：
-1. 社区列表可加载，无明显错位或空白区域
-2. 筛选与分页操作后列表结果更新
-3. 房屋/业主信息入口可见且可进入详情
-失败截图要求：保留列表、筛选、详情入口截图
-""",
+                f'\nRole: {_ROLE_NAME}\nPrerequisites: Signed in with property-module permissions\nEntry: `智慧物业 > 小区/社区管理` and `物业管理`\nGoal: Verify community lists, building/unit entry points, pagination, search, and detail entry points\nKey assertions:\n1. Community lists load without obvious misalignment or blank areas\n2. Filtering and pagination update the results\n3. Unit and owner information entry points are visible and open details\nFailure screenshots: Retain lists, filters, and detail entry points\n',
             ),
             _step(
-                "报事报修与公告主流程",
+                'Incident, repair, and announcement flows',
                 _TARGET_URL,
-                f"""
-角色：{_ROLE_NAME}
-前置数据：准备 `{_TEST_DATA_PREFIX}_NOTICE_` 或 `{_TEST_DATA_PREFIX}_REPORT_` 测试数据
-入口：`智慧物业 > 报事/公告`
-目标：验证报事列表、处理动作、公告新增/编辑/发布或下线
-关键断言：
-1. 列表支持查询、筛选、详情查看
-2. 新增或编辑成功后列表可回显
-3. 发布状态变化后详情和列表状态一致
-回滚动作：删除测试公告或记录回收清单
-失败截图要求：保留新增表单、成功提示、状态变化截图
-""",
+                f'\nRole: {_ROLE_NAME}\nPrerequisites: Prepare `{_TEST_DATA_PREFIX}_NOTICE_` or `{_TEST_DATA_PREFIX}_REPORT_` test data\nEntry: `智慧物业 > 报事/公告`\nGoal: Verify incident lists and handling, and announcement creation, editing, publishing, or unpublishing\nKey assertions:\n1. Lists support queries, filters, and details\n2. Created or edited records appear correctly in the list\n3. Publication state agrees between the list and details\nRollback: Delete test announcements or add them to the cleanup list\nFailure screenshots: Retain creation forms, success feedback, and status changes\n',
                 on_failure="continue",
             ),
         ],
     },
     {
         "name": f"[{_ROLE_NAME}]-智慧物业-Wave2停车安防能耗-测试环境",
-        "description": "覆盖停车、安防、能耗等资产管理模块的查询、详情与状态变化。",
-        "tags": ["示例项目", "真实回归", "wave2", "智慧物业", "停车", "安防", "能耗"],
+        "description": 'Cover asset-management queries, details, and status changes for parking, security, and energy use.',
+        "tags": ['Sample project', 'Live regression', "wave2", 'Property management', 'Parking', 'Security', 'Energy use'],
         "steps": [
             _step(
-                "停车管理合同与进出记录",
+                'Parking contracts and entry/exit records',
                 _TARGET_URL,
-                f"""
-角色：{_ROLE_NAME}
-前置数据：具备停车模块权限；准备 `{_TEST_DATA_PREFIX}_PK_` 测试合同数据
-入口：`智慧物业 > 智能停车`
-目标：验证车位列表、详情、续费/终止、进出记录弹窗、导出
-关键断言：
-1. 车牌号、车位信息、合同状态、费用状态字段完整
-2. 续费或终止动作后列表状态同步
-3. 进出记录弹窗可打开且数据结构完整
-失败截图要求：保留列表、弹窗、状态变化截图
-""",
+                f'\nRole: {_ROLE_NAME}\nPrerequisites: Parking-module permissions and `{_TEST_DATA_PREFIX}_PK_` test contract data\nEntry: `智慧物业 > 智能停车`\nGoal: Verify parking space lists, details, renewal/termination, entry/exit dialogs, and export\nKey assertions:\n1. License plate, parking space, contract status, and fee status fields are complete\n2. Renewal or termination updates the list status\n3. Entry/exit dialogs open with complete data structures\nFailure screenshots: Retain lists, dialogs, and status changes\n',
             ),
             _step(
-                "安防与能耗概览",
+                'Security and energy overview',
                 _TARGET_URL,
-                f"""
-角色：{_ROLE_NAME}
-前置数据：根据角色判断能耗模块是否开启；若未开启则记录为配置差异
-入口：`智慧物业 > 安防监控`、`能耗管理`
-目标：验证设备列表、围栏管理、能耗数据表和可见性规则
-关键断言：
-1. 安防列表和围栏管理入口可用
-2. 能耗模块若开启，应可见能耗列表/统计；若关闭，应有合理菜单隐藏或提示
-3. 页面无白屏、死链、严重控制台报错
-失败截图要求：保留模块可见性和异常状态截图
-""",
+                f'\nRole: {_ROLE_NAME}\nPrerequisites: Determine whether the role has the energy module enabled; record a configuration difference if it is disabled\nEntry: `智慧物业 > 安防监控` and `能耗管理`\nGoal: Verify device lists, geofences, energy data tables, and visibility rules\nKey assertions:\n1. Security lists and geofence entry points are available\n2. Enabled energy modules expose energy lists/statistics; disabled modules hide menus appropriately or explain the restriction\n3. No blank pages, broken links, or severe console errors occur\nFailure screenshots: Retain module visibility and error states\n',
                 on_failure="continue",
             ),
         ],
     },
     {
         "name": f"[{_ROLE_NAME}]-养老管理-Wave3老人设备告警-测试环境",
-        "description": "覆盖老人档案、设备、告警、处理记录等养老主流程。",
-        "tags": ["示例项目", "真实回归", "wave3", "养老管理"],
+        "description": 'Cover senior care flows for resident records, devices, alerts, and handling history.',
+        "tags": ['Sample project', 'Live regression', "wave3", 'Senior care'],
         "steps": [
             _step(
-                "老人档案列表与新增",
+                'Senior resident lists and record creation',
                 _TARGET_URL,
-                f"""
-角色：{_ROLE_NAME}
-前置数据：具备养老模块权限；准备 `{_TEST_DATA_PREFIX}_ELDER_` 测试档案数据
-入口：`养老管理 > 老人信息管理`
-目标：验证筛选、脱敏展示、新增/编辑、详情跳转
-关键断言：
-1. 姓名和联系方式默认脱敏展示
-2. 新增或编辑成功后列表与详情一致
-3. 关联社区、护理等级、紧急联系人字段回显正确
-回滚动作：删除测试老人档案或记录回收清单
-失败截图要求：保留列表脱敏态、详情态、编辑成功截图
-""",
+                f'\nRole: {_ROLE_NAME}\nPrerequisites: Senior care permissions and `{_TEST_DATA_PREFIX}_ELDER_` test resident data\nEntry: `养老管理 > 老人信息管理`\nGoal: Verify filtering, masked display, creation/editing, and detail navigation\nKey assertions:\n1. Names and contact details are masked by default\n2. After creation or editing, lists and details agree\n3. Linked community, care level, and emergency contact values display correctly\nRollback: Delete test resident records or add them to the cleanup list\nFailure screenshots: Retain masked lists, details, and successful edits\n',
             ),
             _step(
-                "设备与告警处理",
+                'Device and alert handling',
                 _TARGET_URL,
-                f"""
-角色：{_ROLE_NAME}
-前置数据：存在可查看的测试设备或告警记录
-入口：`养老管理 > 设备管理`、`告警管理`
-目标：验证设备详情、在线状态、告警列表、告警处理与记录追溯
-关键断言：
-1. 设备详情可打开且字段完整
-2. 告警处理动作有状态变化和处理记录
-3. 失败提示、批处理或多选操作反馈明确
-失败截图要求：保留设备详情、告警处理前后截图
-""",
+                f'\nRole: {_ROLE_NAME}\nPrerequisites: Viewable test devices or alert records\nEntry: `养老管理 > 设备管理` and `告警管理`\nGoal: Verify device details, online status, alert lists, handling, and traceable history\nKey assertions:\n1. Device details open with complete fields\n2. Handling an alert changes its status and records the action\n3. Failures, batch operations, and multiselect actions give clear feedback\nFailure screenshots: Retain device details and alerts before and after handling\n',
                 on_failure="continue",
             ),
         ],
     },
     {
         "name": f"[{_ROLE_NAME}]-系统管理-Wave4个人中心权限差异-测试环境",
-        "description": "覆盖个人中心、密码修改、菜单权限差异与配置读取。",
-        "tags": ["示例项目", "真实回归", "wave4", "系统管理"],
+        "description": 'Cover profiles, password changes, role-specific menu permissions, and configuration reads.',
+        "tags": ['Sample project', 'Live regression', "wave4", 'System administration'],
         "steps": [
             _step(
-                "个人中心与密码修改",
+                'Profile and password changes',
                 _TARGET_URL,
-                f"""
-角色：{_ROLE_NAME}
-前置数据：已登录；准备可恢复的测试密码策略
-入口：个人中心 / 用户资料
-目标：验证个人信息查看、密码修改表单、会话连续性
-关键断言：
-1. 个人中心可访问
-2. 密码校验规则和错误提示明确
-3. 若执行改密，需在任务末尾恢复原密码
-失败截图要求：保留个人中心与改密校验截图
-""",
+                f'\nRole: {_ROLE_NAME}\nPrerequisites: Signed in with a recoverable test-password strategy\nEntry: Profile / user details\nGoal: Verify personal information, the password-change form, and session continuity\nKey assertions:\n1. The profile is accessible\n2. Password rules and validation messages are clear\n3. If the password is changed, restore the original password at the end\nFailure screenshots: Retain the profile and password validation states\n',
             ),
             _step(
-                "菜单权限与系统配置读取",
+                'Menu permissions and system configuration reads',
                 _TARGET_URL,
-                f"""
-角色：{_ROLE_NAME}
-前置数据：业务运营角色账号，不使用管理员全量权限
-目标：验证业务角色可见菜单、不可见菜单和系统配置读取行为
-关键断言：
-1. 仅展示该角色应见菜单
-2. 无权限页面不能直接访问或会返回明确提示
-3. 配置页或参数读取页可正常加载角色允许范围内的数据
-失败截图要求：保留菜单树和无权限提示截图
-""",
+                f'\nRole: {_ROLE_NAME}\nPrerequisites: A business-operations account, without unrestricted administrator permissions\nGoal: Verify role-visible and hidden menus and system configuration reads\nKey assertions:\n1. Only menus allowed for the role are shown\n2. Unauthorized pages cannot be accessed directly or show a clear restriction\n3. Configuration pages load only data permitted for the role\nFailure screenshots: Retain the menu tree and permission-denied feedback\n',
                 on_failure="continue",
             ),
         ],
@@ -460,7 +278,7 @@ _SAMPLE_PLATFORM_SCENARIOS = [
 _SAMPLE_PLATFORM_GATE_RULES = [
     {
         "name": "sample_platform_login_success_gate",
-        "description": "登录主流程必须全部通过。",
+        "description": 'The entire primary sign-in flow must pass.',
         "metric": "login_success_rate",
         "operator": ">=",
         "threshold": 1.0,
@@ -468,7 +286,7 @@ _SAMPLE_PLATFORM_GATE_RULES = [
     },
     {
         "name": "sample_platform_core_flow_pass_gate",
-        "description": "一级核心业务流通过率必须达到 95%。",
+        "description": 'The core business flow pass rate must reach 95%.',
         "metric": "core_flow_pass_rate",
         "operator": ">=",
         "threshold": 0.95,
@@ -476,7 +294,7 @@ _SAMPLE_PLATFORM_GATE_RULES = [
     },
     {
         "name": "sample_platform_blocking_bug_gate",
-        "description": "首轮回归不允许存在阻断级缺陷。",
+        "description": 'No blocking defects are allowed in the initial regression.',
         "metric": "blocking_bug_count",
         "operator": "<=",
         "threshold": 0,
@@ -484,7 +302,7 @@ _SAMPLE_PLATFORM_GATE_RULES = [
     },
     {
         "name": "sample_platform_unexplained_5xx_gate",
-        "description": "不允许存在未解释的 5xx 错误。",
+        "description": 'No unexplained 5xx errors are allowed.',
         "metric": "unexplained_5xx_count",
         "operator": "<=",
         "threshold": 0,
@@ -492,7 +310,7 @@ _SAMPLE_PLATFORM_GATE_RULES = [
     },
     {
         "name": "sample_platform_critical_ui_error_gate",
-        "description": "关键页面不允许出现白屏、死链或严重控制台错误。",
+        "description": 'Key pages must have no blank pages, broken links, or severe console errors.',
         "metric": "critical_ui_error_count",
         "operator": "<=",
         "threshold": 0,
@@ -505,9 +323,9 @@ def list_playbooks() -> list[dict[str, Any]]:
     return [
         {
             "playbook_id": PLAYBOOK_ID_SAMPLE_PLATFORM_FIRST_REGRESSION,
-            "name": "示例项目企业平台端首轮真实回归",
+            "name": 'Sample Enterprise Platform Initial Live Regression',
             "target_url": _TARGET_URL,
-            "project_name": "示例项目企业平台端",
+            "project_name": 'Sample Enterprise Platform',
             "recommended_test_types": ["ui_e2e", "business_flow", "api_rest", "data_validation"],
         },
         get_sample_platform_platform_catalog_entry(),
@@ -546,25 +364,25 @@ def get_requirement_playbook(playbook_id: str) -> dict[str, Any] | None:
 
     return {
         "playbook_id": PLAYBOOK_ID_SAMPLE_PLATFORM_FIRST_REGRESSION,
-        "project_name": "示例项目企业平台端",
-        "title": "示例项目企业平台端首轮真实回归",
+        "project_name": 'Sample Enterprise Platform',
+        "title": 'Sample Enterprise Platform Initial Live Regression',
         "content": _build_requirement_content(),
         "references": references,
         "document_sources": doc_sources,
         "target_url": _TARGET_URL,
         "repositories": [
             {
-                "label": "前端仓库",
+                "label": 'Frontend repository',
                 "url": _FRONTEND_REPO_URL,
                 "local_path": str(_deployed_repo_path("sample-product-qd")),
             },
             {
-                "label": "后端仓库",
+                "label": 'Backend repository',
                 "url": _BACKEND_REPO_URL,
                 "local_path": str(_deployed_repo_path("sample-product-hd")),
             },
             {
-                "label": "需求文档仓",
+                "label": 'Requirements repository',
                 "url": _DOCS_REPO_URL,
                 "local_path": str(_docs_repo_path()),
             },
@@ -572,13 +390,13 @@ def get_requirement_playbook(playbook_id: str) -> dict[str, Any] | None:
         "waves": deepcopy(_SAMPLE_PLATFORM_WAVES),
         "recommended_test_types": ["ui_e2e", "business_flow", "api_rest", "data_validation"],
         "naming_convention": {
-            "scenario": "[角色]-[模块]-[场景]-[环境]",
+            "scenario": '[role]-[module]-[scenario]-[environment]',
             "test_data_prefix": _TEST_DATA_PREFIX,
         },
         "notes": [
-            "首轮执行建议先跑 Wave 0，再依次推进 Wave 1~4。",
-            "业务 API 先通过 UI 回归抓包确认，再补录到 API 工作台。",
-            "若需求与线上行为不一致，请单列为需求漂移，不直接判错。",
+            'Run Wave 0 first, then continue through Waves 1–4.',
+            'Capture business API requests during UI regression before adding them to API Workbench.',
+            'Record differences between requirements and live behavior as requirements drift; do not automatically label them defects.',
         ],
     }
 
@@ -607,8 +425,8 @@ def get_test_data_convention(playbook_id: str) -> dict[str, Any] | None:
     return {
         "playbook_id": playbook_id,
         "prefix": _TEST_DATA_PREFIX,
-        "cleanup_policy": "所有可删除对象在任务末尾清理，不可删除对象进入回收清单。",
-        "recommended_entities": ["工单", "公告", "停车合同", "老人档案"],
+        "cleanup_policy": 'Delete removable test objects at the end; add nonremovable objects to the cleanup list.',
+        "recommended_entities": ['Work orders', 'Announcements', 'Parking contracts', 'Senior resident records'],
     }
 
 

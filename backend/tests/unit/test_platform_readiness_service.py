@@ -53,12 +53,12 @@ def test_platform_readiness_evaluate_reports_local_and_global_views():
     assert readiness["score"] > 0
     assert readiness["local_score"] > 0
     assert readiness["global_score"] > 0
-    assert "核心差距集中在运维治理" in readiness["summary"]
+    assert "the main remaining gaps are operational governance" in readiness["summary"]
     assert len(readiness["local"]) == 5
     assert len(readiness["global"]) == 4
-    assert readiness["local"][1]["name"] == "告警模块"
+    assert readiness["local"][1]["name"] == "Alerting Module"
     assert readiness["local"][1]["status"] == "critical"
-    assert "接出至少 1 个生产告警 Webhook" in readiness["recommendations"][0]
+    assert "Connect at least one production alert Webhook" in readiness["recommendations"][0]
 
 
 def test_platform_readiness_treats_archived_history_as_governed_after_export():
@@ -109,8 +109,8 @@ def test_platform_readiness_treats_archived_history_as_governed_after_export():
 
     governance = next(section for section in readiness["local"] if section["key"] == "data_governance_module")
     assert governance["score"] == 100
-    assert "归档导出 已完成" in governance["summary"]
-    assert not any("离线导出或保留策略" in item for item in readiness["recommendations"])
+    assert "archive export: complete" in governance["summary"]
+    assert not any("offline export or retention policies" in item for item in readiness["recommendations"])
 
 
 def test_platform_readiness_recommends_notification_platform_subscription_when_webhook_ready_but_token_missing():
@@ -193,4 +193,4 @@ def test_platform_readiness_recommends_fixing_public_callback_when_probe_fails()
          patch.object(service, "_safe_count", side_effect=lambda table: 104 if table == "execution_groups" else 139):
         readiness = service.evaluate()
 
-    assert any("修复公网回调地址的外部可达性" in item for item in readiness["recommendations"])
+    assert any("Restore public callback reachability" in item for item in readiness["recommendations"])

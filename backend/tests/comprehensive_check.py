@@ -1,9 +1,9 @@
 """
-全面功能逻辑检查脚本
-检查内容：
-1. 后端 API 端点连通性
-2. 模块导入完整性
-3. 关键业务逻辑验证
+Comprehensive functional logic check script
+Checks:
+1. Backend API endpoint connectivity
+2. Module import completeness
+3. Key business logic checks
 """
 import sys
 import os
@@ -12,7 +12,7 @@ import traceback
 import importlib
 import ast
 
-# 设置项目根目录
+# Set the project root
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, PROJECT_ROOT)
 os.chdir(PROJECT_ROOT)
@@ -43,10 +43,10 @@ def warn(name, msg):
     print(f"         → {msg}")
 
 # ==========================================================
-# 第一部分：API 端点连通性
+# Part 1: API endpoint connectivity
 # ==========================================================
 print("=" * 70)
-print("1️⃣  后端 API 端点连通性检查")
+print("1️⃣  Backend API endpoint connectivity checks")
 print("=" * 70)
 
 import urllib.request
@@ -55,30 +55,30 @@ import urllib.error
 BASE_URL = "http://localhost:8020"
 
 API_ENDPOINTS = [
-    ("GET", "/", "根路径"),
-    ("GET", "/api/health", "健康检查"),
-    ("GET", "/api/status", "系统状态"),
-    ("GET", "/api/history", "测试历史"),
-    ("GET", "/api/config/ai", "AI 配置"),
-    ("GET", "/api/knowledge/status", "知识库状态"),
-    ("GET", "/api/knowledge/list", "知识列表"),
-    ("GET", "/api/data-factory/types", "数据工厂类型"),
-    ("GET", "/api/commander/agents", "Agent 列表"),
-    ("GET", "/api/performance/status", "性能测试状态"),
-    ("GET", "/api/security/status", "安全扫描状态"),
-    ("GET", "/api/evaluation/scenarios", "评估场景"),
-    ("GET", "/api/scheduler/tasks", "定时任务列表"),
-    ("GET", "/api/report/history", "报告历史"),
-    ("GET", "/api/workbench/collections", "API 集合"),
-    ("GET", "/api/workbench/environments", "环境列表"),
-    ("GET", "/api/platform/capabilities", "平台能力"),
-    ("GET", "/api/scenarios", "场景列表"),
-    ("GET", "/api/visual/baselines", "视觉基线"),
+    ("GET", "/", "Root path"),
+    ("GET", "/api/health", "Health check"),
+    ("GET", "/api/status", "System status"),
+    ("GET", "/api/history", "Test history"),
+    ("GET", "/api/config/ai", "AI configuration"),
+    ("GET", "/api/knowledge/status", "Knowledge base status"),
+    ("GET", "/api/knowledge/list", "Knowledge entries"),
+    ("GET", "/api/data-factory/types", "Data factory types"),
+    ("GET", "/api/commander/agents", "Agent list"),
+    ("GET", "/api/performance/status", "Performance test status"),
+    ("GET", "/api/security/status", "Security scan status"),
+    ("GET", "/api/evaluation/scenarios", "Evaluation scenarios"),
+    ("GET", "/api/scheduler/tasks", "Scheduled task list"),
+    ("GET", "/api/report/history", "Report history"),
+    ("GET", "/api/workbench/collections", "API collections"),
+    ("GET", "/api/workbench/environments", "Environment list"),
+    ("GET", "/api/platform/capabilities", "Platform capabilities"),
+    ("GET", "/api/scenarios", "Scenario list"),
+    ("GET", "/api/visual/baselines", "Visual baselines"),
     ("GET", "/api/oauth/tokens", "OAuth Tokens"),
-    ("GET", "/api/ci/config", "CI/CD 配置"),
-    ("GET", "/api/db/connections", "数据库连接"),
-    ("GET", "/api/notify/webhooks", "通知 Webhook"),
-    ("GET", "/api/deploy/projects", "部署项目"),
+    ("GET", "/api/ci/config", "CI/CD configuration"),
+    ("GET", "/api/db/connections", "Database connections"),
+    ("GET", "/api/notify/webhooks", "Notification webhooks"),
+    ("GET", "/api/deploy/projects", "Deployed projects"),
 ]
 
 for method, path, desc in API_ENDPOINTS:
@@ -93,15 +93,15 @@ for method, path, desc in API_ENDPOINTS:
         except urllib.error.HTTPError as e:
             raise AssertionError(f"HTTP {e.code}: {e.reason}")
         except urllib.error.URLError as e:
-            raise AssertionError(f"连接失败: {e.reason}")
+            raise AssertionError(f"Connection failed: {e.reason}")
     test(f"API {method} {path} ({desc})", check_endpoint)
 
 # ==========================================================
-# 第二部分：核心模块导入验证
+# Part 2: Core module import verification
 # ==========================================================
 print()
 print("=" * 70)
-print("2️⃣  核心模块导入验证 (Core)")
+print("2️⃣  Core module import verification (Core)")
 print("=" * 70)
 
 CORE_MODULES = [
@@ -129,11 +129,11 @@ for mod in CORE_MODULES:
     test(f"import {mod}", lambda m=mod: importlib.import_module(m))
 
 # ==========================================================
-# 第三部分：Agent 模块导入验证
+# Part 3: Agent module import verification
 # ==========================================================
 print()
 print("=" * 70)
-print("3️⃣  Agent 模块导入验证")
+print("3️⃣  Agent module import verification")
 print("=" * 70)
 
 AGENT_MODULES = [
@@ -151,11 +151,11 @@ for mod in AGENT_MODULES:
     test(f"import {mod}", lambda m=mod: importlib.import_module(m))
 
 # ==========================================================
-# 第四部分：Service 模块导入验证
+# Part 4: Service module import verification
 # ==========================================================
 print()
 print("=" * 70)
-print("4️⃣  Service 模块导入验证")
+print("4️⃣  Service module import verification")
 print("=" * 70)
 
 SERVICES_DIR = os.path.join(PROJECT_ROOT, "services")
@@ -166,11 +166,11 @@ if os.path.isdir(SERVICES_DIR):
             test(f"import {mod_name}", lambda m=mod_name: importlib.import_module(m))
 
 # ==========================================================
-# 第五部分：Router 模块导入验证
+# Part 5: Router module import verification
 # ==========================================================
 print()
 print("=" * 70)
-print("5️⃣  Router 模块导入验证")
+print("5️⃣  Router module import verification")
 print("=" * 70)
 
 ROUTERS_DIR = os.path.join(PROJECT_ROOT, "routers")
@@ -181,11 +181,11 @@ if os.path.isdir(ROUTERS_DIR):
             test(f"import {mod_name}", lambda m=mod_name: importlib.import_module(m))
 
 # ==========================================================
-# 第六部分：Skills 模块导入验证
+# Part 6: Skill module import verification
 # ==========================================================
 print()
 print("=" * 70)
-print("6️⃣  Skills 模块导入验证")
+print("6️⃣  Skill module import verification")
 print("=" * 70)
 
 SKILLS_DIR = os.path.join(PROJECT_ROOT, "skills")
@@ -196,11 +196,11 @@ if os.path.isdir(SKILLS_DIR):
             test(f"import {mod_name}", lambda m=mod_name: importlib.import_module(m))
 
 # ==========================================================
-# 第七部分：Workflow 模块导入验证
+# Part 7: Workflow module import verification
 # ==========================================================
 print()
 print("=" * 70)
-print("7️⃣  Workflow 模块导入验证")
+print("7️⃣  Workflow module import verification")
 print("=" * 70)
 
 WORKFLOWS_DIR = os.path.join(PROJECT_ROOT, "workflows")
@@ -211,156 +211,156 @@ if os.path.isdir(WORKFLOWS_DIR):
             test(f"import {mod_name}", lambda m=mod_name: importlib.import_module(m))
 
 # ==========================================================
-# 第八部分：关键业务逻辑验证
+# Part 8: Key business logic checks
 # ==========================================================
 print()
 print("=" * 70)
-print("8️⃣  关键业务逻辑验证")
+print("8️⃣  Key business logic checks")
 print("=" * 70)
 
-# 8.1 Config 逻辑
+# 8.1 Config logic
 def test_config_logic():
     from core.config import Config
     cfg = Config()
-    assert hasattr(cfg, 'LLM_PROVIDER'), "缺少 LLM_PROVIDER"
-    assert hasattr(cfg, 'LLM_MODEL'), "缺少 LLM_MODEL"
-    assert hasattr(cfg, 'PROJECT_ROOT'), "缺少 PROJECT_ROOT"
-test("Config 关键属性", test_config_logic)
+    assert hasattr(cfg, 'LLM_PROVIDER'), "Missing LLM_PROVIDER"
+    assert hasattr(cfg, 'LLM_MODEL'), "Missing LLM_MODEL"
+    assert hasattr(cfg, 'PROJECT_ROOT'), "Missing PROJECT_ROOT"
+test("Config key attributes", test_config_logic)
 
-# 8.2 Models 逻辑
+# 8.2 Models logic
 def test_models():
     from core.models import APIError
     err = APIError(message="test", status_code=400)
     assert err.status_code == 400
-test("Models APIError 构造", test_models)
+test("Models APIError construction", test_models)
 
-# 8.3 EventBus 逻辑
+# 8.3 EventBus logic
 def test_event_bus():
     from core.event_bus import EventBus
     bus = EventBus(session_id="test_verify")
     assert hasattr(bus, 'publish_task') or hasattr(bus, 'publish_task_sync')
-test("EventBus 实例化", test_event_bus)
+test("EventBus instantiation", test_event_bus)
 
-# 8.4 SharedBrowserState 逻辑
+# 8.4 SharedBrowserState logic
 def test_shared_state():
     from core.shared import SharedBrowserState
     state = SharedBrowserState()
     assert hasattr(state, 'get_page') or hasattr(state, 'page')
-test("SharedBrowserState 实例化", test_shared_state)
+test("SharedBrowserState instantiation", test_shared_state)
 
-# 8.5 DataFactory 逻辑
+# 8.5 DataFactory logic
 def test_data_factory():
     from core.data_factory import get_data_factory
     factory = get_data_factory()
     types = factory.get_available_types()
-    assert len(types) > 0, "数据工厂类型为空"
-test("DataFactory 获取类型", test_data_factory)
+    assert len(types) > 0, "Data factory types are empty"
+test("DataFactory type lookup", test_data_factory)
 
-# 8.6 评估指标
+# 8.6 Evaluation metrics
 def test_eval_metrics():
     from evaluation.metrics import ALL_METRICS
-    assert len(ALL_METRICS) >= 8, f"评估指标不足8个: {len(ALL_METRICS)}"
-test("评估指标 >= 8", test_eval_metrics)
+    assert len(ALL_METRICS) >= 8, f"Fewer than 8 evaluation metrics: {len(ALL_METRICS)}"
+test("Evaluation metrics >= 8", test_eval_metrics)
 
-# 8.7 基准场景
+# 8.7 Benchmark scenarios
 def test_benchmark():
     from evaluation.benchmark_suite import BenchmarkSuite
     suite = BenchmarkSuite()
     scenarios = suite.list_scenarios()
-    assert len(scenarios) >= 8, f"基准场景不足8个: {len(scenarios)}"
-test("基准场景 >= 8", test_benchmark)
+    assert len(scenarios) >= 8, f"Fewer than 8 benchmark scenarios: {len(scenarios)}"
+test("Benchmark scenarios >= 8", test_benchmark)
 
 # 8.8 Allure Reporter
 def test_allure_reporter():
     from core.allure_reporter import AllureReporter
     reporter = AllureReporter()
     assert hasattr(reporter, 'generate_report') or hasattr(reporter, 'generate')
-test("AllureReporter 实例化", test_allure_reporter)
+test("AllureReporter instantiation", test_allure_reporter)
 
 # 8.9 LLM Manager
 def test_llm_manager():
     from core.llm_manager import get_llm
-    # 不实际创建 LLM，只验证函数存在
+    # Verify that the function exists without creating an LLM
     assert callable(get_llm)
-test("LLM Manager get_llm 可调用", test_llm_manager)
+test("LLM Manager get_llm is callable", test_llm_manager)
 
 # 8.10 SemanticEngine
 def test_semantic_engine():
     from core.semantic_engine import SemanticLocator
     assert SemanticLocator is not None
-test("SemanticLocator 类存在", test_semantic_engine)
+test("SemanticLocator class exists", test_semantic_engine)
 
 # 8.11 Scenario Chain
 def test_scenario_chain():
     from core.scenario_chain import ScenarioChainEngine
     assert ScenarioChainEngine is not None
-test("ScenarioChainEngine 类存在", test_scenario_chain)
+test("ScenarioChainEngine class exists", test_scenario_chain)
 
 # 8.12 StrategySelector
 def test_strategy():
     from core.strategy_selector import AITestStrategySelector
     selector = AITestStrategySelector()
     assert hasattr(selector, 'select_strategy') or hasattr(selector, 'analyze_requirement')
-test("AITestStrategySelector 实例化", test_strategy)
+test("AITestStrategySelector instantiation", test_strategy)
 
 # 8.13 TestScheduler
 def test_scheduler():
     from core.test_scheduler import TestScheduler
     assert TestScheduler is not None
-test("TestScheduler 类存在", test_scheduler)
+test("TestScheduler class exists", test_scheduler)
 
 # 8.14 NotifyGateway
 def test_notify():
     from core.notify_gateway import NotifyGateway
     gw = NotifyGateway()
     assert gw is not None
-test("NotifyGateway 实例化", test_notify)
+test("NotifyGateway instantiation", test_notify)
 
 # ==========================================================
-# 第九部分：代码静态检查 - 寻找潜在问题
+# Part 9: Static code checks for potential issues
 # ==========================================================
 print()
 print("=" * 70)
-print("9️⃣  代码静态分析 - 潜在问题扫描")
+print("9️⃣  Static code analysis: potential issue scan")
 print("=" * 70)
 
 issues_found = []
 
 def check_python_file(filepath):
-    """检查 Python 文件的常见问题"""
+    """Check Python files for common issues"""
     file_issues = []
     try:
         with open(filepath, 'r', encoding='utf-8') as f:
             content = f.read()
             lines = content.split('\n')
         
-        # 检查语法
+        # Check syntax
         try:
             ast.parse(content)
         except SyntaxError as e:
-            file_issues.append(f"语法错误: 行{e.lineno}: {e.msg}")
+            file_issues.append(f"Syntax error: line {e.lineno}: {e.msg}")
         
-        # 检查裸 except
+        # Check bare except clauses
         for i, line in enumerate(lines, 1):
             stripped = line.strip()
             if stripped == "except:" or stripped.startswith("except: "):
-                file_issues.append(f"行{i}: 裸 except (应指定异常类型)")
+                file_issues.append(f"Line {i}: Bare except clause (specify an exception type)")
             if "except Exception: pass" in stripped or "except: pass" in stripped:
-                file_issues.append(f"行{i}: 静默吞噬异常 (except: pass)")
+                file_issues.append(f"Line {i}: Silently swallowed exception (except: pass)")
         
-        # 检查硬编码密码/密钥
+        # Check hard-coded passwords/keys
         for i, line in enumerate(lines, 1):
             stripped = line.strip()
             if any(kw in stripped.lower() for kw in ['password = "', "password = '", 'secret = "', "secret = '"]):
                 if not stripped.startswith('#') and 'example' not in stripped.lower() and 'test' not in stripped.lower():
-                    file_issues.append(f"行{i}: 可能的硬编码密码/密钥")
+                    file_issues.append(f"Line {i}: Possible hard-coded password/key")
         
     except Exception as e:
-        file_issues.append(f"文件读取错误: {e}")
+        file_issues.append(f"File read error: {e}")
     
     return file_issues
 
-# 扫描所有 Python 文件
+# Scan all Python files
 scan_dirs = ['core', 'agents', 'services', 'routers', 'skills', 'workflows', 'evaluation']
 total_files_scanned = 0
 
@@ -380,32 +380,32 @@ for scan_dir in scan_dirs:
                     for issue in file_issues:
                         issues_found.append(f"{rel_path}: {issue}")
 
-print(f"  扫描文件数: {total_files_scanned}")
-print(f"  发现问题数: {len(issues_found)}")
-for issue in issues_found[:20]:  # 只显示前20个
+print(f"  Files scanned: {total_files_scanned}")
+print(f"  Issues found: {len(issues_found)}")
+for issue in issues_found[:20]:  # Show only the first 20
     print(f"  ⚠️  {issue}")
 if len(issues_found) > 20:
-    print(f"  ... 还有 {len(issues_found) - 20} 个问题")
+    print(f"  ... {len(issues_found) - 20} more issues")
 
 # ==========================================================
-# 第十部分：main.py 路由注册完整性
+# Part 10: main.py route registration completeness
 # ==========================================================
 print()
 print("=" * 70)
-print("🔟  main.py 路由注册完整性检查")
+print("🔟  main.py route registration completeness check")
 print("=" * 70)
 
 main_py_path = os.path.join(PROJECT_ROOT, "main.py")
 with open(main_py_path, 'r', encoding='utf-8') as f:
     main_content = f.read()
 
-# 检查所有 router 文件是否在 main.py 中注册
+# Check that all router files are registered in main.py
 router_files = []
 for f in os.listdir(os.path.join(PROJECT_ROOT, "routers")):
     if f.endswith(".py") and f != "__init__.py":
         router_files.append(f[:-3])
 
-# 同时检查 main.py 和 routers/__init__.py
+# Check both main.py and routers/__init__.py
 init_py_path = os.path.join(PROJECT_ROOT, "routers", "__init__.py")
 with open(init_py_path, 'r', encoding='utf-8') as f:
     init_content = f.read()
@@ -418,35 +418,35 @@ for rf in router_files:
     else:
         not_registered.append(rf)
 
-print(f"  Router 文件总数: {len(router_files)}")
-print(f"  已在 main.py 注册: {len(registered)}")
-print(f"  未注册: {len(not_registered)}")
+print(f"  Total router files: {len(router_files)}")
+print(f"  Registered in main.py: {len(registered)}")
+print(f"  Unregistered: {len(not_registered)}")
 for nr in not_registered:
-    print(f"  ⚠️  未注册路由: routers/{nr}.py")
+    print(f"  ⚠️  Unregistered router: routers/{nr}.py")
 
 # ==========================================================
-# 汇总报告
+# Summary report
 # ==========================================================
 print()
 print("=" * 70)
-print("📊 汇总报告")
+print("📊 Summary report")
 print("=" * 70)
-print(f"  ✅ 通过: {PASS}")
-print(f"  ❌ 失败: {FAIL}")
-print(f"  ⚠️  警告: {WARN}")
-print(f"  📝 代码问题: {len(issues_found)}")
-print(f"  📄 扫描文件: {total_files_scanned}")
+print(f"  ✅ Passed: {PASS}")
+print(f"  ❌ Failed: {FAIL}")
+print(f"  ⚠️  Warnings: {WARN}")
+print(f"  📝 Code issues: {len(issues_found)}")
+print(f"  📄 Files scanned: {total_files_scanned}")
 print()
 
-# 列出所有失败项
+# List all failed checks
 if FAIL > 0:
     print("=" * 70)
-    print("失败项汇总:")
+    print("Failed check summary:")
     print("=" * 70)
     for r in RESULTS:
         if r[0] == "FAIL":
             print(f"  ❌ {r[1]}: {r[2]}")
 
 print()
-print(f"退出码: {'0 (全部通过)' if FAIL == 0 else '1 (存在失败)'}")
+print(f"Exit code: {'0 (All passed)' if FAIL == 0 else '1 (Failures present)'}")
 sys.exit(1 if FAIL > 0 else 0)

@@ -1,6 +1,6 @@
 """
-RAG 知识库服务 - 支持多嵌入模型
-优先级: OpenAI 兼容 API -> 本地 HuggingFace -> 禁用
+RAG knowledge service with multiple embedding models
+Priority: OpenAI-compatible API -> local HuggingFace -> disabled
 """
 import logging
 import os
@@ -28,40 +28,40 @@ class KnowledgeBase:
         return cls._instance
 
     def initialize(self):
-        """Lazy init - 尝试多种嵌入模型"""
+        """Lazy initialization: try multiple embedding models"""
         if self.initialized:
             return
         
-        # 检查是否显式禁用
+        # Check whether explicitly disabled
         if not getattr(settings, 'ENABLE_RAG', True):
-            logger.info("RAG 已通过配置禁用")
+            logger.info("RAG is disabled by configuration")
             self.initialized = True
             return
         
-        # 策略 1: OpenAI 兼容 API (通过网关)
+        # Strategy 1: OpenAI-compatible API through the gateway
         if self._try_openai_embeddings():
             self.initialized = True
             return
             
-        # 策略 2: 本地 HuggingFace sentence-transformers
+        # Strategy 2: local HuggingFace sentence-transformers
         if self._try_huggingface_embeddings():
             self.initialized = True
             return
             
-        # 所有策略都失败
-        logger.warning("RAG 知识库已禁用: 无可用的嵌入模型")
+        # All strategies failed
+        logger.warning("RAG knowledge service disabled: no embedding model is available")
         self.initialized = True
 
     def _try_openai_embeddings(self) -> bool:
-        """尝试使用 OpenAI 兼容的嵌入 API"""
+        """Try an OpenAI-compatible embedding API"""
         try:
             from langchain_openai import OpenAIEmbeddings
             from langchain_chroma import Chroma
             
-            # 获取嵌入模型名称
+            # Get the embedding model name
             embedding_model = getattr(settings, 'EMBEDDING_MODEL', 'text-embedding-3-small')
             
-            logger.info(f"尝试 OpenAI 兼容嵌入模型: {embedding_model}...")
+            logger.info(f"Trying OpenAI-compatible embedding model: {embedding_model}...")
             
             self.embeddings = OpenAIEmbeddings(
                 model=embedding_model,
@@ -70,12 +70,12 @@ class KnowledgeBase:
                 timeout=3
             )
             
-            # 测试嵌入是否工作
+            # Test whether embeddings work
             test_result = self.embeddings.embed_query("test")
             if not test_result or len(test_result) < 10:
-                raise ValueError("嵌入结果无效")
+                raise ValueError("Invalid embedding result")
             
-            # 初始化向量存储
+            # Initialize the vector store
             os.makedirs(settings.CHROMA_PATH, exist_ok=True)
             self.vector_store = Chroma(
                 persist_directory=settings.CHROMA_PATH,
@@ -85,22 +85,22 @@ class KnowledgeBase:
             
             self.enabled = True
             self.embedding_type = "openai"
-            logger.info(f"RAG 已启用 (OpenAI 兼容模式: {embedding_model})")
+            logger.info(f"RAG enabled (OpenAI-compatible mode: {embedding_model})")
             return True
             
         except Exception as e:
-            logger.error(f"OpenAI 嵌入初始化失败: {e}")
+            logger.error(f"OpenAI embedding initialization failed: {e}")
             return False
 
     def _try_huggingface_embeddings(self) -> bool:
-        """尝试使用本地 HuggingFace 嵌入模型"""
+        """Try a local HuggingFace embedding model"""
         try:
             from langchain_huggingface import HuggingFaceEmbeddings
             from langchain_chroma import Chroma
             
-            # 使用小型中文/多语言模型
+            # Use a compact multilingual model
             model_name = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
-            logger.info(f"尝试本地 HuggingFace 嵌入模型: {model_name}...")
+            logger.info(f"Trying local HuggingFace embedding model: {model_name}...")
             
             self.embeddings = HuggingFaceEmbeddings(
                 model_name=model_name,
@@ -108,12 +108,12 @@ class KnowledgeBase:
                 encode_kwargs={'normalize_embeddings': True}
             )
             
-            # 测试
-            test_result = self.embeddings.embed_query("测试")
+            # Test
+            test_result = self.embeddings.embed_query("Test")
             if not test_result or len(test_result) < 10:
-                raise ValueError("嵌入结果无效")
+                raise ValueError("Invalid embedding result")
             
-            # 初始化向量存储
+            # Initialize the vector store
             os.makedirs(settings.CHROMA_PATH, exist_ok=True)
             self.vector_store = Chroma(
                 persist_directory=settings.CHROMA_PATH,
@@ -123,20 +123,20 @@ class KnowledgeBase:
             
             self.enabled = True
             self.embedding_type = "huggingface"
-            logger.info("RAG 已启用 (HuggingFace 本地模式)")
+            logger.info("RAG enabled (local HuggingFace mode)")
             return True
             
         except ImportError:
-            logger.warning("langchain-huggingface 未安装，跳过本地嵌入")
+            logger.warning("langchain-huggingface is not installed; skipping local embeddings")
             return False
         except Exception as e:
-            logger.error(f"HuggingFace 嵌入初始化失败: {e}")
+            logger.error(f"HuggingFace embedding initialization failed: {e}")
             return False
 
     def ingest_file(self, file_path: str, metadata: Optional[Dict] = None) -> bool:
-        """从文件摄入知识 (支持 .md, .sql, .txt)"""
+        """Ingest knowledge from a file (.md, .sql, or .txt)"""
         if not os.path.exists(file_path):
-            logger.error(f"文件不存在: {file_path}")
+            logger.error(f"File not found: {file_path}")
             return False
             
         self.initialize()
@@ -144,7 +144,7 @@ class KnowledgeBase:
             return False
             
         try:
-            # 读取文件内容
+            # Read file contents
             with open(file_path, "r", encoding="utf-8") as f:
                 content = f.read()
                 
@@ -157,13 +157,13 @@ class KnowledgeBase:
             
             parsed_docs = []
             
-            # 根据后缀选择解析策略
+            # Choose a parsing strategy by extension
             if file_ext == ".md":
                 parsed_docs = DocumentParser.parse_markdown(content, source_name=filename)
             elif file_ext == ".sql":
                 parsed_docs = DocumentParser.parse_sql(content, source_name=filename)
             elif file_ext == ".json":
-                # 简单判断是否是 OpenAPI (检查 "openapi" 或 "swagger" 关键字)
+                # Detect OpenAPI by checking for "openapi" or "swagger"
                 if '"openapi"' in content or '"swagger"' in content:
                     parsed_docs = DocumentParser.parse_openapi(content, source_name=filename)
                 else:
@@ -172,27 +172,27 @@ class KnowledgeBase:
                 parsed_docs = DocumentParser.parse_text(content, source_name=filename)
                 
             if not parsed_docs:
-                logger.warning(f"文件解析为空: {filename}")
+                logger.warning(f"File parsing produced no content: {filename}")
                 return False
                 
-            # 批量转换为 LangChain Document 对象
+            # Convert the batch into LangChain Document objects
             lc_docs = []
             for d in parsed_docs:
-                # 合并元数据
+                # Merge metadata
                 final_meta = {**meta_base, **d["metadata"]}
                 lc_docs.append(Document(page_content=d["content"], metadata=final_meta))
                 
-            # 批量写入向量库
+            # Write the batch to the vector store
             self.vector_store.add_documents(lc_docs)
-            logger.info(f"成功摄入文件: {filename} ({len(lc_docs)} chunks)")
+            logger.info(f"File ingested successfully: {filename} ({len(lc_docs)} chunks)")
             return True
             
         except Exception as e:
-            logger.error(f"摄入文件失败 {file_path}: {e}")
+            logger.error(f"Failed to ingest file {file_path}: {e}")
             return False
 
     def add_knowledge(self, text: str, metadata: Optional[Dict] = None) -> bool:
-        """添加知识条目"""
+        """Add a knowledge entry"""
         self.initialize()
         if not self.enabled:
             return False
@@ -201,14 +201,14 @@ class KnowledgeBase:
             meta.setdefault("source", "user_input")
             doc = Document(page_content=text, metadata=meta)
             self.vector_store.add_documents([doc])
-            logger.info(f"知识已添加: {text[:50]}...")
+            logger.info(f"Knowledge added: {text[:50]}...")
             return True
         except Exception as e:
-            logger.error(f"添加知识失败: {e}")
+            logger.error(f"Failed to add knowledge: {e}")
             return False
 
     def query_knowledge(self, query: str, k: int = 3) -> List[str]:
-        """查询相关知识"""
+        """Query relevant knowledge"""
         self.initialize()
         if not self.enabled:
             return []
@@ -216,16 +216,16 @@ class KnowledgeBase:
             docs = self.vector_store.similarity_search(query, k=k)
             return [d.page_content for d in docs]
         except Exception as e:
-            logger.error(f"查询知识失败: {e}")
+            logger.error(f"Knowledge query failed: {e}")
             return []
 
     def list_knowledge(self, limit: int = 100) -> List[Dict[str, Any]]:
-        """列出所有知识条目"""
+        """List all knowledge entries"""
         self.initialize()
         if not self.enabled:
             return []
         try:
-            # Chroma 的 get() 方法获取所有文档
+            # Chroma get() retrieves all documents
             collection = self.vector_store._collection
             results = collection.get(limit=limit, include=["documents", "metadatas"])
             
@@ -242,11 +242,11 @@ class KnowledgeBase:
                 })
             return items
         except Exception as e:
-            logger.error(f"列出知识失败: {e}")
+            logger.error(f"Failed to list knowledge: {e}")
             return []
 
     def get_knowledge_item(self, doc_id: str) -> Optional[Dict[str, Any]]:
-        """获取单条知识内容"""
+        """Get one knowledge entry"""
         self.initialize()
         if not self.enabled:
             return None
@@ -264,43 +264,43 @@ class KnowledgeBase:
                 "metadata": metas[0] if metas else {},
             }
         except Exception as e:
-            logger.error(f"获取知识失败 {doc_id}: {e}")
+            logger.error(f"Failed to get knowledge {doc_id}: {e}")
             return None
 
     def delete_knowledge(self, doc_id: str) -> bool:
-        """删除指定知识条目"""
+        """Delete a knowledge entry"""
         self.initialize()
         if not self.enabled:
             return False
         try:
             collection = self.vector_store._collection
             collection.delete(ids=[doc_id])
-            logger.info(f"知识已删除: {doc_id}")
+            logger.info(f"Knowledge deleted: {doc_id}")
             return True
         except Exception as e:
-            logger.error(f"删除知识失败: {e}")
+            logger.error(f"Failed to delete knowledge: {e}")
             return False
 
     def clear_knowledge(self) -> bool:
-        """清空所有知识"""
+        """Clear all knowledge"""
         self.initialize()
         if not self.enabled:
             return False
         try:
-            # 获取所有 ID 并删除
+            # Get all IDs and delete them
             collection = self.vector_store._collection
             results = collection.get()
             ids = results.get("ids", [])
             if ids:
                 collection.delete(ids=ids)
-            logger.info(f"已清空 {len(ids)} 条知识")
+            logger.info(f"Cleared {len(ids)} knowledge entries")
             return True
         except Exception as e:
-            logger.error(f"清空知识失败: {e}")
+            logger.error(f"Failed to clear knowledge: {e}")
             return False
 
     def get_status(self) -> Dict[str, Any]:
-        """获取知识库状态"""
+        """Get knowledge service status"""
         self.initialize()
         count = 0
         if self.enabled:
@@ -315,5 +315,5 @@ class KnowledgeBase:
             "document_count": count
         }
 
-# 单例实例
+# Singleton instance
 kb = KnowledgeBase()

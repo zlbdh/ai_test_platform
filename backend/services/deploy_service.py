@@ -1,11 +1,11 @@
 ﻿# -*- coding: utf-8 -*-
 """
-待测项目自动化部署服务
+Automated deployment service for projects under test
 
-数据模型: Project → Repos (二级结构)
-一个项目可包含多个仓库（前端/后端/微服务等），在同一个项目下统一管理。
+Data model: Project -> Repos (two levels)
+A project can contain multiple repositories (frontend, backend, microservices, etc.) managed together.
 
-注: 数据类和工具函数已移至 deploy_models.py
+Note: Data classes and utility functions have moved to deploy_models.py.
 """
 
 import logging
@@ -35,9 +35,9 @@ from services.deploy_models import (
 logger = logging.getLogger(__name__)
 
 
-# ── 部署服务 ──────────────────────────────────────────────────────────────────
+# -- Deployment service --------------------------------------------------
 class DeployService:
-    """待测项目部署管理服务"""
+    """Deployment management service for projects under test"""
 
     SENSITIVE_ENV_KEYWORDS = ("PASSWORD", "SECRET", "TOKEN", "API_KEY", "ACCESS_KEY")
 
@@ -48,7 +48,7 @@ class DeployService:
         self.history: List[DeployRecord] = []
         self.jobs: Dict[str, DeployJob] = {}
         self.approvals: Dict[str, DeployApproval] = {}
-        self.memory: Dict[str, Dict] = {}                    # key = repo.id, val = 部署记忆
+        self.memory: Dict[str, Dict] = {}                    # key = repo.id, value = deployment memory
         self._deploy_event_bus: Dict[str, asyncio.Queue] = {}  # repo_id -> Queue
         self._active_job_tasks: Dict[str, asyncio.Task] = {}
         self._load_projects()
@@ -59,7 +59,7 @@ class DeployService:
         self._load_state()
         self._load_all_memory()
 
-    # ── 持久化 ────────────────────────────────────────────────────────────────
+    # -- Persistence ---------------------------------------------------------
     def _ensure_job_runtime(self):
         if not hasattr(self, "jobs") or self.jobs is None:
             self.jobs = {}
@@ -69,11 +69,11 @@ class DeployService:
             self._active_job_tasks = {}
 
     def _load_state(self):
-        """加载全局状态 (历史兼容)"""
+        """Load global state (legacy compatibility)"""
         if STATE_FILE.exists():
             try:
                 data = json.loads(STATE_FILE.read_text(encoding="utf-8"))
-                # 兼容旧版本: 将全局 token 迁移到第一个项目
+                # Legacy compatibility: migrate the global token to the first project
                 self._legacy_token = data.get("git_token", "")
             except Exception:
                 self._legacy_token = ""
@@ -85,7 +85,7 @@ class DeployService:
                 encoding="utf-8",
             )
         except Exception as e:
-            logger.warning(f"保存状态失败: {e}")
+            logger.warning(f"Failed to save state: {e}")
 
     def _load_projects(self):
         if PROJECTS_FILE.exists():
@@ -96,7 +96,7 @@ class DeployService:
                     cfg = ProjectConfig(**item, repos=repos)
                     self.projects[cfg.key] = cfg
             except Exception as e:
-                logger.warning(f"加载项目列表失败: {e}")
+                logger.warning(f"Failed to load projects: {e}")
                 self.projects = {}
 
     def _save_projects(self):
@@ -106,7 +106,7 @@ class DeployService:
                 json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8",
             )
         except Exception as e:
-            logger.warning(f"保存项目列表失败: {e}")
+            logger.warning(f"Failed to save projects: {e}")
 
     def _load_history(self):
         if HISTORY_FILE.exists():
@@ -123,7 +123,7 @@ class DeployService:
                 encoding="utf-8",
             )
         except Exception as e:
-            logger.warning(f"保存历史失败: {e}")
+            logger.warning(f"Failed to save history: {e}")
 
     def _load_jobs(self):
         self._ensure_job_runtime()
@@ -136,7 +136,7 @@ class DeployService:
                     if isinstance(item, dict) and item.get("id")
                 }
             except Exception as exc:
-                logger.warning(f"加载部署作业失败: {exc}")
+                logger.warning(f"Failed to load deployment jobs: {exc}")
                 self.jobs = {}
 
     def _save_jobs(self):
@@ -147,7 +147,7 @@ class DeployService:
                 encoding="utf-8",
             )
         except Exception as e:
-            logger.warning(f"保存部署作业失败: {e}")
+            logger.warning(f"Failed to save deployment jobs: {e}")
 
     def _load_approvals(self):
         self._ensure_job_runtime()
@@ -160,7 +160,7 @@ class DeployService:
                     if isinstance(item, dict) and item.get("id")
                 }
             except Exception as exc:
-                logger.warning(f"加载部署审批失败: {exc}")
+                logger.warning(f"Failed to load deployment approvals: {exc}")
                 self.approvals = {}
 
     def _save_approvals(self):
@@ -171,7 +171,7 @@ class DeployService:
                 encoding="utf-8",
             )
         except Exception as e:
-            logger.warning(f"保存部署审批失败: {e}")
+            logger.warning(f"Failed to save deployment approvals: {e}")
 
     def _mark_incomplete_jobs_orphaned(self):
         self._ensure_job_runtime()
@@ -180,7 +180,7 @@ class DeployService:
         for job in self.jobs.values():
             if job.status in {"queued", "running"}:
                 job.status = "orphaned"
-                reason = "服务重启前任务未完成，已标记为 orphaned"
+                reason = "The task did not finish before the service restarted and was marked orphaned"
                 job.message = f"{job.message} | {reason}" if job.message else reason
                 job.finished_at = now
                 changed = True
@@ -302,11 +302,11 @@ class DeployService:
             repo_label = repo.label
         elif action == "full_deploy_all":
             if project_key not in self.projects:
-                raise ValueError(f"项目不存在: {project_key}")
+                raise ValueError(f"Project not found: {project_key}")
             repo_label = self.projects[project_key].name
             repo_id = ""
         else:
-            raise ValueError("不支持的审批动作")
+            raise ValueError("Unsupported approval action")
 
         approval = DeployApproval(
             action=action,
@@ -317,7 +317,7 @@ class DeployService:
             request_comment=request_comment,
             requested_by=requested_by,
             requested_by_name=requested_by_name or requested_by,
-            message="等待审批",
+            message="Awaiting approval",
         )
         self.approvals[approval.id] = approval
         self._save_approvals()
@@ -350,9 +350,9 @@ class DeployService:
         self._ensure_job_runtime()
         approval = self.approvals.get(approval_id)
         if not approval:
-            raise ValueError("审批单不存在")
+            raise ValueError("Approval request not found")
         if approval.status != "pending":
-            raise ValueError("审批单已处理")
+            raise ValueError("Approval request already processed")
 
         approval.reviewed_by = reviewed_by
         approval.reviewed_by_name = reviewed_by_name or reviewed_by
@@ -361,7 +361,7 @@ class DeployService:
 
         if not approved:
             approval.status = "rejected"
-            approval.message = "审批已拒绝"
+            approval.message = "Approval rejected"
             self._save_approvals()
             return self._approval_to_payload(approval)
 
@@ -370,12 +370,12 @@ class DeployService:
         elif approval.action == "full_deploy_all":
             job = self.schedule_full_deploy_all(approval.project_key)
         else:
-            raise ValueError("不支持的审批动作")
+            raise ValueError("Unsupported approval action")
 
         approval.status = "approved"
         approval.job_id = job.id
         approval.record_id = job.record_id
-        approval.message = "审批已通过，部署任务已创建"
+        approval.message = "Approved; deployment job created"
         self._save_approvals()
         return self._approval_to_payload(approval)
 
@@ -403,7 +403,7 @@ class DeployService:
                     running_steps = True
                 elif step.status == "pending":
                     step.status = "skipped"
-                    step.message = "任务已取消，未执行"
+                    step.message = "Task canceled without execution"
             if not running_steps and not record.steps:
                 record.logs.append(f"⛔ {message}")
             else:
@@ -417,43 +417,43 @@ class DeployService:
         self._ensure_job_runtime()
         job = self.jobs.get(job_id)
         if not job:
-            raise ValueError("作业不存在")
+            raise ValueError("Job not found")
         if job.status in {"success", "failed", "cancelled", "orphaned"}:
-            raise ValueError("作业已结束，无法取消")
+            raise ValueError("The job has finished and cannot be canceled")
         if job.status == "cancel_requested":
             payload = self.get_job_detail(job_id)
             if payload is None:
-                raise ValueError("作业不存在")
+                raise ValueError("Job not found")
             return payload
 
         job.status = "cancel_requested"
-        job.message = "已收到取消请求"
+        job.message = "Cancellation request received"
         self._save_jobs()
 
         record = self._get_history_record(job.record_id)
         if record and record.status == "running":
-            record.logs.append("⛔ 已收到取消请求，将在当前步骤结束后停止后续执行")
+            record.logs.append("⛔ Cancellation requested; stop further execution after the current step completes")
             self._save_history()
 
         task = self._active_job_tasks.get(job_id)
         if task is None or task.done():
-            payload = self._finalize_job_cancellation(job_id, "任务已取消")
+            payload = self._finalize_job_cancellation(job_id, "Task canceled")
             if payload is None:
-                raise ValueError("作业不存在")
+                raise ValueError("Job not found")
             return payload
 
         payload = self.get_job_detail(job_id)
         if payload is None:
-            raise ValueError("作业不存在")
+            raise ValueError("Job not found")
         return payload
 
     def schedule_full_deploy(self, project_key: str, repo_id: str, branch: str = "") -> DeployJob:
-        """调度一键部署后台作业并立即返回作业信息。"""
+        """Schedule a one-click deployment in the background and return job details immediately."""
         self._ensure_job_runtime()
         _, repo = self._find_repo(project_key, repo_id)
 
         record = self._add_record(project_key, repo_id, repo.label, "full_deploy")
-        record.logs.append(f"🔄 一键部署 [{repo.label}]...")
+        record.logs.append(f"🔄 One-click deployment [{repo.label}]...")
         record.steps = [DeployStep(name="clone"), DeployStep(name="install"), DeployStep(name="start")]
         self._save_history()
 
@@ -464,26 +464,26 @@ class DeployService:
             repo_label=repo.label,
             record_id=record.id,
             branch=branch,
-            message="后台部署任务已创建",
+            message="Background deployment job created",
         )
 
         async def _runner():
             if self._job_cancellation_requested(job.id):
-                self._finalize_job_cancellation(job.id, "任务在启动前已取消")
+                self._finalize_job_cancellation(job.id, "Task canceled before startup")
                 return
-            self._update_job(job.id, status="running", message="后台部署执行中", started=True)
+            self._update_job(job.id, status="running", message="Background deployment running", started=True)
             try:
                 final_record = await self.full_deploy_repo(project_key, repo_id, branch, record, job_id=job.id)
             except Exception as exc:
-                logger.exception("[DeployService] 后台部署任务执行失败: %s", exc)
+                logger.exception("[DeployService] Background deployment failed: %s", exc)
                 self._update_job(job.id, status="failed", message=str(exc), started=True, finished=True)
                 return
 
             if final_record.status == "cancelled":
-                self._update_job(job.id, status="cancelled", message=final_record.message or "任务已取消", started=True, finished=True)
+                self._update_job(job.id, status="cancelled", message=final_record.message or "Task canceled", started=True, finished=True)
                 return
             final_status = "success" if final_record.status == "success" else "failed"
-            final_message = final_record.message or ("一键部署完成 ✅" if final_status == "success" else "部署失败")
+            final_message = final_record.message or ("One-click deployment completed ✅" if final_status == "success" else "Deployment failed")
             self._update_job(job.id, status=final_status, message=final_message, started=True, finished=True)
 
         task = asyncio.create_task(_runner(), name=f"deploy-job-{job.id}")
@@ -496,14 +496,14 @@ class DeployService:
         return job
 
     def schedule_full_deploy_all(self, project_key: str) -> DeployJob:
-        """调度项目级一键部署后台作业并立即返回作业信息。"""
+        """Schedule a project-wide one-click deployment in the background and return job details immediately."""
         self._ensure_job_runtime()
         if project_key not in self.projects:
-            raise ValueError(f"项目不存在: {project_key}")
+            raise ValueError(f"Project not found: {project_key}")
 
         project = self.projects[project_key]
         record = self._add_record(project_key, "", project.name, "full_deploy_all")
-        record.logs.append(f"🔄 一键部署全部 ({len(project.repos)} 个仓库)...")
+        record.logs.append(f"🔄 Deploy all ({len(project.repos)} repositories)...")
         self._save_history()
 
         job = self._create_job(
@@ -512,29 +512,29 @@ class DeployService:
             repo_id="",
             repo_label=project.name,
             record_id=record.id,
-            message="后台项目级部署任务已创建",
+            message="Project-wide background deployment job created",
         )
 
         async def _runner():
             if self._job_cancellation_requested(job.id):
-                self._finalize_job_cancellation(job.id, "任务在启动前已取消")
+                self._finalize_job_cancellation(job.id, "Task canceled before startup")
                 return
-            self._update_job(job.id, status="running", message="项目级后台部署执行中", started=True)
+            self._update_job(job.id, status="running", message="Project-wide background deployment running", started=True)
             try:
                 final_record = await self.full_deploy_all(project_key, existing_record=record, job_id=job.id)
             except Exception as exc:
-                logger.exception("[DeployService] 项目级后台部署任务执行失败: %s", exc)
+                logger.exception("[DeployService] Project-wide background deployment failed: %s", exc)
                 self._update_job(job.id, status="failed", message=str(exc), started=True, finished=True)
                 return
 
             if final_record.status == "cancelled":
-                self._update_job(job.id, status="cancelled", message=final_record.message or "任务已取消", started=True, finished=True)
+                self._update_job(job.id, status="cancelled", message=final_record.message or "Task canceled", started=True, finished=True)
                 return
             final_status = "success" if final_record.status == "success" else "failed"
             final_message = final_record.message or (
-                f"全部 {len(project.repos)} 个仓库部署完成 ✅"
+                f"All {len(project.repos)} repositories deployed ✅"
                 if final_status == "success"
-                else "项目级部署失败"
+                else "Project-wide deployment failed"
             )
             self._update_job(job.id, status=final_status, message=final_message, started=True, finished=True)
 
@@ -547,12 +547,12 @@ class DeployService:
         task.add_done_callback(_cleanup)
         return job
 
-    # ── 部署记忆系统 ────────────────────────────────────────────────────────────
+    # -- Deployment memory ---------------------------------------------------
     def _memory_file(self, repo_id: str) -> Path:
         return MEMORY_DIR / f"{repo_id}.json"
 
     def _load_all_memory(self):
-        """启动时加载所有 repo 的部署记忆"""
+        """Load deployment memory for every repository at startup"""
         for f in MEMORY_DIR.glob("*.json"):
             try:
                 data = json.loads(f.read_text(encoding="utf-8"))
@@ -560,10 +560,10 @@ class DeployService:
             except Exception:
                 pass
         if self.memory:
-            logger.info(f"[Memory] 已加载 {len(self.memory)} 个仓库的部署记忆")
+            logger.info(f"[Memory] Loaded deployment memory for {len(self.memory)} repositories")
 
     def _load_memory(self, repo_id: str) -> Dict:
-        """加载指定 repo 的记忆"""
+        """Load memory for a repository"""
         if repo_id in self.memory:
             return self.memory[repo_id]
         mf = self._memory_file(repo_id)
@@ -577,21 +577,21 @@ class DeployService:
         return {}
 
     def _save_memory(self, repo_id: str, data: Dict):
-        """保存 repo 的部署记忆到磁盘"""
+        """Save repository deployment memory to disk"""
         self.memory[repo_id] = data
         try:
             self._memory_file(repo_id).write_text(
                 json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8"
             )
         except Exception as e:
-            logger.warning(f"[Memory] 保存记忆失败 ({repo_id}): {e}")
+            logger.warning(f"[Memory] Failed to save memory ({repo_id}): {e}")
 
     def _update_memory(self, repo_id: str, key: str, value, record: DeployRecord = None):
-        """更新 repo 记忆的某个字段"""
+        """Update a repository memory field"""
         mem = self._load_memory(repo_id)
         mem[key] = value
         mem["last_updated"] = datetime.now().isoformat()
-        # 构建成功或启动成功都算一次有效部署
+        # A successful build or startup counts as a valid deployment
         should_inc = (
             key == "last_success"
             or (key == "build_strategy" and isinstance(value, dict) and value.get("success"))
@@ -599,11 +599,11 @@ class DeployService:
         mem["deploy_count"] = mem.get("deploy_count", 0) + (1 if should_inc else 0)
         self._save_memory(repo_id, mem)
         if record:
-            record.logs.append(f"🧠 记忆已更新: {key}")
+            record.logs.append(f"🧠 Memory updated: {key}")
 
     @staticmethod
     def _parse_env_text(env_text: str) -> Dict[str, str]:
-        """解析 KEY=VALUE 文本为环境变量字典。"""
+        """Parse KEY=VALUE text into an environment-variable dictionary."""
         env_vars: Dict[str, str] = {}
         if not env_text:
             return env_vars
@@ -617,14 +617,14 @@ class DeployService:
 
     @staticmethod
     def _dump_env_text(env_vars: Dict[str, str]) -> str:
-        """将环境变量字典转回 KEY=VALUE 文本。"""
+        """Convert an environment-variable dictionary back to KEY=VALUE text."""
         if not env_vars:
             return ""
         return "\n".join(f"{key}={value}" for key, value in env_vars.items())
 
     @classmethod
     def _mask_env_vars(cls, env_vars: Dict[str, str]) -> Dict[str, str]:
-        """脱敏环境变量，避免在 UI/记忆中重复暴露敏感信息。"""
+        """Mask environment variables to avoid exposing sensitive values in the UI or memory."""
         masked: Dict[str, str] = {}
         for key, value in env_vars.items():
             upper_key = key.upper()
@@ -641,7 +641,7 @@ class DeployService:
 
     @staticmethod
     def _summarize_env_vars(env_vars: Dict[str, str]) -> str:
-        """提炼关键环境变量摘要供记忆/提示使用。"""
+        """Summarize key environment variables for memory and prompts."""
         if not env_vars:
             return ""
         keys = [
@@ -657,7 +657,7 @@ class DeployService:
         return " | ".join(parts)
 
     def _get_env_file_path(self, project_dir: Path, create: bool = False) -> Path:
-        """定位仓库实际使用的环境变量文件，优先 docker/.env。"""
+        """Locate the environment file actually used by the repository, preferring docker/.env."""
         docker_env = project_dir / "docker" / ".env"
         root_env = project_dir / ".env"
         if docker_env.exists():
@@ -670,20 +670,20 @@ class DeployService:
 
     @staticmethod
     def _env_source_label(project_dir: Path, env_file: Path) -> str:
-        """将环境文件路径转换成对前端友好的来源标签。"""
+        """Convert an environment file path into a frontend-friendly source label."""
         try:
             return str(env_file.relative_to(project_dir)).replace("\\", "/")
         except ValueError:
             return env_file.name
 
     def _read_env_file(self, env_file: Path) -> Dict[str, str]:
-        """读取指定环境文件。"""
+        """Read an environment file."""
         if not env_file.exists():
             return {}
         return self._parse_env_text(env_file.read_text(encoding="utf-8"))
 
     def _merge_env_file(self, project_dir: Path, overrides: Dict[str, str], record: Optional[DeployRecord] = None) -> Dict[str, str]:
-        """将环境变量增量合并到生效的 .env 文件，保留未改项。"""
+        """Merge environment-variable updates into the active .env file, preserving unchanged entries."""
         env_file = self._get_env_file_path(project_dir, create=True)
         env_file.parent.mkdir(parents=True, exist_ok=True)
         merged = self._read_env_file(env_file)
@@ -693,11 +693,11 @@ class DeployService:
                 handle.write(f"{key}={value}\n")
         if record and overrides:
             changed = ", ".join(overrides.keys())
-            record.logs.append(f"📝 已增量更新环境配置 ({self._env_source_label(project_dir, env_file)}): {changed}")
+            record.logs.append(f"📝 Environment configuration updated incrementally ({self._env_source_label(project_dir, env_file)}): {changed}")
         return merged
 
     def _get_repo_env_state(self, repo: RepoConfig) -> Dict[str, object]:
-        """汇总仓库当前生效环境、已保存覆盖项和前端可展示说明。"""
+        """Summarize the active environment, saved overrides, and frontend display notes."""
         target = self._repo_path(repo)
         saved_context = {
             "server_address": "",
@@ -718,7 +718,7 @@ class DeployService:
 
         if not effective_env_vars and saved_env_vars:
             effective_env_vars = dict(saved_env_vars)
-            effective_env_source = "已保存的部署覆盖项"
+            effective_env_source = "Saved deployment overrides"
 
         masked_effective = self._mask_env_vars(effective_env_vars)
         masked_saved = self._mask_env_vars(saved_env_vars)
@@ -729,11 +729,11 @@ class DeployService:
             "effective_env_vars": masked_effective,
             "effective_env_text": self._dump_env_text(effective_env_vars),
             "effective_env_source": effective_env_source,
-            "env_apply_behavior": "不填写补充信息时沿用当前生效值；补充信息中的 KEY=VALUE 会增量合并到现有 .env，并在后续部署继续生效。",
+            "env_apply_behavior": "When no supplemental information is provided, retain the active values. KEY=VALUE entries in supplemental information are merged into the existing .env and remain effective for later deployments.",
         }
 
     def _remember_effective_env(self, repo: RepoConfig, project_dir: Path, record: Optional[DeployRecord] = None):
-        """在部署成功后记录当前生效环境摘要，供下次 AI 分析参考。"""
+        """After a successful deployment, record the active environment summary for the next AI analysis."""
         env_file = self._get_env_file_path(project_dir)
         env_vars = self._read_env_file(env_file)
         if not env_vars:
@@ -747,7 +747,7 @@ class DeployService:
         }, record)
 
     def _prefer_stable_ai_start_command(self, repo: RepoConfig, result: Dict, mem: Dict) -> Dict:
-        """对 AI 建议做稳定性保护，优先沿用已验证成功的启动命令。"""
+        """Protect stable AI recommendations by preferring a previously verified startup command."""
         suggested_start = str(result.get("start_cmd") or "").strip()
         current_start = str(repo.start_cmd or "").strip()
         docker_cmd = str(mem.get("start_config", {}).get("docker_cmd") or "").strip()
@@ -767,20 +767,20 @@ class DeployService:
             return result
 
         result["start_cmd"] = stable_start
-        suffix = "已沿用当前验证通过的 Docker 启动命令，避免 AI 建议覆盖稳定部署链路。"
+        suffix = "Kept the currently verified Docker startup command to prevent AI recommendations from overriding a stable deployment flow."
         result["notes"] = f"{result.get('notes', '').strip()} {suffix}".strip()
         result["stability_guard_applied"] = True
-        logger.info(f"[AI] 启用稳定命令保护: {repo.label} -> {stable_start}")
+        logger.info(f"[AI] Stable command protection enabled: {repo.label} -> {stable_start}")
         return result
 
     def _auto_start_docker(self, record: DeployRecord) -> bool:
-        """自动启动 Docker Desktop 并等待 daemon 就绪（最多等 60 秒）"""
+        """Start Docker Desktop automatically and wait up to 60 seconds for the daemon"""
         import time as _time
 
-        # 查找 Docker Desktop 可执行文件
+        # Locate the Docker Desktop executable
         docker_desktop_path = None
         if os.name == "nt":
-            # Windows: 常见安装路径
+            # Windows: common installation paths
             candidates = [
                 Path(os.environ.get("ProgramFiles", "C:\\Program Files")) / "Docker" / "Docker" / "Docker Desktop.exe",
                 Path(os.environ.get("LOCALAPPDATA", "")) / "Docker" / "Docker Desktop.exe",
@@ -789,7 +789,7 @@ class DeployService:
                 if c.exists():
                     docker_desktop_path = str(c)
                     break
-            # 如果找不到固定路径，尝试 where 命令
+            # If no fixed path is found, try the where command
             if not docker_desktop_path:
                 try:
                     r = subprocess.run(["where", "Docker Desktop"], capture_output=True, text=True, timeout=5)
@@ -811,12 +811,12 @@ class DeployService:
                     pass
 
         if not docker_desktop_path:
-            record.logs.append("⚠️ 找不到 Docker Desktop 安装路径，无法自动启动")
+            record.logs.append("⚠️ Docker Desktop installation not found; automatic startup is unavailable")
             return False
 
-        # 启动 Docker Desktop
+        # Start Docker Desktop
         try:
-            record.logs.append(f"🐳 正在启动 Docker Desktop...")
+            record.logs.append(f"🐳 Starting Docker Desktop...")
             if os.name == "nt":
                 subprocess.Popen(
                     [docker_desktop_path],
@@ -829,34 +829,34 @@ class DeployService:
                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                 )
         except Exception as e:
-            record.logs.append(f"⚠️ 启动 Docker Desktop 失败: {e}")
+            record.logs.append(f"⚠️ Failed to start Docker Desktop: {e}")
             return False
 
-        # 等待 Docker daemon 就绪（最多 60 秒）
+        # Wait up to 60 seconds for the Docker daemon
         max_wait = 60
         interval = 3
         waited = 0
-        record.logs.append(f"⏳ 等待 Docker daemon 就绪 (最多 {max_wait}s)...")
+        record.logs.append(f"⏳ Waiting for the Docker daemon (up to {max_wait}s)...")
         while waited < max_wait:
             _time.sleep(interval)
             waited += interval
             try:
                 r = subprocess.run(["docker", "info"], capture_output=True, text=True, timeout=10)
                 if r.returncode == 0:
-                    record.logs.append(f"✅ Docker Desktop 已就绪 (等待了 {waited}s)")
+                    record.logs.append(f"✅ Docker Desktop is ready (waited {waited}s)")
                     return True
             except Exception:
                 pass
             if waited % 15 == 0:
-                record.logs.append(f"⏳ 仍在等待 Docker 启动... ({waited}s/{max_wait}s)")
+                record.logs.append(f"⏳ Still waiting for Docker to start... ({waited}s/{max_wait}s)")
 
-        record.logs.append(f"⚠️ Docker Desktop 启动超时 ({max_wait}s)，请手动检查")
+        record.logs.append(f"⚠️ Docker Desktop startup timed out ({max_wait}s); check it manually")
         return False
 
     def _kill_project_java_processes(self, project_dir: Path, record: DeployRecord):
-        """构建前清理该项目残留的 Java 进程（防止 jar 被占用）"""
+        """Clean up remaining Java processes for this project before building to release locked JAR files"""
         killed = 0
-        # 使用项目目录名来匹配 — 比全路径更可靠
+        # Match the project directory name; it is more reliable than the full path
         dir_name = project_dir.name.lower()
         jar_markers = {
             dir_name,
@@ -864,7 +864,7 @@ class DeployService:
             *(jar.name.lower() for jar in self._list_local_microservice_jars(project_dir)),
         }
 
-        # 1) 先杀 docker_repos 中记录的微服务 PID
+        # 1) First terminate microservice PIDs recorded in docker_repos
         for repo_id, info in list(self.docker_repos.items()):
             cwd = info.get("cwd", "").lower()
             if dir_name in cwd:
@@ -884,10 +884,10 @@ class DeployService:
                             pass
                 self.docker_repos.pop(repo_id, None)
 
-        # 2) 通过 PowerShell/ps 查找命令行含项目目录名的 java 进程
+        # 2) Use PowerShell/ps to find Java processes whose command lines contain the project directory name
         try:
             if os.name == "nt":
-                # PowerShell Get-CimInstance 比 WMIC 更可靠
+                # PowerShell Get-CimInstance is more reliable than WMIC
                 ps_cmd = (
                     "Get-CimInstance Win32_Process -Filter \"Name='java.exe'\" "
                     "| Select-Object ProcessId, CommandLine "
@@ -910,7 +910,7 @@ class DeployService:
                                 capture_output=True, timeout=5
                             )
                             killed += 1
-                            logger.info(f"[进程清理] 杀掉 Java PID {pid_str}")
+                            logger.info(f"[Process cleanup] Terminate Java PID {pid_str}")
             else:
                 result = subprocess.run(
                     ["ps", "aux"], capture_output=True, text=True, timeout=10
@@ -923,23 +923,23 @@ class DeployService:
                             os.kill(int(parts[1]), signal.SIGTERM)
                             killed += 1
         except Exception as e:
-            logger.debug(f"[进程清理] 扫描异常: {e}")
+            logger.debug(f"[Process cleanup] Scan error: {e}")
 
         if killed:
-            record.logs.append(f"🧹 构建前清理: 已终止 {killed} 个残留 Java 进程")
-            logger.info(f"[进程清理] 项目 {project_dir.name}: 终止 {killed} 个 Java 进程")
-            time.sleep(2)  # 等待文件句柄释放
+            record.logs.append(f"🧹 Pre-build cleanup: terminated {killed} remaining Java processes")
+            logger.info(f"[Process cleanup] Project {project_dir.name}: terminated {killed} Java processes")
+            time.sleep(2)  # Wait for file handles to be released
         else:
-            record.logs.append("🔍 构建前检查: 无残留 Java 进程")
+            record.logs.append("🔍 Pre-build check: no remaining Java processes")
 
     @staticmethod
     def _is_frontend_repo(repo: RepoConfig) -> bool:
         label = repo.label or ""
         tech_stack = (repo.tech_stack or "").lower()
-        return label == "前端" or any(keyword in tech_stack for keyword in ("vite", "vue", "react", "next"))
+        return (label == "前端" or label.lower() == "frontend") or any(keyword in tech_stack for keyword in ("vite", "vue", "react", "next"))
 
     def _kill_project_frontend_processes(self, project_dir: Path, record: DeployRecord) -> int:
-        """启动/停止前清理同仓库残留的 Vite/Node 前端进程，避免旧实例占住端口。"""
+        """Before startup or shutdown, clean up this repository's remaining Vite/Node frontend processes so old instances do not occupy ports."""
         killed = 0
         project_marker = str(project_dir).lower()
         dev_markers = ("vite", "npm run dev", "pnpm dev", "yarn dev")
@@ -984,26 +984,26 @@ class DeployService:
                             os.kill(int(parts[1]), signal.SIGTERM)
                             killed += 1
         except Exception as e:
-            logger.debug(f"[前端进程清理] 扫描异常: {e}")
+            logger.debug(f"[Frontend process cleanup] Scan error: {e}")
 
         if killed:
-            record.logs.append(f"🧹 前端运行前清理: 已终止 {killed} 个残留 Node/Vite 进程")
+            record.logs.append(f"🧹 Pre-run frontend cleanup: terminated {killed} remaining Node/Vite processes")
             time.sleep(1)
         else:
-            record.logs.append("🔍 前端运行前检查: 无残留 Node/Vite 进程")
+            record.logs.append("🔍 Pre-run frontend check: no remaining Node/Vite processes")
         return killed
 
-    # ── 事件流 ─────────────────────────────────────────────────────────────────
+    # -- Event stream --------------------------------------------------------
     def _emit_event(self, repo_id: str, event: dict):
-        """向事件总线推送一条部署事件"""
+        """Push a deployment event to the event bus"""
         q = self._deploy_event_bus.get(repo_id)
         if q:
             try: q.put_nowait(event)
             except asyncio.QueueFull: pass
 
     async def get_event_stream(self, repo_id: str):
-        """SSE 消费端：yield 事件直到部署完成"""
-        # 使用已预注册的队列，若无则创建新队列
+        """SSE consumer: yield events until deployment completes"""
+        # Use the preregistered queue, or create one if none exists
         q = self._deploy_event_bus.get(repo_id)
         if q is None:
             q = asyncio.Queue(maxsize=500)
@@ -1015,7 +1015,7 @@ class DeployService:
                 if event.get("type") == "deploy_done":
                     break
         except asyncio.TimeoutError:
-            yield {"type": "deploy_done", "status": "timeout", "message": "事件流超时"}
+            yield {"type": "deploy_done", "status": "timeout", "message": "Event stream timed out"}
         finally:
             self._deploy_event_bus.pop(repo_id, None)
 
@@ -1023,20 +1023,20 @@ class DeployService:
         return DEPLOY_DIR / repo.local_dir
 
     def _find_repo(self, project_key: str, repo_id: str) -> tuple:
-        """查找项目和仓库, 返回 (ProjectConfig, RepoConfig)"""
+        """Find a project and repository; return (ProjectConfig, RepoConfig)"""
         if project_key not in self.projects:
-            raise ValueError(f"项目不存在: {project_key}")
+            raise ValueError(f"Project not found: {project_key}")
         proj = self.projects[project_key]
         repo = next((r for r in proj.repos if r.id == repo_id), None)
         if not repo:
-            raise ValueError(f"仓库不存在: {repo_id}")
+            raise ValueError(f"Repository not found: {repo_id}")
         return proj, repo
 
     # ── Git Token ─────────────────────────────────────────────────────────────
     def set_project_token(self, project_key: str, token: str):
-        """设置项目级 Git 令牌"""
+        """Set the project-level Git token"""
         if project_key not in self.projects:
-            raise ValueError(f"项目不存在: {project_key}")
+            raise ValueError(f"Project not found: {project_key}")
         self.projects[project_key].git_token = token
         self._save_projects()
 
@@ -1046,9 +1046,9 @@ class DeployService:
             return f"{parts[0]}://oauth2:{token}@{parts[1]}"
         return url
 
-    # ── 项目 CRUD ─────────────────────────────────────────────────────────────
+    # -- Project CRUD --------------------------------------------------------
     def add_project(self, name: str, repos: List[dict]) -> ProjectConfig:
-        """添加新项目 (含多个仓库)"""
+        """Add a project with multiple repositories"""
         key = str(uuid.uuid4())[:8]
         existing_dirs = set()
         for p in self.projects.values():
@@ -1068,7 +1068,7 @@ class DeployService:
 
             repo_configs.append(RepoConfig(
                 id=repo_id,
-                label=rd.get("label", "默认"),
+                label=rd.get("label", "Default"),
                 repo_url=rd["repo_url"],
                 local_dir=local_dir,
                 tech_stack=rd.get("tech_stack", ""),
@@ -1079,24 +1079,24 @@ class DeployService:
                 deploy_context=rd.get("deploy_context", {}),
             ))
 
-        # 从参数或旧版全局 token 获取令牌
+        # Get the token from arguments or the legacy global token
         token = ""
         if repos and repos[0].get("git_token"):
             token = repos[0].get("git_token", "")
         elif hasattr(self, '_legacy_token') and self._legacy_token:
             token = self._legacy_token
-            self._legacy_token = ""  # 迁移后清除
+            self._legacy_token = ""  # Clear after migration
 
         cfg = ProjectConfig(key=key, name=name, repos=repo_configs, git_token=token)
         self.projects[key] = cfg
         self._save_projects()
-        logger.info(f"新增项目: {name} ({len(repo_configs)} 个仓库)")
+        logger.info(f"Project added: {name} ({len(repo_configs)} repositories)")
         return cfg
 
     def update_project(self, key: str, name: str = None, repos: List[dict] = None) -> ProjectConfig:
-        """更新项目 (可更新名称和仓库列表)"""
+        """Update a project, including its name and repository list"""
         if key not in self.projects:
-            raise ValueError(f"项目不存在: {key}")
+            raise ValueError(f"Project not found: {key}")
         cfg = self.projects[key]
         if name:
             cfg.name = name
@@ -1120,7 +1120,7 @@ class DeployService:
 
                 new_repos.append(RepoConfig(
                     id=repo_id,
-                    label=rd.get("label", "默认"),
+                    label=rd.get("label", "Default"),
                     repo_url=rd["repo_url"],
                     local_dir=local_dir,
                     tech_stack=rd.get("tech_stack", ""),
@@ -1136,7 +1136,7 @@ class DeployService:
 
     def delete_project(self, key: str) -> bool:
         if key not in self.projects:
-            raise ValueError(f"项目不存在: {key}")
+            raise ValueError(f"Project not found: {key}")
         for repo in self.projects[key].repos:
             if repo.id in self.processes and self.processes[repo.id].poll() is None:
                 try:
@@ -1151,7 +1151,7 @@ class DeployService:
         self._save_projects()
         return True
 
-    # ── 部署操作 (以 repo 为单位) ─────────────────────────────────────────────
+    # -- Per-repository deployment operations --------------------------------
     async def clone_repo(self, project_key: str, repo_id: str, branch: str = "") -> DeployRecord:
         proj, repo = self._find_repo(project_key, repo_id)
         record = self._add_record(project_key, repo_id, repo.label, "clone")
@@ -1160,8 +1160,8 @@ class DeployService:
 
         try:
             if target.exists() and (target / ".git").exists():
-                record.logs.append(f"📂 已存在，执行 git pull ({use_branch})")
-                # 使用同步 subprocess.run 避免 Windows asyncio 兼容问题
+                record.logs.append(f"📂 Already exists; running git pull ({use_branch})")
+                # Use synchronous subprocess.run to avoid Windows asyncio compatibility issues
                 r1 = subprocess.run(
                     ["git", "checkout", use_branch], cwd=str(target),
                     capture_output=True, text=True, timeout=30,
@@ -1171,14 +1171,14 @@ class DeployService:
                 if r1.stderr.strip():
                     record.logs.append(r1.stderr.strip())
 
-                # 自动 stash 本地修改（如 AI 修改的 pom.xml），防止 pull 冲突
+                # Automatically stash local changes, such as AI-edited pom.xml, to avoid pull conflicts
                 stash_result = subprocess.run(
                     ["git", "stash", "--include-untracked"], cwd=str(target),
                     capture_output=True, text=True, timeout=30,
                 )
                 has_stash = "No local changes" not in (stash_result.stdout or "")
                 if has_stash:
-                    record.logs.append(f"📦 已暂存本地修改 (git stash)")
+                    record.logs.append(f"📦 Local changes stashed (git stash)")
 
                 r2 = subprocess.run(
                     ["git", "pull", "origin", use_branch], cwd=str(target),
@@ -1190,33 +1190,33 @@ class DeployService:
                     record.logs.append(r2.stderr.strip())
 
                 if r2.returncode != 0:
-                    # pull 失败，恢复 stash
+                    # Restore the stash if pull fails
                     if has_stash:
                         subprocess.run(["git", "stash", "pop"], cwd=str(target),
                                        capture_output=True, text=True, timeout=30)
-                    self._finish_record(record, "failed", f"拉取失败 (exit={r2.returncode})")
+                    self._finish_record(record, "failed", f"Pull failed (exit={r2.returncode})")
                     return record
 
-                # pull 成功后，尝试恢复本地修改
+                # After a successful pull, try to restore local changes
                 if has_stash:
                     pop_result = subprocess.run(
                         ["git", "stash", "pop"], cwd=str(target),
                         capture_output=True, text=True, timeout=30,
                     )
                     if pop_result.returncode == 0:
-                        record.logs.append("📦 已恢复本地修改")
+                        record.logs.append("📦 Local changes restored")
                     else:
-                        record.logs.append("⚠️ 恢复本地修改时有冲突，已丢弃旧修改")
+                        record.logs.append("⚠️ Conflicts occurred while restoring local changes; old changes were discarded")
                         subprocess.run(["git", "stash", "drop"], cwd=str(target),
                                        capture_output=True, text=True, timeout=30)
                         subprocess.run(["git", "checkout", "."], cwd=str(target),
                                        capture_output=True, text=True, timeout=30)
 
-                self._finish_record(record, "success", f"已拉取 ({use_branch})")
+                self._finish_record(record, "success", f"Pulled ({use_branch})")
             else:
                 auth_url = self._auth_url(repo.repo_url, proj.git_token)
-                record.logs.append(f"🔄 克隆 {repo.repo_url}")
-                # 使用同步 subprocess.run 避免 Windows asyncio 兼容问题
+                record.logs.append(f"🔄 Cloning {repo.repo_url}")
+                # Use synchronous subprocess.run to avoid Windows asyncio compatibility issues
                 r = subprocess.run(
                     ["git", "clone", "-b", use_branch, auth_url, str(target)],
                     capture_output=True, text=True, timeout=300,
@@ -1239,20 +1239,20 @@ class DeployService:
                         if detected["port"] and not repo.port:
                             repo.port = detected["port"]
                         self._save_projects()
-                        record.logs.append(f"🔍 探测: {repo.tech_stack}")
-                    self._finish_record(record, "success", "克隆完成")
+                        record.logs.append(f"🔍 Detected: {repo.tech_stack}")
+                    self._finish_record(record, "success", "Clone completed")
                 else:
-                    self._finish_record(record, "failed", f"克隆失败 (exit={r.returncode})")
+                    self._finish_record(record, "failed", f"Clone failed (exit={r.returncode})")
         except subprocess.TimeoutExpired:
-            self._finish_record(record, "failed", "克隆超时 (>300s)")
+            self._finish_record(record, "failed", "Clone timed out (>300s)")
         except Exception as e:
             self._finish_record(record, "failed", str(e))
         return record
 
-    # ── 自愈辅助 ────────────────────────────────────────────────────────────
+    # -- Self-healing helpers ------------------------------------------------
     @staticmethod
     def _find_free_port(preferred: int, range_size: int = 100) -> int:
-        """从 preferred 开始扫描可用端口"""
+        """Search for an available port starting at preferred"""
         for port in range(preferred, preferred + range_size):
             try:
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -1260,7 +1260,7 @@ class DeployService:
                     return port
             except OSError:
                 continue
-        return 0  # 未找到
+        return 0  # Not found
 
     @staticmethod
     def _is_privileged_port(port: int) -> bool:
@@ -1274,7 +1274,7 @@ class DeployService:
         *,
         allow_port_scan: bool = False,
     ) -> int:
-        """前端低位端口会在本地环境下触发 EACCES，统一改写到安全端口。"""
+        """Low frontend ports cause EACCES locally; replace them with safe ports."""
         if not self._is_frontend_repo(repo):
             return requested_port
 
@@ -1288,23 +1288,23 @@ class DeployService:
 
         if record is not None:
             record.logs.append(
-                f"🔧 自愈: 前端低位端口 {port or '未配置'} 不适合当前本地环境，已改写到 {safe_port}"
+                f"🔧 Self-healing: low frontend port {port or 'Not configured'} is unsuitable for the local environment; changed to {safe_port}"
             )
         return safe_port
 
     def _get_deploy_env(self, repo: 'RepoConfig') -> dict:
-        """构建部署环境变量：OS 环境 + 用户补充的 deploy_context.env_vars"""
+        """Build the deployment environment: OS environment plus deploy_context.env_vars supplied by the user"""
         env = dict(os.environ)
         ctx = repo.deploy_context or {}
-        # 解析用户补充的 KEY=VALUE 环境变量
+        # Parse user-supplied KEY=VALUE environment variables
         env.update(self._parse_env_text(ctx.get("env_vars", "")))
-        # 数据库连接
+        # Database connection
         if ctx.get("db_connection"):
             env["DATABASE_URL"] = ctx["db_connection"]
         return env
 
     def _write_env_file(self, target: Path, repo: 'RepoConfig', record: DeployRecord):
-        """将 deploy_context 增量合并到项目的环境文件，保留当前未修改项。"""
+        """Merge deploy_context into the project environment file, preserving unchanged entries."""
         ctx = repo.deploy_context or {}
         overrides = self._parse_env_text(ctx.get("env_vars", ""))
         if ctx.get("server_address"):
@@ -1317,44 +1317,44 @@ class DeployService:
             self._merge_env_file(target, overrides, record)
         except Exception as e:
             env_file = self._get_env_file_path(target, create=True)
-            record.logs.append(f"⚠️ 写入 {self._env_source_label(target, env_file)} 失败: {e}")
+            record.logs.append(f"⚠️ Failed to write {self._env_source_label(target, env_file)}: {e}")
 
     def _apply_pom_changes(self, target: Path, suggested_changes: list, record: DeployRecord):
-        """用户确认后，自动应用 pom.xml Maven Profile 修改（不修改不相关的代码）"""
+        """After user confirmation, apply Maven profile changes to pom.xml without modifying unrelated code"""
         import re as _re
         for change in suggested_changes:
             if change.get("type") != "maven_profile":
                 continue
             pom_file = target / change["file"]
             if not pom_file.exists():
-                record.logs.append(f"⚠️ 文件不存在: {change['file']}")
+                record.logs.append(f"⚠️ File not found: {change['file']}")
                 continue
             try:
                 content = pom_file.read_text(encoding="utf-8")
                 mod = change["module"]
                 profile_id = change.get("profile_id", "aigc")
 
-                # 检查是否已经有该 profile
+                # Check whether the profile already exists
                 if f'<id>{profile_id}</id>' in content:
-                    record.logs.append(f"ℹ️ {change['file']} 已有 {profile_id} profile，跳过")
+                    record.logs.append(f"ℹ️ {change['file']} Profile already exists: {profile_id}; skipping")
                     continue
 
-                # 将 <module>mod</module> 替换为注释
+                # Replace <module>mod</module> with a comment
                 pattern = f'(\\s*)<module>{_re.escape(mod)}</module>'
                 match = _re.search(pattern, content)
                 if not match:
-                    record.logs.append(f"ℹ️ {change['file']} 中未找到 {mod}，跳过")
+                    record.logs.append(f"ℹ️ {change['file']} does not contain {mod}; skipping")
                     continue
 
                 indent = match.group(1)
-                # 替换为注释
+                # Replace with a comment
                 content = _re.sub(
                     pattern,
-                    f'{indent}<!-- {mod} 移至 profile 中，默认不打包 -->',
+                    f'{indent}<!-- {mod} moved to a profile; excluded from packaging by default -->',
                     content,
                 )
 
-                # 在 </modules> 后插入 <profiles> 节
+                # Insert a <profiles> section after </modules>
                 profiles_block = f"""\n
     <profiles>
         <profile>
@@ -1367,13 +1367,13 @@ class DeployService:
                 content = content.replace('</modules>', '</modules>' + profiles_block, 1)
 
                 pom_file.write_text(content, encoding="utf-8")
-                record.logs.append(f"✅ 已应用: {change['file']} → {mod} 移至 Profile '{profile_id}'")
+                record.logs.append(f"✅ Applied: {change['file']} → {mod} moved to profile '{profile_id}'")
             except Exception as e:
-                record.logs.append(f"⚠️ 修改 {change['file']} 失败: {e}")
+                record.logs.append(f"⚠️ Failed to modify {change['file']}: {e}")
 
 
     def _run_install_cmd(self, cmd: str, cwd: str, record: DeployRecord, env: dict = None) -> int:
-        """执行安装命令并记录日志, 返回 exit code"""
+        """Execute the install command and record logs; return the exit code"""
         record.logs.append(f"📦 {cmd}")
         run_kwargs = dict(
             cwd=cwd, shell=True,
@@ -1397,23 +1397,23 @@ class DeployService:
         target = self._repo_path(repo)
 
         if not target.exists():
-            self._finish_record(record, "failed", "请先克隆")
+            self._finish_record(record, "failed", "Clone the repository first")
             return record
         if not repo.install_cmd:
-            self._finish_record(record, "failed", "未配置安装命令")
+            self._finish_record(record, "failed", "No install command configured")
             return record
 
-        # ── 预检: Maven 项目构建前清理残留 Java 进程 ──
+        # -- Preflight: clean up remaining Java processes before a Maven build --
         if "mvn" in (repo.install_cmd or ""):
             self._kill_project_java_processes(target, record)
 
-        # ── 预检: 确认构建工具可用，尝试自愈 ──
+        # -- Preflight: verify build tools and attempt self-healing --
         cmd_first = repo.install_cmd.split()[0]
         cmd_base = cmd_first.replace("./", "").replace(".\\" , "")
         wrapper_path = target / cmd_first.replace("./", "").replace(".\\" , "")
 
         if not wrapper_path.exists() and not cmd_available(cmd_base):
-            # ── 自愈: Maven/Gradle 缺失 → 检查 Docker 配置 ──
+            # -- Self-healing: Maven/Gradle missing -> check Docker configuration --
             if cmd_base in ("mvn", "mvnw", "mvnw.cmd", "gradle", "gradlew", "gradlew.bat"):
                 docker_compose = None
                 for dc_name in ["docker-compose.yml", "docker-compose-dev.yml"]:
@@ -1426,37 +1426,37 @@ class DeployService:
                         break
 
                 if docker_compose and cmd_available("docker-compose"):
-                    # Docker 可用 → 切换到 Docker 部署路径
-                    record.logs.append(f"🔧 自愈: {cmd_base} 未安装，检测到 Docker 配置 → 跳过本地构建")
+                    # Docker available -> switch to Docker deployment
+                    record.logs.append(f"🔧 Self-healing: {cmd_base} is not installed; Docker configuration detected -> skip the local build")
                     dc_dir = str(docker_compose.parent.relative_to(target)).replace("\\", "/")
                     if dc_dir and dc_dir != ".":
                         new_start = f"cd {dc_dir} && docker-compose -f {docker_compose.name} up -d"
                     else:
                         new_start = f"docker-compose -f {docker_compose.name} up -d"
-                    repo.install_cmd = "echo [自愈] 跳过本地构建，使用 Docker 部署"
+                    repo.install_cmd = "echo [Self-healing] Skip the local build and deploy with Docker"
                     repo.start_cmd = new_start
                     self._save_projects()
-                    record.logs.append(f"🔧 自愈: 启动命令已切换为: {new_start}")
-                    self._finish_record(record, "success", "自愈: 跳过本地构建 (使用 Docker)")
+                    record.logs.append(f"🔧 Self-healing: startup command changed to: {new_start}")
+                    self._finish_record(record, "success", "Self-healing: skipped the local build (using Docker)")
                     return record
                 else:
-                    # 两者均不可用 → 给出清晰的双选提示
+                    # Neither tool is available -> present both options clearly
                     tool_name = "Maven" if "mvn" in cmd_base else "Gradle"
-                    hints = [f"❌ {tool_name} 和 Docker 均未安装，无法自动部署"]
-                    hints.append(f"  方案一: 安装 {tool_name} → https://maven.apache.org/download.cgi" if "mvn" in cmd_base else f"  方案一: 安装 {tool_name} → https://gradle.org/install/")
-                    hints.append("  方案二: 安装 Docker Desktop → https://www.docker.com/products/docker-desktop/")
-                    hints.append("  安装任一工具后重新部署即可")
+                    hints = [f"❌ {tool_name} and Docker are both missing; automated deployment is unavailable"]
+                    hints.append(f"  Option 1: Install {tool_name} → https://maven.apache.org/download.cgi" if "mvn" in cmd_base else f"  Option 1: Install {tool_name} → https://gradle.org/install/")
+                    hints.append("  Option 2: Install Docker Desktop -> https://www.docker.com/products/docker-desktop/")
+                    hints.append("  Install either tool and deploy again")
                     for h in hints:
                         record.logs.append(h)
-                    self._finish_record(record, "failed", f"{tool_name} 和 Docker 均未安装，请安装任一工具后重试")
+                    self._finish_record(record, "failed", f"{tool_name} and Docker are both missing; install either tool and try again")
                     return record
             else:
                 hint_map = {
-                    "npm": "npm 未安装。请安装 Node.js: https://nodejs.org/",
-                    "pip": "pip 未安装。请确认 Python 环境正确配置",
+                    "npm": "npm is not installed. Install Node.js: https://nodejs.org/",
+                    "pip": "pip is not installed. Check your Python environment configuration",
                 }
-                hint = hint_map.get(cmd_base, f"命令 '{cmd_base}' 未找到")
-                record.logs.append(f"❌ 预检失败: {hint}")
+                hint = hint_map.get(cmd_base, f"Command '{cmd_base}' not found")
+                record.logs.append(f"❌ Preflight failed: {hint}")
                 self._finish_record(record, "failed", hint)
                 return record
 
@@ -1468,65 +1468,65 @@ class DeployService:
                     "cmd": repo.install_cmd, "success": True,
                     "timestamp": datetime.now().isoformat()
                 }, record)
-                self._finish_record(record, "success", "安装完成")
+                self._finish_record(record, "success", "Installation completed")
             else:
-                # ── 自愈: 安装失败自动修复尝试 ──
+                # -- Self-healing: attempt repairs after installation fails --
                 log_text = "\n".join(record.logs[-30:])
 
-                # 自愈 1: npm install 失败 → 淘宝镜像重试
+                # Self-healing 1: npm install fails -> retry with the Taobao mirror
                 if "npm" in repo.install_cmd and "registry" not in repo.install_cmd:
-                    record.logs.append("🔧 自愈: npm install 失败，切换淘宝镜像重试...")
+                    record.logs.append("🔧 Self-healing: npm install failed; retrying with the Taobao mirror...")
                     mirror_cmd = f"{repo.install_cmd} --registry=https://registry.npmmirror.com"
                     rc2 = self._run_install_cmd(mirror_cmd, str(target), record, env=deploy_env)
                     if rc2 == 0:
-                        self._finish_record(record, "success", "自愈: 使用淘宝镜像安装成功")
+                        self._finish_record(record, "success", "Self-healing: installation succeeded with the Taobao mirror")
                     else:
-                        self._finish_record(record, "failed", f"安装失败 (原始+镜像均失败, exit={rc2})")
+                        self._finish_record(record, "failed", f"Installation failed (original registry and mirror both failed, exit={rc2})")
 
-                # 自愈 2: Maven 构建失败 → 多级自愈策略
+                # Self-healing 2: Maven build fails -> multilevel healing strategy
                 elif "mvn" in repo.install_cmd:
                     healed = False
                     current_cmd = repo.install_cmd
 
-                    # 策略 A: 测试编译失败 → 添加 -Dmaven.test.skip=true
+                    # Strategy A: test compilation fails -> add -Dmaven.test.skip=true
                     if ("testCompile" in log_text or "test-compile" in log_text) and "-Dmaven.test.skip=true" not in current_cmd:
-                        record.logs.append("🔧 自愈: Maven 测试编译失败，添加 -Dmaven.test.skip=true 重试...")
+                        record.logs.append("🔧 Self-healing: Maven test compilation failed; retrying with -Dmaven.test.skip=true...")
                         current_cmd = current_cmd.replace("-DskipTests", "").strip() + " -Dmaven.test.skip=true"
                         rc2 = self._run_install_cmd(current_cmd, str(target), record, env=deploy_env)
                         if rc2 == 0:
                             repo.install_cmd = current_cmd
                             self._save_projects()
-                            self._finish_record(record, "success", "自愈: 跳过测试编译后构建成功")
+                            self._finish_record(record, "success", "Self-healing: build succeeded after skipping test compilation")
                             healed = True
                         else:
                             log_text = "\n".join(record.logs[-30:])
 
-                    # 策略 B: 某模块编译失败 → 用 -pl 命令行排除（不修改源码）
+                    # Strategy B: module compilation fails -> exclude with -pl without modifying source
                     if not healed and ("FAILURE" in log_text or "BUILD FAILURE" in log_text or "Compilation failure" in log_text or "Could not find" in log_text):
                         excluded_modules = set()
 
-                        # ── 预检: 检测 POM Profile 中已排除的模块，避免 -pl ! 冲突 ──
+                        # -- Preflight: detect modules already excluded by a POM profile to avoid -pl ! conflicts --
                         profile_excluded = set()
                         for pom_sub in ["sample-modules/pom.xml", "sample-api/pom.xml"]:
                             pom_path = target / pom_sub
                             if pom_path.exists():
                                 pom_content = pom_path.read_text(encoding="utf-8", errors="replace")
                                 if "<profiles>" in pom_content:
-                                    # 提取 <profiles> 中的 <module> 名称
+                                    # Extract <module> names from <profiles>
                                     profiles_section = pom_content.split("<profiles>", 1)[-1].split("</profiles>", 1)[0]
                                     for m in re.findall(r'<module>([^<]+)</module>', profiles_section):
                                         profile_excluded.add(m)
                         if profile_excluded:
-                            record.logs.append(f"📋 POM Profile 已排除: {', '.join(profile_excluded)}")
+                            record.logs.append(f"📋 POM profile already excludes: {', '.join(profile_excluded)}")
 
-                        # 聚合父模块不应被排除
+                        # Do not exclude the aggregator parent module
                         parent_modules = {"sample-modules", "sample-api", "sample-common", "sample-auth",
                                           "sample-gateway", "sample-visual", "sample-base", "sample-ui"}
-                        for _round in range(3):  # 最多排除 3 个模块
+                        for _round in range(3):  # Exclude at most 3 modules
                             failed_module = None
                             recent_logs = record.logs[-80:]
 
-                            # 优先: [ERROR] on project xxx / Could not find ... reactor
+                            # First choice: [ERROR] on project xxx / Could not find ... reactor
                             for log_line in recent_logs:
                                 if "[ERROR]" in log_line and "on project" in log_line:
                                     match = re.search(r'on project (\S+)', log_line)
@@ -1543,7 +1543,7 @@ class DeployService:
                                             failed_module = mod
                                             break
 
-                            # 次选: Compilation failure 路径中的模块名
+                            # Second choice: module names in Compilation failure paths
                             if not failed_module:
                                 for log_line in recent_logs:
                                     if "Compilation failure" in log_line or "[ERROR]" in log_line:
@@ -1554,7 +1554,7 @@ class DeployService:
                                                 failed_module = mod
                                                 break
 
-                            # 最后: Reactor Summary 中的 FAILURE 行
+                            # Last choice: FAILURE rows in Reactor Summary
                             if not failed_module:
                                 for log_line in recent_logs:
                                     if "FAILURE" in log_line and "[INFO]" in log_line:
@@ -1568,17 +1568,17 @@ class DeployService:
                                             break
 
                             if not failed_module:
-                                break  # 没有新的失败模块
+                                break  # No newly failing modules
 
                             excluded_modules.add(failed_module)
-                            # 同时排除对应的 api 模块
+                            # Also exclude the corresponding API module
                             api_mod = failed_module.replace("sample-", "sample-api-").replace("ruyi-", "sample-api-")
                             excluded_modules.add(api_mod)
-                            # 构建 -pl 排除参数（用逗号分隔）
+                            # Build comma-separated -pl exclusion arguments
                             pl_excludes = ",".join([f"!{m}" for m in excluded_modules])
-                            # PowerShell 下 ! 需要用引号包裹
+                            # Quote ! in PowerShell
                             exclude_cmd = f'{current_cmd} -pl "{pl_excludes}" --fail-at-end'
-                            record.logs.append(f"🔧 自愈[轮{_round+1}]: 排除 {failed_module} + {api_mod}（命令行 -pl，不修改源码）")
+                            record.logs.append(f"🔧 Self-healing [round {_round+1}]: exclude {failed_module} + {api_mod} (command-line -pl; source unchanged)")
                             rc2 = self._run_install_cmd(exclude_cmd, str(target), record, env=deploy_env)
                             if rc2 == 0:
                                 self._update_memory(repo.id, "build_strategy", {
@@ -1587,19 +1587,19 @@ class DeployService:
                                     "self_healed": True,
                                     "timestamp": datetime.now().isoformat()
                                 }, record)
-                                self._finish_record(record, "success", f"自愈: 排除 {', '.join(excluded_modules)} 后构建成功")
+                                self._finish_record(record, "success", f"Self-healing: excluded {', '.join(excluded_modules)} and the build succeeded")
                                 healed = True
                                 break
                             else:
                                 log_text = "\n".join(record.logs[-30:])
                                 if _round == 2:
-                                    self._finish_record(record, "failed", f"Maven 构建失败 (已排除 {', '.join(excluded_modules)}，仍失败)")
+                                    self._finish_record(record, "failed", f"Maven build failed (excluded {', '.join(excluded_modules)}; still failing)")
                                     healed = True
 
                     if not healed:
-                        self._finish_record(record, "failed", f"Maven 构建失败 (exit={rc})")
+                        self._finish_record(record, "failed", f"Maven build failed (exit={rc})")
         except subprocess.TimeoutExpired:
-            self._finish_record(record, "failed", "安装超时 (>600s)")
+            self._finish_record(record, "failed", "Installation timed out (>600s)")
         except Exception as e:
             self._finish_record(record, "failed", str(e))
         return record
@@ -1610,26 +1610,26 @@ class DeployService:
         target = self._repo_path(repo)
 
         if not target.exists():
-            self._finish_record(record, "failed", "请先克隆")
+            self._finish_record(record, "failed", "Clone the repository first")
             return record
         if not repo.start_cmd:
-            self._finish_record(record, "failed", "未配置启动命令")
+            self._finish_record(record, "failed", "No startup command configured")
             return record
         if repo.id in self.processes and self.processes[repo.id].poll() is None:
-            self._finish_record(record, "failed", "已在运行中")
+            self._finish_record(record, "failed", "Already running")
             return record
 
         if self._is_frontend_repo(repo):
             self._kill_project_frontend_processes(target, record)
 
-        # ── 预检: 检查启动命令中使用的工具是否可用 ──
-        # 处理 "cd dir && docker-compose ..." 等复合命令
+        # -- Preflight: check tools used by the startup command --
+        # Handle compound commands such as "cd dir && docker-compose ..."
         if "docker" in repo.start_cmd:
             docker_ok = False
             daemon_running = False
-            # 检测 docker compose v2 子命令
+            # Detect the docker compose v2 subcommand
             if cmd_available("docker"):
-                # docker 命令存在，但 daemon 可能未启动
+                # The docker command exists, but the daemon may not be running
                 try:
                     r = subprocess.run(["docker", "info"], capture_output=True, text=True, timeout=10)
                     daemon_running = r.returncode == 0
@@ -1643,7 +1643,7 @@ class DeployService:
                             docker_ok = True
                             if "docker-compose" in repo.start_cmd:
                                 current_cmd = re.sub(r'docker-compose(?=\s|$)', 'docker compose', repo.start_cmd)
-                                record.logs.append("🔧 自愈: docker-compose → docker compose (v2)")
+                                record.logs.append("🔧 Self-healing: docker-compose -> docker compose (v2)")
                                 repo.start_cmd = current_cmd
                                 self._save_projects()
                     except Exception:
@@ -1651,43 +1651,43 @@ class DeployService:
                     if not docker_ok and cmd_available("docker-compose"):
                         docker_ok = True
                 else:
-                    # Docker 已安装但 daemon 未运行 → 自动启动 Docker Desktop
-                    record.logs.append("🐳 检测到 Docker 已安装但未启动，正在自动启动 Docker Desktop...")
+                    # Docker is installed but its daemon is not running -> start Docker Desktop automatically
+                    record.logs.append("🐳 Docker is installed but not running; starting Docker Desktop automatically...")
                     started = self._auto_start_docker(record)
                     if started:
                         docker_ok = True
-                        # 启动成功后重新检查 compose 版本
+                        # Check the Compose version again after startup succeeds
                         try:
                             r = subprocess.run(["docker", "compose", "version"], capture_output=True, text=True, timeout=5)
                             if r.returncode == 0 and "docker-compose" in repo.start_cmd:
                                 current_cmd = re.sub(r'docker-compose(?=\s|$)', 'docker compose', repo.start_cmd)
-                                record.logs.append("🔧 自愈: docker-compose → docker compose (v2)")
+                                record.logs.append("🔧 Self-healing: docker-compose -> docker compose (v2)")
                                 repo.start_cmd = current_cmd
                                 self._save_projects()
                         except Exception:
                             pass
 
             if not docker_ok:
-                # 检测 docker-compose v1 独立命令
+                # Detect the standalone docker-compose v1 command
                 if cmd_available("docker-compose") and daemon_running:
                     docker_ok = True
 
             if not docker_ok:
                 if self._has_local_microservice_jars(target):
                     return self._start_microservices_without_docker(repo, target, record)
-                record.logs.append("❌ Docker 未安装或无法启动")
-                record.logs.append("  安装方式: https://www.docker.com/products/docker-desktop/")
-                record.logs.append("  安装后请确保 docker 命令在 PATH 中可用")
+                record.logs.append("❌ Docker is not installed or cannot start")
+                record.logs.append("  Install: https://www.docker.com/products/docker-desktop/")
+                record.logs.append("  After installation, ensure the docker command is available in PATH")
                 self._finish_record(record, "failed",
-                    "Docker 未安装或无法启动。请安装 Docker Desktop: https://www.docker.com/products/docker-desktop/")
+                    "Docker is not installed or cannot start. Install Docker Desktop: https://www.docker.com/products/docker-desktop/")
                 return record
 
-        # 最多重试 1 次 (用于端口自愈)
+        # Retry at most once for port self-healing
         max_attempts = 2
         current_cmd = repo.start_cmd
         current_port = repo.port
 
-        # ── 自愈: Windows 下 source xxx.sh 不可用 → 解析 .sh 文件加载环境变量 ──
+        # -- Self-healing: source xxx.sh is unavailable on Windows -> parse the .sh file to load environment variables --
         if os.name == "nt" and "source " in current_cmd:
             match = re.search(r'source\s+(\S+\.sh)\s*&&\s*', current_cmd)
             if match:
@@ -1699,24 +1699,24 @@ class DeployService:
                         line = line.strip()
                         if not line or line.startswith("#"):
                             continue
-                        # 处理 export KEY=VALUE 和 KEY=VALUE 格式
+                        # Handle export KEY=VALUE and KEY=VALUE formats
                         line = line.replace("export ", "")
                         if "=" in line:
                             k, v = line.split("=", 1)
                             v = v.strip().strip("'").strip('"')
                             env_loaded[k.strip()] = v
                     if env_loaded:
-                        # 将环境变量写入 docker/.env (合并)
+                        # Merge environment variables into docker/.env
                         env_file = target / "docker" / ".env"
                         env_file.parent.mkdir(parents=True, exist_ok=True)
                         self._merge_env_file(target, env_loaded, record)
                         env_keys = ", ".join(k for k in env_loaded if "PASSWORD" not in k)
-                        record.logs.append(f"🔧 自愈: Windows 不支持 source → 已从 {sh_file} 加载环境变量: {env_keys}")
+                        record.logs.append(f"🔧 Self-healing: Windows does not support source -> loaded environment variables from {sh_file}: {env_keys}")
                 else:
-                    record.logs.append(f"⚠️ 未找到 {sh_file}，跳过 source 命令")
-                # 去掉 source xxx.sh && 部分
+                    record.logs.append(f"⚠️ Not found: {sh_file}; skipping the source command")
+                # Remove the source xxx.sh && prefix
                 current_cmd = re.sub(r'source\s+\S+\.sh\s*&&\s*', '', current_cmd).strip()
-                record.logs.append(f"🔧 自愈: 启动命令调整为: {current_cmd}")
+                record.logs.append(f"🔧 Self-healing: startup command adjusted to: {current_cmd}")
                 repo.start_cmd = current_cmd
                 self._save_projects()
 
@@ -1745,13 +1745,13 @@ class DeployService:
                 current_cmd = compose_cmd
                 repo.start_cmd = current_cmd
                 self._save_projects()
-                record.logs.append("🔧 自愈: 检测到微服务项目，当前启动命令仅覆盖网关，切换为 Docker 基础设施 + 本地微服务全量启动")
+                record.logs.append("🔧 Self-healing: microservices detected, but the command starts only the gateway; switching to Docker infrastructure plus all local microservices")
             else:
                 return self._start_microservices_without_docker(
                     repo,
                     target,
                     record,
-                    reason="🔧 自愈: 检测到微服务项目，当前启动命令仅覆盖网关，改为本地微服务全量启动",
+                    reason="🔧 Self-healing: microservices detected, but the command starts only the gateway; switching to all local microservices",
                 )
 
         for attempt in range(max_attempts):
@@ -1759,13 +1759,13 @@ class DeployService:
                 record.logs.append(f"🚀 {current_cmd}")
                 log_file = DEPLOY_DIR / f"{repo.id}_output.log"
 
-                # ── 加载 docker/.env 环境变量到进程环境 ──
+                # -- Load docker/.env variables into the process environment --
                 proc_env = os.environ.copy()
                 env_vars = self._load_env_file(target)
                 if env_vars:
                     proc_env.update(env_vars)
                     env_keys = ", ".join(k for k in env_vars if "PASSWORD" not in k)
-                    record.logs.append(f"📋 加载 .env 环境变量: {env_keys}")
+                    record.logs.append(f"📋 Loaded .env variables: {env_keys}")
 
                 with open(log_file, "w", encoding="utf-8") as lf:
                     proc = subprocess.Popen(
@@ -1774,9 +1774,9 @@ class DeployService:
                         creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0,
                     )
                 self.processes[repo.id] = proc
-                record.logs.append(f"⏳ PID: {proc.pid}，等待启动验证...")
+                record.logs.append(f"⏳ PID: {proc.pid}; waiting for startup verification...")
 
-                # ── 启动后健康检查 ──
+                # -- Post-startup health check --
                 import time
                 for _ in range(3):
                     time.sleep(1)
@@ -1784,24 +1784,24 @@ class DeployService:
                         break
 
                 if proc.poll() is not None:
-                    # 进程已退出
+                    # Process exited
                     exit_code = proc.returncode
                     self.processes.pop(repo.id, None)
 
-                    # ── 特殊处理: docker compose -d (detach) 模式 ──
-                    # docker compose up -d 会在启动容器后立即退出(exit=0)，这是正常行为
+                    # -- Special handling: docker compose -d (detach) mode --
+                    # docker compose up -d exits immediately after starting containers (exit=0); this is expected
                     is_docker_detach = (
                         exit_code == 0
                         and "docker" in current_cmd
                         and "-d" in current_cmd
                     )
                     if is_docker_detach:
-                        record.logs.append("✅ Docker Compose (detach 模式) 容器已在后台启动")
+                        record.logs.append("✅ Docker Compose containers started in the background (detach mode)")
 
-                        # ── 自动启动微服务 jar 包 ──
+                        # -- Automatically start microservice JAR files --
                         svc_pids = self._start_microservices(target, record)
 
-                        # 追踪 Docker detach 模式的 repo，使其在 UI 上显示为 "运行中"
+                        # Track repositories in Docker detach mode so the UI shows them as running
                         self.docker_repos[repo.id] = {
                             "cwd": str(target),
                             "cmd": current_cmd,
@@ -1824,26 +1824,26 @@ class DeployService:
 
                     err_detail, is_port_error = self._parse_start_error(log_file, record)
 
-                    # ── 自愈: 端口冲突 → 自动换端口重试 ──
+                    # -- Self-healing: port conflict -> retry with another port --
                     if is_port_error and attempt == 0 and current_port:
                         new_port = self._find_free_port(current_port + 1)
                         if new_port:
-                            record.logs.append(f"🔧 自愈: 端口 {current_port} 不可用，自动切换到 {new_port}")
-                            # 替换命令中的端口号
+                            record.logs.append(f"🔧 Self-healing: port {current_port} is unavailable; switching to {new_port}")
+                            # Replace the port number in the command
                             current_cmd = re.sub(
                                 rf'(--port\s+){current_port}\b',
                                 rf'\g<1>{new_port}',
                                 current_cmd,
                             )
-                            # 也处理 -p port 和 :port 格式
-                            if current_cmd == repo.start_cmd:  # 未替换成功，尝试其他格式
+                            # Also handle -p port and :port formats
+                            if current_cmd == repo.start_cmd:  # If replacement fails, try other formats
                                 current_cmd = current_cmd.replace(str(current_port), str(new_port))
                             current_port = new_port
-                            continue  # 重试
+                            continue  # Retry
                         else:
-                            record.logs.append("❌ 自愈失败: 无法找到可用端口")
+                            record.logs.append("❌ Self-healing failed: no available port found")
 
-                    # ── 自愈: 根 POM 无主类，切换到 Docker Compose / 本地微服务 ──
+                    # -- Self-healing: root POM has no main class -> switch to Docker Compose or local microservices --
                     if (
                         attempt == 0
                         and "spring-boot:run" in current_cmd
@@ -1851,25 +1851,25 @@ class DeployService:
                     ):
                         compose_cmd = self._derive_compose_start_cmd(target, record)
                         if compose_cmd:
-                            record.logs.append("🔧 自愈: spring-boot:run 无可执行主类，切换到 Docker Compose")
+                            record.logs.append("🔧 Self-healing: spring-boot:run has no executable main class; switching to Docker Compose")
                             current_cmd = compose_cmd
                             repo.start_cmd = current_cmd
                             self._save_projects()
                             continue
                         if self._has_local_microservice_jars(target):
-                            record.logs.append("🔧 自愈: spring-boot:run 无可执行主类，回退为本地微服务启动")
+                            record.logs.append("🔧 Self-healing: spring-boot:run has no executable main class; falling back to local microservices")
                             return self._start_microservices_without_docker(repo, target, record)
 
-                    msg = f"进程立即退出 (exit={exit_code})"
+                    msg = f"Process exited immediately (exit={exit_code})"
                     if err_detail:
                         msg += f": {err_detail}"
                     self._finish_record(record, "failed", msg)
                     return record
                 else:
-                    # 进程运行中 → 端口验证
+                    # Process is running -> verify the port
                     if current_port:
                         if "docker" in current_cmd and "-d" in current_cmd:
-                            record.logs.append("⏳ Docker Compose 正在构建/拉起容器，等待后台命令完成...")
+                            record.logs.append("⏳ Docker Compose is building or starting containers; waiting for the background command to finish...")
                             compose_state = self._wait_for_process_or_port(
                                 proc,
                                 port=current_port,
@@ -1879,7 +1879,7 @@ class DeployService:
                                 exit_code = proc.returncode
                                 self.processes.pop(repo.id, None)
                                 if exit_code == 0:
-                                    record.logs.append("✅ Docker Compose (detach 模式) 容器已在后台启动")
+                                    record.logs.append("✅ Docker Compose containers started in the background (detach mode)")
                                     svc_pids = self._start_microservices(target, record)
                                     return self._finalize_microservice_start(
                                         repo,
@@ -1892,14 +1892,14 @@ class DeployService:
                                     )
 
                                 err_detail, _ = self._parse_start_error(log_file, record)
-                                msg = f"Docker Compose 启动失败 (exit={exit_code})"
+                                msg = f"Docker Compose startup failed (exit={exit_code})"
                                 if err_detail:
                                     msg += f": {err_detail}"
                                 self._finish_record(record, "failed", msg)
                                 return record
                             if compose_state == "timeout":
                                 self._parse_start_error(log_file, record)
-                                self._finish_record(record, "failed", "Docker Compose 执行超时，端口仍未就绪")
+                                self._finish_record(record, "failed", "Docker Compose timed out and the port is still not ready")
                                 return record
 
                         time.sleep(2)
@@ -1907,14 +1907,14 @@ class DeployService:
                             exit_code = proc.returncode
                             self.processes.pop(repo.id, None)
 
-                            # ── 修复: 延迟退出也需检测 docker detach 模式 ──
+                            # -- Fix: detect Docker detach mode after a delayed exit as well --
                             is_docker_detach_delayed = (
                                 exit_code == 0
                                 and "docker" in current_cmd
                                 and "-d" in current_cmd
                             )
                             if is_docker_detach_delayed:
-                                record.logs.append("✅ Docker Compose (detach 模式) 容器已在后台启动")
+                                record.logs.append("✅ Docker Compose containers started in the background (detach mode)")
                                 svc_pids = self._start_microservices(target, record)
                                 self.docker_repos[repo.id] = {
                                     "cwd": str(target), "cmd": current_cmd,
@@ -1938,77 +1938,77 @@ class DeployService:
                             ):
                                 compose_cmd = self._derive_compose_start_cmd(target, record)
                                 if compose_cmd:
-                                    record.logs.append("🔧 自愈: spring-boot:run 延迟退出且无主类，切换到 Docker Compose")
+                                    record.logs.append("🔧 Self-healing: spring-boot:run exited late without a main class; switching to Docker Compose")
                                     current_cmd = compose_cmd
                                     repo.start_cmd = current_cmd
                                     self._save_projects()
                                     continue
                                 if self._has_local_microservice_jars(target):
-                                    record.logs.append("🔧 自愈: spring-boot:run 延迟退出且无主类，回退为本地微服务启动")
+                                    record.logs.append("🔧 Self-healing: spring-boot:run exited late without a main class; falling back to local microservices")
                                     return self._start_microservices_without_docker(repo, target, record)
-                            self._finish_record(record, "failed", f"进程延迟退出 (exit={exit_code})")
+                            self._finish_record(record, "failed", f"Process exited after a delay (exit={exit_code})")
                             return record
                         elif self._check_port(current_port):
-                            # 如果端口变了，持久化
+                            # Persist the port if it changed
                             if current_port != repo.port or current_cmd != repo.start_cmd:
                                 repo.port = current_port
                                 repo.start_cmd = current_cmd
                                 self._save_projects()
-                            record.logs.append(f"⏳ 端口 {current_port} 初步就绪，继续验证稳定性...")
+                            record.logs.append(f"⏳ Port {current_port} is initially ready; checking stability...")
                             if self._wait_for_port_stability(
                                 current_port,
                                 timeout_seconds=12,
                                 stable_seconds=5,
                                 process_ids=[proc.pid],
                             ):
-                                record.logs.append(f"✅ 端口 {current_port} 已稳定就绪")
+                                record.logs.append(f"✅ Port {current_port} is stable and ready")
                                 if self._verify_repo_http_readiness(repo, current_port, record):
                                     self._remember_effective_env(repo, target, record)
-                                    self._finish_record(record, "success", f"启动成功 (PID: {proc.pid}, Port: {current_port})")
+                                    self._finish_record(record, "success", f"Started successfully (PID: {proc.pid}, Port: {current_port})")
                                 else:
-                                    self._finish_record(record, "failed", f"端口 {current_port} 已打开，但 HTTP 就绪校验未通过")
+                                    self._finish_record(record, "failed", f"Port {current_port} is open, but HTTP readiness validation failed")
                             else:
                                 self._parse_start_error(log_file, record)
                                 if proc.poll() is not None:
                                     self.processes.pop(repo.id, None)
-                                self._finish_record(record, "failed", f"端口 {current_port} 未通过稳定性验证")
+                                self._finish_record(record, "failed", f"Port {current_port} failed stability validation")
                         else:
                             if current_port != repo.port or current_cmd != repo.start_cmd:
                                 repo.port = current_port
                                 repo.start_cmd = current_cmd
                                 self._save_projects()
-                            record.logs.append(f"⏳ 进程运行中，继续等待端口 {current_port} 稳定就绪...")
+                            record.logs.append(f"⏳ Process is running; waiting for port {current_port} to become stable...")
                             if self._wait_for_port_stability(
                                 current_port,
                                 timeout_seconds=20,
                                 stable_seconds=5,
                                 process_ids=[proc.pid],
                             ):
-                                record.logs.append(f"✅ 端口 {current_port} 已稳定就绪")
+                                record.logs.append(f"✅ Port {current_port} is stable and ready")
                                 if self._verify_repo_http_readiness(repo, current_port, record):
                                     self._remember_effective_env(repo, target, record)
-                                    self._finish_record(record, "success", f"启动成功 (PID: {proc.pid}, Port: {current_port})")
+                                    self._finish_record(record, "success", f"Started successfully (PID: {proc.pid}, Port: {current_port})")
                                 else:
-                                    self._finish_record(record, "failed", f"端口 {current_port} 已打开，但 HTTP 就绪校验未通过")
+                                    self._finish_record(record, "failed", f"Port {current_port} is open, but HTTP readiness validation failed")
                             else:
                                 self._parse_start_error(log_file, record)
                                 if proc.poll() is not None:
                                     self.processes.pop(repo.id, None)
-                                self._finish_record(record, "failed", f"进程运行中，但端口 {current_port} 未通过稳定性验证")
+                                self._finish_record(record, "failed", f"Process is running, but port {current_port} failed stability validation")
                     else:
-                        record.logs.append(f"✅ 进程运行中")
+                        record.logs.append(f"✅ Process is running")
                         self._remember_effective_env(repo, target, record)
-                        self._finish_record(record, "success", f"启动成功 (PID: {proc.pid})")
+                        self._finish_record(record, "success", f"Started successfully (PID: {proc.pid})")
                     return record
             except Exception as e:
                 self._finish_record(record, "failed", str(e))
                 return record
 
-        self._finish_record(record, "failed", "自愈重试次数耗尽")
+        self._finish_record(record, "failed", "Self-healing retries exhausted")
         return record
 
     def _parse_start_error(self, log_file: Path, record: DeployRecord) -> tuple:
-        """解析启动日志，返回 (错误摘要, 是否为端口错误)"""
+        """Parse startup logs; return (error summary, is port error)"""
         err_detail = ""
         is_port_error = False
         try:
@@ -2017,7 +2017,7 @@ class DeployService:
                 clean_log = re.sub(r'\x1b\[[0-9;]*m', '', log_content)
                 err_lines = clean_log.strip().split("\n")
                 record.logs.extend(err_lines[-10:])
-                # 第一轮: 优先检查端口错误 (EACCES / EADDRINUSE)
+                # First pass: prioritize port errors (EACCES / EADDRINUSE)
                 for line in err_lines:
                     lower_line = line.lower()
                     if (
@@ -2029,7 +2029,7 @@ class DeployService:
                         err_detail = line.strip()
                         is_port_error = True
                         break
-                # 第二轮: 若无端口错误，匹配通用错误
+                # Second pass: if there are no port errors, match general errors
                 if not err_detail:
                     for line in err_lines:
                         if "Error:" in line:
@@ -2045,13 +2045,13 @@ class DeployService:
         return err_detail, is_port_error
 
     def _load_env_file(self, project_dir: Path) -> Dict[str, str]:
-        """读取仓库当前生效的环境变量文件，优先 docker/.env。"""
+        """Read the repository's active environment file, preferring docker/.env."""
         env_file = self._get_env_file_path(project_dir)
         return self._read_env_file(env_file)
 
     @staticmethod
     def _pid_alive(pid: Optional[int]) -> bool:
-        """跨平台判断进程是否仍然存活。"""
+        """Check whether a process is alive across platforms."""
         if not pid:
             return False
         try:
@@ -2076,7 +2076,7 @@ class DeployService:
         stable_seconds: int = 8,
         process_ids: Optional[List[int]] = None,
     ) -> bool:
-        """等待端口持续稳定，同时确认相关进程未在验证期间退出。"""
+        """Wait for a stable port and confirm that related processes remain alive throughout verification."""
         deadline = time.time() + timeout_seconds
         stable_since = None
         tracked_pids = [pid for pid in (process_ids or []) if pid]
@@ -2104,7 +2104,7 @@ class DeployService:
         current_port: int,
         record: DeployRecord,
     ) -> str:
-        """针对已知前端开发服务器补全端口约束，避免静默顺延端口导致误判。"""
+        """Enforce port constraints for known frontend development servers to avoid false results from silent port fallback."""
         normalized = (current_cmd or "").strip()
         lower_cmd = normalized.lower()
         tech_stack = (repo.tech_stack or "").lower()
@@ -2155,12 +2155,12 @@ class DeployService:
             changed = True
 
         if changed:
-            record.logs.append("🔧 自愈: Vite 启动命令已强制绑定目标端口，避免静默切换端口")
+            record.logs.append("🔧 Self-healing: Vite startup is bound to the target port to prevent silent port changes")
         return normalized
 
     @staticmethod
     def _looks_like_gateway_only_start(current_cmd: str) -> bool:
-        """识别只启动网关的微服务命令。"""
+        """Identify microservice commands that start only the gateway."""
         normalized_cmd = re.sub(r"\s+", " ", (current_cmd or "").lower()).strip()
         if not normalized_cmd:
             return False
@@ -2188,7 +2188,7 @@ class DeployService:
 
     @staticmethod
     def _extract_gateway_port_from_log_text(log_text: str) -> int:
-        """从网关日志里提取运行时端口，优先使用明确的网关注册信息。"""
+        """Extract the runtime port from gateway logs, preferring explicit gateway registration information."""
         if not log_text:
             return 0
 
@@ -2221,7 +2221,7 @@ class DeployService:
         service_pids: List[Dict],
         record: Optional[DeployRecord] = None,
     ) -> int:
-        """从当前项目的网关日志里推断真实运行端口。"""
+        """Infer the actual runtime port from the current project's gateway logs."""
         log_dir = project_dir / "docker" / "logs"
         if not log_dir.exists():
             return 0
@@ -2250,12 +2250,12 @@ class DeployService:
 
             if port:
                 if record:
-                    record.logs.append(f"🔎 从网关日志发现运行时端口: {port} ({log_path.name})")
+                    record.logs.append(f"🔎 Runtime port found in gateway logs: {port} ({log_path.name})")
                 return port
         return 0
 
     def _verify_repo_http_readiness(self, repo: RepoConfig, port: int, record: DeployRecord) -> bool:
-        """在端口连通后做最小 HTTP 语义校验，避免把占位响应当成部署成功。"""
+        """After a port connects, perform minimal HTTP semantic validation so a placeholder response is not counted as deployment success."""
         is_frontend = self._is_frontend_repo(repo)
 
         if is_frontend:
@@ -2272,36 +2272,36 @@ class DeployService:
             normalized_body = body.lower()
 
             if status is None:
-                observations.append(f"{path}: {probe.get('error', '连接失败')}")
+                observations.append(f"{path}: {probe.get('error', 'Connection failed')}")
                 continue
 
             if "no static resource" in normalized_body:
-                observations.append(f"{path}: {status} (静态占位响应)")
+                observations.append(f"{path}: {status} (static placeholder response)")
                 continue
 
             if is_frontend:
                 if status in (200, 301, 302) and ("<html" in normalized_body or "<!doctype html" in normalized_body):
-                    record.logs.append(f"✅ HTTP 页面校验通过: {path} -> {status}")
+                    record.logs.append(f"✅ HTTP page validation passed: {path} -> {status}")
                     return True
                 observations.append(f"{path}: {status}")
                 continue
 
             if status in (200, 401, 403, 405):
-                record.logs.append(f"✅ HTTP 路由校验通过: {path} -> {status}")
+                record.logs.append(f"✅ HTTP route validation passed: {path} -> {status}")
                 return True
 
             observations.append(f"{path}: {status}")
 
         if observations:
-            record.logs.append(f"⚠️ HTTP 就绪校验未通过: {'; '.join(observations[:4])}")
+            record.logs.append(f"⚠️ HTTP readiness validation failed: {'; '.join(observations[:4])}")
         return False
 
     def _has_local_microservice_jars(self, project_dir: Path) -> bool:
-        """检查是否存在可直接启动的本地微服务 jar 包"""
+        """Check for locally executable microservice JAR files"""
         return bool(self._list_local_microservice_jars(project_dir))
 
     def _list_local_microservice_jars(self, project_dir: Path) -> List[Path]:
-        """列出项目下可直接启动的微服务 jar 包。"""
+        """List microservice JAR files that can run directly within the project."""
         skip_patterns = {"sample-api-", "sample-common-", "sample-common-"}
         jar_files: List[Path] = []
         for jar in project_dir.rglob("target/*.jar"):
@@ -2312,7 +2312,7 @@ class DeployService:
         return jar_files
 
     def _should_start_local_microservices(self, repo: RepoConfig, project_dir: Path, current_cmd: str) -> bool:
-        """微服务项目若只配置了网关启动命令，则自动改为全量启动本地 jar。"""
+        """If a microservice project is configured to start only the gateway, start all local JAR files instead."""
         jar_files = self._list_local_microservice_jars(project_dir)
         if len(jar_files) <= 1:
             return False
@@ -2324,17 +2324,18 @@ class DeployService:
         looks_like_microservice = (
             "spring cloud" in tech_stack
             or "nacos" in tech_stack
+            or "microservice" in tech_stack
             or "微服务" in tech_stack
             or len(jar_files) >= 3
         )
         return looks_like_microservice
 
     def _compose_file_looks_runnable(self, project_dir: Path, compose_file: Path, record: DeployRecord) -> bool:
-        """快速校验 compose 文件依赖的 build context 是否存在。"""
+        """Quickly check that the build contexts required by a Compose file exist."""
         try:
             content = compose_file.read_text(encoding="utf-8", errors="replace")
         except Exception as exc:
-            record.logs.append(f"⚠️ 无法读取 Docker Compose 文件: {exc}")
+            record.logs.append(f"⚠️ Cannot read Docker Compose file: {exc}")
             return False
 
         missing_contexts = []
@@ -2346,13 +2347,13 @@ class DeployService:
 
         if missing_contexts:
             preview = ", ".join(missing_contexts[:4])
-            record.logs.append(f"⚠️ Docker Compose 构建上下文缺失: {preview}")
+            record.logs.append(f"⚠️ Docker Compose build context missing: {preview}")
             return False
 
         return True
 
     def _find_compose_file(self, project_dir: Path, record: DeployRecord) -> Optional[Path]:
-        """查找项目内可执行的 Compose 文件，避免误用上级目录配置。"""
+        """Find an executable Compose file inside the project to avoid using a parent directory's configuration."""
         for dc_name in ["docker-compose-dev.yml", "docker-compose.yml"]:
             for check_path in [project_dir / "docker" / dc_name, project_dir / dc_name]:
                 if check_path.exists():
@@ -2362,7 +2363,7 @@ class DeployService:
         return None
 
     def _normalize_compose_command(self, project_dir: Path, current_cmd: str, record: DeployRecord) -> str:
-        """将泛化的 docker compose 命令绑定到项目内 Compose 文件，避免向上级目录误匹配。"""
+        """Bind generic docker compose commands to the project's Compose file to avoid matching parent directories."""
         normalized = (current_cmd or "").strip()
         lower_cmd = normalized.lower()
         if "docker compose" not in lower_cmd and "docker-compose" not in lower_cmd:
@@ -2381,12 +2382,12 @@ class DeployService:
             explicit_cmd = f"cd {dc_dir} && {explicit_cmd}"
 
         if explicit_cmd != normalized:
-            record.logs.append("🔧 自愈: 通用 Docker Compose 命令已绑定到项目内 Compose 文件，避免误用上级目录配置")
+            record.logs.append("🔧 Self-healing: generic Docker Compose command bound to the project's Compose file to avoid using a parent directory's configuration")
         return explicit_cmd
 
     @staticmethod
     def _build_java_system_properties(env_vars: Dict[str, str]) -> List[str]:
-        """把部署环境变量提升为 JVM System Properties，覆盖硬编码的 Spring/Nacos 配置。"""
+        """Promote deployment environment variables to JVM System Properties to override hardcoded Spring/Nacos configuration."""
         props: List[str] = []
 
         def add_prop(key: str, value: Optional[str]):
@@ -2417,7 +2418,7 @@ class DeployService:
 
     @staticmethod
     def _select_critical_microservices(service_pids: List[Dict]) -> List[Dict]:
-        """识别微服务项目的关键启动链路，优先关注网关/认证/系统。"""
+        """Identify critical microservice startup paths, prioritizing gateway, authentication, and system services."""
         critical_prefixes = (
             "sample-gateway",
             "sample-auth",
@@ -2438,7 +2439,7 @@ class DeployService:
         port: int = 0,
         timeout_seconds: int = 180,
     ) -> str:
-        """等待进程退出或目标端口开放。返回 exited / port / timeout。"""
+        """Wait for process exit or an open target port. Return exited / port / timeout."""
         deadline = time.time() + timeout_seconds
         while time.time() < deadline:
             if proc.poll() is not None:
@@ -2455,7 +2456,7 @@ class DeployService:
         return "timeout"
 
     def _derive_compose_start_cmd(self, project_dir: Path, record: DeployRecord) -> str:
-        """根据项目目录推导可执行的 Docker Compose 启动命令。"""
+        """Derive an executable Docker Compose startup command from the project directory."""
         compose_file = self._find_compose_file(project_dir, record)
         if not compose_file:
             return ""
@@ -2471,7 +2472,7 @@ class DeployService:
                 docker_ready = False
 
             if not docker_ready:
-                record.logs.append("🐳 检测到 Docker Compose 兜底方案，尝试自动启动 Docker Desktop...")
+                record.logs.append("🐳 Docker Compose fallback found; attempting to start Docker Desktop automatically...")
                 docker_ready = self._auto_start_docker(record)
 
             if docker_ready:
@@ -2516,8 +2517,8 @@ class DeployService:
             if not svc.get("pid")
         ]
         if critical_missing:
-            record.logs.append(f"❌ 关键微服务未启动: {', '.join(critical_missing[:6])}")
-            self._finish_record(record, "failed", f"关键微服务未启动: {', '.join(critical_missing[:3])}")
+            record.logs.append(f"❌ Critical microservices failed to start: {', '.join(critical_missing[:6])}")
+            self._finish_record(record, "failed", f"Critical microservices failed to start: {', '.join(critical_missing[:3])}")
             return record
 
         stability_services = critical_services or running
@@ -2555,7 +2556,7 @@ class DeployService:
         persist_runtime_state(effective_port)
 
         if effective_port:
-            record.logs.append(f"⏳ 等待端口 {effective_port} 稳定就绪...")
+            record.logs.append(f"⏳ Waiting for port {effective_port} to become stable...")
             port_ready = self._wait_for_port_stability(
                 effective_port,
                 timeout_seconds=60,
@@ -2566,13 +2567,13 @@ class DeployService:
                 discovered_port = self._discover_runtime_gateway_port(project_dir, service_pids, record)
                 if discovered_port and discovered_port != effective_port:
                     record.logs.append(
-                        f"🔧 自愈: 配置端口 {effective_port} 未就绪，改用网关真实运行端口 {discovered_port}"
+                        f"🔧 Self-healing: configured port {effective_port} is not ready; using the gateway's actual runtime port {discovered_port}"
                     )
                     effective_port = discovered_port
                     repo.port = effective_port
                     self._save_projects()
                     persist_runtime_state(effective_port)
-                    record.logs.append(f"⏳ 改用端口 {effective_port} 继续校验...")
+                    record.logs.append(f"⏳ Continuing validation on port {effective_port}...")
                     port_ready = self._wait_for_port_stability(
                         effective_port,
                         timeout_seconds=60,
@@ -2587,14 +2588,14 @@ class DeployService:
                     if not self._pid_alive(svc.get("pid"))
                 ]
                 if crashed:
-                    record.logs.append(f"❌ 稳定性校验失败，已退出服务: {', '.join(crashed[:6])}")
-                record.logs.append(f"⚠️ 端口 {effective_port} 未就绪，已启动 {len(running)}/{total} 个微服务")
-                self._finish_record(record, "failed", f"微服务已启动 {len(running)}/{total} 个，但端口 {effective_port} 未就绪")
+                    record.logs.append(f"❌ Stability validation failed; exited services: {', '.join(crashed[:6])}")
+                record.logs.append(f"⚠️ Port {effective_port} is not ready; started {len(running)}/{total} microservices")
+                self._finish_record(record, "failed", f"Started {len(running)}/{total} microservices, but port {effective_port} is not ready")
                 return record
 
-            record.logs.append(f"✅ 端口 {effective_port} 已稳定就绪")
+            record.logs.append(f"✅ Port {effective_port} is stable and ready")
             if not self._verify_repo_http_readiness(repo, effective_port, record):
-                self._finish_record(record, "failed", f"端口 {effective_port} 已打开，但 HTTP 就绪校验未通过")
+                self._finish_record(record, "failed", f"Port {effective_port} is open, but HTTP readiness validation failed")
                 return record
 
             optional_exited = [
@@ -2603,12 +2604,12 @@ class DeployService:
                 if svc.get("name") not in critical_names and not self._pid_alive(svc.get("pid"))
             ]
             if optional_exited:
-                record.logs.append(f"⚠️ 非关键微服务已退出，但关键入口校验通过: {', '.join(optional_exited[:6])}")
+                record.logs.append(f"⚠️ Noncritical microservices exited, but critical entry-point validation passed: {', '.join(optional_exited[:6])}")
 
         self._update_memory(repo.id, "last_success", datetime.now().isoformat())
         self._remember_effective_env(repo, project_dir, record)
         mode = "Fallback" if fallback_no_docker else "Docker"
-        self._finish_record(record, "success", f"启动成功 ({mode} + {len(running)}/{total} 微服务)")
+        self._finish_record(record, "success", f"Started successfully ({mode} + {len(running)}/{total} microservices)")
         return record
 
     def _start_microservices_without_docker(
@@ -2618,14 +2619,14 @@ class DeployService:
         record: DeployRecord,
         reason: str = "",
     ) -> DeployRecord:
-        """Docker 不可用时，回退为直接启动本地已构建微服务 jar"""
-        record.logs.append(reason or "🔧 自愈: Docker 不可用，回退为本地微服务启动")
+        """When Docker is unavailable, run locally built microservice JAR files directly"""
+        record.logs.append(reason or "🔧 Self-healing: Docker is unavailable; falling back to local microservices")
         svc_pids = self._start_microservices(project_dir, record)
         running = [svc for svc in svc_pids if svc.get("pid")]
         total = len(svc_pids)
 
         if not running:
-            self._finish_record(record, "failed", "Docker 不可用，且未能启动任何本地微服务")
+            self._finish_record(record, "failed", "Docker is unavailable, and no local microservices could be started")
             return record
         return self._finalize_microservice_start(
             repo,
@@ -2638,31 +2639,31 @@ class DeployService:
         )
 
     def _start_microservices(self, project_dir: Path, record: DeployRecord) -> List[Dict]:
-        """在 Docker 基础设施启动后，自动扫描并启动所有编译成功的微服务 jar 包"""
+        """After Docker infrastructure starts, scan for and start all successfully built microservice JAR files"""
         import glob
         results = []
 
-        # ── 读取 .env 环境变量 (Nacos 等) ──
+        # -- Read .env variables, including Nacos configuration --
         env_vars = self._load_env_file(project_dir)
         if env_vars:
             env_keys = ", ".join(k for k in env_vars if "PASSWORD" not in k)
-            record.logs.append(f"📋 加载 .env 环境变量: {env_keys}")
+            record.logs.append(f"📋 Loaded .env variables: {env_keys}")
 
-        # ── 构建 Java 运行环境变量 ──
+        # -- Build the Java runtime environment --
         svc_env = os.environ.copy()
         svc_env.update(env_vars)
         java_system_props = self._build_java_system_properties(env_vars)
         if java_system_props:
-            record.logs.append("🔧 自愈: 为本地微服务注入 Spring/Nacos JVM 参数，覆盖硬编码配置")
+            record.logs.append("🔧 Self-healing: inject Spring/Nacos JVM arguments into local microservices to override hardcoded configuration")
 
-        # ── 扫描所有可执行 jar ──
+        # -- Scan all executable JAR files --
         jar_files = self._list_local_microservice_jars(project_dir)
 
         if not jar_files:
-            record.logs.append("⚠️ 未找到可执行微服务 jar 包")
+            record.logs.append("⚠️ No executable microservice JAR files found")
             return results
 
-        # ── 按优先级排序: Gateway → Auth → System → 其他 ──
+        # -- Priority order: Gateway -> Auth -> System -> others --
         priority_map = {
             "sample-gateway": 0,
             "sample-auth": 1,
@@ -2672,24 +2673,24 @@ class DeployService:
             for name, pri in priority_map.items():
                 if name in jar_path.name:
                     return pri
-            return 10  # 其他服务排后面
+            return 10  # Put other services later
 
         jar_files.sort(key=sort_key)
-        record.logs.append(f"🔍 发现 {len(jar_files)} 个微服务 jar 包")
+        record.logs.append(f"🔍 Found {len(jar_files)} microservice JAR files")
 
-        # ── 检查 java 是否可用 ──
+        # -- Check whether Java is available --
         try:
             java_check = subprocess.run(
                 ["java", "-version"], capture_output=True, text=True, timeout=5
             )
             if java_check.returncode != 0:
-                record.logs.append("❌ java 不可用，无法启动微服务")
+                record.logs.append("❌ Java is unavailable; cannot start microservices")
                 return results
         except Exception:
-            record.logs.append("❌ java 命令不存在，无法启动微服务")
+            record.logs.append("❌ The java command does not exist; cannot start microservices")
             return results
 
-        # ── 逐个启动微服务 ──
+        # -- Start microservices one at a time --
         log_dir = project_dir / "docker" / "logs"
         log_dir.mkdir(parents=True, exist_ok=True)
 
@@ -2709,19 +2710,19 @@ class DeployService:
                     creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
                 )
 
-                # 等待几秒确认没有立即崩溃
+                # Wait a few seconds to check for an immediate crash
                 import time
                 time.sleep(3)
 
                 if proc.poll() is None:
-                    # 进程还在运行 → 成功
+                    # Process still running -> success
                     svc_info["pid"] = proc.pid
                     svc_info["status"] = "running"
                     record.logs.append(f"  ✅ {svc_name} → PID: {proc.pid}")
                 else:
-                    # 进程已退出 → 启动失败
+                    # Process exited -> startup failure
                     exit_code = proc.returncode
-                    # 读取最后几行日志用于错误诊断
+                    # Read the final log lines for diagnosis
                     try:
                         last_lines = svc_log.read_text(encoding="utf-8", errors="replace").strip().split("\n")[-3:]
                         err_hint = " | ".join(l.strip() for l in last_lines if l.strip())[:150]
@@ -2736,10 +2737,10 @@ class DeployService:
 
             results.append(svc_info)
 
-        # ── 汇总 ──
+        # -- Summary --
         ok = len([r for r in results if r["status"] == "running"])
         fail = len(results) - ok
-        record.logs.append(f"📊 微服务启动: {ok} 成功, {fail} 失败 (共 {len(results)} 个)")
+        record.logs.append(f"📊 Microservice startup: {ok} succeeded, {fail} failed (total {len(results)})")
 
         return results
 
@@ -2748,11 +2749,11 @@ class DeployService:
         record = self._add_record(project_key, repo_id, repo.label, "stop")
         target = self._repo_path(repo)
 
-        # ── 检查是否为 Docker detach 模式的 repo ──
+        # -- Check whether the repository uses Docker detach mode --
         docker_info = self.docker_repos.get(repo.id)
         if docker_info:
             try:
-                # 先停止微服务进程
+                # Stop microservice processes first
                 svc_pids = docker_info.get("service_pids", [])
                 killed = 0
                 for svc in svc_pids:
@@ -2767,10 +2768,10 @@ class DeployService:
                         except Exception:
                             pass
                 if killed:
-                    record.logs.append(f"🛑 已停止 {killed} 个微服务进程")
+                    record.logs.append(f"🛑 Stopped {killed} microservice processes")
 
                 if not docker_info.get("fallback_no_docker"):
-                    # 再停止 Docker 容器
+                    # Then stop Docker containers
                     stop_cmd = docker_info["cmd"].replace("up -d", "down")
                     record.logs.append(f"🛑 Docker Compose down: {stop_cmd}")
                     result = subprocess.run(
@@ -2778,13 +2779,13 @@ class DeployService:
                         capture_output=True, text=True, timeout=30
                     )
                     if result.returncode == 0:
-                        record.logs.append("✅ Docker 容器已停止")
+                        record.logs.append("✅ Docker containers stopped")
                     else:
                         record.logs.append(f"⚠️ {result.stderr.strip()[:200]}")
-                    message = f"Docker 容器 + {killed} 微服务已停止"
+                    message = f"Docker containers and {killed} microservices stopped"
                 else:
-                    record.logs.append("🛑 已停止本地微服务（未使用 Docker 容器）")
-                    message = f"本地微服务已停止 ({killed})"
+                    record.logs.append("🛑 Local microservices stopped (no Docker containers were used)")
+                    message = f"Local microservices stopped ({killed})"
                 self.docker_repos.pop(repo.id, None)
                 self._finish_record(record, "success", message)
             except Exception as e:
@@ -2794,11 +2795,11 @@ class DeployService:
         proc = self.processes.get(repo.id)
         if not proc or proc.poll() is not None:
             killed = self._kill_project_frontend_processes(target, record) if self._is_frontend_repo(repo) else 0
-            message = f"已清理 {killed} 个残留前端进程" if killed else "未运行"
+            message = f"Cleaned up {killed} remaining frontend processes" if killed else "Not running"
             self._finish_record(record, "success", message)
             return record
         try:
-            record.logs.append(f"🛑 停止 PID: {proc.pid}")
+            record.logs.append(f"🛑 Stopping PID: {proc.pid}")
             if os.name == "nt":
                 subprocess.run(["taskkill", "/F", "/T", "/PID", str(proc.pid)], capture_output=True)
             else:
@@ -2806,9 +2807,9 @@ class DeployService:
                 proc.wait(timeout=10)
             self.processes.pop(repo.id, None)
             killed = self._kill_project_frontend_processes(target, record) if self._is_frontend_repo(repo) else 0
-            message = "已停止"
+            message = "Stopped"
             if killed:
-                message = f"已停止，并清理 {killed} 个残留前端进程"
+                message = f"Stopped and cleaned up {killed} remaining frontend processes"
             self._finish_record(record, "success", message)
         except Exception as e:
             self._finish_record(record, "failed", str(e))
@@ -2824,20 +2825,20 @@ class DeployService:
     ) -> DeployRecord:
         _, repo = self._find_repo(project_key, repo_id)
 
-        # 使用预创建的记录或新建
+        # Use the precreated record or create a new one
         if existing_record:
             record = existing_record
         else:
             record = self._add_record(project_key, repo_id, repo.label, "full_deploy")
-            record.logs.append(f"🔄 一键部署 [{repo.label}]...")
+            record.logs.append(f"🔄 One-click deployment [{repo.label}]...")
 
-        # 部署前：将用户上下文写入 .env 文件
+        # Before deployment: write user context to the .env file
         target = self._repo_path(repo)
         if repo.deploy_context and target.exists():
             self._write_env_file(target, repo, record)
 
-        # 初始化 3 个子步骤
-        step_names = [("clone", "📥 克隆"), ("install", "📦 安装"), ("start", "🚀 启动")]
+        # Initialize three child steps
+        step_names = [("clone", "📥 Clone"), ("install", "📦 Install"), ("start", "🚀 Start")]
         if not record.steps:
             record.steps = [DeployStep(name=n) for n, _ in step_names]
         step_fns = [
@@ -2857,10 +2858,10 @@ class DeployService:
                     for j in range(i, len(record.steps)):
                         if record.steps[j].status == "pending":
                             record.steps[j].status = "skipped"
-                            record.steps[j].message = "任务已取消，未执行"
-                    self._finish_record(record, "cancelled", "部署任务已取消")
+                            record.steps[j].message = "Task canceled without execution"
+                    self._finish_record(record, "cancelled", "Deployment job canceled")
                     self._emit_event(repo_id, {
-                        "type": "deploy_done", "status": "cancelled", "message": "部署任务已取消",
+                        "type": "deploy_done", "status": "cancelled", "message": "Deployment job canceled",
                     })
                     return record
 
@@ -2883,37 +2884,37 @@ class DeployService:
                     "type": "step_done", "step": sname, "label": slabel,
                     "status": sub_record.status, "message": sub_record.message,
                     "duration_ms": round(elapsed),
-                    "logs": sub_record.logs[-50:],  # 推送最近 50 行日志
+                    "logs": sub_record.logs[-50:],  # Push the latest 50 log lines
                 })
 
-                # 删除子记录 (只保留汇总记录)
+                # Delete child records, keeping only the summary record
                 self.history = [r for r in self.history if r.id != sub_record.id]
 
                 if job_id and self._job_cancellation_requested(job_id):
                     for j in range(i + 1, len(record.steps)):
                         record.steps[j].status = "skipped"
-                        record.steps[j].message = "任务已取消，未执行"
-                    self._finish_record(record, "cancelled", "部署任务已取消")
+                        record.steps[j].message = "Task canceled without execution"
+                    self._finish_record(record, "cancelled", "Deployment job canceled")
                     self._emit_event(repo_id, {
-                        "type": "deploy_done", "status": "cancelled", "message": "部署任务已取消",
+                        "type": "deploy_done", "status": "cancelled", "message": "Deployment job canceled",
                     })
                     return record
 
                 if sub_record.status == "failed":
-                    # 后续步骤标记为跳过
+                    # Mark later steps as skipped
                     for j in range(i + 1, len(record.steps)):
                         record.steps[j].status = "skipped"
-                        record.steps[j].message = "前序步骤失败，已跳过"
-                    self._finish_record(record, "failed", f"{slabel}失败: {sub_record.message}")
+                        record.steps[j].message = "Skipped because a previous step failed"
+                    self._finish_record(record, "failed", f"{slabel} Failed: {sub_record.message}")
                     self._emit_event(repo_id, {
                         "type": "deploy_done", "status": "failed",
-                        "message": f"{slabel}失败: {sub_record.message}",
+                        "message": f"{slabel} Failed: {sub_record.message}",
                     })
                     return record
 
-            self._finish_record(record, "success", "一键部署完成 ✅")
+            self._finish_record(record, "success", "One-click deployment completed ✅")
             self._emit_event(repo_id, {
-                "type": "deploy_done", "status": "success", "message": "一键部署完成 ✅",
+                "type": "deploy_done", "status": "success", "message": "One-click deployment completed ✅",
             })
         except Exception as e:
             self._finish_record(record, "failed", str(e))
@@ -2928,32 +2929,32 @@ class DeployService:
         existing_record: DeployRecord = None,
         job_id: str = "",
     ) -> DeployRecord:
-        """一键部署项目下所有仓库"""
+        """Deploy every repository in the project with one click"""
         if project_key not in self.projects:
-            raise ValueError(f"项目不存在: {project_key}")
+            raise ValueError(f"Project not found: {project_key}")
         proj = self.projects[project_key]
         record = existing_record or self._add_record(project_key, "", proj.name, "full_deploy_all")
         if not existing_record:
-            record.logs.append(f"🔄 一键部署全部 ({len(proj.repos)} 个仓库)...")
+            record.logs.append(f"🔄 Deploy all ({len(proj.repos)} repositories)...")
 
         for repo in proj.repos:
             if job_id and self._job_cancellation_requested(job_id):
-                self._finish_record(record, "cancelled", "项目级部署任务已取消")
+                self._finish_record(record, "cancelled", "Project-wide deployment job canceled")
                 return record
-            record.logs.append(f"📦 开始部署仓库 [{repo.label}]...")
+            record.logs.append(f"📦 Deploying repository [{repo.label}]...")
             r = await self.full_deploy_repo(project_key, repo.id, job_id=job_id)
             record.logs.extend(r.logs)
             if r.status == "cancelled":
-                self._finish_record(record, "cancelled", f"[{repo.label}] 已取消")
+                self._finish_record(record, "cancelled", f"[{repo.label}] canceled")
                 return record
             if r.status == "failed":
-                self._finish_record(record, "failed", f"[{repo.label}] 失败: {r.message}")
+                self._finish_record(record, "failed", f"[{repo.label}] failed: {r.message}")
                 return record
 
-        self._finish_record(record, "success", f"全部 {len(proj.repos)} 个仓库部署完成 ✅")
+        self._finish_record(record, "success", f"All {len(proj.repos)} repositories deployed ✅")
         return record
 
-    # ── 状态查询 ──────────────────────────────────────────────────────────────
+    # -- Status queries ------------------------------------------------------
     def get_repo_status(self, repo: RepoConfig) -> Dict:
         target = self._repo_path(repo)
         proc = self.processes.get(repo.id)
@@ -2999,7 +3000,7 @@ class DeployService:
 
     def get_project_detail(self, key: str) -> Dict:
         if key not in self.projects:
-            raise ValueError(f"项目不存在: {key}")
+            raise ValueError(f"Project not found: {key}")
         proj = self.projects[key]
         repos_status = [self.get_repo_status(r) for r in proj.repos]
         return {
@@ -3012,19 +3013,19 @@ class DeployService:
     def get_all_projects(self) -> List[Dict]:
         return [self.get_project_detail(k) for k in self.projects]
 
-    # ── 日志 ──────────────────────────────────────────────────────────────────
+    # -- Logs ----------------------------------------------------------------
     def get_logs(self, repo_id: str, lines: int = 100) -> List[str]:
         if lines <= 0:
             return []
         log_file = DEPLOY_DIR / f"{repo_id}_output.log"
         if not log_file.exists():
-            return ["暂无日志"]
+            return ["No logs yet"]
         try:
             content = log_file.read_text(encoding="utf-8", errors="replace")
             all_lines = content.strip().split("\n")
             return all_lines[-lines:]
         except Exception as e:
-            return [f"读取日志失败: {e}"]
+            return [f"Failed to read logs: {e}"]
 
     def get_deploy_history(self, limit: int = 30) -> List[Dict]:
         return [asdict(r) for r in self.history[-limit:]][::-1]
@@ -3038,16 +3039,16 @@ class DeployService:
         except Exception:
             return False
 
-    # ── AI 智能分析 ───────────────────────────────────────────────────────────
+    # -- AI analysis ---------------------------------------------------------
     async def ai_analyze_repo(self, project_key: str, repo_id: str) -> Dict:
-        """调用 AI 分析仓库结构并返回配置推荐（注入部署记忆）"""
+        """Use AI to analyze repository structure and recommend configuration, incorporating deployment memory"""
         proj, repo = self._find_repo(project_key, repo_id)
         target = self._repo_path(repo)
 
         if not target.exists():
-            return {"error": "仓库尚未克隆，请先执行克隆操作", "source": "ai"}
+            return {"error": "The repository has not been cloned; clone it first", "source": "ai"}
 
-        # ── 注入部署记忆 ──
+        # -- Incorporate deployment memory --
         mem = self._load_memory(repo.id)
         env_state = self._get_repo_env_state(repo)
         memory_hint = ""
@@ -3056,24 +3057,24 @@ class DeployService:
             if mem.get("build_strategy"):
                 bs = mem["build_strategy"]
                 if bs.get("excluded_modules"):
-                    parts.append(f"历史构建经验: 需排除模块 {bs['excluded_modules']}")
+                    parts.append(f"Build history: exclude modules {bs['excluded_modules']}")
                 if bs.get("cmd"):
-                    parts.append(f"上次成功的构建命令: {bs['cmd']}")
+                    parts.append(f"Last successful build command: {bs['cmd']}")
             if mem.get("ai_config"):
                 ac = mem["ai_config"]
                 if ac.get("pom_changes"):
-                    parts.append(f"上次 pom 修改: {ac['pom_changes']}")
+                    parts.append(f"Previous POM changes: {ac['pom_changes']}")
             if mem.get("start_config"):
                 sc = mem["start_config"]
-                parts.append(f"上次启动: {sc.get('success_count', 0)}/{sc.get('total_count', 0)} 微服务成功")
+                parts.append(f"Previous startup: {sc.get('success_count', 0)}/{sc.get('total_count', 0)} microservices succeeded")
                 if sc.get("docker_cmd"):
-                    parts.append(f"上次稳定启动命令: {sc['docker_cmd']}")
+                    parts.append(f"Last stable startup command: {sc['docker_cmd']}")
             if mem.get("effective_env", {}).get("summary"):
-                parts.append(f"上次生效环境: {mem['effective_env']['summary']}")
+                parts.append(f"Previously active environment: {mem['effective_env']['summary']}")
             if mem.get("deploy_count"):
-                parts.append(f"累计成功部署 {mem['deploy_count']} 次")
+                parts.append(f"Total successful deployments: {mem['deploy_count']}")
             memory_hint = "\n".join(parts)
-            logger.info(f"[Memory] 向 AI 注入 {repo.label} 的 {len(parts)} 条历史记忆")
+            logger.info(f"[Memory] Providing AI with {repo.label}'s {len(parts)} historical memory entries")
 
         from services.ai_deploy_analyzer import analyze_project
         result = await analyze_project(
@@ -3083,7 +3084,7 @@ class DeployService:
         )
         result = self._prefer_stable_ai_start_command(repo, result, mem)
 
-        # 在结果中附带记忆信息供前端展示
+        # Include memory details in the result for frontend display
         if mem:
             result["has_memory"] = True
             result["deploy_count"] = mem.get("deploy_count", 0)
@@ -3094,7 +3095,7 @@ class DeployService:
         return result
 
     def apply_ai_config(self, project_key: str, repo_id: str, config: Dict) -> Dict:
-        """将 AI 推荐的配置应用到仓库（同时保存到记忆）"""
+        """Apply AI-recommended configuration to the repository and save it to memory"""
         proj, repo = self._find_repo(project_key, repo_id)
 
         if config.get("tech_stack"):
@@ -3108,7 +3109,7 @@ class DeployService:
         if self._is_frontend_repo(repo):
             normalized_port = self._normalize_frontend_port(repo, repo.port)
             if normalized_port != repo.port:
-                logger.info(f"[AI] 前端端口过低，自动改写: {repo.label} {repo.port} -> {normalized_port}")
+                logger.info(f"[AI] Frontend port is too low; adjusted automatically: {repo.label} {repo.port} -> {normalized_port}")
                 repo.port = normalized_port
             if repo.start_cmd:
                 normalized_start_cmd = self._normalize_start_command(
@@ -3118,21 +3119,21 @@ class DeployService:
                     DeployRecord(project_key=project_key, repo_id=repo.id, repo_label=repo.label, action="apply_ai_config"),
                 )
                 if normalized_start_cmd != repo.start_cmd:
-                    logger.info(f"[AI] 前端启动命令已规范化: {repo.start_cmd} -> {normalized_start_cmd}")
+                    logger.info(f"[AI] Frontend startup command normalized: {repo.start_cmd} -> {normalized_start_cmd}")
                     repo.start_cmd = normalized_start_cmd
         if config.get("deploy_context"):
             existing_ctx = dict(repo.deploy_context or {})
             ctx = {**existing_ctx, **dict(config["deploy_context"] or {})}
             repo.deploy_context = ctx
-            # 用户确认应用 pom 修改
+            # User confirms POM changes
             if ctx.get("apply_pom_changes") and ctx.get("suggested_changes"):
                 target = self._repo_path(repo)
                 if target.exists():
                     temp_record = DeployRecord()
                     self._apply_pom_changes(target, ctx["suggested_changes"], temp_record)
-                    logger.info(f"[AI] pom 修改已应用: {temp_record.logs}")
+                    logger.info(f"[AI] POM changes applied: {temp_record.logs}")
 
-            # ── Fix3: 将 deploy_context 中的 env_vars 写入 docker/.env ──
+            # -- Fix3: write deploy_context.env_vars into docker/.env --
             if ctx.get("env_vars"):
                 target = self._repo_path(repo)
                 if target.exists():
@@ -3142,9 +3143,9 @@ class DeployService:
                     if ctx.get("db_connection"):
                         overrides["DATABASE_URL"] = ctx["db_connection"]
                     merged = self._merge_env_file(target, overrides)
-                    logger.info(f"[AI] 环境变量已写入 {self._get_env_file_path(target, create=True)}: {list(merged.keys())}")
+                    logger.info(f"[AI] Environment variables written to {self._get_env_file_path(target, create=True)}: {list(merged.keys())}")
 
-        # ── Fix1: 检测 POM 中已有 profile 排除，自动清理 install_cmd 中的 -pl ! ──
+        # -- Fix1: detect existing POM profile exclusions and remove conflicting -pl ! from install_cmd --
         if repo.install_cmd and "-pl " in repo.install_cmd and "!" in repo.install_cmd:
             target = self._repo_path(repo)
             has_pom_profile = False
@@ -3156,28 +3157,28 @@ class DeployService:
                         has_pom_profile = True
                         break
             if has_pom_profile:
-                # POM 已通过 profile 排除模块，-pl ! 会冲突，自动移除
+                # POM profiles already exclude modules; remove conflicting -pl ! arguments automatically
                 cleaned = re.sub(r'\s+-pl\s+[^\s]+', '', repo.install_cmd).strip()
-                logger.info(f"[AI] POM 已有 profile 排除，清理 install_cmd: {repo.install_cmd} → {cleaned}")
+                logger.info(f"[AI] POM already has profile exclusions; cleaning install_cmd: {repo.install_cmd} → {cleaned}")
                 repo.install_cmd = cleaned
 
-        # ── 保存 AI 配置到记忆 ──
+        # -- Save AI configuration to memory --
         self._update_memory(repo.id, "ai_config", {
             "tech_stack": config.get("tech_stack"),
-            "install_cmd": repo.install_cmd,  # 使用清理后的命令
+            "install_cmd": repo.install_cmd,  # Use the cleaned command
             "start_cmd": repo.start_cmd,
             "port": repo.port,
             "pom_changes": config.get("deploy_context", {}).get("suggested_changes"),
             "timestamp": datetime.now().isoformat()
         })
-        logger.info(f"[Memory] AI 配置已保存到记忆: {repo.label}")
+        logger.info(f"[Memory] AI configuration saved: {repo.label}")
 
         self._save_projects()
-        logger.info(f"[AI] 配置已应用: {repo.label} → {repo.tech_stack}")
+        logger.info(f"[AI] Configuration applied: {repo.label} → {repo.tech_stack}")
         return self.get_repo_status(repo)
 
 
-# ── 单例 ──────────────────────────────────────────────────────────────────────
+# -- Singleton -----------------------------------------------------------
 _service_instance: Optional[DeployService] = None
 
 

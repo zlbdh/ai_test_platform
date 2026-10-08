@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
-"""模块导入验证"""
+"""Module import verification"""
 import importlib
 import sys
 sys.path.insert(0, ".")
 
 modules = [
-    # 核心
+    # Core
     "core.requirement_parser", "core.db_tools", "core.api_doc_generator",
-    # 服务
+    # Services
     "services.grpc_testing", "services.enhanced_security",
     "services.batch_runner", "services.data_factory",
     "services.accessibility_testing", "services.i18n_testing",
     "services.compliance_testing", "services.chaos_engineering",
     "services.mobile_emulation",
-    # 路由
+    # Routers
     "routers.core", "routers.testing", "routers.knowledge",
     "routers.graphql", "routers.websocket_test", "routers.grpc",
     "routers.database", "routers.accessibility", "routers.i18n",

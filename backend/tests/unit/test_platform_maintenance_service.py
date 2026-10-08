@@ -317,7 +317,7 @@ def test_platform_maintenance_notification_requires_healthy_test_to_be_ready(tmp
     assert result["notification"]["healthy_enabled"] == 0
     assert result["notification"]["untested_enabled"] == 1
     assert result["notification"]["ready"] is False
-    assert "还没有任何已验证的告警通道" in result["notification"]["summary"]
+    assert "no alert channel has been verified" in result["notification"]["summary"]
 
 
 def test_platform_maintenance_get_status_refreshes_live_notification_snapshot(tmp_path):

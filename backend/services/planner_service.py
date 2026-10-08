@@ -28,12 +28,12 @@ get_llm = get_llm_for_role
 
 class TestGenerationService:
     """
-    智能测试生成服务
-    基于 RAG (PRD + Schema) 自动生成测试计划
+    Intelligent test generation service
+    Generate test plans automatically with RAG (PRD + Schema)
     """
-    # ── LLM 调用缓存（避免相同需求重复调用）──
+    # -- LLM call cache to avoid duplicate calls for identical requirements --
     _plan_cache: Dict[str, Tuple[float, Dict]] = {}   # {hash: (timestamp, result)}
-    CACHE_TTL = 300  # 5 分钟过期
+    CACHE_TTL = 300  # Expires after 5 minutes
     CACHE_VERSION = "v3"
 
     async def generate_plan(
@@ -45,7 +45,7 @@ class TestGenerationService:
         interaction_policy: str = "default",
     ) -> Dict[str, Any]:
         """
-        生成测试计划入口 (Async)
+        Generate a test plan asynchronously
         """
         if not requirement or not requirement.strip():
             return {"requirement": requirement, "sources": [], "test_cases": [], "error": "Requirement cannot be empty"}
@@ -56,7 +56,7 @@ class TestGenerationService:
             interaction_policy=interaction_policy,
         )
 
-        # ── 缓存检查 ──
+        # -- Cache lookup --
         cache_key = hashlib.md5(
             (
                 f"{self.CACHE_VERSION}|{requirement}|{enable_rag}|{target_url}|"
@@ -70,44 +70,44 @@ class TestGenerationService:
                 logger.info(f"Plan cache HIT (key={cache_key[:8]}..., age={_time.time()-ts:.0f}s)")
                 return result
             else:
-                del self._plan_cache[cache_key]  # 过期清除
+                del self._plan_cache[cache_key]  # Remove expired entries
 
         if execution_profile["execution_mode"] == PROBE_EXECUTION_MODE:
             result = self._generate_probe_plan(requirement=requirement, target_url=target_url)
             self._plan_cache[cache_key] = (_time.time(), result)
             logger.info("Probe plan generated locally (target=%s)", target_url or "N/A")
             return result
-        # 1. 知识检索
+        # 1. Knowledge retrieval
         import time
         import asyncio
         t0 = time.time()
         context = ""
         sources = []
         if enable_rag:
-            # 尝试初始化知识库（懒加载）
+            # Try to initialize the knowledge service lazily
             # kb.initialize() is sync, run in thread if heavy, but usually fast enough if already init
             kb.initialize()
             
         if enable_rag and kb.enabled:
             logger.info(f"Retrieving knowledge for: {requirement}")
-            # 检索 PRD 和 Schema
+            # Retrieve PRD and Schema
             try:
-                # 增强 RAG: 使用 similarity_search_with_score 获取相关性分数
+                # Enhanced RAG: use similarity_search_with_score for relevance scores
                 raw_results = await asyncio.to_thread(
                     kb.vector_store.similarity_search_with_score, requirement, k=8
                 )
                 
-                # 相关性过滤: 丢弃 score 低于阈值的文档
-                # 注意: 不同向量存储的 score 含义不同
-                # Chroma: 距离越小越好 (L2), 阈值设为 1.5
-                # FAISS: 距离越小越好
+                # Relevance filtering: discard documents outside the score threshold
+                # Note: score meanings differ between vector stores
+                # Chroma: lower L2 distance is better; threshold 1.5
+                # FAISS: lower distance is better
                 RELEVANCE_THRESHOLD = 1.5
                 filtered = [(doc, score) for doc, score in raw_results if score < RELEVANCE_THRESHOLD]
                 
-                # 按相关性排序 (score 越小 = 越相关)
+                # Sort by relevance: lower score means greater relevance
                 filtered.sort(key=lambda x: x[1])
                 
-                # 去重: 基于 page_content hash 去重
+                # Deduplicate by page_content hash
                 seen_hashes = set()
                 unique_results = []
                 for doc, score in filtered:
@@ -116,7 +116,7 @@ class TestGenerationService:
                         seen_hashes.add(content_hash)
                         unique_results.append((doc, score))
                 
-                # 限制最终取 top-5
+                # Keep at most the top five results
                 top_results = unique_results[:5]
                 
                 context_parts = []
@@ -126,15 +126,15 @@ class TestGenerationService:
                     relevance_pct = max(0, (1 - score / RELEVANCE_THRESHOLD)) * 100
                     
                     context_parts.append(
-                        f"--- 来源: {source_name} (相关度: {relevance_pct:.0f}%) ---\n"
+                        f"--- Source: {source_name} (relevance: {relevance_pct:.0f}%) ---\n"
                         f"{doc.page_content}\n"
                     )
                     sources.append(source_name)
                 
-                # 限制总 context 长度 (防止超出 LLM token 限制)
+                # Limit total context length to stay within the LLM token limit
                 context = "\n".join(context_parts)
                 if len(context) > 8000:
-                    context = context[:8000] + "\n...(已截断)"
+                    context = context[:8000] + "\n...(truncated)"
                 
                 logger.info(
                     f"RAG Enhanced: {len(raw_results)} retrieved → "
@@ -146,8 +146,8 @@ class TestGenerationService:
         else:
             logger.info("RAG not enabled or skipped")
             
-        # 2. 链路零：侦察兵 (Crawl-First)
-        # 如果提供了 URL，先派侦察兵去看看真实情况
+        # 2. Stage zero: Scout (Crawl-First)
+        # If a URL is provided, send the scout to inspect the actual page first
         page_context = ""
         scout_result: Dict[str, Any] = {}
         if target_url:
@@ -158,10 +158,10 @@ class TestGenerationService:
                 scout_result = await ScoutAgent.scout(target_url)
                 if scout_result.get('status') == 'success':
                     page_context = (
-                        f"\n【真实页面状态 (由 Scout Agent 实时探测)】\n"
+                        f"\n[Live page state detected by the Scout Agent]\n"
                         f"Title: {scout_result.get('title', 'Unknown')}\n"
                         f"Visible Text Summary: {scout_result.get('visible_text', '')[:500]}...\n"
-                        f"Interactive Elements (关键): {scout_result.get('interactive_summary', '')}\n"
+                        f"Interactive Elements (key): {scout_result.get('interactive_summary', '')}\n"
                         f"----------------------------------------\n"
                     )
                     logger.info(f"Scout returned successful report. Title: {scout_result.get('title')}")
@@ -170,20 +170,20 @@ class TestGenerationService:
             except Exception as e:
                 logger.error(f"Scout execution error: {e}")
         
-        # 3. 链路路由：智能路由 (Smart Router)
+        # 3. Routing: Smart Router
         from services.context_analyzer import ContextAnalyzer
         router_result = ContextAnalyzer.analyze(requirement, target_url, context)
         strategy = router_result['strategy']
         logger.info(f"🎯 Smart Router Decision: {strategy} | Reason: {router_result['reasoning']}")
         
-        # 4. 链路一：场景挖掘 (Scenario Discovery)
+        # 4. Stage one: Scenario Discovery
         t1 = time.time()
-        # 将 Scout 的发现注入到 Context 中
+        # Add Scout findings to the context
         full_context = page_context + "\n" + context
         scenarios = await self._discover_scenarios(requirement, full_context, target_url)
         logger.info(f"Scenario Discovery finished (Time: {time.time()-t1:.2f}s)")
         
-        # 5. 链路二：步骤生成 (Step Generation) - 并行执行
+        # 5. Stage two: Step Generation in parallel
         t2 = time.time()
         test_cases = []
         priority_counts = {"P0": 0, "P1": 0, "P2": 0}
@@ -210,7 +210,7 @@ class TestGenerationService:
                 )
                 if not steps:
                     continue
-                logger.warning(f"Scenario '{scenario['name']}' 使用本地 fallback 步骤继续执行")
+                logger.warning(f"Scenario '{scenario['name']}' will continue with local fallback steps")
             else:
                 steps = res
 
@@ -222,9 +222,9 @@ class TestGenerationService:
                     scout_result=scout_result,
                 )
                 if not steps:
-                    logger.warning(f"Scenario '{scenario['name']}' 未生成有效步骤，已跳过")
+                    logger.warning(f"Scenario '{scenario['name']}' produced no valid steps and was skipped")
                     continue
-                logger.warning(f"Scenario '{scenario['name']}' 生成空步骤，已切换为本地 fallback")
+                logger.warning(f"Scenario '{scenario['name']}' produced empty steps; using local fallback")
 
             steps = self._prune_redundant_authenticated_login_steps(requirement, target_url, steps)
             steps = self._prune_redundant_site_selection_steps(requirement, target_url, steps)
@@ -255,7 +255,7 @@ class TestGenerationService:
             }
         }
 
-        # ── 缓存写入 ──
+        # -- Cache write --
         self._plan_cache[cache_key] = (_time.time(), result)
         logger.info(f"Plan cache STORE (key={cache_key[:8]}..., cases={len(test_cases)})")
         return result
@@ -273,8 +273,8 @@ class TestGenerationService:
             "sources": [],
             "test_cases": [
                 {
-                    "scenario": "只读探针验证",
-                    "description": "只验证页面可访问性与首屏可见性，不执行登录、输入或提交",
+                    "scenario": "Read-only Probe Verification",
+                    "description": "Check only page accessibility and initial visibility; do not sign in, enter text, or submit",
                     "priority": "P0",
                     "precondition": "",
                     "test_data": [],
@@ -284,7 +284,7 @@ class TestGenerationService:
             "coverage_summary": {
                 "total_scenarios": 1,
                 "by_priority": {"P0": 1, "P1": 0, "P2": 0},
-                "dimensions_covered": ["只读探针"],
+                "dimensions_covered": ["Read-only Probe"],
             },
         }
 
@@ -296,8 +296,8 @@ class TestGenerationService:
         scout_result: Dict[str, Any] | None = None,
     ) -> List[Dict[str, Any]]:
         """
-        当 LLM 不可用或返回空步骤时，使用页面侦察结果和需求文本构造最小可执行计划。
-        目标不是替代完整 AI 规划，而是保证首页可用性、关键入口和基础渲染至少能被真实验证。
+        When the LLM is unavailable or returns no steps, build a minimal executable plan from scout findings and requirements.
+        This supplements full AI planning by ensuring the homepage, critical entry points, and basic rendering can be verified.
         """
         steps: List[Dict[str, Any]] = []
         service_product_center = self._needs_service_product_center_flow(requirement, target_url)
@@ -602,8 +602,8 @@ class TestGenerationService:
         scout_result: Dict[str, Any],
     ) -> str:
         """
-        从需求文本和 Scout 侦察结果中提取一个高概率存在于页面中的断言词。
-        优先选页面标题这类能被 HTML 精确命中的静态文本，其次才退回登录/注册等 UI 词。
+        Extract assertion text likely to exist on the page from requirements and Scout findings.
+        Prefer static text such as the page title that can be matched exactly in HTML, then fall back to UI terms such as sign-in or registration.
         """
         scenario_name = str(scenario.get("name", ""))
         scenario_desc = str(scenario.get("description", ""))
@@ -663,11 +663,11 @@ class TestGenerationService:
 
     async def _discover_scenarios(self, requirement: str, context: str, target_url: str = "") -> List[Dict[str, str]]:
         """
-        AI 测试架构师：分析输入 → 决策测什么 (Async)
+        AI test architect: analyze inputs and decide what to test asynchronously
         """
         url_hint = ""
         if target_url:
-            url_hint = f"\n【目标网站】\n{target_url}\n所有测试场景必须围绕该网站的功能展开，不要测试其他无关网站。\n"
+            url_hint = f"\n[Target website]\n{target_url}\nEvery test scenario must address this website's features. Do not test unrelated websites.\n"
 
         prompt = ChatPromptTemplate.from_template(SCENARIO_DISCOVERY_PROMPT)
         
@@ -677,11 +677,11 @@ class TestGenerationService:
             return res
         except Exception as e:
             logger.warning(f"Scenario discovery failed: {e}")
-            return [{"name": "默认场景", "description": "基于需求的基本流程", "priority": "P1", "dimension": "核心业务流程", "precondition": "", "test_data": []}]
+            return [{"name": "Default Scenario", "description": "Basic requirements-based workflow", "priority": "P1", "dimension": "Core Business Workflow", "precondition": "", "test_data": []}]
 
     async def _generate_steps_for_scenario(self, scenario: Dict[str, str], context: str, target_url: str = "") -> List[Dict[str, Any]]:
         """
-        为单个场景生成执行步骤 (Async Helper)
+        Generate execution steps for one scenario (async helper)
         """
         import time
         st = time.time()
@@ -691,11 +691,11 @@ class TestGenerationService:
 
     async def _generate_steps(self, scenario: Dict[str, str], context: str, target_url: str = "") -> List[Dict[str, Any]]:
         """
-        生成步骤核心逻辑 (Async)
+        Core step-generation logic (async)
         """
         url_rule = ""
         if target_url:
-            url_rule = f"5. 所有 goto 步骤应针对目标网站 {target_url}，不要导航到其他域名。\n"
+            url_rule = f"5. All goto steps must target {target_url}. Do not navigate to other domains.\n"
 
         prompt = ChatPromptTemplate.from_template(STEP_GENERATION_PROMPT)
         
@@ -720,17 +720,17 @@ class TestGenerationService:
         execution_profile: Dict[str, Any] | None = None,
     ) -> dict:
         """
-        Smart Mode: 单步推理。
-        基于目标 + 当前页面状态 + 操作历史，决定下一个动作。
+        Smart Mode: reason about one step.
+        Choose the next action from the goal, current page state, and action history.
         
-        返回: {"thinking": "...", "action": "fill|click|goto|...|done", "target": "...", "value": "..."}
+        Returns: {"thinking": "...", "action": "fill|click|goto|...|done", "target": "...", "value": "..."}
         """
         execution_profile = execution_profile or {}
         prompt_goal = goal
         if execution_profile.get("execution_mode") == PROBE_EXECUTION_MODE:
             prompt_goal = f"{goal}\n{build_probe_goal_hint(page_state.get('url', ''))}"
 
-        # 构建历史摘要（最近 20 步，让 LLM 看到更多重复操作）
+        # Summarize the latest 20 steps so the LLM can detect repeated actions
         history_text = ""
         loop_warning = ""
         if history:
@@ -741,7 +741,7 @@ class TestGenerationService:
                 lines.append(f"  {i}. {status_icon} {h.get('action', '?')} → {h.get('target', '')} | {h.get('message', '')[:60]}")
             history_text = "\n".join(lines)
             
-            # === 死循环检测 ===
+            # === Loop detection ===
             consecutive_same = 1
             if len(history) >= 2:
                 last_action = history[-1].get('action', '')
@@ -754,24 +754,24 @@ class TestGenerationService:
             if consecutive_same >= 3:
                 last_action = history[-1].get('action', '')
                 loop_warning = (
-                    f"\n\n【⚠️ 死循环警告！】\n"
-                    f"你已经连续执行了 {consecutive_same} 次 '{last_action}' 操作！\n"
-                    f"你正在陷入死循环。请立刻停下来，改用其他动作类型。\n"
+                    f"\n\n[⚠️ Repeated-action loop warning]\n"
+                    f"You have executed {consecutive_same} consecutive '{last_action}' actions!\n"
+                    f"You are entering a loop. Stop immediately and choose a different action type.\n"
                 )
                 if last_action == 'screenshot':
                     loop_warning += (
-                        f"screenshot 不会返回图片内容给你 — 你看不到截图内容！\n"
-                        f"你必须改用 fill, click, scroll 等实际操作。\n"
-                        f"如果是因为验证码卡住了，请直接在验证码输入框填写 '1234' 然后点击登录。\n"
+                        f"screenshot does not return image content to you; you cannot see the screenshot!\n"
+                        f"Switch to an actual action such as fill, click, or scroll.\n"
+                        f"If a verification code is blocking progress, enter '1234' in the verification-code field and click Sign in.\n"
                     )
                 logger.warning(f"[SmartPlan] LOOP DETECTED: {consecutive_same}x '{last_action}'")
         else:
-            history_text = "  （无，这是第一步）"
+            history_text = "  (None; this is the first step)"
         
-        # 构建页面状态
+        # Build the page state
         from core.snapshot_compressor import snapshot_compressor
         
-        elements_text = page_state.get('interactive_elements', '（页面未加载）')
+        elements_text = page_state.get('interactive_elements', '(Page not loaded)')
         snapshot = snapshot_compressor.compress(elements_text, page_state, max_visible_text=200)
         
         prompt = ChatPromptTemplate.from_template(SMART_PLAN_PROMPT)
@@ -780,7 +780,7 @@ class TestGenerationService:
         last_error = None
         last_raw_text = ""
         
-        # ★ L1: 多模态推理 — 有截图时优先用 VLM
+        # L1: Multimodal reasoning; prefer the VLM when a screenshot is available
         if screenshot_b64:
             try:
                 from core.llm_manager import get_vision_llm
@@ -802,7 +802,7 @@ class TestGenerationService:
                     raw_text = raw_response.content if hasattr(raw_response, 'content') else str(raw_response)
                     logger.info(f"[SmartPlan] ★ Vision mode ({len(raw_text)} chars): {raw_text[:200]}")
                     
-                    # 复用 JSON 解析逻辑
+                    # Reuse JSON parsing logic
                     import re as _re
                     text = raw_text.strip()
                     md_match = _re.search(r'```(?:json)?\s*\n?(.*?)\n?```', text, _re.DOTALL)
@@ -823,7 +823,7 @@ class TestGenerationService:
         for attempt in range(MAX_RETRIES):
             try:
                 llm = get_llm_for_role("planner")
-                # 分步执行: 先获取原始文本，再手动解析 JSON（兼容 markdown 代码块包裹）
+                # Execute in stages: get raw text, then parse JSON manually, supporting Markdown code fences
                 chain = prompt | llm
                 raw_response = await chain.ainvoke({
                     "goal": prompt_goal,
@@ -835,14 +835,14 @@ class TestGenerationService:
                 last_raw_text = raw_text
                 logger.info(f"[SmartPlan] LLM raw output (attempt {attempt+1}, {len(raw_text)} chars): {raw_text[:300]}")
                 
-                # 手动 JSON 解析（兼容 ```json ... ``` 代码块）
+                # Parse JSON manually, supporting fenced ```json ... ``` blocks
                 import re as _re
                 text = raw_text.strip()
-                # 尝试提取 markdown 代码块中的 JSON
+                # Try to extract JSON from a Markdown code block
                 md_match = _re.search(r'```(?:json)?\s*\n?(.*?)\n?```', text, _re.DOTALL)
                 if md_match:
                     text = md_match.group(1).strip()
-                # 提取第一个 { ... } 或直接解析
+                # Extract the first { ... } object or parse directly
                 json_start = text.find('{')
                 json_end = text.rfind('}') + 1
                 if json_start >= 0 and json_end > json_start:
@@ -850,9 +850,9 @@ class TestGenerationService:
                 else:
                     res = json.loads(text)
                 
-                # 验证必须有 action 字段
+                # Require an action field
                 if 'action' not in res:
-                    raise ValueError(f"LLM 返回缺少 'action' 字段: {list(res.keys())}")
+                    raise ValueError(f"LLM response is missing the 'action' field: {list(res.keys())}")
                 
                 logger.info(f"[SmartPlan] thinking: {res.get('thinking', '?')[:80]}")
                 return res
@@ -871,34 +871,34 @@ class TestGenerationService:
                     await _asyncio.sleep(1)
                     continue
         
-        # 所有重试都失败：智能降级
+        # All retries failed: controlled fallback
         logger.error(f"[SmartPlan] All {MAX_RETRIES} attempts failed. Last error: {last_error}")
         logger.error(f"[SmartPlan] Last raw LLM output: {last_raw_text[:500]}")
         
-        # 如果是第一步且有 URL，降级为 goto
+        # If this is the first step and a URL exists, fall back to goto
         target_url = page_state.get('url', '')
-        if not history and target_url and target_url != '（未导航）':
+        if not history and target_url and target_url not in ('(Not navigated)', '（未导航）'):
             logger.info(f"[SmartPlan] Fallback: goto {target_url}")
-            return {"thinking": f"LLM 推理失败（{last_error}），降级为直接打开目标页面", "action": "goto", "target": target_url, "value": ""}
+            return {"thinking": f"LLM reasoning failed ({last_error}); falling back to opening the target page directly", "action": "goto", "target": target_url, "value": ""}
         
-        return {"thinking": f"推理失败（重试{MAX_RETRIES}次）: {last_error}", "action": "error", "target": "推理异常终止", "value": ""}
+        return {"thinking": f"Reasoning failed after {MAX_RETRIES} retries: {last_error}", "action": "error", "target": "Reasoning terminated with an error", "value": ""}
 
     def semantic_verify(self, assertion: str, page_context: str, screenshot_b64: str = "") -> dict:
         """
-        语义验证：LLM 判断页面内容是否满足断言条件。
-        当精确文本匹配失败时作为 fallback。
-        支持多模态：传入 screenshot_b64 时使用 vision model 联合判断。
+        Semantic verification: use the LLM to assess whether page content satisfies an assertion.
+        Use as a fallback when exact text matching fails.
+        Supports multimodal verification with a vision model when screenshot_b64 is provided.
         
-        返回: {"passed": True/False, "reason": "..."}
+        Returns: {"passed": True/False, "reason": "..."}
         """
-        # 解析 page_context 中的 url 和 visible_text
+        # Parse url and visible_text from page_context
         url = ""
         visible_text = page_context
         if isinstance(page_context, dict):
             url = page_context.get('url', '')
             visible_text = page_context.get('visible_text', '')
         
-        # 多模态路径：有截图时使用 vision model
+        # Multimodal path: use the vision model when a screenshot is available
         if screenshot_b64:
             try:
                 from core.llm_manager import get_vision_llm
@@ -909,31 +909,31 @@ class TestGenerationService:
                     url=url,
                     visible_text=str(visible_text)[:2000],
                 )
-                # 构建多模态消息（文本 + 图片）
+                # Build a multimodal message with text and image
                 message = HumanMessage(content=[
                     {"type": "text", "text": prompt_text},
                     {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{screenshot_b64}"}},
                 ])
                 vision_llm = get_vision_llm()
                 response = vision_llm.invoke([message])
-                # 尝试解析 JSON
+                # Attempt to parse JSON
                 import json as _json
                 res_text = response.content if hasattr(response, 'content') else str(response)
-                # 提取 JSON 部分
+                # Extract JSON
                 json_start = res_text.find('{')
                 json_end = res_text.rfind('}') + 1
                 if json_start >= 0 and json_end > json_start:
                     res = _json.loads(res_text[json_start:json_end])
                     passed = res.get('passed', False)
-                    reason = res.get('reason', '无')
+                    reason = res.get('reason', 'None')
                     visual_evidence = res.get('visual_evidence', '')
                     logger.info(f"[MultimodalVerify] {'PASS' if passed else 'FAIL'}: {reason} | visual: {visual_evidence}")
                     return {"passed": passed, "reason": reason, "visual_evidence": visual_evidence}
             except Exception as e:
-                logger.warning(f"[MultimodalVerify] Vision model 失败, 降级到文本验证: {e}")
-                # 降级到纯文本验证
+                logger.warning(f"[MultimodalVerify] Vision model failed; falling back to text verification: {e}")
+                # Fall back to text-only verification
 
-        # 纯文本路径
+        # Text-only path
         prompt = ChatPromptTemplate.from_template(SEMANTIC_VERIFY_PROMPT)
         try:
             chain = prompt | get_llm_for_role("executor") | JsonOutputParser()
@@ -943,12 +943,12 @@ class TestGenerationService:
                 "visible_text": str(visible_text)[:2000],
             })
             passed = res.get('passed', False)
-            reason = res.get('reason', '无')
+            reason = res.get('reason', 'None')
             logger.info(f"[SemanticVerify] {'PASS' if passed else 'FAIL'}: {reason}")
             return {"passed": passed, "reason": reason}
         except Exception as e:
             logger.error(f"[SemanticVerify] LLM call failed: {e}")
-            return {"passed": False, "reason": f"语义验证异常: {e}"}
+            return {"passed": False, "reason": f"Semantic verification error: {e}"}
 
 planner_service = TestGenerationService()
 

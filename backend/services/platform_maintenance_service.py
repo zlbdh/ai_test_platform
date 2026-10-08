@@ -2,10 +2,10 @@
 """
 Platform Maintenance Service
 
-统一负责：
-1. 执行中心外部历史同步
-2. 执行中心旧脏数据修复
-3. 报告历史标题与口径修复
+Central responsibilities:
+1. Synchronize external history into the execution center
+2. Repair legacy execution-center data artifacts
+3. Repair report history titles and reporting conventions
 """
 from __future__ import annotations
 
@@ -66,7 +66,7 @@ class PlatformMaintenanceService:
                 "healthy_enabled": 0,
                 "untested_enabled": 0,
                 "ready": False,
-                "summary": "尚未配置启用中的生产告警 Webhook",
+                "summary": "No active production alert Webhook is configured",
             },
             "data_quality": {
                 "suspect_history_count": 0,
@@ -90,7 +90,7 @@ class PlatformMaintenanceService:
                 "last_archive_cleanup_deleted_runs": 0,
                 "last_archive_cleanup_deleted_exports": 0,
                 "clean": True,
-                "summary": "维护历史正常",
+                "summary": "Maintenance history is healthy",
             },
         }
         self._last_activity: Dict[str, Any] = {
@@ -112,7 +112,7 @@ class PlatformMaintenanceService:
                 "healthy_enabled": 0,
                 "untested_enabled": 0,
                 "ready": False,
-                "summary": "尚未配置启用中的生产告警 Webhook",
+                "summary": "No active production alert Webhook is configured",
             },
             "data_quality": {
                 "suspect_history_count": 0,
@@ -136,7 +136,7 @@ class PlatformMaintenanceService:
                 "last_archive_cleanup_deleted_runs": 0,
                 "last_archive_cleanup_deleted_exports": 0,
                 "clean": True,
-                "summary": "维护历史正常",
+                "summary": "Maintenance history is healthy",
             },
         }
 
@@ -271,9 +271,9 @@ class PlatformMaintenanceService:
         level = str(observability.get("risk_level") or ("warning" if shadow_count else "normal"))
         current_db = observability.get("current_db") or {}
         summary = (
-            f"检测到 {shadow_count} 个影子业务库"
+            f"Detected {shadow_count} shadow business databases"
             if shadow_count
-            else "未发现影子业务库"
+            else "No shadow business databases found"
         )
         return {
             "level": level,
@@ -314,17 +314,17 @@ class PlatformMaintenanceService:
                         tested_enabled = 0
                         healthy_enabled = 0
         except Exception:
-            logger.exception("[Maintenance] 统计通知 Webhook 失败")
+            logger.exception("[Maintenance] Failed to count notification Webhooks")
         untested_enabled = max(webhook_count - tested_enabled, 0)
         ready = healthy_enabled > 0
         if webhook_count == 0:
-            summary = "尚未配置启用中的生产告警 Webhook"
+            summary = "No active production alert Webhook is configured"
         elif tested_enabled == 0:
-            summary = f"已配置 {webhook_count} 个 Webhook，但还没有任何已验证的告警通道"
+            summary = f"Configured {webhook_count} Webhooks, but no alert channel has been verified"
         elif healthy_enabled == 0:
-            summary = f"已配置 {webhook_count} 个 Webhook，但最近测试都未通过"
+            summary = f"Configured {webhook_count} Webhooks, but all recent tests failed"
         else:
-            summary = f"已配置 {webhook_count} 个 Webhook，其中 {healthy_enabled} 个最近测试通过"
+            summary = f"Configured {webhook_count} Webhooks; {healthy_enabled} passed their latest tests"
         return {
             "webhook_count": webhook_count,
             "tested_enabled": tested_enabled,
@@ -504,7 +504,7 @@ class PlatformMaintenanceService:
                     export_state=export_state,
                 )
         except Exception:
-            logger.exception("[Maintenance] 统计维护历史洁净度失败")
+            logger.exception("[Maintenance] Failed to assess maintenance history cleanliness")
 
         if pending_result and not pending_result.get("skipped"):
             if self._is_suspect_history_risk(pending_result.get("risk") or {}):
@@ -515,18 +515,18 @@ class PlatformMaintenanceService:
         visible_count = max(active_count - suspect_count, 0)
         clean = suspect_count == 0
         if not clean:
-            summary = f"检测到 {suspect_count} 条可疑维护历史，默认主视图已隐藏"
+            summary = f"Detected {suspect_count} suspicious maintenance records hidden from the default main view"
         elif bool(cleanup_state.get("archive_cleanup_needed")):
             summary = (
-                f"已归档 {archived_count} 条历史维护记录，最近已完成导出，"
-                f"存在 {cleanup_state.get('archive_cleanup_candidate_count') or 0} 项超期待清理"
+                f"Archived {archived_count} maintenance records; export is current; "
+                f"{cleanup_state.get('archive_cleanup_candidate_count') or 0} items are overdue for cleanup"
             )
         elif archived_count and not bool(export_state.get("archive_export_fresh")):
-            summary = f"已归档 {archived_count} 条历史维护记录，但归档导出尚未更新"
+            summary = f"Archived {archived_count} maintenance records, but the archive export is not current"
         elif archived_count:
-            summary = f"已归档 {archived_count} 条历史维护记录，最近已完成导出"
+            summary = f"Archived {archived_count} maintenance records; export is current"
         else:
-            summary = "维护历史正常"
+            summary = "Maintenance history is healthy"
         return {
             "suspect_history_count": suspect_count,
             "raw_history_count": raw_count,
@@ -842,7 +842,7 @@ class PlatformMaintenanceService:
                                 os.remove(file_path)
                                 deleted_export_files.append(file_path)
                             except OSError:
-                                logger.exception("[Maintenance] 删除归档导出文件失败: %s", file_path)
+                                logger.exception("[Maintenance] Failed to delete archive export file: %s", file_path)
 
             created_at = datetime.now().isoformat()
             conn.execute(
@@ -902,11 +902,11 @@ class PlatformMaintenanceService:
         duration_ms = int(result.get("duration_ms") or 0)
         duration_text = f"{duration_ms}ms" if duration_ms < 1000 else f"{duration_ms / 1000:.1f}s"
         notify_result = self._run_notification_sync(
-            title="平台统一维护失败",
+            title="Unified platform maintenance failed",
             status="failed",
             summary=(
-                f"触发原因: {result.get('reason') or 'runtime'}\n"
-                f"错误信息: {result.get('error') or '未知错误'}"
+                f"Trigger: {result.get('reason') or 'runtime'}\n"
+                f"Error: {result.get('error') or 'Unknown error'}"
             ),
             details={
                 "duration": duration_text,
@@ -931,14 +931,14 @@ class PlatformMaintenanceService:
         def _worker() -> None:
             try:
                 holder["result"] = _run()
-            except Exception as exc:  # pragma: no cover - 受控转发
+            except Exception as exc:  # pragma: no cover - controlled forwarding
                 holder["error"] = exc
 
         worker = threading.Thread(target=_worker, daemon=True)
         worker.start()
         worker.join(timeout=15)
         if worker.is_alive():
-            logger.warning("[Maintenance] 通知发送超时，按未送达处理")
+            logger.warning("[Maintenance] Notification delivery timed out; treating it as undelivered")
             return {}
         if "error" in holder:
             raise holder["error"]
@@ -972,15 +972,15 @@ class PlatformMaintenanceService:
         duration_ms = int(result.get("duration_ms") or 0)
         duration_text = f"{duration_ms}ms" if duration_ms < 1000 else f"{duration_ms / 1000:.1f}s"
         summary = (
-            f"触发原因: {result.get('reason') or 'runtime'}\n"
-            f"{risk.get('summary') or '检测到业务库风险'}\n"
-            f"当前业务库: {risk.get('current_db_path') or '未知'}"
+            f"Trigger: {result.get('reason') or 'runtime'}\n"
+            f"{risk.get('summary') or 'Business database risk detected'}\n"
+            f"Current business database: {risk.get('current_db_path') or 'Unknown'}"
         )
         if risk.get("shadow_paths"):
-            summary += "\n影子库:\n" + "\n".join(f"- {path}" for path in risk["shadow_paths"])
+            summary += "\nShadow databases:\n" + "\n".join(f"- {path}" for path in risk["shadow_paths"])
 
         notify_result = self._run_notification_sync(
-            title="平台业务库风险预警",
+            title="Platform business database risk alert",
             status="warning",
             summary=summary,
             details={
@@ -1030,7 +1030,7 @@ class PlatformMaintenanceService:
                     "healthy_enabled": 0,
                     "untested_enabled": 0,
                     "ready": False,
-                    "summary": "尚未配置启用中的生产告警 Webhook",
+                    "summary": "No active production alert Webhook is configured",
                 },
                 "data_quality": {
                     "suspect_history_count": 0,
@@ -1054,7 +1054,7 @@ class PlatformMaintenanceService:
                     "last_archive_cleanup_deleted_runs": 0,
                     "last_archive_cleanup_deleted_exports": 0,
                     "clean": True,
-                    "summary": "维护历史正常",
+                    "summary": "Maintenance history is healthy",
                 },
             }
             result["warning_detected"] = result["risk"].get("level") == "warning"
@@ -1064,7 +1064,7 @@ class PlatformMaintenanceService:
                 result["repair"] = execution_center.repair_text_artifacts()
                 result["report_history"] = get_reporter().repair_history()
             except Exception as exc:
-                logger.exception("[Maintenance] 统一维护失败 (%s)", reason)
+                logger.exception("[Maintenance] Unified maintenance failed (%s)", reason)
                 result["status"] = "failed"
                 result["error"] = str(exc)
             finally:
@@ -1075,12 +1075,12 @@ class PlatformMaintenanceService:
                     try:
                         result["alert_sent"] = self._notify_failure(result)
                     except Exception:
-                        logger.exception("[Maintenance] 失败告警发送失败")
+                        logger.exception("[Maintenance] Failed to send failure alert")
                 elif self._should_send_risk_alert(previous_status, result):
                     try:
                         result["risk_alert_sent"] = self._notify_risk_warning(result)
                     except Exception:
-                        logger.exception("[Maintenance] 风险预警发送失败")
+                        logger.exception("[Maintenance] Failed to send risk alert")
                 self._last_run_monotonic = now_monotonic
                 self._last_activity = copy.deepcopy(result)
                 if self._last_result.get("status") == "never" or not self._is_routine_reason(result.get("reason")):
@@ -1089,7 +1089,7 @@ class PlatformMaintenanceService:
                     try:
                         self._persist_run(result)
                     except Exception:
-                        logger.exception("[Maintenance] 维护结果持久化失败")
+                        logger.exception("[Maintenance] Failed to persist maintenance results")
             return copy.deepcopy(result)
 
     def get_status(self) -> Dict[str, Any]:

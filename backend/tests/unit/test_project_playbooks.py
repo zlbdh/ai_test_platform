@@ -1,6 +1,8 @@
 ﻿# -*- coding: utf-8 -*-
 import pytest
 
+from core import sample_platform_playbook as prototype_playbook
+
 from core.project_playbooks import (
     PLAYBOOK_ID_SAMPLE_PLATFORM_PLATFORM_PROTOTYPE,
     PLAYBOOK_ID_SAMPLE_PLATFORM_FIRST_REGRESSION,
@@ -14,11 +16,44 @@ from routers.quality_gate import import_rules_from_playbook
 from routers.requirement import get_requirement_playbook_detail
 
 
+@pytest.fixture
+def prototype_documents(monkeypatch):
+    """Exercise mapping with local fixtures, without deployed requirement repositories."""
+    entries = []
+    for index, blueprint in enumerate(prototype_playbook._MODULE_BLUEPRINTS):
+        rows = [
+            f"| Fixture page {number} | /fixture/{index}/{number} | 列表页 | Fixture description |"
+            for number in range(1, 5)
+        ]
+        content = "\n".join([
+            "## 2. 页面清单",
+            "| 页面名称 | 页面路由 | 页面类型 | 说明 |",
+            "| --- | --- | --- | --- |",
+            *rows,
+        ])
+        entries.append({
+            "module_name": blueprint["module_name"],
+            "title": blueprint["doc_title"],
+            "role": blueprint["role"],
+            "relative_path": f"fixtures/module-{index}.md",
+            "local_path": f"/fixtures/module-{index}.md",
+            "exists": True,
+            "content": content,
+        })
+    monkeypatch.setattr(prototype_playbook, "_platform_doc_entries", lambda: entries)
+    monkeypatch.setattr(prototype_playbook, "_prototype_files", lambda: ([], None))
+    monkeypatch.setattr(prototype_playbook, "_prototype_dir_candidates", lambda: [
+        {"asset_id": "fixture-primary", "exists": False},
+        {"asset_id": "fixture-secondary", "exists": False},
+    ])
+    return entries
+
+
 def test_requirement_playbook_contains_target_and_waves():
     playbook = get_requirement_playbook(PLAYBOOK_ID_SAMPLE_PLATFORM_FIRST_REGRESSION)
 
     assert playbook is not None
-    assert playbook["project_name"] == "示例项目企业平台端"
+    assert playbook["project_name"] == "Sample Enterprise Platform"
     assert playbook["target_url"] == "https://example.com/login"
     assert playbook["recommended_test_types"] == ["ui_e2e", "business_flow", "api_rest", "data_validation"]
     assert len(playbook["waves"]) == 5
@@ -54,11 +89,11 @@ def test_quality_gate_rules_match_first_regression_policy():
     }
 
 
-def test_platform_prototype_playbook_contains_asset_checks_and_page_mappings():
+def test_platform_prototype_playbook_contains_asset_checks_and_page_mappings(prototype_documents):
     playbook = get_requirement_playbook(PLAYBOOK_ID_SAMPLE_PLATFORM_PLATFORM_PROTOTYPE)
 
     assert playbook is not None
-    assert playbook["project_name"] == "示例项目大平台"
+    assert playbook["project_name"] == "Sample Project Platform"
     assert playbook["recommended_test_types"] == ["ui_e2e", "business_flow", "data_validation", "visual_regression"]
     assert len(playbook["asset_checks"]) >= 5
     assert len(playbook["prototype_assets"]) >= 2
@@ -108,15 +143,15 @@ def test_platform_prototype_test_data_convention_exposes_artifact_prefix():
 async def test_requirement_router_returns_playbook_detail():
     payload = await get_requirement_playbook_detail(PLAYBOOK_ID_SAMPLE_PLATFORM_FIRST_REGRESSION)
 
-    assert payload["title"] == "示例项目企业平台端首轮真实回归"
+    assert payload["title"] == "Sample Enterprise Platform Initial Live Regression"
     assert payload["target_url"] == "https://example.com/login"
 
 
 @pytest.mark.asyncio
-async def test_requirement_router_returns_platform_prototype_playbook_detail():
+async def test_requirement_router_returns_platform_prototype_playbook_detail(prototype_documents):
     payload = await get_requirement_playbook_detail(PLAYBOOK_ID_SAMPLE_PLATFORM_PLATFORM_PROTOTYPE)
 
-    assert payload["title"] == "示例项目大平台原型测试包"
+    assert payload["title"] == "Sample Project Platform Prototype Test Package"
     assert payload["mapping_summary"]["module_count"] == 16
 
 

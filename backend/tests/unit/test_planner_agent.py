@@ -392,3 +392,21 @@ class TestCapturePageScreenshot:
         mock_session.run_browser.assert_awaited_once()
 
 
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("sentinel", ["(Not navigated)", "（未导航）"])
+async def test_probe_does_not_treat_navigation_sentinel_as_loaded_page(sentinel, _patch_externals):
+    _, session = _patch_externals
+    planner = _make_planner(execution_profile={"execution_mode": "probe"})
+    session.get_page_state.return_value = {"url": sentinel}
+    clock_values = iter([0.0, 0.0, 100.0])
+    with patch("agents.planner_agent.logger"), \
+         patch("agents.planner_agent.time.time", side_effect=lambda: next(clock_values, 100.0)), \
+         patch("agents.planner_agent.asyncio.sleep", new_callable=AsyncMock):
+        await planner._run_probe_mode()
+    session.get_page_state.assert_called_once()
+    messages = [call.args[0] for call in planner.bus.publish_log.await_args_list]
+    assert not any(item.get("event") == "probe_summary" for item in messages)
+    assert any(item.get("type") == "error" and "timed out" in item["content"] for item in messages)
+    planner.bus.publish_task.assert_not_awaited()

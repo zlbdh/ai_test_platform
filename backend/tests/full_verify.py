@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""全项目验证脚本"""
+"""Project verification script"""
 import requests
 import json
 import importlib
@@ -14,10 +14,10 @@ def section(title):
     print(f"{'='*60}")
 
 # ============================================================
-# 1.1 健康检查
+# 1.1 Health check
 # ============================================================
-section("1.1 服务健康检查")
-for path, label in [("/", "根路径"), ("/docs", "Swagger UI"), ("/openapi.json", "OpenAPI")]:
+section("1.1 Service health check")
+for path, label in [("/", "Root path"), ("/docs", "Swagger UI"), ("/openapi.json", "OpenAPI")]:
     try:
         r = requests.get(f"{BASE}{path}", timeout=5)
         print(f"  ✅ {label}: HTTP {r.status_code}")
@@ -25,9 +25,9 @@ for path, label in [("/", "根路径"), ("/docs", "Swagger UI"), ("/openapi.json
         print(f"  ❌ {label}: {e}")
 
 # ============================================================
-# 1.2 全量端点清单
+# 1.2 Complete endpoint inventory
 # ============================================================
-section("1.2 全量 API 端点清单")
+section("1.2 Complete API endpoint inventory")
 r = requests.get(f"{BASE}/openapi.json", timeout=5)
 spec = r.json()
 info = spec["info"]
@@ -40,17 +40,17 @@ for p in sorted(paths.keys()):
 
 total = 0
 for g, routes in sorted(groups.items()):
-    print(f"\n  [{g}] — {len(routes)} 端点")
+    print(f"\n  [{g}] — {len(routes)} endpoints")
     for path, methods in routes:
         ms = ", ".join(m.upper() for m in methods)
         print(f"    {ms:10s} {path}")
         total += 1
-print(f"\n  📊 API 端点总数: {total}")
+print(f"\n  📊 Total API endpoints: {total}")
 
 # ============================================================
-# 1.2b GET 可达性
+# 1.2b GET reachability
 # ============================================================
-section("1.2b GET 端点可达性测试")
+section("1.2b GET endpoint reachability test")
 get_paths = [p for p in paths if "get" in paths[p] and "{" not in p]
 ok = fail = 0
 for p in sorted(get_paths):
@@ -65,12 +65,12 @@ for p in sorted(get_paths):
     except Exception as e:
         fail += 1
         print(f"  ❌ {p} -> ERROR")
-print(f"\n  GET 可达: {ok}/{ok+fail}")
+print(f"\n  GET reachable: {ok}/{ok+fail}")
 
 # ============================================================
-# 1.2c POST 端点冒烟测试
+# 1.2c POST endpoint smoke tests
 # ============================================================
-section("1.2c POST 端点冒烟测试 (空请求)")
+section("1.2c POST endpoint smoke tests (empty requests)")
 post_paths = [p for p in paths if "post" in paths[p] and "{" not in p]
 alive = dead = 0
 for p in sorted(post_paths):
@@ -90,20 +90,20 @@ for p in sorted(post_paths):
     except Exception as e:
         dead += 1
         print(f"  ❌ {p} -> ERROR/TIMEOUT")
-print(f"\n  POST 存活: {alive}/{alive+dead}")
+print(f"\n  POST responding: {alive}/{alive+dead}")
 
 # ============================================================
-# 2. 模块导入验证
+# 2. Module import verification
 # ============================================================
-section("2. 后端模块导入验证")
+section("2. Backend module import verification")
 
 modules_to_check = {
-    "核心模块": [
+    "Core modules": [
         "core.requirement_parser",
         "core.db_tools",
         "core.api_doc_generator",
     ],
-    "服务模块": [
+    "Service modules": [
         "services.grpc_testing",
         "services.enhanced_security",
         "services.performance_testing",
@@ -115,7 +115,7 @@ modules_to_check = {
         "services.chaos_engineering",
         "services.mobile_emulation",
     ],
-    "路由模块": [
+    "Router modules": [
         "routers.core",
         "routers.testing",
         "routers.knowledge",
@@ -129,7 +129,7 @@ modules_to_check = {
         "routers.chaos",
         "routers.mobile",
     ],
-    "Agent 模块": [
+    "Agent modules": [
         "agents.planner_agent",
         "agents.executor_agent",
         "agents.exploratory_agent",
@@ -149,14 +149,14 @@ for group, mods in modules_to_check.items():
             err = str(e).split("\n")[0][:60]
             print(f"    ❌ {mod}: {err}")
 
-print(f"\n  模块导入: {total_ok}/{total_ok+total_fail}")
+print(f"\n  Module imports: {total_ok}/{total_ok+total_fail}")
 
 # ============================================================
-# 总结
+# Summary
 # ============================================================
-section("验证总结")
-print(f"  API 端点总数: {total}")
-print(f"  GET 可达:     {ok}/{ok+fail}")
-print(f"  POST 存活:    {alive}/{alive+dead}")
-print(f"  模块导入:     {total_ok}/{total_ok+total_fail}")
+section("Verification summary")
+print(f"  Total API endpoints: {total}")
+print(f"  GET reachable:     {ok}/{ok+fail}")
+print(f"  POST responding:    {alive}/{alive+dead}")
+print(f"  Module imports:     {total_ok}/{total_ok+total_fail}")
 print()

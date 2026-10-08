@@ -2,8 +2,8 @@
 """
 Platform Readiness Service
 
-从局部（模块/功能）和全局（架构/目标/总设计）两个视角，
-统一评估平台当前的生产推进状态。
+Assess progress toward production from both local (modules/features)
+and global (architecture/goals/overall design) perspectives.
 """
 from __future__ import annotations
 
@@ -126,50 +126,50 @@ class PlatformReadinessService:
         return [
             {
                 "key": "maintenance_module",
-                "name": "维护模块",
+                "name": "Maintenance Module",
                 "score": maintenance_score,
                 "status": self._status_from_score(maintenance_score),
-                "summary": f"当前状态 {maintenance_status}，最近原因 {maintenance.get('reason') or '未执行'}",
+                "summary": f"Current status: {maintenance_status}; latest reason: {maintenance.get('reason') or 'Not run'}",
             },
             {
                 "key": "notification_module",
-                "name": "告警模块",
+                "name": "Alerting Module",
                 "score": notification_score,
                 "status": self._status_from_score(notification_score),
-                "summary": str(notification.get("summary") or "尚未接出生产告警通道"),
+                "summary": str(notification.get("summary") or "No production alert channel connected"),
             },
             {
                 "key": "chatops_module",
-                "name": "通知平台指令链路",
+                "name": "Notification Command Channel",
                 "score": chatops_score,
                 "status": self._status_from_score(chatops_score),
                 "summary": (
-                    f"{str(chatops.get('summary') or '通知平台双向指令链路尚未评估')} "
-                    f"(平台侧 {'已就绪' if chatops_platform_ready else '待完善'} / "
-                    f"公网回调 {'已打通' if chatops_external_callback_ready else '待验证'} / "
-                    f"App 凭据 {'已验证' if chatops_app_bot_ready else '已保存待校验' if chatops_app_bot_configured else '未保存'} / "
-                    f"群聊直连 {'已联通' if chatops_external_connected else '待验证'} / "
-                    f"历史回流 {'已观察' if chatops_external_history_observed else '未观察'}"
-                    f"{'（当前已退化）' if chatops_external_connection_stale else ''})"
+                    f"{str(chatops.get('summary') or 'The bidirectional notification command channel has not been assessed')} "
+                    f"(Platform: {'ready' if chatops_platform_ready else 'incomplete'} / "
+                    f"Public callback: {'connected' if chatops_external_callback_ready else 'unverified'} / "
+                    f"App credentials: {'verified' if chatops_app_bot_ready else 'saved, awaiting validation' if chatops_app_bot_configured else 'not saved'} / "
+                    f"Direct group chat: {'connected' if chatops_external_connected else 'unverified'} / "
+                    f"Historical inbound messages: {'observed' if chatops_external_history_observed else 'not observed'}"
+                    f"{' (currently degraded)' if chatops_external_connection_stale else ''})"
                 ),
             },
             {
                 "key": "data_governance_module",
-                "name": "数据治理",
+                "name": "Data Governance",
                 "score": governance_score,
                 "status": self._status_from_score(governance_score),
                 "summary": (
-                    f"影子库 {shadow_count} 个，活动可疑维护历史 {suspect_count} 条，"
-                    f"已归档 {archived_count} 条，归档导出 {'已完成' if archive_export_fresh else '待更新'}，"
-                    f"超期清理 {'待执行' if archive_cleanup_needed else '正常'}"
+                    f"Shadow databases: {shadow_count}; active suspicious maintenance records: {suspect_count}; "
+                    f"Archived {archived_count}; archive export: {'complete' if archive_export_fresh else 'update needed'}, "
+                    f"Overdue cleanup: {'pending' if archive_cleanup_needed else 'healthy'}"
                 ),
             },
             {
                 "key": "execution_center_module",
-                "name": "执行闭环",
+                "name": "Execution Workflow",
                 "score": execution_score,
                 "status": self._status_from_score(execution_score),
-                "summary": f"执行批次 {execution_groups} 个，测试记录 {test_runs} 条，报告历史 {report_entries} 条",
+                "summary": f"Execution batches: {execution_groups}; test records: {test_runs}; report history: {report_entries}",
             },
         ]
 
@@ -215,31 +215,31 @@ class PlatformReadinessService:
         return [
             {
                 "key": "architecture",
-                "name": "架构稳定性",
+                "name": "Architecture Stability",
                 "score": architecture_score,
                 "status": self._status_from_score(architecture_score),
-                "summary": "核心分层、执行中心、报告和维护主链已成型",
+                "summary": "Core layers, execution center, reporting, and the primary maintenance workflow are established",
             },
             {
                 "key": "delivery_governance",
-                "name": "交付治理",
+                "name": "Delivery Governance",
                 "score": delivery_score,
                 "status": self._status_from_score(delivery_score),
-                "summary": "平台已具备批次归档、可疑历史归档与离线导出能力，剩余治理工作集中在长期保留策略收口",
+                "summary": "The platform supports batch archival, suspicious-history archival, and offline exports; remaining governance work centers on long-term retention policies",
             },
             {
                 "key": "operations_readiness",
-                "name": "运维就绪度",
+                "name": "Operational Readiness",
                 "score": operations_score,
                 "status": self._status_from_score(operations_score),
-                "summary": "当前聚焦维护、告警接出、数据治理三项核心运维能力",
+                "summary": "Current focus: maintenance, alert channel integration, and data governance",
             },
             {
                 "key": "goal_alignment",
-                "name": "目标达成度",
+                "name": "Goal Attainment",
                 "score": goal_score,
                 "status": self._status_from_score(goal_score),
-                "summary": "离生产级的主要差距已收敛到告警接出和环境治理，而不是主功能缺失",
+                "summary": "The main production gaps are now alert channel integration and environment governance, rather than missing core features",
             },
         ]
 
@@ -253,37 +253,37 @@ class PlatformReadinessService:
         data_quality = maintenance.get("data_quality") or {}
         recommendations: List[str] = []
         if not bool(notification.get("ready")):
-            recommendations.append("接出至少 1 个生产告警 Webhook，让维护失败和风险预警真正进入通知链路。")
+            recommendations.append("Connect at least one production alert Webhook so maintenance failures and risk alerts reach the notification channel.")
         elif not bool(chatops.get("ready")):
             if not bool(chatops.get("callback_url_public", True)):
-                recommendations.append("先把 PUBLIC_API_BASE_URL 配成通知平台可访问的公网地址，再去通知平台开发者后台完成事件订阅。")
+                recommendations.append("Set PUBLIC_API_BASE_URL to a public URL reachable by the notification provider, then complete event subscription in its developer console.")
             elif bool((chatops.get("callback_probe") or {}).get("attempted")) and not bool((chatops.get("callback_probe") or {}).get("success")):
                 recommendations.append(
-                    "先修复公网回调地址的外部可达性，再去通知平台开发者后台完成事件订阅；"
+                    "Restore public callback reachability before completing event subscription in the notification provider's developer console; "
                     + (
-                        "平台历史上已经验证过真实群消息回流，但当前公网入口已退化。"
+                        "real group-message delivery was previously verified, but the current public endpoint has degraded."
                         if bool(chatops.get("external_connection_stale"))
-                        else "当前隧道或公网入口仍未稳定可用。"
+                        else "the tunnel or public endpoint is not yet stable."
                     )
                 )
             elif not bool(chatops.get("verification_token_configured")):
-                recommendations.append("先在平台内生成 verification token，并执行一次 challenge 自检，再去通知平台开发者后台配置事件订阅。")
+                recommendations.append("Generate a verification token and run the challenge self-check in the platform, then configure event subscription in the notification provider's developer console.")
             elif not bool(chatops.get("platform_ready")):
-                recommendations.append("先在平台内完成一次 challenge 自检，再去通知平台开发者后台发送测试消息，补齐双向群聊指令链路。")
+                recommendations.append("Complete the platform challenge self-check, then send a test message from the notification provider's developer console to complete the bidirectional group command channel.")
             elif bool(chatops.get("platform_ready")):
-                recommendations.append("把平台里已生成的 verification token 和回调地址复制到通知平台开发者后台，并发送一条测试消息完成外部回流验证。")
+                recommendations.append("Copy the platform-generated verification token and callback URL into the notification provider's developer console, then send a test message to verify inbound delivery.")
             else:
-                recommendations.append("先在平台内完成一次通知平台双向链路自检，再去群里发送一条测试消息，补齐最后的真实联调。")
+                recommendations.append("Run a bidirectional notification channel self-check in the platform, then send a test message in the group to complete real integration testing.")
         if int(db_observability.get("shadow_count") or 0) > 0:
-            recommendations.append("清理影子业务库 D:\\workspace\\ai_test_platform\\data\\business.db，避免错误目录启动旧实例。")
+            recommendations.append("Clean up the shadow business database at D:\\workspace\\ai_test_platform\\data\\business.db to prevent an old instance from starting in the wrong directory.")
         if int(data_quality.get("archived_history_count") or 0) > 0 and not bool(data_quality.get("archive_export_fresh", False)):
-            recommendations.append("为已归档的维护历史建立离线导出或保留策略，进一步收敛运行数据库的长期噪声。")
+            recommendations.append("Define offline export or retention policies for archived maintenance history to reduce long-term noise in the operational database.")
         if bool(data_quality.get("archive_cleanup_needed", False)):
-            recommendations.append("执行一次归档保留清理，消化已超出保留周期的归档记录和历史导出文件。")
+            recommendations.append("Run archive retention cleanup to remove records and historical export files beyond the retention period.")
         if maintenance.get("status") == "failed":
-            recommendations.append("优先修复最近一次维护失败原因，避免平台维护主链出现新的不可恢复断点。")
+            recommendations.append("Resolve the latest maintenance failure first to avoid new unrecoverable breaks in the primary maintenance workflow.")
         if not recommendations:
-            recommendations.append("当前 readiness 已较稳定，下一步适合把告警、发布和环境治理串成标准运维流程。")
+            recommendations.append("Readiness is relatively stable. Next, connect alerting, releases, and environment governance into a standard operational workflow.")
         return recommendations
 
     def evaluate(self) -> Dict[str, Any]:
@@ -318,11 +318,11 @@ class PlatformReadinessService:
             stage = "pre-production"
 
         summary = (
-            "主能力已收口到准生产阶段，但告警接出与环境治理仍是主要约束。"
+            "Core capabilities have reached a preproduction stage, with alerting and environment governance still the main constraints."
             if stage == "pre-production"
-            else "平台已具备真实可用的 Beta 能力，核心差距集中在运维治理。"
+            else "The platform has usable Beta capabilities; the main remaining gaps are operational governance."
             if stage == "beta"
-            else "平台整体已接近生产级运行基线。"
+            else "The platform is close to the production operating baseline."
         )
 
         return {

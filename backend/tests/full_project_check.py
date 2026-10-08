@@ -1,6 +1,6 @@
 """
-全项目全方位检查脚本
-覆盖：语法、导入、路由、依赖、配置
+Comprehensive project check script
+Coverage: syntax, imports, routes, dependencies, and configuration
 """
 import sys, os, py_compile, importlib, json, re
 from pathlib import Path

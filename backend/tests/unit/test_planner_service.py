@@ -14,7 +14,7 @@ import asyncio
 @pytest.fixture(autouse=True)
 def _patch_externals():
     """Mock planner_service 的所有重量级依赖 (LLM, KB, Scout, ContextAnalyzer)"""
-    with patch("services.planner_service.get_llm") as mock_get_llm, \
+    with patch("services.planner_service.get_llm_for_role") as mock_get_llm, \
          patch("services.planner_service.kb") as mock_kb, \
          patch("services.planner_service.Config") as mock_config:
         # 默认 LLM mock
@@ -229,7 +229,7 @@ class TestGeneratePlan:
         assert len(result["test_cases"]) == 1
         steps = result["test_cases"][0]["steps"]
         assert [step["action"] for step in steps] == ["goto", "wait", "screenshot"]
-        assert result["coverage_summary"]["dimensions_covered"] == ["只读探针"]
+        assert result["coverage_summary"]["dimensions_covered"] == ["Read-only Probe"]
 
     def test_build_fallback_steps_expands_login_business_flow(self, _patch_externals):
         svc = _make_service()
@@ -426,6 +426,7 @@ class TestDiscoverScenarios:
 
             result = await svc._discover_scenarios("测试登录", "知识上下文")
             assert result == expected_scenarios
+            _patch_externals["get_llm"].assert_called_once_with("planner")
 
     @pytest.mark.asyncio
     async def test_discovery_failure_returns_default(self, _patch_externals):
@@ -441,7 +442,7 @@ class TestDiscoverScenarios:
             )
             result = await svc._discover_scenarios("测试", "")
             assert len(result) == 1
-            assert result[0]["name"] == "默认场景"
+            assert result[0]["name"] == "Default Scenario"
             assert result[0]["priority"] == "P1"
 
     @pytest.mark.asyncio
@@ -562,6 +563,22 @@ class TestPlanNextStep:
         return msg
 
     @pytest.mark.asyncio
+    @pytest.mark.parametrize("target_url", ["(Not navigated)", "（未导航）", "https://example.com"])
+    async def test_failed_reasoning_never_navigates_to_a_sentinel(self, _patch_externals, target_url):
+        """Only a real URL may become the initial navigation fallback."""
+        svc = _make_service()
+        mock_chain = MagicMock()
+        mock_chain.ainvoke = AsyncMock(side_effect=ValueError("Model unavailable"))
+        with patch("services.planner_service.ChatPromptTemplate") as mock_pt, \
+             patch("asyncio.sleep", new_callable=AsyncMock):
+            mock_pt.from_template.return_value.__or__.return_value = mock_chain
+            result = await svc.plan_next_step(goal="Open the target page", page_state={"url": target_url}, history=[])
+        assert mock_chain.ainvoke.await_count == 3
+        assert result["action"] == ("goto" if target_url == "https://example.com" else "error")
+        if result["action"] == "goto":
+            assert result["target"] == target_url
+
+    @pytest.mark.asyncio
     async def test_successful_planning(self, _patch_externals):
         """正常推理下一步"""
         svc = _make_service()
@@ -628,8 +645,8 @@ class TestPlanNextStep:
                 history=[]
             )
             call_args = mock_chain.ainvoke.call_args[0][0]
-            assert "（页面未加载或无可交互元素）" in call_args["snapshot"]
-            assert "URL: （未知）" in call_args["snapshot"]
+            assert "(Page not loaded or no interactive elements)" in call_args["snapshot"]
+            assert "URL: (Unknown)" in call_args["snapshot"]
 
     @pytest.mark.asyncio
     async def test_llm_failure_returns_error_action(self, _patch_externals):
@@ -650,7 +667,7 @@ class TestPlanNextStep:
                 history=[{"action": "goto", "target": "x", "status": "success", "message": "ok"}]
             )
             assert result["action"] == "error"
-            assert "推理失败" in result["thinking"]
+            assert "Reasoning failed" in result["thinking"]
 
     @pytest.mark.asyncio
     async def test_history_truncation(self, _patch_externals):
@@ -772,7 +789,8 @@ class TestSemanticVerify:
             )
             result = svc.semantic_verify("检查内容", "页面文本")
             assert result["passed"] is False
-            assert "语义验证异常" in result["reason"]
+            assert "Semantic verification error" in result["reason"]
+            _patch_externals["get_llm"].assert_called_once_with("executor")
 
     def test_long_page_context_is_truncated(self, _patch_externals):
         """超长页面文本应被截断到 2000 字符"""

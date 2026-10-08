@@ -1,11 +1,11 @@
 """
-全方位验证脚本 — 检查所有新建模块的语法、导入和基本功能
+Comprehensive verification script: check syntax, imports, and basic functionality of all new modules
 """
 import sys
 import os
 import traceback
 
-# 设置项目根目录 — 从 tests/ 上跳一层
+# Set the project root one level above tests/
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, PROJECT_ROOT)
 os.chdir(PROJECT_ROOT)
@@ -24,7 +24,7 @@ def test(name, func):
         FAIL += 1
         RESULTS.append(f"  FAIL {name}: {e}")
 
-# ── 1. Python 语法检查 ───────────────────────────────────────────
+# ── 1. Python syntax checks ───────────────────────────────────────────
 
 print("=" * 60)
 print("1. Python Syntax Check")
@@ -60,7 +60,7 @@ for f in NEW_FILES + MCP_FILES:
     fpath = os.path.join(PROJECT_ROOT, f)
     test(f"syntax: {f}", lambda fpath=fpath: py_compile.compile(fpath, doraise=True))
 
-# ── 2. 模块导入验证 ──────────────────────────────────────────────
+# ── 2. Module import verification ──────────────────────────────────────────────
 
 print()
 print("=" * 60)
@@ -73,7 +73,7 @@ test("import evaluation.judge", lambda: __import__("evaluation.judge"))
 test("import evaluation.benchmark_suite", lambda: __import__("evaluation.benchmark_suite"))
 test("import evaluation.reporter", lambda: __import__("evaluation.reporter"))
 
-# MCP: 系统已安装mcp包，需要用importlib直接加载我们的
+# MCP: The installed mcp package requires loading this project's module directly with importlib
 def import_our_mcp_tools():
     import importlib.util
     spec = importlib.util.spec_from_file_location("our_mcp_tools", os.path.join(PROJECT_ROOT, "mcp", "tools.py"))
@@ -100,7 +100,7 @@ test("import core.scenario_generator", lambda: __import__("core.scenario_generat
 test("import cicd", lambda: __import__("cicd"))
 test("import cicd.quality_gate", lambda: __import__("cicd.quality_gate"))
 
-# ── 3. 评估指标功能验证 ──────────────────────────────────────────
+# ── 3. Evaluation metric functionality checks ──────────────────────────────────────────
 
 print()
 print("=" * 60)
@@ -132,7 +132,7 @@ def test_aggregate():
     assert 0.6 <= score <= 0.8, f"overall_score out of range: {score}"
 test("compute_overall_score", test_aggregate)
 
-# ── 4. 基准场景验证 ──────────────────────────────────────────────
+# ── 4. Benchmark scenario checks ──────────────────────────────────────────────
 
 print()
 print("=" * 60)
@@ -180,7 +180,7 @@ def test_model_compare():
     assert "models" in comparison
 test("model comparison", test_model_compare)
 
-# ── 5. 报告生成验证 ──────────────────────────────────────────────
+# ── 5. Report generation checks ──────────────────────────────────────────────
 
 print()
 print("=" * 60)
@@ -229,7 +229,7 @@ def test_trend():
     assert trend["trend_direction"] == "improving"
 test("trend report", test_trend)
 
-# ── 6. MCP 工具验证 ──────────────────────────────────────────────
+# ── 6. MCP tool checks ──────────────────────────────────────────────
 
 print()
 print("=" * 60)
@@ -253,7 +253,7 @@ def test_mcp_tool_names():
         assert expected in names, f"Missing: {expected}"
 test("tool names complete", test_mcp_tool_names)
 
-# ── 7. 质量门禁验证 ──────────────────────────────────────────────
+# ── 7. Quality gate checks ──────────────────────────────────────────────
 
 print()
 print("=" * 60)
@@ -309,7 +309,7 @@ def test_gate_verdict_dict():
     assert "total_checks" in d and "passed_checks" in d
 test("gate verdict to_dict", test_gate_verdict_dict)
 
-# ── 8. CI/CD 变更分析验证 ─────────────────────────────────────────
+# ── 8. CI/CD change analysis checks ─────────────────────────────────────────
 
 print()
 print("=" * 60)
@@ -357,7 +357,7 @@ def test_github_skip():
     assert r["action"] == "skip"
 test("GitHub skip closed", test_github_skip)
 
-# ── 9. 语义引擎验证 ──────────────────────────────────────────────
+# ── 9. Semantic engine checks ──────────────────────────────────────────────
 
 print()
 print("=" * 60)
@@ -399,7 +399,7 @@ def test_sem_cache_key():
     assert len(k) == 32  # md5 hex digest
 test("SemanticCache.make_key", test_sem_cache_key)
 
-# ── 10. 智能定位器验证 ────────────────────────────────────────────
+# ── 10. Smart locator checks ────────────────────────────────────────────
 
 print()
 print("=" * 60)
@@ -449,7 +449,7 @@ def test_flaky():
     assert d.check("nonexistent")["is_flaky"] == False
 test("FlakyDetector safe check", test_flaky)
 
-# ── 11. 场景生成器验证 ────────────────────────────────────────────
+# ── 11. Scenario generator checks ────────────────────────────────────────────
 
 print()
 print("=" * 60)
@@ -501,7 +501,7 @@ def test_perf_gen():
     assert len(r) == 3
 test("performance scenarios = 3", test_perf_gen)
 
-# ── 12. 语义动作解析验证 ──────────────────────────────────────────
+# ── 12. Semantic action parsing checks ──────────────────────────────────────────
 
 print()
 print("=" * 60)
@@ -538,7 +538,7 @@ def test_parse_english():
     assert a == "click"
 test("parse: english click", test_parse_english)
 
-# ── 13. Judge 结构验证 ────────────────────────────────────────────
+# ── 13. Judge structure checks ────────────────────────────────────────────
 
 print()
 print("=" * 60)
@@ -576,7 +576,7 @@ def test_judge_parse_bad():
     assert r.overall_score == 5.0  # fallback
 test("Judge parse bad input", test_judge_parse_bad)
 
-# ── 打印结果 ──────────────────────────────────────────────────────
+# ── Print results ──────────────────────────────────────────────────────
 
 print()
 print("=" * 60)
