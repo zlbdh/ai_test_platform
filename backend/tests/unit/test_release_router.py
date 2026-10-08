@@ -49,7 +49,7 @@ def test_create_release_risk_assessment_route_returns_service_payload():
                 "environment": "production",
                 "exploration_session_ids": ["explore_demo"],
                 "required_tests_passed": True,
-                "change_summary": "支付链路调整",
+                "change_summary": "Payment flow update",
             },
         )
 

@@ -33,7 +33,7 @@ async def test_grpc_call_records_execution_center_entry():
                 data={"id": 1},
                 session_id="sess_demo",
                 execution_group_id="batch_demo",
-                group_title="API 专项批次",
+                group_title="API test batch",
             )
         )
 
@@ -64,7 +64,7 @@ async def test_ws_quick_test_records_execution_center_entry():
                 message={"hello": "world"},
                 session_id="sess_demo",
                 execution_group_id="batch_demo",
-                group_title="API 专项批次",
+                group_title="API test batch",
             )
         )
 
@@ -85,7 +85,7 @@ async def test_mobile_test_records_execution_center_entry():
             "devices_tested": 1,
             "total_issues": 0,
             "score": 100,
-            "summary": "设备 1 台 · 问题 0 个",
+            "summary": "Devices: 1 · Issues: 0",
             "results": [
                 {
                     "device": "iPhone 14",
@@ -104,7 +104,7 @@ async def test_mobile_test_records_execution_center_entry():
                 devices=["iphone_14"],
                 session_id="sess_demo",
                 execution_group_id="batch_demo",
-                group_title="韧性测试批次",
+                group_title="Resilience test batch",
             )
         )
 
@@ -126,10 +126,10 @@ async def test_chaos_run_records_execution_center_entry():
             "passed": 2,
             "failed": 0,
             "errors": 0,
-            "summary": "执行 2 个场景: 通过 2, 失败 0, 错误 0",
+            "summary": "Ran 2 scenarios: 2 passed, 0 failed, 0 errors",
             "results": [
-                {"scenario": "慢速网络 (3G)", "status": "passed", "details": "通过", "duration_ms": 320},
-                {"scenario": "断网恢复", "status": "passed", "details": "通过", "duration_ms": 210},
+                {"scenario": "Slow network (3G)", "status": "passed", "details": "Passed", "duration_ms": 320},
+                {"scenario": "Offline recovery", "status": "passed", "details": "Passed", "duration_ms": 210},
             ],
             "total_duration_ms": 530,
         }
@@ -143,7 +143,7 @@ async def test_chaos_run_records_execution_center_entry():
                 scenarios=["slow_network", "offline_recovery"],
                 session_id="sess_demo",
                 execution_group_id="batch_demo",
-                group_title="韧性测试批次",
+                group_title="Resilience test batch",
             )
         )
 

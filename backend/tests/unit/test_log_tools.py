@@ -1,6 +1,6 @@
 """
-log_tools 单元测试
-覆盖: 文件不存在、读取尾部日志、lines 边界、读取失败
+log_tools unit tests.
+Covers missing files, log tails, line-count boundaries, and read failures.
 """
 from pathlib import Path
 from unittest.mock import patch

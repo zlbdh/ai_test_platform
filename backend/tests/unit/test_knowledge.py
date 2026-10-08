@@ -1,8 +1,8 @@
 """
-KnowledgeBase 单元测试
-覆盖: 初始化(disabled), add/query/ingest 在 disabled 时返回 False/[],
-      get_status, 单例(get_instance)
-注: 不依赖 langchain/chroma/openai 等重库，全部 mock
+KnowledgeBase unit tests.
+Covers disabled initialization, safe add/query/ingest returns while disabled,
+get_status, and get_instance. Heavy dependencies such as langchain, Chroma, and
+OpenAI are all mocked.
 """
 import pytest
 from unittest.mock import patch, MagicMock
@@ -11,7 +11,7 @@ from services.knowledge import KnowledgeBase
 
 
 # ---------------------------------------------------------------------------
-# 基础状态
+# Basic status.
 # ---------------------------------------------------------------------------
 class TestKnowledgeBaseInit:
     def test_defaults(self):
@@ -22,7 +22,7 @@ class TestKnowledgeBaseInit:
 
 
 # ---------------------------------------------------------------------------
-# initialize — RAG 禁用
+# initialize with RAG disabled.
 # ---------------------------------------------------------------------------
 class TestInitializeDisabled:
     def test_rag_disabled_by_config(self):
@@ -37,12 +37,12 @@ class TestInitializeDisabled:
     def test_already_initialized(self):
         kb = KnowledgeBase()
         kb.initialized = True
-        kb.initialize()  # 不应重新执行
+        kb.initialize()  # Do not initialize again.
         assert kb.initialized is True
 
 
 # ---------------------------------------------------------------------------
-# initialize — 所有嵌入策略失败
+# initialize when every embedding strategy fails.
 # ---------------------------------------------------------------------------
 class TestInitializeAllFail:
     def test_all_strategies_fail(self):
@@ -57,7 +57,7 @@ class TestInitializeAllFail:
 
 
 # ---------------------------------------------------------------------------
-# disabled 状态下各方法应安全返回
+# Methods should return safely while disabled.
 # ---------------------------------------------------------------------------
 class TestDisabledOperations:
     @pytest.fixture
@@ -104,7 +104,7 @@ class TestGetStatus:
 
 
 # ---------------------------------------------------------------------------
-# 单例 (get_instance)
+# get_instance singleton.
 # ---------------------------------------------------------------------------
 class TestSingleton:
     def test_same_instance(self):

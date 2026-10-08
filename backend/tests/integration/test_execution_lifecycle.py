@@ -1,7 +1,7 @@
 """
-执行生命周期集成测试
-覆盖: /api/start → /api/status → /api/control/stop 完整生命周期
-需要后端服务运行才能执行
+Execution lifecycle integration tests.
+Covers the complete /api/start -> /api/status -> /api/control/stop lifecycle.
+Requires a running backend service.
 """
 import os
 import time
@@ -65,12 +65,12 @@ def _request_or_skip(method: str, path: str, **kwargs):
 )
 class TestExecutionLifecycle:
     """
-    集成测试：验证测试执行的完整生命周期。
-    需要后端服务在 127.0.0.1:8020 运行。
+    Verify the complete test execution lifecycle.
+    Requires the backend service at 127.0.0.1:8020.
     """
 
     def test_status_idle(self):
-        """初始状态应为 IDLE"""
+        """The initial state should be IDLE."""
         r = _request_or_skip("get", "/api/status")
         assert r.status_code == 200
         data = r.json()
@@ -78,35 +78,35 @@ class TestExecutionLifecycle:
         assert data["is_running"] is False
 
     def test_start_stop_lifecycle(self):
-        """启动任务 → 检查运行中状态 → 停止任务"""
-        # 1. 启动（使用一个无需真实 LLM 的简单请求，预期可能失败但生命周期应正常）
+        """Start a task, check its running state, then stop it."""
+        # 1. Start with a simple request that needs no real LLM; execution may fail, but the lifecycle should work.
         start_payload = {
-            "requirement": "测试用例: 打开百度",
+            "requirement": "Test case: open Baidu",
             "target_url": "https://www.baidu.com",
             "mode": "CLOUD",
             "planner_mode": "quick",
         }
         try:
             r = _request_or_skip("post", "/api/start", json=start_payload, timeout=10)
-            # 可能成功启动，也可能因 LLM 不可用而报错
+            # Startup may succeed or fail if the LLM is unavailable.
             if r.status_code not in (200, 500):
                 pytest.skip(f"Unexpected start response: {r.status_code}")
         except httpx.TimeoutException:
             pytest.skip("Start request timed out")
 
-        # 2. 检查状态
+        # 2. Check the status.
         time.sleep(1)
         r = _request_or_skip("get", "/api/status")
         assert r.status_code == 200
 
-        # 3. 停止
+        # 3. Stop the task.
         try:
             r = _request_or_skip("post", "/api/control/stop")
             assert r.status_code == 200
         except httpx.TimeoutException:
             pass  # Stop might take time
 
-        # 4. 等待回到 IDLE
+        # 4. Wait for the state to return to IDLE.
         for _ in range(5):
             time.sleep(1)
             r = _request_or_skip("get", "/api/status")
@@ -114,13 +114,13 @@ class TestExecutionLifecycle:
                 break
 
     def test_stop_when_idle(self):
-        """IDLE 状态下停止应不会出错"""
+        """Stopping while IDLE should not raise an error."""
         r = _request_or_skip("post", "/api/control/stop")
-        # 应该返回成功（即使没有运行中的任务）
+        # The request should succeed even if no task is running.
         assert r.status_code in (200, 400, 404)
 
     def test_health_endpoint(self):
-        """根路径健康检查"""
+        """Check health at the root endpoint."""
         r = _request_or_skip("get", "/")
         assert r.status_code == 200
         data = r.json()

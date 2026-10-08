@@ -98,16 +98,16 @@ def test_review_finding_persists_status_comment_and_reviewer(monkeypatch, tmp_pa
         user=user,
         finding_id=finding["finding_id"],
         decision="confirmed",
-        comment="人工确认需要重点跟进",
+        comment="Manual review requires follow-up",
     )
 
     assert reviewed["review_status"] == "confirmed"
-    assert reviewed["review_comment"] == "人工确认需要重点跟进"
+    assert reviewed["review_comment"] == "Manual review requires follow-up"
     assert reviewed["reviewed_by"] == "demo"
     assert reviewed["reviewed_at"]
     refreshed = service.get_finding(user=user, finding_id=finding["finding_id"])
     assert refreshed["review_status"] == "confirmed"
-    assert refreshed["review_comment"] == "人工确认需要重点跟进"
+    assert refreshed["review_comment"] == "Manual review requires follow-up"
 
 
 def test_list_review_queue_defaults_to_pending_human_review_findings(monkeypatch, tmp_path):
@@ -126,7 +126,7 @@ def test_list_review_queue_defaults_to_pending_human_review_findings(monkeypatch
         user=user,
         finding_id=human_review_finding["finding_id"],
         decision="dismissed",
-        comment="已人工驳回",
+        comment="Manually rejected",
     )
 
     pending_queue = service.list_review_queue(user=user)
@@ -160,7 +160,7 @@ def test_get_and_review_finding_enforce_project_scope(monkeypatch, tmp_path):
             user=outsider,
             finding_id=finding_id,
             decision="confirmed",
-            comment="越权复核",
+            comment="Unauthorized review",
         )
 
 

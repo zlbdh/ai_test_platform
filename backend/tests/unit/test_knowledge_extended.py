@@ -1,6 +1,7 @@
 """
-knowledge 扩展单元测试
-覆盖: 嵌入初始化成功/失败、enabled 状态下的 ingest/add/query/list/delete/clear/get_status
+Extended knowledge unit tests.
+Covers embedding initialization success/failure and enabled ingest/add/query/list/
+delete/clear/get_status operations.
 """
 import sys
 from pathlib import Path

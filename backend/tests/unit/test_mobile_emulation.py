@@ -1,6 +1,7 @@
 """
-MobileEmulationService 单元测试
-覆盖: 数据类, DEVICE_PRESETS, list_devices, test_devices(Playwright ImportError), 工厂
+MobileEmulationService unit tests.
+Covers data classes, DEVICE_PRESETS, list_devices, test_devices with a Playwright
+ImportError, and the factory function.
 """
 import pytest
 from unittest.mock import patch
@@ -12,7 +13,7 @@ from services.mobile_emulation import (
 
 
 # ---------------------------------------------------------------------------
-# 数据类
+# Data classes.
 # ---------------------------------------------------------------------------
 class TestDeviceTestResult:
     def test_creation(self):
@@ -81,7 +82,7 @@ class TestListDevices:
 
 
 # ---------------------------------------------------------------------------
-# test_devices (Playwright ImportError 回退)
+# test_devices with a Playwright ImportError fallback.
 # ---------------------------------------------------------------------------
 class TestDevices:
     @pytest.mark.asyncio

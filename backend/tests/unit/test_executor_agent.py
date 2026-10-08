@@ -1,6 +1,6 @@
 """
-ExecutorAgent 单元测试
-覆盖: __init__, _check_signal, stop, _execute_action (13 branches), _take_screenshot
+ExecutorAgent unit tests
+Coverage: __init__, _check_signal, stop, _execute_action (13 branches), _take_screenshot
 """
 import pytest
 from unittest.mock import patch, MagicMock
@@ -223,7 +223,7 @@ class TestProbePolicy:
 
 
 # ═══════════════════════════════════════════════════
-# _execute_action 分支测试
+# _execute_action branch tests
 # ═══════════════════════════════════════════════════
 
 class TestExecuteActionGoto:

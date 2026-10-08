@@ -1,6 +1,6 @@
 """
-UIAgent 单元测试
-覆盖: _format_history, _format_dom_summary, execute_test, heal_and_retry
+UIAgent unit tests
+Coverage: _format_history, _format_dom_summary, execute_test, heal_and_retry.
 """
 import pytest
 from unittest.mock import patch, MagicMock, AsyncMock
@@ -8,7 +8,7 @@ from unittest.mock import patch, MagicMock, AsyncMock
 
 @pytest.fixture(autouse=True)
 def _patch_deps():
-    with patch("agents.ui_agent.get_llm") as mock_llm, \
+    with patch("agents.ui_agent.get_llm_for_role") as mock_llm, \
          patch("agents.ui_agent.UI_TOOLS"), \
          patch("agents.ui_agent.navigate"), \
          patch("agents.ui_agent.take_screenshot"), \
@@ -27,28 +27,28 @@ class TestFormatHistory:
     def test_empty_history(self):
         agent = _make_ui_agent()
         result = agent._format_history([])
-        assert result == "无历史记录"
+        assert result == "No history"
 
     def test_single_action(self):
         agent = _make_ui_agent()
-        actions = [{"step": 1, "thought": "点击登录", "tool": "click", "args": {"selector": "#btn"}}]
+        actions = [{"step": 1, "thought": "Click Login", "tool": "click", "args": {"selector": "#btn"}}]
         result = agent._format_history(actions)
         assert "Step 1" in result
-        assert "点击登录" in result
+        assert "Click Login" in result
         assert "click" in result
 
     def test_multiple_actions(self):
         agent = _make_ui_agent()
         actions = [
-            {"step": i, "thought": f"思考{i}", "tool": f"tool_{i}", "args": {}}
+            {"step": i, "thought": f"Thought {i}", "tool": f"tool_{i}", "args": {}}
             for i in range(1, 8)
         ]
         result = agent._format_history(actions)
-        # 只保留最近 5 个
+        # Keep only the five most recent actions.
         assert "Step 3" in result
         assert "Step 7" in result
         lines = result.strip().split("\n")
-        # 每个 action 占 2 行（Step + Action）
+        # Each action occupies two lines (Step + Action).
         assert len(lines) == 10  # 5 actions * 2 lines
 
     def test_long_args_truncation(self):
@@ -60,7 +60,7 @@ class TestFormatHistory:
 
     def test_missing_fields(self):
         agent = _make_ui_agent()
-        actions = [{}]  # 无任何字段
+        actions = [{}]  # No fields are provided.
         result = agent._format_history(actions)
         assert "Step ?" in result
         assert "No thought" in result
@@ -121,7 +121,7 @@ class TestExecuteTest:
             "steps_taken": 3,
             "final_url": "http://example.com/dashboard"
         }) as mock_loop:
-            result = await agent.execute_test("测试登录功能", url="http://example.com")
+            result = await agent.execute_test("Test login functionality", url="http://example.com")
             mock_loop.assert_called_once()
             assert result is not None
 
@@ -132,7 +132,7 @@ class TestExecuteTest:
             "status": "completed", "steps_taken": 1
         }) as mock_loop, patch("agents.ui_agent.Config") as mock_config:
             mock_config.TARGET_URL = "http://default.com"
-            result = await agent.execute_test("检查首页")
+            result = await agent.execute_test("Check the home page")
             assert result is not None
 
 

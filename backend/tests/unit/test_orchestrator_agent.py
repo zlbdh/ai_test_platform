@@ -1,6 +1,6 @@
 """
-Orchestrator 单元测试
-覆盖: __init__, start_task (busy/zombie 检测), stop_task
+Orchestrator unit tests
+Coverage: __init__, start_task (busy/zombie detection), stop_task.
 """
 import pytest
 from unittest.mock import patch, MagicMock
@@ -10,7 +10,7 @@ from contextlib import contextmanager
 
 @pytest.fixture(autouse=True)
 def _patch_deps():
-    """Mock 掉所有外部依赖"""
+    """Mock all external dependencies."""
     mock_session = MagicMock()
     mock_session.set_status = MagicMock()
     mock_session.set_signal = MagicMock()
@@ -46,7 +46,7 @@ def _make_orchestrator():
 
 
 # ---------------------------------------------------------------------------
-# 测试初始化
+# Initialization tests
 # ---------------------------------------------------------------------------
 class TestInit:
     def test_default_state(self):
@@ -63,21 +63,21 @@ class TestInit:
 
 
 # ---------------------------------------------------------------------------
-# 测试 start_task
+# start_task tests
 # ---------------------------------------------------------------------------
 class TestStartTask:
     def test_start_returns_task_id(self):
         orch = _make_orchestrator()
-        # 需要 mock asyncio.create_task 因为没有事件循环
+        # Mock asyncio.create_task because there is no event loop.
         with patch("asyncio.create_task") as mock_ct:
             def fake_create_task(coro):
                 coro.close()
                 return MagicMock()
             mock_ct.side_effect = fake_create_task
-            task_id = orch.start_task("测试登录功能", mode="quick", target_url="http://example.com")
+            task_id = orch.start_task("Test login functionality", mode="quick", target_url="http://example.com")
         assert task_id.startswith("task_")
         assert orch.is_running is True
-        assert orch._task_requirement == "测试登录功能"
+        assert orch._task_requirement == "Test login functionality"
         assert orch._task_target_url == "http://example.com"
         assert orch._task_mode == "quick"
 
@@ -96,22 +96,22 @@ class TestStartTask:
     def test_busy_when_already_running(self):
         orch = _make_orchestrator()
         orch.is_running = True
-        # 模拟 e_thread 仍存活
+        # Simulate a still-running e_thread.
         mock_thread = MagicMock()
         mock_thread.is_alive.return_value = True
         orch.e_thread = mock_thread
-        # 模拟 planner_task 未完成
+        # Simulate an unfinished planner_task.
         mock_task = MagicMock()
         mock_task.done.return_value = False
         orch._planner_task = mock_task
 
-        result = orch.start_task("新任务")
+        result = orch.start_task("New task")
         assert result == "Busy"
 
     def test_zombie_detection_dead_thread(self):
         orch = _make_orchestrator()
         orch.is_running = True
-        # 模拟 e_thread 已死 → zombie
+        # Simulate a stopped e_thread: a zombie task.
         mock_thread = MagicMock()
         mock_thread.is_alive.return_value = False
         orch.e_thread = mock_thread
@@ -122,7 +122,7 @@ class TestStartTask:
                 coro.close()
                 return MagicMock()
             mock_ct.side_effect = fake_create_task
-            task_id = orch.start_task("恢复任务")
+            task_id = orch.start_task("Resume task")
         assert task_id.startswith("task_")
         assert orch.is_running is True
 
@@ -130,7 +130,7 @@ class TestStartTask:
         orch = _make_orchestrator()
         orch.is_running = True
         orch.e_thread = None
-        # 模拟 planner_task 已完成 → zombie
+        # Simulate a completed planner_task: a zombie task.
         mock_task = MagicMock()
         mock_task.done.return_value = True
         orch._planner_task = mock_task
@@ -140,12 +140,12 @@ class TestStartTask:
                 coro.close()
                 return MagicMock()
             mock_ct.side_effect = fake_create_task
-            task_id = orch.start_task("恢复任务")
+            task_id = orch.start_task("Resume task")
         assert task_id.startswith("task_")
 
 
 # ---------------------------------------------------------------------------
-# 测试 stop_task
+# stop_task tests
 # ---------------------------------------------------------------------------
 class TestStopTask:
     def test_stop_resets_state(self, _patch_deps):

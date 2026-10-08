@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Phase 2 单元测试 — QAState, inspect 节点, 报告集成
+Phase 2 unit tests: QAState, the inspect node, and report integration.
 """
 import pytest
 import json
@@ -13,11 +13,11 @@ from agents.master_agent import MasterAgent
 
 
 # ============================================================================
-# QAState 新字段测试
+# Tests for new QAState fields
 # ============================================================================
 
 class TestQAStateInspectionField:
-    """QAState 新增 inspection_results 字段"""
+    """QAState includes the new inspection_results field."""
 
     def test_field_exists(self):
         assert "inspection_results" in QAState.__annotations__
@@ -46,11 +46,11 @@ class TestQAStateInspectionField:
 
 
 # ============================================================================
-# inspect 节点测试 (从 QAWorkflow 类中提取方法测试)
+# inspect node tests (test methods extracted from QAWorkflow)
 # ============================================================================
 
 def _make_workflow_with_fake_inspector(vlm_response: str):
-    """构造一个带 fake Inspector 的 QAWorkflow（不编译图）"""
+    """Build a QAWorkflow with a fake Inspector without compiling the graph."""
     from workflows.qa_workflow import QAWorkflow
 
     wf = QAWorkflow.__new__(QAWorkflow)
@@ -63,7 +63,7 @@ def _make_workflow_with_fake_inspector(vlm_response: str):
 
 
 class TestInspectNode:
-    """_inspect_node 方法测试"""
+    """_inspect_node method tests."""
 
     BASE_STATE = {
         "test_scenario": "test",
@@ -92,14 +92,14 @@ class TestInspectNode:
         return state
 
     def test_no_screenshots_skips(self):
-        """无截图时跳过审查"""
+        """Skip inspection when no screenshot is available."""
         wf = _make_workflow_with_fake_inspector('{}')
         state = self._make_state(ui_results=[{"action": "click", "status": "success"}])
         result = wf._inspect_node(state)
         assert result["inspection_results"] == []
 
     def test_inspect_passed(self):
-        """VLM 判定通过"""
+        """The VLM passes the inspection."""
         vlm_resp = json.dumps({"passed": True, "confidence": 0.95, "reason": "OK", "anomalies": []})
         wf = _make_workflow_with_fake_inspector(vlm_resp)
         state = self._make_state(
@@ -108,8 +108,8 @@ class TestInspectNode:
                 "screenshot": "fakebase64==",
                 "url": "http://test.com",
                 "visible_text": "Success",
-                "step_desc": "click(提交)",
-                "expected_outcome": "提交成功",
+                "step_desc": "click(Submit)",
+                "expected_outcome": "Submission successful",
             }]
         )
         result = wf._inspect_node(state)
@@ -119,7 +119,7 @@ class TestInspectNode:
         assert len(result["errors"]) == 0
 
     def test_inspect_rejected_adds_error(self):
-        """VLM 判定驳回 → errors 追加"""
+        """The VLM rejects the inspection, so errors are appended."""
         vlm_resp = json.dumps({
             "passed": False, "confidence": 0.8,
             "reason": "Red error banner", "anomalies": ["toast visible"]
@@ -131,17 +131,17 @@ class TestInspectNode:
                 "screenshot": "fakebase64==",
                 "url": "http://test.com",
                 "visible_text": "",
-                "step_desc": "click(按钮)",
+                "step_desc": "click(Button)",
             }]
         )
         result = wf._inspect_node(state)
         assert len(result["inspection_results"]) == 1
         assert result["inspection_results"][0]["passed"] is False
         assert len(result["errors"]) == 1
-        assert "驳回" in result["errors"][0]["error"]
+        assert "rejected" in result["errors"][0]["error"]
 
     def test_inspect_multiple_results(self):
-        """多个截图结果同时审查"""
+        """Inspect multiple screenshot results together."""
         vlm_resp = json.dumps({"passed": True, "confidence": 0.9, "reason": "ok", "anomalies": []})
         wf = _make_workflow_with_fake_inspector(vlm_resp)
         state = self._make_state(
@@ -157,7 +157,7 @@ class TestInspectNode:
         assert len(result["inspection_results"]) == 3
 
     def test_inspect_vlm_exception_auto_passes(self):
-        """VLM 异常时自动放行"""
+        """Automatically pass when the VLM raises an exception."""
         wf = _make_workflow_with_fake_inspector("")
         wf.inspector._vlm.invoke.side_effect = RuntimeError("API timeout")
         state = self._make_state(
@@ -170,11 +170,11 @@ class TestInspectNode:
 
 
 # ============================================================================
-# _route_after_inspect 路由测试
+# _route_after_inspect routing tests
 # ============================================================================
 
 class TestRouteAfterInspect:
-    """inspect 后路由逻辑"""
+    """Routing logic after inspect."""
 
     def _make_wf(self):
         from workflows.qa_workflow import QAWorkflow
@@ -183,10 +183,10 @@ class TestRouteAfterInspect:
         return wf
 
     def test_route_to_rca_on_reject(self):
-        """有 inspect 错误 → 路由到 rca"""
+        """Inspection errors route execution to rca."""
         wf = self._make_wf()
         state = {
-            "errors": [{"step": "inspect", "error": "Inspector 驳回: ..."}],
+            "errors": [{"step": "inspect", "error": "Inspector rejected: ..."}],
             "ops_results": [],
             "completed_steps": ["ui_test"],
             "planned_steps": ["ui_test", "api_test"],
@@ -194,7 +194,7 @@ class TestRouteAfterInspect:
         assert wf._route_after_inspect(state) == "rca"
 
     def test_route_to_api_after_ui(self):
-        """ui_test 通过 → 继续 api_test"""
+        """A passed ui_test continues to api_test."""
         wf = self._make_wf()
         state = {
             "errors": [],
@@ -205,7 +205,7 @@ class TestRouteAfterInspect:
         assert wf._route_after_inspect(state) == "next"
 
     def test_route_to_data_after_api(self):
-        """api_test 通过 → 继续 data_verification"""
+        """A passed api_test continues to data_verification."""
         wf = self._make_wf()
         state = {
             "errors": [],
@@ -216,7 +216,7 @@ class TestRouteAfterInspect:
         assert wf._route_after_inspect(state) == "data"
 
     def test_route_to_end_when_done(self):
-        """所有计划步骤完成 → end"""
+        """When all planned steps are complete, route to end."""
         wf = self._make_wf()
         state = {
             "errors": [],
@@ -227,7 +227,7 @@ class TestRouteAfterInspect:
         assert wf._route_after_inspect(state) == "end"
 
     def test_skip_rca_if_already_done(self):
-        """已有 RCA 报告 → 不再路由到 rca"""
+        """Do not route to rca again when an RCA report already exists."""
         wf = self._make_wf()
         state = {
             "errors": [{"step": "inspect", "error": "..."}],
@@ -239,11 +239,11 @@ class TestRouteAfterInspect:
 
 
 # ============================================================================
-# 报告集成测试
+# Report integration tests
 # ============================================================================
 
 class TestReportInspectionIntegration:
-    """generate_report 包含 Inspector 结果"""
+    """generate_report includes Inspector results."""
 
     def _make_master(self):
         m = MasterAgent.__new__(MasterAgent)
@@ -283,7 +283,7 @@ class TestReportInspectionIntegration:
             "api_results": [],
             "data_results": [],
             "ops_results": [],
-            "errors": [{"step": "inspect", "error": "驳回"}],
+            "errors": [{"step": "inspect", "error": "rejected"}],
             "warnings": [],
             "inspection_results": [
                 {"step": "click(pay)", "passed": False, "confidence": 0.8, "reason": "Red error", "anomalies": ["err"]},
@@ -292,7 +292,7 @@ class TestReportInspectionIntegration:
         }
         report = m.generate_report(state)
         assert report["summary"]["inspection_rejected"] == 1
-        assert any("驳回" in r for r in report["recommendations"])
+        assert any("rejected" in r for r in report["recommendations"])
 
     def test_report_empty_inspection(self):
         m = self._make_master()
@@ -312,4 +312,4 @@ class TestReportInspectionIntegration:
         report = m.generate_report(state)
         assert report["summary"]["inspection_total"] == 0
         assert report["inspection_results"] == []
-        assert any("通过" in r for r in report["recommendations"])
+        assert any("passed" in r for r in report["recommendations"])

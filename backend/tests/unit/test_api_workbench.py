@@ -1,7 +1,8 @@
 """
-ApiWorkbenchService 单元测试
-覆盖: 数据结构, Collection/Request/Environment CRUD,
-      变量替换, JSON路径提取, 断言评估, 请求执行, 集合运行, 单例
+ApiWorkbenchService unit tests
+Coverage: data structures; Collection/Request/Environment CRUD;
+          variable substitution; JSON path extraction; assertion evaluation;
+          request execution; collection execution; singleton access.
 """
 import pytest
 from unittest.mock import patch, MagicMock, AsyncMock
@@ -13,7 +14,7 @@ from services.api_workbench import (
 
 @pytest.fixture
 def svc(tmp_path):
-    """使用临时目录避免影响真实数据"""
+    """Use a temporary directory to avoid affecting real data."""
     with patch("services.api_workbench.DATA_DIR", tmp_path), \
          patch("services.api_workbench.COLLECTIONS_FILE", tmp_path / "collections.json"), \
          patch("services.api_workbench.ENVIRONMENTS_FILE", tmp_path / "environments.json"):
@@ -21,7 +22,7 @@ def svc(tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# 数据结构测试
+# Data structure tests
 # ---------------------------------------------------------------------------
 class TestDataClasses:
     def test_request_item(self):
@@ -48,11 +49,11 @@ class TestDataClasses:
 
 
 # ---------------------------------------------------------------------------
-# Collection CRUD 测试
+# Collection CRUD tests
 # ---------------------------------------------------------------------------
 class TestCollectionCRUD:
     def test_create(self, svc):
-        col = svc.create_collection("Test Collection", "描述")
+        col = svc.create_collection("Test Collection", "Description")
         assert col["name"] == "Test Collection"
         assert col["id"] in svc.collections
 
@@ -90,7 +91,7 @@ class TestCollectionCRUD:
 
 
 # ---------------------------------------------------------------------------
-# Environment CRUD 测试
+# Environment CRUD tests
 # ---------------------------------------------------------------------------
 class TestEnvironmentCRUD:
     def test_create(self, svc):
@@ -139,7 +140,7 @@ class TestEnvironmentCRUD:
 
 
 # ---------------------------------------------------------------------------
-# Request CRUD 测试
+# Request CRUD tests
 # ---------------------------------------------------------------------------
 class TestRequestCRUD:
     def test_add_request(self, svc):
@@ -178,7 +179,7 @@ class TestRequestCRUD:
 
 
 # ---------------------------------------------------------------------------
-# 变量替换测试
+# Variable substitution tests
 # ---------------------------------------------------------------------------
 class TestSubstituteVariables:
     def test_no_variables(self, svc):
@@ -206,7 +207,7 @@ class TestSubstituteVariables:
         assert result == "user=admin"
 
     def test_runtime_overrides_env(self, svc):
-        """运行时变量应覆盖环境变量"""
+        """Runtime variables should override environment variables."""
         env = svc.create_environment("Dev", {"key": "env_val"})
         svc.set_active_environment(env["id"])
         svc.runtime_variables["key"] = "runtime_val"
@@ -215,7 +216,7 @@ class TestSubstituteVariables:
 
 
 # ---------------------------------------------------------------------------
-# JSON 路径提取测试
+# JSON path extraction tests
 # ---------------------------------------------------------------------------
 class TestExtractJsonPath:
     def test_simple_key(self, svc):
@@ -237,7 +238,7 @@ class TestExtractJsonPath:
 
 
 # ---------------------------------------------------------------------------
-# 断言评估测试
+# Assertion evaluation tests
 # ---------------------------------------------------------------------------
 class TestEvaluateAssertion:
     def _make_result(self, status_code=200, response_time_ms=100,
@@ -324,12 +325,12 @@ class TestEvaluateAssertion:
 
 
 # ---------------------------------------------------------------------------
-# 请求执行测试 (mock httpx)
+# Request execution tests (mock httpx)
 # ---------------------------------------------------------------------------
 class TestExecuteRequest:
     @pytest.mark.asyncio
     async def test_successful_get(self, svc):
-        """GET 请求成功"""
+        """A GET request succeeds."""
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.headers = {"content-type": "application/json"}
@@ -351,7 +352,7 @@ class TestExecuteRequest:
 
     @pytest.mark.asyncio
     async def test_assertion_evaluation(self, svc):
-        """请求时应评估断言"""
+        """Assertions should be evaluated when a request runs."""
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.headers = {}
@@ -376,7 +377,7 @@ class TestExecuteRequest:
 
     @pytest.mark.asyncio
     async def test_variable_extraction(self, svc):
-        """应从响应中提取变量"""
+        """Variables should be extracted from the response."""
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.headers = {"x-token": "abc123"}
@@ -403,7 +404,7 @@ class TestExecuteRequest:
 
     @pytest.mark.asyncio
     async def test_timeout_error(self, svc):
-        """超时应返回错误"""
+        """A timeout should return an error."""
         import httpx
         mock_client = AsyncMock()
         mock_client.request = AsyncMock(side_effect=httpx.TimeoutException("timeout"))
@@ -419,7 +420,7 @@ class TestExecuteRequest:
 
     @pytest.mark.asyncio
     async def test_post_with_json_body(self, svc):
-        """POST 请求应发送 JSON body"""
+        """A POST request should send a JSON body."""
         mock_response = MagicMock()
         mock_response.status_code = 201
         mock_response.headers = {}
@@ -442,7 +443,7 @@ class TestExecuteRequest:
 
 
 # ---------------------------------------------------------------------------
-# 集合运行测试
+# Collection execution tests
 # ---------------------------------------------------------------------------
 class TestRunCollection:
     @pytest.mark.asyncio
@@ -452,7 +453,7 @@ class TestRunCollection:
 
     @pytest.mark.asyncio
     async def test_run_with_mocked_execute(self, svc):
-        """运行集合应依次执行每个请求"""
+        """Running a collection should execute each request in order."""
         col = svc.create_collection("RunTest")
         svc.add_request(col["id"], {"name": "R1", "method": "GET", "url": "/"})
         svc.add_request(col["id"], {"name": "R2", "method": "GET", "url": "/"})
@@ -469,7 +470,7 @@ class TestRunCollection:
 
     @pytest.mark.asyncio
     async def test_stop_on_failure(self, svc):
-        """stop_on_failure=True 时失败后应停止"""
+        """Execution should stop after a failure when stop_on_failure=True."""
         col = svc.create_collection("StopTest")
         svc.add_request(col["id"], {"name": "R1", "method": "GET", "url": "/"})
         svc.add_request(col["id"], {"name": "R2", "method": "GET", "url": "/"})
@@ -487,20 +488,20 @@ class TestRunCollection:
 
     @pytest.mark.asyncio
     async def test_clears_runtime_variables(self, svc):
-        """运行集合前应清空 runtime_variables"""
+        """runtime_variables should be cleared before a collection runs."""
         col = svc.create_collection("ClearTest")
         svc.runtime_variables["old_var"] = "should_be_cleared"
 
         mock_result = {"success": True, "request_id": "x", "request_name": "x"}
         with patch.object(svc, "execute_request", new_callable=AsyncMock, return_value=mock_result):
             await svc.run_collection(col["id"])
-        # runtime_variables 应在 run_collection 开始时被清空
-        # (但 execute_request 可能重新填充)
-        # 关键点是 clear() 被调用了
+        # runtime_variables should be cleared at the start of run_collection.
+        # execute_request may populate them again.
+        # The key check is that clear() was called.
 
 
 # ---------------------------------------------------------------------------
-# 单例测试
+# Singleton tests
 # ---------------------------------------------------------------------------
 class TestSingleton:
     def test_singleton(self, tmp_path):

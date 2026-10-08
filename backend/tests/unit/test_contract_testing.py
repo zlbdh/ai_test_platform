@@ -1,8 +1,7 @@
 """
-ContractTestingService 单元测试
-覆盖: 枚举/数据类, create_contract, verify_contract,
-      _verify_interaction, export_pact, import_pact,
-      get_statistics, 单例
+ContractTestingService unit tests.
+Covers enums and data classes, create_contract, verify_contract, _verify_interaction,
+Pact export/import, get_statistics, and the singleton.
 """
 import pytest
 from unittest.mock import patch, MagicMock, AsyncMock
@@ -15,7 +14,7 @@ from services.contract_testing import (
 
 
 # ---------------------------------------------------------------------------
-# 枚举 / 数据类
+# Enums and data classes.
 # ---------------------------------------------------------------------------
 class TestContractStatus:
     def test_values(self):
@@ -88,7 +87,7 @@ class TestGenerateId:
 
 
 # ---------------------------------------------------------------------------
-# verify_contract 测试
+# verify_contract tests.
 # ---------------------------------------------------------------------------
 def _make_aiohttp_ctx(mock_resp):
     ctx = MagicMock()
@@ -106,7 +105,7 @@ class TestVerifyContract:
 
     @pytest.mark.asyncio
     async def test_all_pass(self, svc):
-        """所有交互验证通过"""
+        """All interactions pass verification."""
         c = svc.create_contract("fe", "be", [
             {"description": "get", "request": {"method": "GET", "path": "/"},
              "response": {"status": 200}}
@@ -123,7 +122,7 @@ class TestVerifyContract:
 
     @pytest.mark.asyncio
     async def test_partial_fail(self, svc):
-        """部分交互失败"""
+        """Some interactions fail verification."""
         c = svc.create_contract("fe", "be", SAMPLE_INTERACTIONS)
 
         returns = [
@@ -141,7 +140,7 @@ class TestVerifyContract:
 
 
 # ---------------------------------------------------------------------------
-# _verify_interaction 测试
+# _verify_interaction tests.
 # ---------------------------------------------------------------------------
 class TestVerifyInteraction:
     @pytest.mark.asyncio
@@ -231,7 +230,7 @@ class TestVerifyInteraction:
 
 
 # ---------------------------------------------------------------------------
-# Pact 导入/导出
+# Pact import/export.
 # ---------------------------------------------------------------------------
 class TestPact:
     def test_export_pact(self, svc):
@@ -259,7 +258,7 @@ class TestPact:
         assert len(c.interactions) == 1
 
     def test_roundtrip(self, svc):
-        """导出再导入应产生等价契约"""
+        """Exporting and reimporting should produce an equivalent contract."""
         c1 = svc.create_contract("fe", "be", SAMPLE_INTERACTIONS)
         pact = svc.export_pact(c1.contract_id)
         c2 = svc.import_pact(pact)
@@ -269,7 +268,7 @@ class TestPact:
 
 
 # ---------------------------------------------------------------------------
-# 统计
+# Statistics.
 # ---------------------------------------------------------------------------
 class TestStatistics:
     def test_empty(self, svc):
@@ -290,7 +289,7 @@ class TestStatistics:
 
 
 # ---------------------------------------------------------------------------
-# 单例
+# Singleton.
 # ---------------------------------------------------------------------------
 class TestSingleton:
     def test_singleton(self):

@@ -1,6 +1,6 @@
 """
-AITestStrategySelector 单元测试
-覆盖: TestType/Priority 枚举, analyze_target, analyze_requirement, learn_from_result, 单例
+AITestStrategySelector unit tests
+Coverage: TestType/Priority enums, analyze_target, analyze_requirement, learn_from_result, and singleton access.
 """
 import pytest
 from core.strategy_selector import (
@@ -80,7 +80,7 @@ class TestAnalyzeRequirement:
     def test_normalization(self, selector):
         scores = selector.analyze_requirement("测试登录页面")
         max_score = max(scores.values())
-        assert max_score <= 1.0  # 归一化后最大值为 1.0
+        assert max_score <= 1.0  # The normalized maximum value is 1.0.
 
     def test_empty_requirement(self, selector):
         scores = selector.analyze_requirement("")
@@ -94,15 +94,15 @@ class TestLearnFromResult:
             test_types=[TestType.UI_E2E],
             priority=Priority.HIGH,
         )
-        selector.learn_from_result("测试登录", strategy, success=True, feedback="good")
+        selector.learn_from_result("Test login", strategy, success=True, feedback="good")
         assert len(selector.history) == 1
         assert selector.history[0]["success"] is True
 
     def test_multiple_records(self):
         selector = AITestStrategySelector()
         strategy = TestStrategy(test_types=[TestType.API_REST], priority=Priority.MEDIUM)
-        selector.learn_from_result("测试A", strategy, True)
-        selector.learn_from_result("测试B", strategy, False)
+        selector.learn_from_result("Test A", strategy, True)
+        selector.learn_from_result("Test B", strategy, False)
         assert len(selector.history) == 2
 
 

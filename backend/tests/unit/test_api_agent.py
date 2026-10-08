@@ -1,6 +1,6 @@
 """
-APIAgent 单元测试
-覆盖: __init__, execute_test, chain_api_calls
+APIAgent unit tests
+Coverage: __init__, execute_test, chain_api_calls
 """
 import pytest
 from unittest.mock import patch, MagicMock
@@ -8,11 +8,11 @@ from unittest.mock import patch, MagicMock
 
 @pytest.fixture(autouse=True)
 def _patch_deps():
-    with patch("agents.api_agent.get_llm") as mock_llm, \
+    with patch("agents.api_agent.get_llm_for_role") as mock_llm, \
          patch("agents.api_agent.API_TOOLS") as mock_tools, \
          patch("agents.api_agent.Config"):
         mock_llm.return_value = MagicMock()
-        # Mock 各工具的 invoke
+        # Mock each tool's invoke method.
         mock_call = MagicMock()
         mock_call.invoke = MagicMock(return_value={"status_code": 200, "body": {}})
         mock_tools.__getitem__ = MagicMock(return_value=mock_call)
@@ -37,17 +37,17 @@ class TestInit:
 class TestExecuteTest:
     def test_basic_no_swagger(self):
         agent = _make_api_agent()
-        result = agent.execute_test("测试用户登录")
+        result = agent.execute_test("Test user login")
         assert result["agent"] == "api_agent"
-        assert result["scenario"] == "测试用户登录"
-        # 没有 Swagger URL 也没有 URL → warning
+        assert result["scenario"] == "Test user login"
+        # No Swagger URL or target URL should produce a warning.
         assert result["status"] == "warning"
 
     def test_with_url_in_scenario(self, _patch_deps):
         agent = _make_api_agent()
-        result = agent.execute_test("测试 http://api.example.com/users 接口")
+        result = agent.execute_test("Test the http://api.example.com/users endpoint")
         assert result["agent"] == "api_agent"
-        # 能从场景中提取 URL → 有 endpoints_tested
+        # A URL extracted from the scenario should produce endpoints_tested.
         assert isinstance(result["endpoints_tested"], list)
 
     @patch("workflows.api_fuzzing_subgraph.get_fuzzing_subgraph")
@@ -67,7 +67,7 @@ class TestExecuteTest:
         mock_get_subgraph.return_value = mock_subgraph
 
         agent = _make_api_agent()
-        result = agent.execute_test("测试电商 API", swagger_url="http://api.com/swagger.json")
+        result = agent.execute_test("Test the e-commerce API", swagger_url="http://api.com/swagger.json")
         assert result["agent"] == "api_agent"
         assert len(result["endpoints_tested"]) == 2
         

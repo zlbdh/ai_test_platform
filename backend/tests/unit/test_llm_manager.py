@@ -1,27 +1,27 @@
 # -*- coding: utf-8 -*-
 """
-测试 - LLM Manager 模块
+Tests for the LLM Manager module.
 """
 import pytest
 from unittest.mock import patch, MagicMock
 
 
 class TestLLMManager:
-    """LLM Manager 单元测试"""
+    """LLM Manager unit tests."""
 
     def test_get_llm_default_provider(self):
-        """测试默认提供商获取"""
+        """Test default provider selection."""
         from core.llm_manager import LLMManager
         
         with patch.object(LLMManager, '_get_openai_llm') as mock_openai:
             mock_openai.return_value = MagicMock()
-            # 默认使用 openai
+            # Use OpenAI by default.
             with patch('core.config.Config.LLM_PROVIDER', 'openai'):
                 llm = LLMManager.get_llm()
                 assert llm is not None
 
     def test_get_llm_gemini_provider(self):
-        """测试 Gemini 提供商"""
+        """Test the Gemini provider."""
         from core.llm_manager import LLMManager
         
         with patch.object(LLMManager, '_get_gemini_llm') as mock_gemini:
@@ -30,17 +30,17 @@ class TestLLMManager:
             mock_gemini.assert_called_once()
 
     def test_get_llm_unsupported_provider(self):
-        """测试不支持的提供商"""
+        """Test an unsupported provider."""
         from core.llm_manager import LLMManager
         
         with pytest.raises(ValueError, match="Unsupported LLM provider"):
             LLMManager._create_llm_instance('unsupported', 'model', 0, 1, 4096, None)
 
     def test_get_vision_llm_gemini(self):
-        """测试视觉模型获取 (Gemini 路径)"""
+        """Test vision model selection through Gemini."""
         from core.llm_manager import LLMManager
         
-        # 清除缓存
+        # Clear the cache.
         LLMManager._cached_vision_llm = None
         
         with patch('core.config.Config.VISION_MODEL', 'gemini-1.5-flash'):
@@ -48,14 +48,14 @@ class TestLLMManager:
                 with patch('langchain_google_genai.ChatGoogleGenerativeAI') as mock_gemini:
                     mock_gemini.return_value = MagicMock()
                     vision_llm = LLMManager.get_vision_llm()
-                    # 应该调用 Gemini
+                    # Expect a Gemini call.
                     mock_gemini.assert_called_once()
 
     def test_get_vision_llm_gateway(self):
-        """测试视觉模型获取 (OpenAI Gateway 路径)"""
+        """Test vision model selection through OpenAI Gateway."""
         from core.llm_manager import LLMManager
         
-        # 清除缓存
+        # Clear the cache.
         LLMManager._cached_vision_llm = None
         
         with patch('core.config.Config.VISION_MODEL', 'claude-sonnet-4-5'):
@@ -64,25 +64,25 @@ class TestLLMManager:
                     with patch('langchain_openai.ChatOpenAI') as mock_openai:
                         mock_openai.return_value = MagicMock()
                         vision_llm = LLMManager.get_vision_llm()
-                        # 应该通过 OpenAI Gateway
+                        # Expect an OpenAI Gateway call.
                         mock_openai.assert_called_once()
 
     def test_llm_caching(self):
-        """测试 LLM 缓存机制"""
+        """Test LLM caching."""
         from core.llm_manager import LLMManager
         
-        # 清除缓存
+        # Clear the cache.
         LLMManager._cached_llm = None
         
         mock_llm = MagicMock()
         with patch.object(LLMManager, '_create_llm_instance', return_value=mock_llm):
             llm1 = LLMManager.get_llm()
             llm2 = LLMManager.get_llm()
-            # 应该使用缓存
+            # Reuse the cached instance.
             assert llm1 is llm2
 
     def test_get_llm_uses_configured_sampling_params(self):
-        """测试默认 LLM 调用会带上配置中的采样参数"""
+        """Default LLM calls should include the configured sampling parameters."""
         from core.llm_manager import LLMManager
 
         LLMManager._cached_llm = None
@@ -100,7 +100,7 @@ class TestLLMManager:
             assert args[4] == 3072
 
     def test_claude_sampling_options_drop_top_p_when_temperature_present(self):
-        """测试 Claude 路由下同时配置 temperature/top_p 时会自动忽略 top_p"""
+        """Claude routing should omit top_p when both temperature and top_p are configured."""
         from core.llm_manager import LLMManager
 
         options = LLMManager._resolve_sampling_options(

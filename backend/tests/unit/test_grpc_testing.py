@@ -1,7 +1,7 @@
 """
-GrpcTestService 单元测试
-覆盖: 数据类, _check_grpcurl, _build_command, _get_value_by_path,
-      assert_response, call(grpcurl 不可用), 工厂函数
+GrpcTestService unit tests.
+Covers data classes, _check_grpcurl, _build_command, _get_value_by_path, assert_response,
+call without grpcurl, and the factory function.
 """
 import pytest
 from unittest.mock import patch, MagicMock
@@ -13,7 +13,7 @@ from services.grpc_testing import (
 
 
 # ---------------------------------------------------------------------------
-# 数据类
+# Data classes.
 # ---------------------------------------------------------------------------
 class TestGrpcRequest:
     def test_creation(self):
@@ -136,7 +136,7 @@ class TestAssertResponse:
 
 
 # ---------------------------------------------------------------------------
-# call — grpcurl 不可用
+# call without grpcurl.
 # ---------------------------------------------------------------------------
 class TestCall:
     @pytest.mark.asyncio
@@ -148,7 +148,7 @@ class TestCall:
 
 
 # ---------------------------------------------------------------------------
-# list_services / describe — grpcurl 不可用
+# list_services and describe without grpcurl.
 # ---------------------------------------------------------------------------
 class TestListAndDescribe:
     @pytest.mark.asyncio
@@ -163,7 +163,7 @@ class TestListAndDescribe:
 
 
 # ---------------------------------------------------------------------------
-# 工厂
+# Factory.
 # ---------------------------------------------------------------------------
 class TestFactory:
     def test_create(self):

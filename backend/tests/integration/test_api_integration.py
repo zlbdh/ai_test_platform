@@ -1,6 +1,6 @@
-﻿"""
-P2-3: 后端 API 集成测试
-覆盖：/api/plan/generate, /api/history/*, /api/health, /api/config/ai, /api/gallery/*
+"""
+P2-3: Backend API integration tests
+Coverage: /api/plan/generate, /api/history/*, /api/health, /api/config/ai, /api/gallery/*
 """
 import asyncio
 import io
@@ -15,14 +15,14 @@ client = TestClient(app)
 
 
 # ============================================================
-# /api/health — 健康检查
+# /api/health — Health check
 # ============================================================
 class TestHealthAPI:
     def test_health_returns_200(self):
         resp = client.get("/api/health")
         assert resp.status_code == 200
         data = resp.json()
-        # 测试环境可能没有 LLM Key，status 可能为 degraded
+        # The test environment may have no LLM key, so status may be degraded.
         assert data["status"] in ("healthy", "degraded")
 
     def test_health_contains_version(self):
@@ -54,15 +54,15 @@ class TestHealthAPI:
 
 
 # ============================================================
-# /api/plan/generate — 计划生成
+# /api/plan/generate — Plan generation
 # ============================================================
 class TestPlanGenerateAPI:
-    """mock planner_service 避免真实 LLM 调用"""
+    """Mock planner_service to avoid real LLM calls."""
 
     MOCK_PLAN_RESULT = {
         "test_cases": [
             {
-                "scenario": "登录功能测试",
+                "scenario": "Login functionality test",
                 "priority": "P0",
                 "steps": [
                     {"action": "goto", "target": "https://example.com/login", "value": ""},
@@ -81,7 +81,7 @@ class TestPlanGenerateAPI:
         mock_svc.generate_plan = AsyncMock(return_value=self.MOCK_PLAN_RESULT)
 
         resp = client.post("/api/plan/generate", json={
-            "requirement": "测试登录功能",
+            "requirement": "Test login functionality",
             "enable_rag": True,
             "target_url": "https://example.com"
         })
@@ -94,11 +94,11 @@ class TestPlanGenerateAPI:
 
     @patch("routers.plan.planner_service")
     def test_plan_generate_empty_steps(self, mock_svc):
-        """LLM 返回空结果时应返回 error 状态"""
+        """An empty LLM result should return error status."""
         mock_svc.generate_plan = AsyncMock(return_value={"test_cases": []})
 
         resp = client.post("/api/plan/generate", json={
-            "requirement": "无效需求",
+            "requirement": "Invalid requirement",
             "enable_rag": False
         })
         assert resp.status_code == 200
@@ -109,11 +109,11 @@ class TestPlanGenerateAPI:
 
     @patch("routers.plan.planner_service")
     def test_plan_generate_llm_exception(self, mock_svc):
-        """LLM 调用异常时应优雅降级"""
+        """LLM exceptions should degrade gracefully."""
         mock_svc.generate_plan = AsyncMock(side_effect=Exception("API key invalid"))
 
         resp = client.post("/api/plan/generate", json={
-            "requirement": "测试购物车"
+            "requirement": "Test the shopping cart"
         })
         assert resp.status_code == 200
         data = resp.json()
@@ -122,27 +122,27 @@ class TestPlanGenerateAPI:
 
     @patch("routers.plan.planner_service")
     def test_plan_generate_with_priority(self, mock_svc):
-        """确认 priority 和 scenario 正确映射到 description"""
+        """Verify that priority and scenario map correctly to description."""
         mock_svc.generate_plan = AsyncMock(return_value=self.MOCK_PLAN_RESULT)
 
         resp = client.post("/api/plan/generate", json={
-            "requirement": "测试登录",
+            "requirement": "Test login",
             "enable_rag": True
         })
         data = resp.json()
         step = data["steps"][0]
         assert step["priority"] == "P0"
-        assert step["scenario"] == "登录功能测试"
+        assert step["scenario"] == "Login functionality test"
         assert "[P0]" in step["description"]
 
     def test_plan_generate_missing_requirement(self):
-        """缺少 requirement 字段应返回 422"""
+        """A missing requirement field should return 422."""
         resp = client.post("/api/plan/generate", json={})
         assert resp.status_code == 422
 
 
 # ============================================================
-# /api/config/ai — AI 配置
+# /api/config/ai — AI configuration
 # ============================================================
 class TestAIConfigAPI:
     def test_get_ai_config(self):
@@ -153,7 +153,7 @@ class TestAIConfigAPI:
         assert "config" in data
 
     def test_update_ai_config(self):
-        """测试 AI 配置更新 — 直接调用端点验证可达性和响应格式"""
+        """Test AI configuration updates by calling the endpoint directly and verifying reachability and response format."""
         resp = client.post("/api/config/ai", json={
             "provider": "openai",
             "model": "should-be-overridden",
@@ -178,7 +178,7 @@ class TestAIConfigAPI:
 
 
 # ============================================================
-# /api/history — 历史记录
+# /api/history — History
 # ============================================================
 class TestHistoryAPI:
     def test_get_history_returns_list(self):
@@ -204,7 +204,7 @@ class TestHistoryAPI:
 
 
 # ============================================================
-# /api/report — 报告
+# /api/report — Reports
 # ============================================================
 class TestReportAPI:
     @patch("routers.report.get_reporter")
@@ -308,9 +308,9 @@ class TestPlatformMaintenanceAPI:
                 "healthy_enabled": 1,
                 "untested_enabled": 0,
                 "ready": True,
-                "summary": "已配置 2 个 Webhook，其中 1 个最近测试通过",
+                "summary": "2 webhooks configured; 1 passed its most recent test",
             },
-            "data_quality": {"suspect_history_count": 3, "archived_history_count": 4, "clean": False, "summary": "检测到 3 条可疑维护历史，默认主视图已隐藏"},
+            "data_quality": {"suspect_history_count": 3, "archived_history_count": 4, "clean": False, "summary": "Detected 3 suspicious maintenance history records, hidden from the default main view"},
         }
         mock_get_service.return_value = svc
         chatops_svc = MagicMock()
@@ -328,13 +328,13 @@ class TestPlatformMaintenanceAPI:
             "verification_token_configured": False,
             "verification_token_masked": "",
             "verification_token_updated_at": "",
-            "summary": "通知平台回推通道已健康，但还缺少事件订阅 verification token，群消息还不能稳定回流到平台。",
+            "summary": "The notification platform's outbound channel is healthy, but the event subscription verification token is missing, so group messages cannot reliably return to the platform.",
             "latest_event": {"created_at": "2026-03-18T11:10:00", "delivery_delivered": 1},
             "latest_successful_event": {"created_at": "2026-03-18T11:09:00"},
         }
         mock_get_chatops_service.return_value = chatops_svc
         readiness_svc = MagicMock()
-        readiness_svc.evaluate.return_value = {"stage": "pre-production", "score": 78, "summary": "主能力已收口到准生产阶段，但告警接出与环境治理仍是主要约束。"}
+        readiness_svc.evaluate.return_value = {"stage": "pre-production", "score": 78, "summary": "Core capabilities are ready for staging, but alert integration and environment governance remain the main constraints."}
         mock_get_readiness_service.return_value = readiness_svc
         resp = client.get("/api/platform/info")
         assert resp.status_code == 200
@@ -400,10 +400,10 @@ class TestPlatformMaintenanceAPI:
             "score": 78,
             "local_score": 74,
             "global_score": 83,
-            "summary": "主能力已收口到准生产阶段，但告警接出与环境治理仍是主要约束。",
-            "local": [{"key": "maintenance_module", "name": "维护模块", "score": 100, "status": "good", "summary": "ok"}],
-            "global": [{"key": "architecture", "name": "架构稳定性", "score": 88, "status": "good", "summary": "ok"}],
-            "recommendations": ["接出至少 1 个生产告警 Webhook，让维护失败和风险预警真正进入通知链路。"],
+            "summary": "Core capabilities are ready for staging, but alert integration and environment governance remain the main constraints.",
+            "local": [{"key": "maintenance_module", "name": "Maintenance module", "score": 100, "status": "good", "summary": "ok"}],
+            "global": [{"key": "architecture", "name": "Architecture stability", "score": 88, "status": "good", "summary": "ok"}],
+            "recommendations": ["Connect at least 1 production alert webhook to deliver maintenance failures and risk alerts through the notification channel."],
         }
         mock_get_readiness_service.return_value = readiness_svc
 
@@ -429,9 +429,9 @@ class TestPlatformMaintenanceAPI:
                 "healthy_enabled": 1,
                 "untested_enabled": 0,
                 "ready": True,
-                "summary": "已配置 1 个 Webhook，其中 1 个最近测试通过",
+                "summary": "1 webhook configured; 1 passed its most recent test",
             },
-            "data_quality": {"suspect_history_count": 2, "archived_history_count": 5, "clean": False, "summary": "检测到 2 条可疑维护历史，默认主视图已隐藏"},
+            "data_quality": {"suspect_history_count": 2, "archived_history_count": 5, "clean": False, "summary": "Detected 2 suspicious maintenance history records, hidden from the default main view"},
         }
         svc.get_latest_activity.return_value = {
             "status": "success",
@@ -445,9 +445,9 @@ class TestPlatformMaintenanceAPI:
                 "healthy_enabled": 1,
                 "untested_enabled": 0,
                 "ready": True,
-                "summary": "已配置 1 个 Webhook，其中 1 个最近测试通过",
+                "summary": "1 webhook configured; 1 passed its most recent test",
             },
-            "data_quality": {"suspect_history_count": 2, "archived_history_count": 5, "clean": False, "summary": "检测到 2 条可疑维护历史，默认主视图已隐藏"},
+            "data_quality": {"suspect_history_count": 2, "archived_history_count": 5, "clean": False, "summary": "Detected 2 suspicious maintenance history records, hidden from the default main view"},
         }
         svc.list_runs.return_value = {
             "items": [{"id": 1, "status": "success", "risk": {"level": "warning", "shadow_count": 1}, "warning_detected": True, "risk_alert_sent": True}],
@@ -516,7 +516,7 @@ class TestPlatformMaintenanceAPI:
             "reason": "ops_archive",
             "archived_at": "2026-03-16T12:00:00",
             "remaining": 0,
-            "data_quality": {"suspect_history_count": 0, "archived_history_count": 4, "clean": True, "summary": "已归档 4 条历史维护记录"},
+            "data_quality": {"suspect_history_count": 0, "archived_history_count": 4, "clean": True, "summary": "Archived 4 maintenance history records"},
         }
         mock_get_service.return_value = svc
 
@@ -549,7 +549,7 @@ class TestPlatformMaintenanceAPI:
                 "last_archive_export_format": "json",
                 "archive_export_fresh": True,
                 "clean": True,
-                "summary": "已归档 52 条历史维护记录，最近已完成导出",
+                "summary": "Archived 52 maintenance history records; the latest export is complete",
             },
         }
         mock_get_service.return_value = svc
@@ -606,7 +606,7 @@ class TestPlatformMaintenanceAPI:
                 "last_archive_cleanup_deleted_runs": 0,
                 "last_archive_cleanup_deleted_exports": 0,
                 "clean": True,
-                "summary": "已归档 52 条历史维护记录，最近已完成导出",
+                "summary": "Archived 52 maintenance history records; the latest export is complete",
             },
         }
         mock_get_service.return_value = svc
@@ -641,17 +641,17 @@ class TestPlatformMaintenanceAPI:
         remediation_svc = MagicMock()
         remediation_svc.evaluate.return_value = {
             "status": "attention",
-            "summary": "当前存在需要继续推进的生产化行动项。",
+            "summary": "Production readiness action items still need attention.",
             "counts": {"total": 2, "blocking": 1, "local": 1, "global": 1, "p0": 1, "p1": 1},
             "items": [
                 {
                     "key": "notification_webhook",
-                    "title": "接出生产告警 Webhook",
+                    "title": "Connect a production alert webhook",
                     "scope": "local",
                     "priority": "P0",
                     "blocking": True,
                     "route": "/notifications",
-                    "summary": "当前没有启用中的生产告警 Webhook",
+                    "summary": "No production alert webhook is currently enabled",
                     "impact": "impact",
                     "next_step": "step",
                     "evidence": {"webhook_count": 0},
@@ -682,7 +682,7 @@ class TestPlatformMaintenanceAPI:
 
 
 # ============================================================
-# /api/knowledge — 知识库
+# /api/knowledge — Knowledge base
 # ============================================================
 class TestKnowledgeAPI:
     @patch("routers.knowledge._get_kb")
@@ -782,7 +782,7 @@ class TestNotificationAPI:
                 "last_test_at": "2026-03-18 10:00:00",
                 "last_test_success": 1,
                 "last_test_status": 200,
-                "last_test_message": "发送成功",
+                "last_test_message": "Sent successfully",
                 "created_at": "2026-03-18 10:00:00",
             }
         ]
@@ -848,7 +848,7 @@ class TestNotificationAPI:
         assert resp.status_code == 200
         data = resp.json()
         assert data["success"] is True
-        assert data["message"] == "发送成功"
+        assert data["message"] == "Sent successfully"
         mock_execute.assert_called_once()
 
     @patch("routers.notification.query_one")
@@ -865,7 +865,7 @@ class TestNotificationAPI:
                 "last_test_at": "2026-03-16T10:00:00",
                 "last_test_success": 1,
                 "last_test_status": 200,
-                "last_test_message": "发送成功",
+                "last_test_message": "Sent successfully",
                 "created_at": "2026-03-16T10:00:00",
             },
             {
@@ -878,7 +878,7 @@ class TestNotificationAPI:
                 "last_test_at": "2026-03-16T10:00:00",
                 "last_test_success": 1,
                 "last_test_status": 200,
-                "last_test_message": "发送成功",
+                "last_test_message": "Sent successfully",
                 "created_at": "2026-03-16T10:00:00",
             },
         ]
@@ -907,7 +907,7 @@ class TestNotificationAPI:
                 "last_test_at": "2026-03-16T10:00:00",
                 "last_test_success": 1,
                 "last_test_status": 200,
-                "last_test_message": "发送成功",
+                "last_test_message": "Sent successfully",
                 "created_at": "2026-03-16T10:00:00",
             },
             {
@@ -945,7 +945,7 @@ class TestNotificationAPI:
         data = resp.json()
         assert data["configured"] == 0
         assert data["delivered"] == 0
-        assert "无法执行告警演练" in data["summary"]
+        assert "cannot run an alert drill" in data["summary"]
 
     @patch("routers.notification.execute")
     @patch("routers.notification.query_all")
@@ -966,12 +966,12 @@ class TestNotificationAPI:
         client_mock.post.return_value = response
         mock_client_cls.return_value.__aenter__.return_value = client_mock
 
-        resp = client.post("/api/notify/drill", json={"title": "平台告警演练"})
+        resp = client.post("/api/notify/drill", json={"title": "Platform alert drill"})
         assert resp.status_code == 200
         data = resp.json()
         assert data["configured"] == 1
         assert data["delivered"] == 1
-        assert data["results"][0]["message"] == "发送成功"
+        assert data["results"][0]["message"] == "Sent successfully"
         assert mock_execute.called
 
 
@@ -995,7 +995,7 @@ class TestCommanderWebhookAPI:
             "attempted": True,
             "success": True,
             "issue": "",
-            "summary": "公网回调地址已通过主动回探，当前入口对外可达。",
+            "summary": "The public callback URL passed its active probe and is externally reachable.",
             "status_code": 200,
             "content_type": "application/json",
             "response_excerpt": '{"challenge":"chatops-probe"}',
@@ -1011,7 +1011,7 @@ class TestCommanderWebhookAPI:
                     "message": "health",
                     "from_user": "ou_demo",
                     "chat_id": "oc_demo",
-                    "response": "🟢 军团状态：6/6 Agent 在线",
+                    "response": "🟢 Agent fleet status: 6/6 agents online",
                     "status": "ok",
                     "delivery_configured": 1,
                     "delivery_delivered": 1,
@@ -1079,7 +1079,7 @@ class TestCommanderWebhookAPI:
             "attempted": True,
             "success": True,
             "issue": "",
-            "summary": "公网回调地址已通过主动回探，当前入口对外可达。",
+            "summary": "The public callback URL passed its active probe and is externally reachable.",
             "status_code": 200,
             "content_type": "application/json",
             "response_excerpt": '{"challenge":"chatops-probe"}',
@@ -1110,7 +1110,7 @@ class TestCommanderWebhookAPI:
                     "message": "health",
                     "from_user": "ou_demo",
                     "chat_id": "oc_demo",
-                    "response": "🟢 军团状态：6/6 Agent 在线",
+                    "response": "🟢 Agent fleet status: 6/6 agents online",
                     "status": "ok",
                     "delivery_configured": 1,
                     "delivery_delivered": 1,
@@ -1151,7 +1151,7 @@ class TestCommanderWebhookAPI:
         data = resp.json()
         assert data["overview"]["latest_event"]["status"] == "ignored"
         assert data["overview"]["latest_successful_event"]["message"] == "health"
-        assert "最近一次文本指令仍然成功回推" in data["overview"]["summary"]
+        assert "the latest text command was still successfully sent back" in data["overview"]["summary"]
 
     @patch.dict("os.environ", {"NOTIFICATION_PLATFORM_EVENT_VERIFICATION_TOKEN": "", "PUBLIC_API_BASE_URL": "https://callback.example.com"}, clear=False)
     @patch.object(Config, "NOTIFICATION_PLATFORM_EVENT_VERIFICATION_TOKEN", "")
@@ -1196,7 +1196,7 @@ class TestCommanderWebhookAPI:
     @patch("routers.commander._deliver_commander_response", new_callable=AsyncMock)
     @patch("routers.commander._handle_commander_chat_message", new_callable=AsyncMock)
     def test_notification_platform_message_event_dispatches_and_pushes_reply(self, mock_handle_message, mock_deliver_reply):
-        mock_handle_message.return_value = {"response": "🟢 军团状态：1/1 Agent 在线"}
+        mock_handle_message.return_value = {"response": "🟢 Agent fleet status: 1/1 agents online"}
         mock_deliver_reply.return_value = {
             "configured": 2,
             "delivered": 1,
@@ -1204,7 +1204,7 @@ class TestCommanderWebhookAPI:
             "sender": "app_bot",
             "mode": "app_bot",
             "fallback_used": False,
-            "message": "通知平台应用机器人已回发消息。",
+            "message": "The notification platform app bot has replied.",
             "failures": [],
         }
 
@@ -1225,16 +1225,16 @@ class TestCommanderWebhookAPI:
         data = resp.json()
         assert data["status"] == "ok"
         assert data["message"] == "状态"
-        assert data["result"]["response"] == "🟢 军团状态：1/1 Agent 在线"
+        assert data["result"]["response"] == "🟢 Agent fleet status: 1/1 agents online"
         assert data["delivery"]["delivered"] == 1
         mock_handle_message.assert_awaited_once_with("状态", from_user="ou_demo", chat_id="oc_demo")
-        mock_deliver_reply.assert_awaited_once_with("🟢 军团状态：1/1 Agent 在线", chat_id="oc_demo")
+        mock_deliver_reply.assert_awaited_once_with("🟢 Agent fleet status: 1/1 agents online", chat_id="oc_demo")
 
     @patch("services.commander_chatops_service.query_all")
     @patch("routers.commander._deliver_commander_response", new_callable=AsyncMock)
     @patch("routers.commander._handle_commander_chat_message", new_callable=AsyncMock)
     def test_commander_chatops_simulate(self, mock_handle_message, mock_deliver_reply, mock_query_all):
-        mock_handle_message.return_value = {"response": "🟢 军团状态：1/1 Agent 在线"}
+        mock_handle_message.return_value = {"response": "🟢 Agent fleet status: 1/1 agents online"}
         mock_deliver_reply.return_value = {
             "configured": 2,
             "delivered": 1,
@@ -1242,7 +1242,7 @@ class TestCommanderWebhookAPI:
             "sender": "app_bot",
             "mode": "app_bot",
             "fallback_used": False,
-            "message": "通知平台应用机器人已回发消息。",
+            "message": "The notification platform app bot has replied.",
         }
         mock_query_all.side_effect = [
             [],
@@ -1264,10 +1264,10 @@ class TestCommanderWebhookAPI:
         assert resp.status_code == 200
         data = resp.json()
         assert data["status"] == "success"
-        assert data["result"]["response"] == "🟢 军团状态：1/1 Agent 在线"
+        assert data["result"]["response"] == "🟢 Agent fleet status: 1/1 agents online"
         assert data["delivery"]["delivered"] == 1
         mock_handle_message.assert_awaited_once_with("状态", from_user="tester", chat_id="debug_chat")
-        mock_deliver_reply.assert_awaited_once_with("🟢 军团状态：1/1 Agent 在线", chat_id="debug_chat")
+        mock_deliver_reply.assert_awaited_once_with("🟢 Agent fleet status: 1/1 agents online", chat_id="debug_chat")
 
     @patch("routers.commander._get_chatops_overview")
     @patch("core.agent_profile.get_profile_manager")
@@ -1297,7 +1297,7 @@ class TestCommanderWebhookAPI:
         mock_get_chatops_overview.return_value = {
             "ready": False,
             "platform_ready": True,
-            "summary": "平台侧已就绪，待通知平台联调。",
+            "summary": "The platform is ready; notification platform integration testing is pending.",
         }
 
         resp = client.post("/api/commander/chatops/simulate", json={
@@ -1317,7 +1317,7 @@ class TestCommanderWebhookAPI:
 
     def test_commander_chatops_simulate_greeting_returns_help_instead_of_starting_swarm(self):
         resp = client.post("/api/commander/chatops/simulate", json={
-            "message": "你好",
+            "message": "Hello",
             "from_user": "tester",
             "chat_id": "debug_chat",
             "deliver": False,
@@ -1425,7 +1425,7 @@ class TestCommanderWebhookAPI:
         }
         mock_get_token.return_value = {
             "ok": True,
-            "message": "应用机器人凭据校验通过，已成功获取 tenant_access_token。",
+            "message": "App bot credentials validated; tenant_access_token obtained successfully.",
             "status_code": 200,
             "app_id_masked": "cli...bot",
             "app_bot_configured": True,
@@ -1520,7 +1520,7 @@ class TestCommanderWebhookAPI:
                 "attempted": True,
                 "success": False,
                 "issue": "connect_error",
-                "summary": "公网回调地址回探失败：ConnectionError",
+                "summary": "Public callback URL probe failed: ConnectionError",
                 "status_code": None,
                 "content_type": "",
                 "response_excerpt": "",
@@ -1534,7 +1534,7 @@ class TestCommanderWebhookAPI:
                         "attempted": True,
                         "success": False,
                         "issue": "connect_error",
-                        "summary": "公网回调地址回探失败：ConnectionError",
+                        "summary": "Public callback URL probe failed: ConnectionError",
                         "status_code": None,
                         "content_type": "",
                         "response_excerpt": "",
@@ -1560,7 +1560,7 @@ class TestCommanderWebhookAPI:
         service = MagicMock()
         service.restart_local_tunnel.return_value = {
             "ok": True,
-            "message": "本机反向隧道已重启。",
+            "message": "The local reverse tunnel has restarted.",
             "stdout": "native_ssh_reverse_tunnel_pid=4321",
             "stderr": "",
             "tunnel": {
@@ -1569,7 +1569,7 @@ class TestCommanderWebhookAPI:
                 "running": True,
                 "pid": 4321,
                 "status": "running",
-                "summary": "检测到本机 OpenSSH 反向隧道进程（PID 4321）。",
+                "summary": "Detected a local OpenSSH reverse tunnel process (PID 4321).",
             },
             "overview": {
                 "local_tunnel": {
@@ -1586,7 +1586,7 @@ class TestCommanderWebhookAPI:
         data = resp.json()
         assert data["status"] == "success"
         assert data["ok"] is True
-        assert data["message"] == "本机反向隧道已重启。"
+        assert data["message"] == "The local reverse tunnel has restarted."
         assert data["tunnel"]["running"] is True
         assert data["tunnel"]["pid"] == 4321
         assert data["overview"]["local_tunnel"]["running"] is True
@@ -1634,7 +1634,7 @@ class TestCommanderWebhookAPI:
                     return FakeResponse(200, {"challenge": json.get("challenge")})
                 return FakeResponse(200, {
                     "status": "ok",
-                    "result": {"response": "📡 军团状态\n• 已注册 Agent: 6\n• 健康心跳: 6/6"},
+                    "result": {"response": "📡 Agent fleet status\n• Registered agents: 6\n• Healthy heartbeats: 6/6"},
                     "delivery": {"configured": 1, "delivered": 1, "failed": 0},
                 })
 
@@ -1666,7 +1666,7 @@ class TestCommanderWebhookAPI:
         assert data["challenge_check"]["challenge_matched"] is True
         assert data["message_check"]["ok"] is True
         assert data["message_check"]["delivery"]["delivered"] == 1
-        assert "军团状态" in data["message_check"]["command_response"]
+        assert "Agent fleet status" in data["message_check"]["command_response"]
         assert data["overview"]["callback_url"] == "https://ops.example.com/api/commander/notification_platform/events"
         assert mock_get_overview.call_count == 2
 
@@ -1690,34 +1690,34 @@ class TestCommanderWebhookAPI:
 
 
 # ============================================================
-# /api/start + /api/stop — 执行生命周期
+# /api/start + /api/stop — Execution lifecycle
 # ============================================================
 class TestStartStopLifecycle:
-    """测试任务启动/停止端点行为。
-    注意: /api/start 会真正启动 orchestrator + Playwright 浏览器线程,
-    在 TestClient 中不能安全调用。start 的完整生命周期测试在
-    test_execution_lifecycle.py 中以 httpx 真实连接方式覆盖。
+    """Test task start/stop endpoint behavior.
+    Note: /api/start starts the actual orchestrator and Playwright browser thread,
+    so it cannot be called safely through TestClient. The complete start lifecycle
+    is covered with a real httpx connection in test_execution_lifecycle.py.
     """
 
     def test_start_missing_requirement(self):
-        """缺少 requirement 字段应返回 422"""
+        """A missing requirement field should return 422."""
         resp = client.post("/api/start", json={})
         assert resp.status_code == 422
 
     def test_stop_always_returns_stopped(self):
-        """停止端点应始终返回 stopped 状态"""
+        """The stop endpoint should always return stopped status."""
         resp = client.post("/api/stop")
         assert resp.status_code == 200
         assert resp.json()["status"] == "stopped"
 
 
 # ============================================================
-# /api/status — 系统状态
+# /api/status — System status
 # ============================================================
 class TestStatusEndpoint:
 
     def test_status_returns_all_fields(self):
-        """状态端点应返回所有必要字段"""
+        """The status endpoint should return all required fields."""
         resp = client.get("/api/status")
         assert resp.status_code == 200
         data = resp.json()
@@ -1725,65 +1725,65 @@ class TestStatusEndpoint:
             assert field in data, f"Missing field: {field}"
 
     def test_status_signal_valid_values(self):
-        """信号值应在合法范围内"""
+        """Signal values should remain within the valid range."""
         resp = client.get("/api/status")
         data = resp.json()
         assert data["signal"] in ("RUNNING", "PAUSED", "STOPPED", "INTERVENTION")
 
 
 # ============================================================
-# /api/stream — SSE 日志流
+# /api/stream — SSE log stream
 # ============================================================
 class TestStreamEndpoint:
 
     def test_stream_content_type(self):
-        """SSE 端点应返回 text/event-stream"""
+        """The SSE endpoint should return text/event-stream."""
         resp = client.get("/api/stream")
         assert resp.status_code == 200
         assert "text/event-stream" in resp.headers.get("content-type", "")
 
     def test_stream_with_last_event_id(self):
-        """支持 Last-Event-ID 断线重连"""
+        """Support reconnection with Last-Event-ID."""
         resp = client.get("/api/stream", headers={"Last-Event-ID": "5"})
         assert resp.status_code == 200
 
 
 # ============================================================
-# /api/control/* — 控制端点
+# /api/control/* — Control endpoints
 # ============================================================
 class TestControlEndpoints:
 
     def test_pause(self):
-        """暂停应返回 PAUSED 信号"""
+        """Pause should return the PAUSED signal."""
         resp = client.post("/api/control/pause")
         assert resp.status_code == 200
         assert resp.json()["signal"] == "PAUSED"
         assert client.get("/api/status").json()["signal"] == "PAUSED"
 
     def test_resume(self):
-        """恢复应返回 RUNNING 信号"""
+        """Resume should return the RUNNING signal."""
         resp = client.post("/api/control/resume")
         assert resp.status_code == 200
         assert resp.json()["signal"] == "RUNNING"
         assert client.get("/api/status").json()["signal"] == "RUNNING"
 
     def test_suspend_with_reason(self):
-        """挂起应接受 reason 参数"""
-        resp = client.post("/api/control/suspend", json={"reason": "验证码场景暂停"})
+        """Suspend should accept the reason parameter."""
+        resp = client.post("/api/control/suspend", json={"reason": "Paused for a CAPTCHA scenario"})
         assert resp.status_code == 200
         data = resp.json()
         assert data["signal"] == "PAUSED"
-        assert "验证码" in data["reason"]
-        assert client.get("/api/status").json()["pause_reason"] == "验证码场景暂停"
+        assert "CAPTCHA" in data["reason"]
+        assert client.get("/api/status").json()["pause_reason"] == "Paused for a CAPTCHA scenario"
 
     def test_control_stop(self):
-        """控制停止应返回 STOPPED 信号"""
+        """Control stop should return the STOPPED signal."""
         resp = client.post("/api/control/stop")
         assert resp.status_code == 200
         assert resp.json()["signal"] == "STOPPED"
 
     def test_pause_resume_lifecycle(self):
-        """完整的暂停→恢复生命周期"""
+        """Complete pause/resume lifecycle."""
         client.post("/api/control/pause")
         assert client.get("/api/status").json()["signal"] == "PAUSED"
         client.post("/api/control/resume")
@@ -1792,7 +1792,7 @@ class TestControlEndpoints:
 
 
 # ============================================================
-# /api/session/bootstrap-auth — 会话预认证注入
+# /api/session/bootstrap-auth — Session preauthentication injection
 # ============================================================
 class TestSessionBootstrapAPI:
     @patch("routers.session_bootstrap.session_manager")

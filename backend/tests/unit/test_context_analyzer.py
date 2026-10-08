@@ -1,6 +1,6 @@
 """
-ContextAnalyzer 单元测试
-覆盖: TDD / EXPLORER / VERIFICATION 分支与空输入健壮性
+ContextAnalyzer unit tests
+Coverage: TDD / EXPLORER / VERIFICATION branches and robustness to empty input.
 """
 from services.context_analyzer import ContextAnalyzer
 

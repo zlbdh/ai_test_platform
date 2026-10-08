@@ -11,20 +11,20 @@ from core import db_helper
 
 
 class TestDbHelper:
-    """db_helper 上下文管理器和便捷方法测试"""
+    """Tests for db_helper context managers and convenience methods."""
 
     def setup_method(self):
-        """每个测试前使用临时数据库"""
+        """Use a temporary database for each test."""
         self._original_db_path = db_helper.DB_PATH
         self._original_backend_dir = db_helper._BACKEND_DIR
         self._original_legacy_candidates = list(db_helper.LEGACY_DB_CANDIDATES)
-        # 需要用 get_connection 创建表，因为 :memory: 每次连接是独立的
-        # 改为使用临时文件
+        # Create the table using get_connection because each :memory: connection is isolated.
+        # Use a temporary file instead.
         import tempfile
         self._tmpfile = tempfile.NamedTemporaryFile(suffix='.db', delete=False)
         self._tmpfile.close()
         db_helper.DB_PATH = self._tmpfile.name
-        # 创建测试表
+        # Create a test table.
         with db_helper.get_connection() as conn:
             conn.execute("CREATE TABLE IF NOT EXISTS test_items (id INTEGER PRIMARY KEY, name TEXT, value TEXT)")
 
@@ -38,17 +38,17 @@ class TestDbHelper:
             pass
 
     def test_get_connection_context_manager(self):
-        """上下文管理器应自动提交并关闭"""
+        """The context manager should commit and close automatically."""
         with db_helper.get_connection() as conn:
             conn.execute("INSERT INTO test_items (name, value) VALUES (?, ?)", ("key1", "val1"))
         
-        # 验证数据已持久化（新连接）
+        # Verify persistence using a new connection.
         row = db_helper.query_one("SELECT * FROM test_items WHERE name=?", ("key1",))
         assert row is not None
         assert row["value"] == "val1"
 
     def test_get_connection_rollback_on_error(self):
-        """异常时应回滚"""
+        """Roll back when an exception occurs."""
         try:
             with db_helper.get_connection() as conn:
                 conn.execute("INSERT INTO test_items (name, value) VALUES (?, ?)", ("bad", "data"))
@@ -89,12 +89,12 @@ class TestDbHelper:
         assert affected == 1
 
     def test_execute_safe_ignores_operational_error(self):
-        """execute_safe 应忽略表不存在的错误"""
+        """execute_safe should ignore missing-table errors."""
         affected = db_helper.execute_safe("DELETE FROM nonexistent_table WHERE id=1")
         assert affected == 0
 
     def test_concurrent_writes(self):
-        """多线程并发写入应不丢数据"""
+        """Concurrent writes from multiple threads should not lose data."""
         errors = []
 
         def writer(tid):

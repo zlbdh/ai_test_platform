@@ -1,6 +1,7 @@
 """
-core/models.py 单元测试
-覆盖: 30+ Pydantic 模型实例化/默认值/枚举、APIResponse/APIError 工厂方法
+core/models.py unit tests.
+Covers initialization, defaults, and enums for more than 30 Pydantic models,
+plus APIResponse and APIError factory methods.
 """
 import pytest
 from core.models import (
@@ -21,7 +22,7 @@ from core.models import (
 
 
 # ═══════════════════════════════════════════════════
-# LogType 枚举
+# LogType enum.
 # ═══════════════════════════════════════════════════
 
 class TestLogType:
@@ -41,7 +42,7 @@ class TestLogType:
 
 
 # ═══════════════════════════════════════════════════
-# Core Request/Response 模型
+# Core request/response models.
 # ═══════════════════════════════════════════════════
 
 class TestTestRequest:
@@ -111,7 +112,7 @@ class TestLogEntry:
 
 
 # ═══════════════════════════════════════════════════
-# Plan / Config 模型
+# Plan/configuration models.
 # ═══════════════════════════════════════════════════
 
 class TestPlanGenerate:
@@ -139,7 +140,7 @@ class TestBatchRunRequest:
 
 
 # ═══════════════════════════════════════════════════
-# DB 模型
+# Database models.
 # ═══════════════════════════════════════════════════
 
 class TestDBModels:
@@ -159,7 +160,7 @@ class TestDBModels:
 
 
 # ═══════════════════════════════════════════════════
-# CI/CD 模型
+# CI/CD models.
 # ═══════════════════════════════════════════════════
 
 class TestCICDModels:
@@ -174,7 +175,7 @@ class TestCICDModels:
 
 
 # ═══════════════════════════════════════════════════
-# Auth 模型
+# Authentication models.
 # ═══════════════════════════════════════════════════
 
 class TestAuthModels:
@@ -188,7 +189,7 @@ class TestAuthModels:
 
 
 # ═══════════════════════════════════════════════════
-# Testing Router 模型
+# Testing router models.
 # ═══════════════════════════════════════════════════
 
 class TestTestingModels:
@@ -244,7 +245,7 @@ class TestTestingModels:
 
 
 # ═══════════════════════════════════════════════════
-# Misc 模型
+# Miscellaneous models.
 # ═══════════════════════════════════════════════════
 
 class TestMiscModels:

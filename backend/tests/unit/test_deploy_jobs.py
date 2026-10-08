@@ -13,7 +13,7 @@ def _make_service(project_dir: Path) -> tuple[DeployService, RepoConfig]:
     service = DeployService.__new__(DeployService)
     repo = RepoConfig(
         id="repo1",
-        label="后端",
+        label="Backend",
         repo_url="https://example.com/backend.git",
         local_dir="unused",
         tech_stack="Java 17 + Spring Cloud",
@@ -21,7 +21,7 @@ def _make_service(project_dir: Path) -> tuple[DeployService, RepoConfig]:
         start_cmd="mvn spring-boot:run",
         port=8080,
     )
-    project = ProjectConfig(key="proj1", name="测试项目", repos=[repo])
+    project = ProjectConfig(key="proj1", name="Test project", repos=[repo])
 
     service.projects = {project.key: project}
     service.processes = {}
@@ -43,9 +43,9 @@ def _make_service(project_dir: Path) -> tuple[DeployService, RepoConfig]:
 def test_mark_incomplete_jobs_as_orphaned():
     service, _ = _make_service(Path("."))
     service.jobs = {
-        "job_queue": DeployJob(id="job_queue", status="queued", message="待执行"),
-        "job_run": DeployJob(id="job_run", status="running", message="执行中"),
-        "job_done": DeployJob(id="job_done", status="success", message="完成"),
+        "job_queue": DeployJob(id="job_queue", status="queued", message="Pending"),
+        "job_run": DeployJob(id="job_run", status="running", message="Running"),
+        "job_done": DeployJob(id="job_done", status="success", message="Completed"),
     }
 
     service._mark_incomplete_jobs_orphaned()
@@ -67,7 +67,7 @@ async def test_schedule_full_deploy_tracks_success_job_lifecycle(tmp_path: Path)
         assert branch == "release"
         assert job_id
         existing_record.status = "success"
-        existing_record.message = "一键部署完成 ✅"
+        existing_record.message = "One-click deployment completed ✅"
         return existing_record
 
     with patch.object(service, "full_deploy_repo", side_effect=fake_full_deploy):
@@ -91,7 +91,7 @@ async def test_schedule_full_deploy_tracks_failed_job_lifecycle(tmp_path: Path):
         assert branch == "hotfix"
         assert job_id
         existing_record.status = "failed"
-        existing_record.message = "启动失败"
+        existing_record.message = "Startup failed"
         return existing_record
 
     with patch.object(service, "full_deploy_repo", side_effect=fake_full_deploy):
@@ -99,7 +99,7 @@ async def test_schedule_full_deploy_tracks_failed_job_lifecycle(tmp_path: Path):
         await asyncio.wait_for(service._active_job_tasks[job.id], timeout=1)
 
     assert service.jobs[job.id].status == "failed"
-    assert service.jobs[job.id].message == "启动失败"
+    assert service.jobs[job.id].message == "Startup failed"
 
 
 @pytest.mark.asyncio
@@ -107,7 +107,7 @@ async def test_schedule_full_deploy_all_tracks_success_job_lifecycle(tmp_path: P
     service, repo = _make_service(tmp_path)
     frontend = RepoConfig(
         id="repo2",
-        label="前端",
+        label="Frontend",
         repo_url="https://example.com/frontend.git",
         local_dir="unused-frontend",
         tech_stack="React + Vite",
@@ -122,7 +122,7 @@ async def test_schedule_full_deploy_all_tracks_success_job_lifecycle(tmp_path: P
         assert existing_record is service.history[0]
         assert job_id
         existing_record.status = "success"
-        existing_record.message = "全部 2 个仓库部署完成 ✅"
+        existing_record.message = "All 2 repositories deployed successfully ✅"
         return existing_record
 
     with patch.object(service, "full_deploy_all", side_effect=fake_full_deploy_all):
@@ -132,7 +132,7 @@ async def test_schedule_full_deploy_all_tracks_success_job_lifecycle(tmp_path: P
     assert job.record_id
     assert service.jobs[job.id].action == "full_deploy_all"
     assert service.jobs[job.id].status == "success"
-    assert service.jobs[job.id].repo_label == "测试项目"
+    assert service.jobs[job.id].repo_label == "Test project"
     assert service.jobs[job.id].started_at
     assert service.jobs[job.id].finished_at
     assert service.history[0].id == job.record_id
@@ -146,7 +146,7 @@ async def test_schedule_full_deploy_all_tracks_failed_job_lifecycle(tmp_path: Pa
     async def fake_full_deploy_all(_project_key, existing_record=None, job_id=""):
         assert job_id
         existing_record.status = "failed"
-        existing_record.message = "[后端] 失败: 启动失败"
+        existing_record.message = "[Backend] Failed: Startup failed"
         return existing_record
 
     with patch.object(service, "full_deploy_all", side_effect=fake_full_deploy_all):
@@ -155,7 +155,7 @@ async def test_schedule_full_deploy_all_tracks_failed_job_lifecycle(tmp_path: Pa
 
     assert service.jobs[job.id].action == "full_deploy_all"
     assert service.jobs[job.id].status == "failed"
-    assert service.jobs[job.id].message == "[后端] 失败: 启动失败"
+    assert service.jobs[job.id].message == "[Backend] Failed: Startup failed"
 
 
 @pytest.mark.asyncio
@@ -167,18 +167,18 @@ async def test_cancel_job_marks_running_repo_job_cancelled(tmp_path: Path):
         assert branch == "release"
         assert job_id
         existing_record.steps[0].status = "running"
-        existing_record.steps[0].message = "克隆中"
+        existing_record.steps[0].message = "Cloning"
         await gate.wait()
         if service._job_cancellation_requested(job_id):
             existing_record.steps[0].status = "cancelled"
-            existing_record.steps[0].message = "部署任务已取消"
+            existing_record.steps[0].message = "Deployment job canceled"
             existing_record.status = "cancelled"
-            existing_record.message = "部署任务已取消"
+            existing_record.message = "Deployment job canceled"
             return existing_record
         existing_record.steps[0].status = "success"
-        existing_record.steps[0].message = "克隆完成"
+        existing_record.steps[0].message = "Clone completed"
         existing_record.status = "success"
-        existing_record.message = "一键部署完成 ✅"
+        existing_record.message = "One-click deployment completed ✅"
         return existing_record
 
     with patch.object(service, "full_deploy_repo", side_effect=fake_full_deploy):
@@ -191,16 +191,16 @@ async def test_cancel_job_marks_running_repo_job_cancelled(tmp_path: Path):
     assert payload["status"] == "cancel_requested"
     assert service.jobs[job.id].status == "cancelled"
     assert service.history[0].status == "cancelled"
-    assert service.history[0].message == "部署任务已取消"
+    assert service.history[0].message == "Deployment job canceled"
 
 
 def test_cancel_job_rejects_finished_job(tmp_path: Path):
     service, _ = _make_service(tmp_path)
     service.jobs = {
-        "job_done": DeployJob(id="job_done", status="success", message="完成"),
+        "job_done": DeployJob(id="job_done", status="success", message="Completed"),
     }
 
-    with pytest.raises(ValueError, match="作业已结束，无法取消"):
+    with pytest.raises(ValueError, match="The job has finished and cannot be canceled"):
         service.cancel_job("job_done")
 
 
@@ -210,7 +210,7 @@ def test_cancel_job_finalizes_without_active_task(tmp_path: Path):
         id="rec_cancel",
         project_key="proj1",
         repo_id="repo1",
-        repo_label="后端",
+        repo_label="Backend",
         action="full_deploy",
         status="running",
         steps=[DeployStep(name="clone", status="pending")],
@@ -220,10 +220,10 @@ def test_cancel_job_finalizes_without_active_task(tmp_path: Path):
         action="full_deploy",
         project_key="proj1",
         repo_id="repo1",
-        repo_label="后端",
+        repo_label="Backend",
         record_id="rec_cancel",
         status="queued",
-        message="待执行",
+        message="Pending",
     )
     service.history = [record]
     service.jobs = {job.id: job}
@@ -237,23 +237,23 @@ def test_cancel_job_finalizes_without_active_task(tmp_path: Path):
 
 def test_get_job_detail_includes_record_status(tmp_path: Path):
     service, _ = _make_service(tmp_path)
-    record = DeployRecord(id="rec_demo", project_key="proj1", repo_id="repo1", repo_label="后端", action="full_deploy", status="success", message="完成")
+    record = DeployRecord(id="rec_demo", project_key="proj1", repo_id="repo1", repo_label="Backend", action="full_deploy", status="success", message="Completed")
     service.history = [record]
-    job = DeployJob(id="job_demo", action="full_deploy", project_key="proj1", repo_id="repo1", repo_label="后端", record_id="rec_demo", status="success", message="完成")
+    job = DeployJob(id="job_demo", action="full_deploy", project_key="proj1", repo_id="repo1", repo_label="Backend", record_id="rec_demo", status="success", message="Completed")
     service.jobs = {job.id: job}
 
     payload = service.get_job_detail("job_demo")
 
     assert payload is not None
     assert payload["record_status"] == "success"
-    assert payload["record_message"] == "完成"
+    assert payload["record_message"] == "Completed"
 
 
 def test_list_jobs_returns_latest_first_and_supports_status_filter(tmp_path: Path):
     service, _ = _make_service(tmp_path)
     service.history = [
-        DeployRecord(id="rec_old", status="success", message="旧任务"),
-        DeployRecord(id="rec_new", status="failed", message="新任务"),
+        DeployRecord(id="rec_old", status="success", message="Old task"),
+        DeployRecord(id="rec_new", status="failed", message="New task"),
     ]
     service.jobs = {
         "job_old": DeployJob(id="job_old", record_id="rec_old", status="success", created_at="2026-03-19T10:00:00"),
@@ -278,7 +278,7 @@ def test_create_deploy_approval_returns_pending_payload(tmp_path: Path):
         repo_id=repo.id,
         branch="release",
         requested_by="dev1",
-        requested_by_name="开发者",
+        requested_by_name="Developer",
     )
 
     assert payload["status"] == "pending"
@@ -288,7 +288,7 @@ def test_create_deploy_approval_returns_pending_payload(tmp_path: Path):
     assert payload["repo_label"] == repo.label
     assert payload["branch"] == "release"
     assert payload["requested_by"] == "dev1"
-    assert service.approvals[payload["id"]].message == "等待审批"
+    assert service.approvals[payload["id"]].message == "Awaiting approval"
 
 
 def test_review_repo_approval_schedules_job_on_approve(tmp_path: Path):
@@ -299,7 +299,7 @@ def test_review_repo_approval_schedules_job_on_approve(tmp_path: Path):
         repo_id=repo.id,
         branch="release",
         requested_by="dev1",
-        requested_by_name="开发者",
+        requested_by_name="Developer",
     )
 
     def fake_schedule(project_key: str, repo_id: str, branch: str = "") -> DeployJob:
@@ -324,15 +324,15 @@ def test_review_repo_approval_schedules_job_on_approve(tmp_path: Path):
             approval["id"],
             approved=True,
             reviewed_by="admin1",
-            reviewed_by_name="管理员",
-            comment="可以发布",
+            reviewed_by_name="Administrator",
+            comment="Ready to release",
         )
 
     assert payload["status"] == "approved"
     assert payload["job_id"] == "job_repo_approved"
     assert payload["record_id"] == "rec_repo_approved"
     assert payload["reviewed_by"] == "admin1"
-    assert payload["review_comment"] == "可以发布"
+    assert payload["review_comment"] == "Ready to release"
     assert payload["job"]["status"] == "queued"
 
 
@@ -342,7 +342,7 @@ def test_review_project_approval_schedules_project_job_on_approve(tmp_path: Path
         action="full_deploy_all",
         project_key="proj1",
         requested_by="dev1",
-        requested_by_name="开发者",
+        requested_by_name="Developer",
     )
 
     def fake_schedule(project_key: str) -> DeployJob:
@@ -352,7 +352,7 @@ def test_review_project_approval_schedules_project_job_on_approve(tmp_path: Path
             action="full_deploy_all",
             project_key=project_key,
             repo_id="",
-            repo_label="测试项目",
+            repo_label="Test project",
             record_id="rec_project_approved",
             status="queued",
         )
@@ -364,8 +364,8 @@ def test_review_project_approval_schedules_project_job_on_approve(tmp_path: Path
             approval["id"],
             approved=True,
             reviewed_by="admin1",
-            reviewed_by_name="管理员",
-            comment="项目级发布通过",
+            reviewed_by_name="Administrator",
+            comment="Project release approved",
         )
 
     assert payload["status"] == "approved"
@@ -381,20 +381,20 @@ def test_review_approval_marks_rejected_without_creating_job(tmp_path: Path):
         project_key="proj1",
         repo_id=repo.id,
         requested_by="dev1",
-        requested_by_name="开发者",
+        requested_by_name="Developer",
     )
 
     payload = service.review_approval(
         approval["id"],
         approved=False,
         reviewed_by="admin1",
-        reviewed_by_name="管理员",
-        comment="发布窗口未到",
+        reviewed_by_name="Administrator",
+        comment="Release window has not opened",
     )
 
     assert payload["status"] == "rejected"
-    assert payload["message"] == "审批已拒绝"
-    assert payload["review_comment"] == "发布窗口未到"
+    assert payload["message"] == "Approval rejected"
+    assert payload["review_comment"] == "Release window has not opened"
     assert payload["job_id"] == ""
 
 
@@ -405,10 +405,10 @@ def test_load_jobs_marks_running_job_orphaned_after_reload(tmp_path: Path):
         action="full_deploy",
         project_key="proj1",
         repo_id="repo1",
-        repo_label="后端",
+        repo_label="Backend",
         record_id="rec1",
         status="running",
-        message="执行中",
+        message="Running",
     )
 
     service, _ = _make_service(tmp_path)

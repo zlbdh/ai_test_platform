@@ -1,6 +1,6 @@
 """
-api_tools 单元测试
-覆盖: JSON 响应、文本回退、默认请求参数、异常路径
+api_tools unit tests.
+Covers JSON responses, text fallback, default request parameters, and error paths.
 """
 from datetime import timedelta
 from unittest.mock import MagicMock, patch

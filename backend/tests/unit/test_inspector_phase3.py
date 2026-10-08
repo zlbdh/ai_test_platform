@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Phase 3 单元测试 — store_finding / RAG 召回 / 置信度阈值
+Phase 3 unit tests: store_finding, RAG recall, and confidence thresholds.
 """
 import pytest
 import json
@@ -16,7 +16,7 @@ from core.models import InspectionResult
 # ============================================================================
 
 def _make_fake_vlm(response_text: str):
-    """构造 fake VLM"""
+    """Build a fake VLM."""
     fake = MagicMock()
     fake_resp = MagicMock()
     fake_resp.content = response_text
@@ -25,7 +25,7 @@ def _make_fake_vlm(response_text: str):
 
 
 def _make_fake_vector_store(search_results=None):
-    """构造 fake VectorStore"""
+    """Build a fake VectorStore."""
     vs = MagicMock()
     vs.store_document = MagicMock(return_value="bugs_0")
     vs.search = MagicMock(return_value=search_results or [])
@@ -40,11 +40,11 @@ SAMPLE_SCREENSHOT = "iVBORw0KGgoAAAANSUhEUg=="
 
 
 # ============================================================================
-# P3-1: store_finding 写入 ChromaDB
+# P3-1: store_finding writes to ChromaDB
 # ============================================================================
 
 class TestStoreFinding:
-    """store_finding 方法测试"""
+    """store_finding method tests."""
 
     def test_store_finding_calls_vector_store(self):
         vs = _make_fake_vector_store()
@@ -55,14 +55,14 @@ class TestStoreFinding:
         )
         doc_id = agent.store_finding(
             url="https://example.com",
-            step_desc="click(按钮)",
+            step_desc="click(Button)",
             result=result,
         )
         assert doc_id == "bugs_0"
         vs.store_document.assert_called_once()
         call_args = vs.store_document.call_args
         assert call_args[0][0] == "bugs"  # collection name
-        assert "Inspector 驳回" in call_args[0][1]  # content
+        assert "Inspector rejected" in call_args[0][1]  # content
         metadata = call_args[0][2]
         assert metadata["source"] == "inspector"
         assert metadata["url"] == "https://example.com"
@@ -86,7 +86,7 @@ class TestStoreFinding:
         assert doc_id is None
 
     def test_inspect_rejected_triggers_store(self):
-        """inspect() 驳回时自动调用 store_finding"""
+        """A rejected inspect() result automatically calls store_finding."""
         vlm_resp = json.dumps({
             "passed": False, "confidence": 0.85,
             "reason": "Error visible", "anomalies": ["red banner"]
@@ -99,15 +99,15 @@ class TestStoreFinding:
         )
         result = agent.inspect(
             screenshot_b64=SAMPLE_SCREENSHOT,
-            step_desc="click(提交)",
-            expected_outcome="提交成功",
+            step_desc="click(Submit)",
+            expected_outcome="Submission successful",
             page_state=SAMPLE_PAGE_STATE,
         )
         assert result.passed is False
         vs.store_document.assert_called_once()
 
     def test_inspect_passed_does_not_store(self):
-        """inspect() 通过时不调用 store_finding"""
+        """A passed inspect() result does not call store_finding."""
         vlm_resp = json.dumps({
             "passed": True, "confidence": 0.95,
             "reason": "OK", "anomalies": []
@@ -116,7 +116,7 @@ class TestStoreFinding:
         agent = InspectorAgent(vlm=_make_fake_vlm(vlm_resp), vector_store=vs)
         agent.inspect(
             screenshot_b64=SAMPLE_SCREENSHOT,
-            step_desc="click(按钮)",
+            step_desc="click(Button)",
             expected_outcome="",
             page_state=SAMPLE_PAGE_STATE,
         )
@@ -124,21 +124,21 @@ class TestStoreFinding:
 
 
 # ============================================================================
-# P3-2: RAG 召回历史审查记录
+# P3-2: RAG recall of previous inspection records
 # ============================================================================
 
 class TestRAGRecall:
-    """_recall_history 和 RAG 注入 prompt 测试"""
+    """Test _recall_history and RAG prompt injection."""
 
     def test_recall_returns_history(self):
         vs = _make_fake_vector_store(search_results=[
-            {"content": "Inspector 驳回 | URL: http://a.com | 操作: click", "metadata": {"source": "inspector"}},
-            {"content": "Inspector 驳回 | URL: http://b.com | 操作: fill", "metadata": {"source": "inspector"}},
+            {"content": "Inspector rejected | URL: http://a.com | Action: click", "metadata": {"source": "inspector"}},
+            {"content": "Inspector rejected | URL: http://b.com | Action: fill", "metadata": {"source": "inspector"}},
         ])
         agent = InspectorAgent(vector_store=vs)
-        history = agent._recall_history("http://a.com", "click(按钮)")
-        assert "Inspector 驳回" in history
-        vs.search.assert_called_once_with("bugs", "Inspector click(按钮) http://a.com", n_results=3)
+        history = agent._recall_history("http://a.com", "click(Button)")
+        assert "Inspector rejected" in history
+        vs.search.assert_called_once_with("bugs", "Inspector click(Button) http://a.com", n_results=3)
 
     def test_recall_empty_when_no_results(self):
         vs = _make_fake_vector_store(search_results=[])
@@ -179,35 +179,35 @@ class TestRAGRecall:
         assert history == ""
 
     def test_history_injected_into_prompt(self):
-        """inspect() 调用时 RAG 历史被注入 VLM prompt"""
+        """RAG history is injected into the VLM prompt during inspect()."""
         vlm_resp = json.dumps({"passed": True, "confidence": 0.9, "reason": "ok", "anomalies": []})
         fake_vlm = _make_fake_vlm(vlm_resp)
         vs = _make_fake_vector_store(search_results=[
-            {"content": "Inspector 驳回 | 历史记录", "metadata": {"source": "inspector"}},
+            {"content": "Inspector rejected | Historical record", "metadata": {"source": "inspector"}},
         ])
         agent = InspectorAgent(vlm=fake_vlm, vector_store=vs)
         agent.inspect(
             screenshot_b64=SAMPLE_SCREENSHOT,
-            step_desc="click(提交)",
+            step_desc="click(Submit)",
             expected_outcome="",
             page_state=SAMPLE_PAGE_STATE,
         )
         # Check VLM was called with history in the prompt
         call_args = fake_vlm.invoke.call_args[0][0]
         prompt_text = call_args[0].content[0]["text"]
-        assert "历史审查参考" in prompt_text
-        assert "Inspector 驳回" in prompt_text
+        assert "Prior review findings for the same page/action:" in prompt_text
+        assert "Inspector rejected" in prompt_text
 
 
 # ============================================================================
-# P3-3: 置信度阈值校准
+# P3-3: Confidence threshold calibration
 # ============================================================================
 
 class TestConfidenceThreshold:
-    """置信度阈值机制测试"""
+    """Confidence threshold tests."""
 
     def test_low_confidence_rejection_auto_passes(self):
-        """confidence < threshold → 驳回被翻转为 pass"""
+        """confidence < threshold: change rejection to pass."""
         vlm_resp = json.dumps({
             "passed": False, "confidence": 0.5,
             "reason": "maybe error", "anomalies": ["unsure"]
@@ -220,7 +220,7 @@ class TestConfidenceThreshold:
         )
         result = agent.inspect(
             screenshot_b64=SAMPLE_SCREENSHOT,
-            step_desc="click(按钮)",
+            step_desc="click(Button)",
             expected_outcome="",
             page_state=SAMPLE_PAGE_STATE,
         )
@@ -231,7 +231,7 @@ class TestConfidenceThreshold:
         vs.store_document.assert_not_called()
 
     def test_high_confidence_rejection_stays_rejected(self):
-        """confidence >= threshold → 驳回保持"""
+        """confidence >= threshold: retain rejection."""
         vlm_resp = json.dumps({
             "passed": False, "confidence": 0.85,
             "reason": "clear error", "anomalies": ["red banner"]
@@ -244,7 +244,7 @@ class TestConfidenceThreshold:
         )
         result = agent.inspect(
             screenshot_b64=SAMPLE_SCREENSHOT,
-            step_desc="click(按钮)",
+            step_desc="click(Button)",
             expected_outcome="",
             page_state=SAMPLE_PAGE_STATE,
         )
@@ -253,7 +253,7 @@ class TestConfidenceThreshold:
         vs.store_document.assert_called_once()
 
     def test_exact_threshold_stays_rejected(self):
-        """confidence == threshold → 驳回保持（不是严格小于）"""
+        """confidence == threshold: retain rejection because it is not strictly below the threshold."""
         vlm_resp = json.dumps({
             "passed": False, "confidence": 0.7,
             "reason": "borderline", "anomalies": []
@@ -266,7 +266,7 @@ class TestConfidenceThreshold:
         )
         result = agent.inspect(
             screenshot_b64=SAMPLE_SCREENSHOT,
-            step_desc="click(按钮)",
+            step_desc="click(Button)",
             expected_outcome="",
             page_state=SAMPLE_PAGE_STATE,
         )
@@ -274,7 +274,7 @@ class TestConfidenceThreshold:
         assert result.confidence == 0.7
 
     def test_passed_result_ignores_threshold(self):
-        """通过的结果不受阈值影响"""
+        """A passed result is unaffected by the threshold."""
         vlm_resp = json.dumps({
             "passed": True, "confidence": 0.3,
             "reason": "looks ok", "anomalies": []
@@ -285,7 +285,7 @@ class TestConfidenceThreshold:
         )
         result = agent.inspect(
             screenshot_b64=SAMPLE_SCREENSHOT,
-            step_desc="click(按钮)",
+            step_desc="click(Button)",
             expected_outcome="",
             page_state=SAMPLE_PAGE_STATE,
         )
@@ -293,7 +293,7 @@ class TestConfidenceThreshold:
         assert result.confidence == 0.3
 
     def test_custom_threshold(self):
-        """自定义阈值"""
+        """Custom threshold."""
         vlm_resp = json.dumps({
             "passed": False, "confidence": 0.85,
             "reason": "error", "anomalies": []
@@ -306,7 +306,7 @@ class TestConfidenceThreshold:
         )
         result = agent.inspect(
             screenshot_b64=SAMPLE_SCREENSHOT,
-            step_desc="click(按钮)",
+            step_desc="click(Button)",
             expected_outcome="",
             page_state=SAMPLE_PAGE_STATE,
         )
@@ -314,7 +314,7 @@ class TestConfidenceThreshold:
         assert "below threshold" in result.reason
 
     def test_zero_threshold_never_auto_passes(self):
-        """threshold=0 → 所有驳回都保持"""
+        """threshold=0: retain every rejection."""
         vlm_resp = json.dumps({
             "passed": False, "confidence": 0.01,
             "reason": "maybe", "anomalies": []
@@ -327,7 +327,7 @@ class TestConfidenceThreshold:
         )
         result = agent.inspect(
             screenshot_b64=SAMPLE_SCREENSHOT,
-            step_desc="click(按钮)",
+            step_desc="click(Button)",
             expected_outcome="",
             page_state=SAMPLE_PAGE_STATE,
         )

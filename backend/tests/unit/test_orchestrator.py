@@ -1,7 +1,7 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
-单元测试: Orchestrator 生命周期
-测试任务状态管理和异常处理
+Unit tests: Orchestrator lifecycle
+Test task state management and exception handling.
 """
 import asyncio
 import pytest
@@ -15,7 +15,7 @@ from agents.orchestrator import Orchestrator
 
 
 class TestOrchestratorLifecycle:
-    """测试 Orchestrator 基本生命周期"""
+    """Test the basic Orchestrator lifecycle."""
 
     def test_initial_state(self):
         orch = Orchestrator()
@@ -24,33 +24,33 @@ class TestOrchestratorLifecycle:
         assert orch._executor_error is None
 
     def test_zombie_detection(self):
-        """测试僵尸状态检测"""
+        """Test zombie-state detection."""
         orch = Orchestrator()
         orch.is_running = True
         orch.e_thread = None  # No thread
         orch._planner_task = None  # No task
         
-        # 没有线程引用时不应该判定为 zombie
+        # Do not classify the task as a zombie when there is no thread reference.
         result = orch.start_task("test")
         assert result == "Busy"
 
     def test_stop_when_not_running(self):
-        """停止未运行的任务不应抛异常"""
+        """Stopping a task that is not running should not raise an exception."""
         orch = Orchestrator()
         orch.stop_task()  # Should not raise
         assert orch.is_running == False
 
     def test_persist_test_run_no_db(self):
-        """持久化在数据库不可访问时应优雅失败"""
+        """Persistence should fail gracefully when the database is inaccessible."""
         orch = Orchestrator()
         orch.active_task_id = "test_999"
         orch._task_requirement = "sample test"
-        # 这应该不会抛异常（即使 DB 不存在）
+        # This should not raise an exception, even if the database does not exist.
         with patch("agents.orchestrator.get_execution_center_service", return_value=MagicMock()):
             orch._persist_test_run()
 
     def test_persist_test_run_runs_notification_without_loop(self):
-        """在无运行事件循环时，应同步完成通知而不是泄漏 coroutine。"""
+        """Complete notifications synchronously without leaking a coroutine when no event loop is running."""
         orch = Orchestrator()
         orch.active_task_id = "test_notify"
         orch._task_requirement = "sample test"

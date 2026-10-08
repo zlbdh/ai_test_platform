@@ -1,7 +1,7 @@
 """
-AccessibilityTestService 单元测试
-覆盖: 枚举/数据类, quick_check(通过 aiohttp mock), audit(Playwright mock),
-      create_accessibility_service
+AccessibilityTestService unit tests.
+Covers enums and data classes, quick_check with mocked aiohttp, audit with mocked
+Playwright, and create_accessibility_service.
 """
 import pytest
 from unittest.mock import patch, MagicMock, AsyncMock
@@ -13,7 +13,7 @@ from services.accessibility_testing import (
 
 
 # ---------------------------------------------------------------------------
-# 枚举
+# Enums.
 # ---------------------------------------------------------------------------
 class TestWCAGLevel:
     def test_values(self):
@@ -29,11 +29,11 @@ class TestSeverity:
 
 
 # ---------------------------------------------------------------------------
-# 数据类
+# Data classes.
 # ---------------------------------------------------------------------------
 class TestAccessibilityIssue:
     def test_creation(self):
-        issue = AccessibilityIssue(rule_id="img-alt", description="缺少alt",
+        issue = AccessibilityIssue(rule_id="img-alt", description="Missing alt text",
                                    severity="critical", wcag_level="A")
         d = issue.to_dict()
         assert d["rule_id"] == "img-alt"
@@ -48,7 +48,7 @@ class TestAccessibilityReport:
 
 
 # ---------------------------------------------------------------------------
-# aiohttp mock 辅助
+# aiohttp mock helpers.
 # ---------------------------------------------------------------------------
 def _make_aiohttp_ctx(mock_resp):
     ctx = MagicMock()
@@ -58,12 +58,12 @@ def _make_aiohttp_ctx(mock_resp):
 
 
 # ---------------------------------------------------------------------------
-# quick_check 测试
+# quick_check tests.
 # ---------------------------------------------------------------------------
 class TestQuickCheck:
     @pytest.mark.asyncio
     async def test_missing_lang_and_title(self):
-        """检测到缺少 lang 和 title"""
+        """Detect missing lang and title attributes."""
         svc = AccessibilityTestService()
         html = '<html><head></head><body><img src="x.png"></body></html>'
 
@@ -86,7 +86,7 @@ class TestQuickCheck:
 
     @pytest.mark.asyncio
     async def test_compliant_page(self):
-        """符合规范的页面不应有问题"""
+        """A compliant page should have no issues."""
         svc = AccessibilityTestService()
         html = '<html lang="zh-CN"><head><title>Test</title></head><body><img src="x.png" alt="desc"></body></html>'
 
@@ -104,7 +104,7 @@ class TestQuickCheck:
 
     @pytest.mark.asyncio
     async def test_error_handling(self):
-        """网络异常应返回 error"""
+        """Network errors should return an error result."""
         svc = AccessibilityTestService()
         mock_session_ctx = MagicMock()
         mock_session_ctx.__aenter__ = AsyncMock(side_effect=Exception("timeout"))
@@ -116,17 +116,17 @@ class TestQuickCheck:
 
 
 # ---------------------------------------------------------------------------
-# audit 测试 (mock Playwright)
+# audit tests with mocked Playwright.
 # ---------------------------------------------------------------------------
 class TestAudit:
     @pytest.mark.asyncio
     async def test_playwright_not_installed(self):
-        """Playwright 不可用时应提示安装"""
+        """Show installation guidance when Playwright is unavailable."""
         svc = AccessibilityTestService()
         with patch.dict("sys.modules", {"playwright": None, "playwright.async_api": None}):
-            # 模拟 ImportError
+            # Simulate ImportError.
             with patch.object(svc, "audit", new_callable=AsyncMock) as mock_audit:
-                report = AccessibilityReport(url="http://x.com", summary="Playwright 未安装", score=-1)
+                report = AccessibilityReport(url="http://x.com", summary="Playwright is not installed", score=-1)
                 mock_audit.return_value = report
                 result = await svc.audit("http://x.com")
                 assert "Playwright" in result.summary

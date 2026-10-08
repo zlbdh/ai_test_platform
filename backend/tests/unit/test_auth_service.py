@@ -1,7 +1,7 @@
 """
-AuthenticationService 单元测试
-覆盖: 枚举/数据类, 创建用户, 认证(密码/API Key/Token), 权限检查,
-      项目管理, 审计日志, 登出, 单例
+AuthenticationService unit tests.
+Covers enums and data classes, user creation, password/API-key/token authentication,
+permission checks, project management, audit logs, logout, and the singleton.
 """
 import pytest
 from unittest.mock import patch
@@ -15,7 +15,7 @@ from services.auth_service import (
 
 
 # ---------------------------------------------------------------------------
-# 枚举
+# Enums.
 # ---------------------------------------------------------------------------
 class TestUserRole:
     def test_values(self):
@@ -48,11 +48,11 @@ def auth(tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# 用户管理
+# User management.
 # ---------------------------------------------------------------------------
 class TestUserManagement:
     def test_default_admin_created(self, auth):
-        """初始化时应自动创建默认管理员"""
+        """Initialization should create the default administrator automatically."""
         admin = [u for u in auth.users.values() if u.role == UserRole.ADMIN]
         assert len(admin) >= 1
         assert admin[0].username == "admin"
@@ -60,7 +60,7 @@ class TestUserManagement:
     def test_create_user(self, auth):
         user = auth.create_user("alice", "alice@test.com", "pass123")
         assert user.username == "alice"
-        assert user.role == UserRole.TESTER  # 默认角色
+        assert user.role == UserRole.TESTER  # Default role.
         assert user.api_key is not None
         assert user.api_key.startswith("atp_")
         assert user.is_active is True
@@ -71,7 +71,7 @@ class TestUserManagement:
 
 
 # ---------------------------------------------------------------------------
-# 认证
+# Authentication.
 # ---------------------------------------------------------------------------
 class TestAuthentication:
     def test_login_success(self, auth):
@@ -147,7 +147,7 @@ class TestAuthentication:
 
 
 # ---------------------------------------------------------------------------
-# 权限
+# Permissions.
 # ---------------------------------------------------------------------------
 class TestPermissions:
     def test_admin_has_all_permissions(self, auth):
@@ -164,7 +164,7 @@ class TestPermissions:
 
 
 # ---------------------------------------------------------------------------
-# 项目管理
+# Project management.
 # ---------------------------------------------------------------------------
 class TestProjectManagement:
     def test_create_project(self, auth):
@@ -202,11 +202,11 @@ class TestProjectManagement:
 
 
 # ---------------------------------------------------------------------------
-# 审计日志
+# Audit logs.
 # ---------------------------------------------------------------------------
 class TestAuditLogs:
     def test_logs_created(self, auth):
-        """创建用户时应产生审计日志"""
+        """Creating a user should produce an audit log entry."""
         auth.create_user("x", "x@t.com", "p")
         logs = auth.get_audit_logs()
         actions = [l.action for l in logs]
@@ -270,7 +270,7 @@ class TestAuditLogs:
 
 
 # ---------------------------------------------------------------------------
-# 登出
+# Logout.
 # ---------------------------------------------------------------------------
 class TestLogout:
     def test_logout(self, auth):
@@ -280,11 +280,11 @@ class TestLogout:
         assert auth.validate_token(session.token) is None
 
     def test_logout_invalid_token(self, auth):
-        auth.logout("bogus")  # 不应崩溃
+        auth.logout("bogus")  # Should not raise an error.
 
 
 # ---------------------------------------------------------------------------
-# 单例
+# Singleton.
 # ---------------------------------------------------------------------------
 class TestSingleton:
     def test_singleton(self):

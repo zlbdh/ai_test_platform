@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-单元测试: EventBus 线程安全通信
-测试 sync/async 方法的正确性和线程安全性
+Unit tests for thread-safe EventBus communication.
+Tests correctness and thread safety of synchronous and asynchronous methods.
 """
 import asyncio
 import threading
@@ -16,7 +16,7 @@ from core.protocol import SENTINEL
 
 
 class TestEventBusSync:
-    """测试 EventBus 同步方法"""
+    """Test synchronous EventBus methods."""
 
     def test_publish_and_get_task(self):
         bus = EventBus()
@@ -65,7 +65,7 @@ class TestEventBusSync:
 
 
 class TestEventBusAsync:
-    """测试 EventBus 异步方法"""
+    """Test asynchronous EventBus methods."""
 
     @pytest.mark.asyncio
     async def test_async_publish_and_get_task(self):
@@ -85,7 +85,7 @@ class TestEventBusAsync:
 
 
 class TestEventBusCrossThread:
-    """测试跨线程通信"""
+    """Test communication across threads."""
 
     def test_sync_publish_async_consume(self):
         bus = EventBus()
@@ -131,7 +131,7 @@ class TestEventBusCrossThread:
 
 
 class TestEventBusNoDuplicateLog:
-    """测试 publish_log 不重复存储到 SharedBrowserState"""
+    """Test that publish_log stores only one entry in SharedBrowserState."""
 
     def setup_method(self):
         from core.shared import SharedBrowserState
@@ -139,12 +139,12 @@ class TestEventBusNoDuplicateLog:
 
     @pytest.mark.asyncio
     async def test_async_publish_log_no_duplicate(self):
-        """async publish_log 应只在 SharedBrowserState 中存一次"""
+        """Async publish_log should store an entry in SharedBrowserState only once."""
         from core.shared import SharedBrowserState
         bus = EventBus()
         await bus.publish_log({"type": "info", "content": "async test"})
 
         logs = SharedBrowserState.get_logs()
-        # 修复前会是 2 (queue.put + append_log 各一次)，修复后应为 1
+        # Before the fix there were two entries, from queue.put and append_log; expect one now.
         matching = [l for l in logs if l.get("content") == "async test"]
         assert len(matching) == 1, f"Expected 1 log entry, got {len(matching)}"

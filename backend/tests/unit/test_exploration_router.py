@@ -35,7 +35,7 @@ def test_create_exploration_session_route_returns_service_payload():
                 "group_id": "grp1",
                 "project_key": "demo",
                 "target_url": "https://demo.example.com",
-                "charter": "检查登录链路",
+                "charter": "Check the login flow",
             },
         )
 
@@ -164,7 +164,7 @@ def test_review_finding_route_returns_updated_finding():
     svc.review_finding.return_value = {
         "finding_id": "finding_demo",
         "review_status": "confirmed",
-        "review_comment": "人工确认",
+        "review_comment": "Manual review",
     }
 
     with patch("core.auth_dependencies.get_auth_service", return_value=auth), \
@@ -172,7 +172,7 @@ def test_review_finding_route_returns_updated_finding():
         response = client.post(
             "/api/exploration/findings/finding_demo/review",
             headers={"Authorization": "Bearer demo-token"},
-            json={"decision": "confirmed", "comment": "人工确认"},
+            json={"decision": "confirmed", "comment": "Manual review"},
         )
 
     assert response.status_code == 200
@@ -181,5 +181,5 @@ def test_review_finding_route_returns_updated_finding():
         user=user,
         finding_id="finding_demo",
         decision="confirmed",
-        comment="人工确认",
+        comment="Manual review",
     )

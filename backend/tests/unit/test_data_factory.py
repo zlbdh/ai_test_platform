@@ -1,34 +1,34 @@
 # -*- coding: utf-8 -*-
 """
-测试 - Data Factory 模块
+Tests for the Data Factory module.
 """
 import pytest
 from core.data_factory import generate_test_data, DataFactory
 
 
 class TestDataFactory:
-    """Data Factory 单元测试"""
+    """Data Factory unit tests."""
 
     def test_generate_name(self):
-        """测试姓名生成"""
+        """Test name generation."""
         result = generate_test_data({"name": "name"})
         assert "name" in result
         assert len(result["name"]) > 0
 
     def test_generate_email(self):
-        """测试邮箱生成"""
+        """Test email generation."""
         result = generate_test_data({"email": "email"})
         assert "email" in result
         assert "@" in result["email"]
 
     def test_generate_phone(self):
-        """测试电话生成"""
+        """Test phone number generation."""
         result = generate_test_data({"phone": "phone"})
         assert "phone" in result
         assert len(result["phone"]) >= 10
 
     def test_generate_multiple_fields(self):
-        """测试多字段生成"""
+        """Test multiple-field generation."""
         template = {
             "name": "name",
             "email": "email",
@@ -41,33 +41,33 @@ class TestDataFactory:
         assert all(key in result for key in template.keys())
 
     def test_generate_with_count(self):
-        """测试批量生成"""
+        """Test batch generation."""
         template = {"name": "name"}
         results = [generate_test_data(template) for _ in range(5)]
         
         assert len(results) == 5
-        # 确保每次生成的数据不同
+        # Ensure that generated records vary.
         names = [r["name"] for r in results]
-        assert len(set(names)) > 1  # 至少有2个不同的名字
+        assert len(set(names)) > 1  # Expect at least two distinct names.
 
     def test_unknown_field_type(self):
-        """测试未知字段类型"""
+        """Test an unknown field type."""
         result = generate_test_data({"unknown": "unknown_type"})
-        # 应该返回原始值或空字符串
+        # Return the original value or an empty string.
         assert "unknown" in result
 
     def test_data_factory_class(self):
-        """测试 DataFactory 类"""
+        """Test the DataFactory class."""
         factory = DataFactory()
         
-        # 测试可用类型列表
+        # Test the list of available types.
         types = factory.get_available_types()
         assert isinstance(types, list)
         assert "name" in types
         assert "email" in types
 
     def test_generate_batch(self):
-        """测试批量数据生成"""
+        """Test batch data generation."""
         factory = DataFactory()
         template = {"name": "name", "email": "email"}
         

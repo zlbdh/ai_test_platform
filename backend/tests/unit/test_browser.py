@@ -1,7 +1,7 @@
 """
-core/browser.py 单元测试
-覆盖: _new_page_state, _process_dom_indexer, _fill_evaluate_results,
-       format_page_state_for_log, SharedBrowser 单例
+core/browser.py unit tests.
+Covers _new_page_state, _process_dom_indexer, _fill_evaluate_results,
+format_page_state_for_log, and the SharedBrowser singleton.
 """
 import asyncio
 import pytest

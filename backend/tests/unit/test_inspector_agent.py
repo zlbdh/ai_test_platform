@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Inspector Agent 单元测试
-覆盖：should_inspect / inspect 通过&驳回 / JSON解析异常 / VLM不可用降级
+Inspector Agent unit tests
+Coverage: should_inspect, passing/rejected inspections, JSON parsing errors, and fallback when VLM is unavailable.
 """
 import pytest
 import json
@@ -12,11 +12,11 @@ from core.models import InspectionResult
 
 
 # ============================================================================
-# should_inspect 白名单测试
+# should_inspect allowlist tests
 # ============================================================================
 
 class TestShouldInspect:
-    """动作白名单判定"""
+    """Action allowlist matching."""
 
     @pytest.mark.parametrize("action", ["goto", "wait", "scroll", "screenshot", "set_var", "done"])
     def test_skip_actions(self, action):
@@ -31,11 +31,11 @@ class TestShouldInspect:
 
 
 # ============================================================================
-# _parse_result JSON 解析
+# _parse_result JSON parsing
 # ============================================================================
 
 class TestParseResult:
-    """VLM 返回文本解析"""
+    """Parse text returned by the VLM."""
 
     def test_parse_valid_passed(self):
         raw = json.dumps({"passed": True, "confidence": 0.95, "reason": "OK", "anomalies": []})
@@ -89,11 +89,11 @@ class TestParseResult:
 
 
 # ============================================================================
-# inspect() 完整调用测试 (使用 fake VLM)
+# Complete inspect() call tests (using a fake VLM)
 # ============================================================================
 
 def _make_fake_vlm(response_text: str):
-    """构造一个 fake VLM，invoke() 返回固定 content"""
+    """Build a fake VLM whose invoke() returns fixed content."""
     fake = MagicMock()
     fake_response = MagicMock()
     fake_response.content = response_text
@@ -102,7 +102,7 @@ def _make_fake_vlm(response_text: str):
 
 
 class TestInspect:
-    """inspect() 端到端测试"""
+    """inspect() end-to-end tests."""
 
     SAMPLE_PAGE_STATE = {
         "url": "https://example.com/dashboard",
@@ -122,8 +122,8 @@ class TestInspect:
         agent = InspectorAgent(vlm=_make_fake_vlm(vlm_response))
         result = agent.inspect(
             screenshot_b64=self.SAMPLE_SCREENSHOT,
-            step_desc="click(提交按钮)",
-            expected_outcome="应显示提交成功",
+            step_desc="click(Submit button)",
+            expected_outcome="Submission should succeed",
             page_state=self.SAMPLE_PAGE_STATE,
         )
         assert result.passed is True
@@ -140,8 +140,8 @@ class TestInspect:
         agent = InspectorAgent(vlm=_make_fake_vlm(vlm_response))
         result = agent.inspect(
             screenshot_b64=self.SAMPLE_SCREENSHOT,
-            step_desc="click(付款按钮)",
-            expected_outcome="应显示付款成功",
+            step_desc="click(Pay button)",
+            expected_outcome="Payment should succeed",
             page_state=self.SAMPLE_PAGE_STATE,
         )
         assert result.passed is False
@@ -149,11 +149,11 @@ class TestInspect:
         assert len(result.anomalies) == 2
 
     def test_inspect_vlm_returns_bad_json(self):
-        """VLM 返回非 JSON 时自动 pass"""
+        """Automatically pass when the VLM returns non-JSON output."""
         agent = InspectorAgent(vlm=_make_fake_vlm("I cannot analyze this image"))
         result = agent.inspect(
             screenshot_b64=self.SAMPLE_SCREENSHOT,
-            step_desc="click(按钮)",
+            step_desc="click(Button)",
             expected_outcome="",
             page_state=self.SAMPLE_PAGE_STATE,
         )
@@ -161,14 +161,14 @@ class TestInspect:
         assert result.confidence == 0.0
 
     def test_inspect_vlm_none_auto_passes(self):
-        """VLM 不可用时自动 pass"""
+        """Automatically pass when the VLM is unavailable."""
         agent = InspectorAgent(vlm=None)
         # Force vlm property to return None
         agent._vlm = None
         with patch("agents.inspector_agent.get_vision_llm", return_value=None):
             result = agent.inspect(
                 screenshot_b64=self.SAMPLE_SCREENSHOT,
-                step_desc="click(按钮)",
+                step_desc="click(Button)",
                 expected_outcome="",
                 page_state=self.SAMPLE_PAGE_STATE,
             )
@@ -176,13 +176,13 @@ class TestInspect:
         assert "unavailable" in result.reason.lower()
 
     def test_inspect_vlm_raises_exception(self):
-        """VLM 调用抛异常时自动 pass"""
+        """Automatically pass when the VLM call raises an exception."""
         fake_vlm = MagicMock()
         fake_vlm.invoke = MagicMock(side_effect=RuntimeError("API timeout"))
         agent = InspectorAgent(vlm=fake_vlm)
         result = agent.inspect(
             screenshot_b64=self.SAMPLE_SCREENSHOT,
-            step_desc="click(按钮)",
+            step_desc="click(Button)",
             expected_outcome="",
             page_state=self.SAMPLE_PAGE_STATE,
         )
@@ -191,12 +191,12 @@ class TestInspect:
         assert "VLM error" in result.reason
 
     def test_inspect_page_state_with_list_visible_text(self):
-        """visible_text 为 list 时正确拼接"""
+        """Join visible_text correctly when it is a list."""
         vlm_response = json.dumps({"passed": True, "confidence": 0.9, "reason": "ok", "anomalies": []})
         agent = InspectorAgent(vlm=_make_fake_vlm(vlm_response))
         result = agent.inspect(
             screenshot_b64=self.SAMPLE_SCREENSHOT,
-            step_desc="fill(搜索框)",
+            step_desc="fill(Search field)",
             expected_outcome="",
             page_state={"url": "http://test.com", "visible_text": ["Hello", "World"]},
         )
@@ -205,13 +205,13 @@ class TestInspect:
         agent.vlm.invoke.assert_called_once()
 
     def test_inspect_empty_expected_outcome(self):
-        """expected_outcome 为空时使用默认文本"""
+        """Use default text when expected_outcome is empty."""
         vlm_response = json.dumps({"passed": True, "confidence": 1.0, "reason": "ok", "anomalies": []})
         fake_vlm = _make_fake_vlm(vlm_response)
         agent = InspectorAgent(vlm=fake_vlm)
         agent.inspect(
             screenshot_b64=self.SAMPLE_SCREENSHOT,
-            step_desc="click(按钮)",
+            step_desc="click(Button)",
             expected_outcome="",
             page_state=self.SAMPLE_PAGE_STATE,
         )
@@ -222,11 +222,11 @@ class TestInspect:
 
 
 # ============================================================================
-# InspectionResult 数据类测试
+# InspectionResult data class tests
 # ============================================================================
 
 class TestInspectionResult:
-    """InspectionResult Pydantic 模型"""
+    """InspectionResult Pydantic model."""
 
     def test_minimal(self):
         r = InspectionResult(passed=True)

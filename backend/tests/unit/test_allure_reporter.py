@@ -56,7 +56,7 @@ class TestAllureReporter:
         runs = [
             {
                 "task_id": "task-123",
-                "requirement": "验证服务商品中心",
+                "requirement": "Verify the service catalog",
                 "status": "success",
                 "log_count": 6,
                 "error_count": 0,
@@ -70,21 +70,21 @@ class TestAllureReporter:
                         "type": "assertion",
                         "event": "assertion_pass",
                         "action": "assert",
-                        "step": "assert(服务商品)",
-                        "target": "服务商品",
+                        "step": "assert(Service products)",
+                        "target": "Service products",
                         "status": "pass",
                         "step_index": 1,
                         "content": "Assert Passed (Text Match)",
                     },
-                    {"event": "step_result", "type": "result", "action": "assert", "step": "assert(服务商品)", "status": "success", "content": "✅ success"},
+                    {"event": "step_result", "type": "result", "action": "assert", "step": "assert(Service products)", "status": "success", "content": "✅ success"},
                     {
                         "type": "error",
                         "event": "step_error",
                         "action": "click",
-                        "step": "click(分类管理)",
-                        "target": "分类管理",
+                        "step": "click(Category management)",
+                        "target": "Category management",
                         "status": "error",
-                        "content": "Could not find element: 分类管理",
+                        "content": "Could not find element: Category management",
                     },
                 ],
             }
@@ -141,7 +141,7 @@ class TestAllureReporter:
             [
                 {
                     "task_id": "task_root",
-                    "requirement": "服务商品中心全链路测试",
+                    "requirement": "Service catalog end-to-end test",
                     "target_url": "http://127.0.0.1:3000/qyLogin",
                 },
                 {

@@ -1,6 +1,7 @@
 """
-OAuthHelper 单元测试
-覆盖: 配置、缓存、授权 URL、授权码换 token、刷新 token、自动刷新、单例
+OAuthHelper unit tests.
+Covers configuration, caching, authorization URLs, code-to-token exchange, token
+refresh, automatic refresh, and the singleton.
 """
 
 from datetime import datetime, timedelta

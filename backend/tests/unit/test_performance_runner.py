@@ -1,7 +1,7 @@
 """
-PerformanceRunner 单元测试
-覆盖: 枚举/数据类, generate_locustfile, run_test 路由,
-      _parse_locust_stats, stop/history/delete/clear, 单例
+PerformanceRunner unit tests.
+Covers enums and data classes, Locust file generation, run_test dispatch, Locust
+statistics, stop/history/delete/clear operations, and the singleton.
 """
 import pytest
 import json
@@ -24,7 +24,7 @@ def _stub_execution_center():
 
 
 # ---------------------------------------------------------------------------
-# 枚举测试
+# Enum tests.
 # ---------------------------------------------------------------------------
 class TestLoadTestStatus:
     def test_enum_values(self):
@@ -36,7 +36,7 @@ class TestLoadTestStatus:
 
 
 # ---------------------------------------------------------------------------
-# 数据类测试
+# Data class tests.
 # ---------------------------------------------------------------------------
 class TestLoadTestConfig:
     def test_defaults(self):
@@ -68,7 +68,7 @@ class TestLoadTestResult:
 
 
 # ---------------------------------------------------------------------------
-# PerformanceRunner 初始化
+# PerformanceRunner initialization.
 # ---------------------------------------------------------------------------
 class TestRunnerInit:
     def test_default_init(self, tmp_path):
@@ -78,11 +78,11 @@ class TestRunnerInit:
 
 
 # ---------------------------------------------------------------------------
-# generate_locustfile 测试
+# generate_locustfile tests.
 # ---------------------------------------------------------------------------
 class TestGenerateLocustfile:
     def test_default_endpoint(self, tmp_path):
-        """没有 endpoints 时应生成默认 GET / 测试"""
+        """Generate a default GET / test when no endpoints are provided."""
         runner = PerformanceRunner(results_dir=str(tmp_path))
         cfg = LoadTestConfig(target_url="http://example.com")
         code = runner.generate_locustfile(cfg)
@@ -122,7 +122,7 @@ class TestGenerateLocustfile:
 
 
 # ---------------------------------------------------------------------------
-# _parse_locust_stats 测试
+# _parse_locust_stats tests.
 # ---------------------------------------------------------------------------
 class TestParseLocustStats:
     def test_parse_aggregated(self, tmp_path):
@@ -143,7 +143,7 @@ class TestParseLocustStats:
         assert result["success_rate"] == 95.0
 
     def test_no_aggregated(self, tmp_path):
-        """没有 Aggregated 条目时应返回 entries"""
+        """Return the entries when there is no Aggregated entry."""
         runner = PerformanceRunner(results_dir=str(tmp_path))
         stats = [{"name": "/api", "num_requests": 10}]
         result = runner._parse_locust_stats(stats)
@@ -151,12 +151,12 @@ class TestParseLocustStats:
 
 
 # ---------------------------------------------------------------------------
-# run_test 测试 (mock subprocess)
+# run_test tests with a mocked subprocess.
 # ---------------------------------------------------------------------------
 class TestRunTest:
     @pytest.mark.asyncio
     async def test_locust_not_found_fallback(self, tmp_path):
-        """Locust 不可用时应 fallback 到 simple test"""
+        """Fall back to a simple test when Locust is unavailable."""
         runner = PerformanceRunner(results_dir=str(tmp_path))
         cfg = LoadTestConfig(target_url="http://example.com", duration=1)
 
@@ -175,7 +175,7 @@ class TestRunTest:
 
     @pytest.mark.asyncio
     async def test_timeout_marks_failed(self, tmp_path):
-        """超时应标记为 FAILED"""
+        """Mark the run as FAILED on timeout."""
         runner = PerformanceRunner(results_dir=str(tmp_path))
         cfg = LoadTestConfig(target_url="http://example.com", duration=1)
 
@@ -190,12 +190,12 @@ class TestRunTest:
         with patch("asyncio.create_subprocess_exec", return_value=mock_process), \
              patch("asyncio.wait_for", side_effect=raise_timeout):
             result = await runner.run_test(cfg)
-        # 超时时可能走 TimeoutError 或 asyncio.TimeoutError 分支
+        # The timeout may use the TimeoutError or asyncio.TimeoutError branch.
         assert result.status in (LoadTestStatus.FAILED, LoadTestStatus.COMPLETED)
 
     @pytest.mark.asyncio
     async def test_generic_exception_marks_failed(self, tmp_path):
-        """通用异常应标记为 FAILED"""
+        """Mark the run as FAILED on a general exception."""
         runner = PerformanceRunner(results_dir=str(tmp_path))
         cfg = LoadTestConfig(target_url="http://example.com", duration=1)
 
@@ -240,7 +240,7 @@ class TestRunTest:
 
 
 # ---------------------------------------------------------------------------
-# stop_test 测试
+# stop_test tests.
 # ---------------------------------------------------------------------------
 class TestStopTest:
     def test_stop_with_process(self, tmp_path):
@@ -258,12 +258,12 @@ class TestStopTest:
 
     def test_stop_without_process(self, tmp_path):
         runner = PerformanceRunner(results_dir=str(tmp_path))
-        runner.stop_test()  # 不应崩溃
+        runner.stop_test()  # Should not raise an error.
         assert runner.status == LoadTestStatus.IDLE
 
 
 # ---------------------------------------------------------------------------
-# 历史管理测试
+# History management tests.
 # ---------------------------------------------------------------------------
 class TestHistory:
     def test_get_history_empty(self, tmp_path):
@@ -301,7 +301,7 @@ class TestHistory:
 
 
 # ---------------------------------------------------------------------------
-# 单例测试
+# Singleton tests.
 # ---------------------------------------------------------------------------
 class TestSingleton:
     def test_singleton(self, tmp_path):

@@ -1,6 +1,6 @@
 """
 Unit Tests for AI Enhancement Modules
-测试智能策略、自愈引擎、知识库
+Covers strategy selection, self-healing, and the knowledge base.
 """
 
 import pytest
@@ -9,7 +9,7 @@ from datetime import datetime
 
 # Tests for Strategy Selector
 class TestStrategySelector:
-    """测试智能策略选择器"""
+    """Test the strategy selector."""
     
     def test_import(self):
         from core.strategy_selector import get_strategy_selector, AITestStrategySelector
@@ -20,7 +20,7 @@ class TestStrategySelector:
         from core.strategy_selector import get_strategy_selector, TestType
         selector = get_strategy_selector()
         
-        # UI 测试需求
+        # UI testing requirement.
         strategy = selector.select_strategy("测试登录页面的表单提交功能")
         assert TestType.UI_E2E in strategy.test_types
         assert strategy.ai_confidence > 0
@@ -29,7 +29,7 @@ class TestStrategySelector:
         from core.strategy_selector import get_strategy_selector, TestType
         selector = get_strategy_selector()
         
-        # API 测试需求
+        # API testing requirement.
         strategy = selector.select_strategy("测试用户接口的 REST API 响应")
         assert TestType.API_REST in strategy.test_types
     
@@ -37,7 +37,7 @@ class TestStrategySelector:
         from core.strategy_selector import get_strategy_selector, TestType
         selector = get_strategy_selector()
         
-        # 数据库测试需求
+        # Database testing requirement.
         strategy = selector.select_strategy("验证数据库中用户表的数据一致性")
         assert TestType.DATABASE in strategy.test_types
     
@@ -45,7 +45,7 @@ class TestStrategySelector:
         from core.strategy_selector import get_strategy_selector, TestType
         selector = get_strategy_selector()
         
-        # 安全测试需求
+        # Security testing requirement.
         strategy = selector.select_strategy("检查 XSS 和 SQL 注入漏洞")
         assert TestType.SECURITY in strategy.test_types
     
@@ -67,7 +67,7 @@ class TestStrategySelector:
 
 # Tests for Self-Healing Engine
 class TestSelfHealingEngine:
-    """测试自愈引擎"""
+    """Test the self-healing engine."""
     
     def test_import(self):
         from core.self_healing import get_healing_engine, SelfHealingEngine
@@ -150,7 +150,7 @@ class TestSelfHealingEngine:
 
 # Tests for Knowledge Base
 class TestKnowledgeBase:
-    """测试知识库"""
+    """Test the knowledge base."""
     
     def test_import(self):
         from core.knowledge_base import get_knowledge_base, TestKnowledgeBase
@@ -176,7 +176,7 @@ class TestKnowledgeBase:
         from core.knowledge_base import get_knowledge_base
         kb = get_knowledge_base()
         
-        # 先记录一些测试
+        # Record some tests first.
         kb.record_test(
             requirement="测试登录表单",
             target_url=None,
@@ -185,9 +185,9 @@ class TestKnowledgeBase:
             duration_ms=1000
         )
         
-        # 查找相似
+        # Find similar tests.
         patterns = kb.find_similar_patterns("登录验证测试")
-        # 可能找到也可能找不到，取决于历史数据
+        # Results depend on the available history.
         assert isinstance(patterns, list)
     
     def test_recommend_test_types(self):
@@ -217,7 +217,7 @@ class TestKnowledgeBase:
 
 # Tests for Auth Service
 class TestAuthService:
-    """测试认证服务"""
+    """Test the authentication service."""
 
     @staticmethod
     def _build_auth_service(tmp_path, monkeypatch):
@@ -253,7 +253,7 @@ class TestAuthService:
     def test_authenticate(self, tmp_path, monkeypatch):
         auth = self._build_auth_service(tmp_path, monkeypatch)
         
-        # 使用默认管理员登录
+        # Sign in as the default administrator.
         session = auth.authenticate("admin", "public-test-passphrase")
         assert session is not None
         assert session.token is not None
@@ -301,7 +301,7 @@ class TestAuthService:
 
 # Tests for GraphQL Service
 class TestGraphQLService:
-    """测试 GraphQL 服务"""
+    """Test the GraphQL service."""
     
     def test_import(self):
         from services.graphql_testing import create_graphql_service
@@ -321,7 +321,7 @@ class TestGraphQLService:
 
 # Tests for WebSocket Service  
 class TestWebSocketService:
-    """测试 WebSocket 服务"""
+    """Test the WebSocket service."""
     
     def test_import(self):
         from services.websocket_testing import create_ws_test_service

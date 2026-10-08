@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-测试 - Visual Tools
+Tests for Visual Tools.
 """
 import pytest
 from unittest.mock import patch, MagicMock
@@ -11,7 +11,7 @@ class TestVisualTools:
     @patch("core.visual_tools.expect")
     @patch("core.visual_tools.os.makedirs")
     def test_assert_visual_snapshot_success(self, mock_makedirs, mock_expect):
-        """测试视觉检测成功"""
+        """Test successful visual verification."""
         # mock playwright expect(...).to_have_screenshot
         mock_page = MagicMock()
         mock_expect_obj = MagicMock()
@@ -26,7 +26,7 @@ class TestVisualTools:
     @patch("core.visual_tools.expect")
     @patch("core.visual_tools.os.makedirs")
     def test_assert_visual_snapshot_failure(self, mock_makedirs, mock_expect):
-        """测试视觉检测失败 (AssertionError)"""
+        """Test visual verification failure with AssertionError."""
         mock_page = MagicMock()
         mock_expect_obj = MagicMock()
         mock_expect_obj.to_have_screenshot.side_effect = AssertionError("Pixels differ")
@@ -42,7 +42,7 @@ class TestVisualTools:
     @patch("core.visual_tools.os.makedirs")
     @patch("core.visual_tools.os.path.exists")
     def test_assert_visual_snapshot_fallback_no_baseline(self, mock_exists, mock_makedirs, mock_expect):
-        """测试缺失 to_have_screenshot 时进入 Fallback: 没有基准图"""
+        """Without to_have_screenshot, use the fallback when no baseline exists."""
         mock_page = MagicMock()
         mock_expect_obj = object() # No to_have_screenshot -> AttributeError
         mock_expect.return_value = mock_expect_obj
@@ -63,7 +63,7 @@ class TestVisualTools:
     def test_assert_visual_snapshot_fallback_compare_success(
         self, mock_diff, mock_img_open, mock_exists, mock_makedirs, mock_expect
     ):
-        """测试 Fallback 模式下图片对比通过"""
+        """Test successful image comparison in fallback mode."""
         mock_page = MagicMock()
         mock_expect.return_value = object()
         
@@ -92,7 +92,7 @@ class TestVisualTools:
     def test_assert_visual_snapshot_fallback_compare_fail(
         self, mock_diff, mock_img_open, mock_exists, mock_makedirs, mock_expect
     ):
-        """测试 Fallback 模式下图片对比失败 (RMS 过大)"""
+        """Test fallback image comparison failure when RMS is too high."""
         mock_page = MagicMock()
         mock_expect.return_value = object()
         

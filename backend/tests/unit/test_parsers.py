@@ -1,6 +1,6 @@
 """
-DocumentParser 单元测试
-覆盖: parse_markdown, parse_sql, parse_openapi, parse_text
+DocumentParser unit tests.
+Covers parse_markdown, parse_sql, parse_openapi, and parse_text.
 """
 import pytest
 import json
@@ -23,7 +23,7 @@ class TestParseMarkdown:
 
     def test_empty_content(self):
         result = DocumentParser.parse_markdown("", source_name="empty.md")
-        # 空内容可能返回空列表或一个空项
+        # Empty input may return an empty list or a single empty item.
         assert isinstance(result, list)
 
     def test_enriched_content(self):

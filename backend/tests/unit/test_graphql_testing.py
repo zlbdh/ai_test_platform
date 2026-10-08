@@ -1,7 +1,7 @@
 """
-GraphQLTestService 单元测试
-覆盖: 数据类, _get_value_by_path, assert_response, 
-      execute(httpx mock), generate_query_from_schema, 工厂函数
+GraphQLTestService unit tests.
+Covers data classes, _get_value_by_path, assert_response, execute with mocked httpx,
+generate_query_from_schema, and the factory function.
 """
 import pytest
 from unittest.mock import patch, AsyncMock, MagicMock
@@ -13,7 +13,7 @@ from services.graphql_testing import (
 
 
 # ---------------------------------------------------------------------------
-# 数据类
+# Data classes.
 # ---------------------------------------------------------------------------
 class TestGraphQLRequest:
     def test_creation(self):
@@ -188,7 +188,7 @@ class TestGenerateQuery:
 
 
 # ---------------------------------------------------------------------------
-# 工厂
+# Factory.
 # ---------------------------------------------------------------------------
 class TestFactory:
     def test_create(self):

@@ -106,8 +106,8 @@ def test_reporter_sorts_findings_by_severity():
                 PrototypeFinding(
                     agent_id="perf",
                     severity="medium",
-                    title="性能预警（Mock Lighthouse）",
-                    summary="当前 mock 性能评分为 72",
+                    title="Performance warning (Mock Lighthouse)",
+                    summary="The current mock performance score is 72",
                     category="mock_perf_warning",
                     provider="mock-lighthouse",
                 ).to_dict()
@@ -119,13 +119,13 @@ def test_reporter_sorts_findings_by_severity():
             provider="playwright-flow",
             started_at="2026-03-31T10:00:00",
             finished_at="2026-03-31T10:00:01",
-            payload={"failures": ["关键页面缺失"]},
+            payload={"failures": ["Critical page missing"]},
             normalized_findings=[
                 PrototypeFinding(
                     agent_id="flow",
                     severity="blocking",
-                    title="流程连通性存在问题",
-                    summary="关键页面未映射到原型：审批流",
+                    title="Workflow connectivity issue",
+                    summary="Critical page is not mapped to the prototype: Approval workflow",
                     category="blocking_prototype_gap",
                     provider="playwright-flow",
                 ).to_dict()
@@ -143,7 +143,7 @@ def test_reporter_sorts_findings_by_severity():
                     agent_id="a11y",
                     severity="high",
                     title="color-contrast",
-                    summary="对比度不足",
+                    summary="Insufficient contrast",
                     category="wcag_violation",
                     provider="local-a11y-audit",
                 ).to_dict()
@@ -227,8 +227,8 @@ async def test_run_mission_completes_with_mixed_worker_results(monkeypatch):
                     PrototypeFinding(
                         agent_id="flow",
                         severity="blocking",
-                        title="流程连通性存在问题",
-                        summary="关键页面未映射到原型：审批流",
+                        title="Workflow connectivity issue",
+                        summary="Critical page is not mapped to the prototype: Approval workflow",
                         category="blocking_prototype_gap",
                         provider="playwright-flow",
                     ).to_dict()
@@ -241,7 +241,7 @@ async def test_run_mission_completes_with_mixed_worker_results(monkeypatch):
                 provider="mock-chromatic",
                 started_at="2026-03-31T10:00:00",
                 finished_at="2026-03-31T10:00:00",
-                payload={"reason": "未提供 compare_source，A/B 结构对比已跳过", "changedComponents": [], "comparedVersions": []},
+                payload={"reason": "No compare_source provided; A/B structural comparison skipped", "changedComponents": [], "comparedVersions": []},
                 normalized_findings=[],
             )
         return PrototypeWorkerResult(
@@ -255,8 +255,8 @@ async def test_run_mission_completes_with_mixed_worker_results(monkeypatch):
                 PrototypeFinding(
                     agent_id="perf",
                     severity="medium",
-                    title="性能预警（Mock Lighthouse）",
-                    summary="当前 mock 性能评分为 72",
+                    title="Performance warning (Mock Lighthouse)",
+                    summary="The current mock performance score is 72",
                     category="mock_perf_warning",
                     provider="mock-lighthouse",
                 ).to_dict()

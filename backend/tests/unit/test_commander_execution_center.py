@@ -29,7 +29,7 @@ async def test_commander_run_archives_group_and_bug_summary(tmp_path):
             "timeout_seconds": 30,
             "retry_count": 1,
             "ai_confidence": 0.91,
-            "reasoning": "需要同时覆盖接口与视觉线",
+            "reasoning": "Cover both API and visual testing",
             "recommended_agents": ["api", "visual"],
         }
 
@@ -37,10 +37,10 @@ async def test_commander_run_archives_group_and_bug_summary(tmp_path):
         return {
             "test_type": "api_rest",
             "status": "error",
-            "error": "登录接口返回 500",
+            "error": "Login API returned 500",
             "result": {
-                "errors": ["登录接口返回 500"],
-                "summary": "登录接口 500",
+                "errors": ["Login API returned 500"],
+                "summary": "Login API 500",
             },
         }
 
@@ -51,7 +51,7 @@ async def test_commander_run_archives_group_and_bug_summary(tmp_path):
             "result": {
                 "baselines_count": 2,
                 "baselines": ["home.png", "login.png"],
-                "note": "视觉基线检查完成",
+                "note": "Visual baseline check completed",
             },
         }
 
@@ -68,7 +68,7 @@ async def test_commander_run_archives_group_and_bug_summary(tmp_path):
             patch.object(Commander, "_notify", _fake_notify):
         commander = Commander()
         result = await commander.run(
-            user_input="测试登录模块",
+            user_input="Test the login module",
             target_url="http://example.com/login",
             parallel=False,
             mission_id="mission_demo",
@@ -77,11 +77,11 @@ async def test_commander_run_archives_group_and_bug_summary(tmp_path):
         assert result["execution_group_id"] == "mission_demo"
         assert result["execution_center_path"] == "/history?group=mission_demo"
         assert len(result["bug_summary"]) == 1
-        assert result["bug_summary"][0]["summary"] == "登录接口返回 500"
+        assert result["bug_summary"][0]["summary"] == "Login API returned 500"
 
         grouped = ExecutionCenterService().list_grouped_runs(limit=10)
         group = next(item for item in grouped["items"] if item["group_id"] == "mission_demo")
-        assert group["title"].startswith("Legion test · 测试登录模块")
+        assert group["title"].startswith("Legion test · Test the login module")
         assert group["status"] == "failed"
 
         record_map = {record["task_id"]: record for record in group["records"]}

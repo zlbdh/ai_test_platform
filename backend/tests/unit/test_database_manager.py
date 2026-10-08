@@ -1,8 +1,8 @@
 """
-DatabaseManagerService 单元测试
-覆盖: 数据类, CRUD连接, test_connection, get_tables, get_table_columns,
-      inject_data, clean_table, query_data, validate_data, 安全校验, 单例
-使用 SQLite :memory: 进行真实数据库操作测试
+DatabaseManagerService unit tests.
+Covers data classes, connection CRUD, connection tests, tables and columns, data
+injection/cleanup/query/validation, security checks, and the singleton.
+Uses SQLite :memory: for real database operations.
 """
 import pytest
 import json
@@ -19,14 +19,14 @@ from services.database_manager import (
 # ---------------------------------------------------------------------------
 @pytest.fixture
 def svc(tmp_path):
-    """创建隔离的 DatabaseManagerService（不读取磁盘文件）"""
+    """Create an isolated DatabaseManagerService without reading disk files."""
     with patch("services.database_manager.CONNECTIONS_FILE", tmp_path / "connections.json"):
         s = DatabaseManagerService()
         yield s
 
 
 def _add_sqlite_memory_conn(svc):
-    """添加一个 :memory: SQLite 连接并返回 id"""
+    """Add an in-memory SQLite connection and return its ID."""
     result = svc.create_connection({
         "name": "test_db",
         "db_type": "sqlite",
@@ -36,7 +36,7 @@ def _add_sqlite_memory_conn(svc):
 
 
 # ---------------------------------------------------------------------------
-# 数据类
+# Data classes.
 # ---------------------------------------------------------------------------
 class TestDatabaseConnection:
     def test_defaults(self):
@@ -55,7 +55,7 @@ class TestValidationRule:
 
 
 # ---------------------------------------------------------------------------
-# _validate_identifier 安全校验
+# _validate_identifier security checks.
 # ---------------------------------------------------------------------------
 class TestValidateIdentifier:
     def test_valid(self):
@@ -71,7 +71,7 @@ class TestValidateIdentifier:
 
 
 # ---------------------------------------------------------------------------
-# 连接 CRUD
+# Connection CRUD.
 # ---------------------------------------------------------------------------
 class TestConnectionCRUD:
     def test_create_and_list(self, svc):
@@ -102,7 +102,7 @@ class TestConnectionCRUD:
     def test_update_password_masked_skipped(self, svc):
         result = svc.create_connection({"name": "db", "password": "real"})
         cid = result["id"]
-        svc.update_connection(cid, {"password": "***"})  # 不应覆盖
+        svc.update_connection(cid, {"password": "***"})  # Do not overwrite the existing value.
         assert svc.connections[cid].password == "real"
 
     def test_update_nonexistent(self, svc):
@@ -179,7 +179,7 @@ class TestConnectionCRUD:
 
 
 # ---------------------------------------------------------------------------
-# test_connection 测试
+# test_connection tests.
 # ---------------------------------------------------------------------------
 class TestTestConnection:
     def test_sqlite_memory(self, svc):
@@ -208,12 +208,12 @@ class TestTestConnection:
 
 
 # ---------------------------------------------------------------------------
-# SQLite 数据操作 (inject / query / clean / validate)
-# 使用真实 in-memory 数据库
+# SQLite data operations: inject, query, clean, and validate.
+# Use a real in-memory database.
 # ---------------------------------------------------------------------------
 class TestSqliteOperations:
     def _make_file_conn(self, svc, tmp_path):
-        """创建文件数据库连接（解决 :memory: 连接隔离问题）"""
+        """Create a file-backed connection to avoid separate :memory: databases per connection."""
         db_path = str(tmp_path / "test.db")
         result = svc.create_connection({
             "name": "file_db", "db_type": "sqlite", "database": db_path
@@ -221,7 +221,7 @@ class TestSqliteOperations:
         return result["id"]
 
     def _setup_table(self, svc, conn_id):
-        """创建测试表"""
+        """Create a test table."""
         import sqlite3
         conn = svc.connections[conn_id]
         db = svc._get_sqlite_connection(conn)
@@ -395,7 +395,7 @@ class TestValidateData:
 
 
 # ---------------------------------------------------------------------------
-# 单例
+# Singleton.
 # ---------------------------------------------------------------------------
 class TestSingleton:
     def test_singleton(self):

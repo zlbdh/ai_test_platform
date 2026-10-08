@@ -1,6 +1,7 @@
 """
-I18nTestService 单元测试
-覆盖: 数据类, quick_check (aiohttp mock), test_locale(Playwright ImportError 回退), 工厂
+I18nTestService unit tests.
+Covers data classes, quick_check with mocked aiohttp, test_locale with a Playwright
+ImportError fallback, and the factory function.
 """
 import pytest
 from unittest.mock import patch, MagicMock, AsyncMock
@@ -11,11 +12,11 @@ from services.i18n_testing import (
 
 
 # ---------------------------------------------------------------------------
-# 数据类
+# Data classes.
 # ---------------------------------------------------------------------------
 class TestI18nIssue:
     def test_creation(self):
-        issue = I18nIssue(rule_id="html-lang", description="缺少lang", severity="major")
+        issue = I18nIssue(rule_id="html-lang", description="Missing lang attribute", severity="major")
         d = issue.to_dict()
         assert d["rule_id"] == "html-lang"
 
@@ -29,7 +30,7 @@ class TestI18nReport:
 
 
 # ---------------------------------------------------------------------------
-# aiohttp mock 辅助
+# aiohttp mock helpers.
 # ---------------------------------------------------------------------------
 def _make_ctx(mock_resp):
     ctx = MagicMock()
@@ -87,7 +88,7 @@ class TestQuickCheck:
 
 
 # ---------------------------------------------------------------------------
-# test_locale (Playwright ImportError 回退)
+# test_locale with a Playwright ImportError fallback.
 # ---------------------------------------------------------------------------
 class TestLocale:
     @pytest.mark.asyncio

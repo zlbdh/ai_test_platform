@@ -167,7 +167,7 @@ async def test_execute_release_risk_assess_uses_exploration_findings(monkeypatch
             "environment": "staging",
             "exploration_session_ids": [session_id],
             "required_tests_passed": True,
-            "change_summary": "首页样式微调",
+            "change_summary": "Minor home page styling update",
         },
         user=user,
         source="api",
@@ -209,7 +209,7 @@ async def test_execute_release_risk_assess_reflects_review_blockers(monkeypatch,
         {
             "finding_id": finding_id,
             "decision": "confirmed",
-            "comment": "人工确认阻断",
+            "comment": "Blocked after manual review",
         },
         user=user,
         source="web",
@@ -222,7 +222,7 @@ async def test_execute_release_risk_assess_reflects_review_blockers(monkeypatch,
             "environment": "staging",
             "exploration_session_ids": [exploration["result"]["session"]["session_id"]],
             "required_tests_passed": True,
-            "change_summary": "登录链路调整",
+            "change_summary": "Login flow update",
         },
         user=user,
         source="web",
@@ -247,8 +247,8 @@ async def test_execute_release_deploy_request_auto_executes_nonprod_low_risk(mon
         "repo_id": "repo1",
         "branch": "main",
         "status": "pending",
-        "message": "等待审批",
-        "request_comment": "按低风险策略发布",
+        "message": "Awaiting approval",
+        "request_comment": "Release under the low-risk policy",
     }
     deploy_service.review_approval.return_value = {
         "id": "approval_auto",
@@ -256,7 +256,7 @@ async def test_execute_release_deploy_request_auto_executes_nonprod_low_risk(mon
         "repo_id": "repo1",
         "branch": "main",
         "status": "approved",
-        "message": "审批已通过，部署任务已创建",
+        "message": "Approval granted; deployment job created",
         "job_id": "job_auto",
         "job": {"id": "job_auto", "project_key": "demo", "status": "queued"},
     }
@@ -288,7 +288,7 @@ async def test_execute_release_deploy_request_auto_executes_nonprod_low_risk(mon
             "environment": "staging",
             "exploration_session_ids": [exploration["result"]["session"]["session_id"]],
             "required_tests_passed": True,
-            "change_summary": "首页样式微调",
+            "change_summary": "Minor home page styling update",
         },
         user=user,
         source="web",
@@ -301,7 +301,7 @@ async def test_execute_release_deploy_request_auto_executes_nonprod_low_risk(mon
             "target_type": "repo",
             "repo_id": "repo1",
             "branch": "main",
-            "comment": "按低风险策略发布",
+            "comment": "Release under the low-risk policy",
         },
         user=user,
         confirm=True,
@@ -323,7 +323,7 @@ async def test_execute_release_deploy_request_auto_executes_nonprod_low_risk(mon
         project_key="demo",
         repo_id="repo1",
         branch="main",
-        request_comment="按低风险策略发布",
+        request_comment="Release under the low-risk policy",
         requested_by="user_demo",
         requested_by_name="demo",
     )
@@ -345,8 +345,8 @@ async def test_execute_release_deploy_request_creates_pending_approval_when_revi
         "repo_id": "",
         "branch": "",
         "status": "pending",
-        "message": "等待审批",
-        "request_comment": "待人工审批",
+        "message": "Awaiting approval",
+        "request_comment": "Awaiting manual approval",
     }
     monkeypatch.setattr(
         "services.commander_command_gateway_service.get_auth_service",
@@ -375,7 +375,7 @@ async def test_execute_release_deploy_request_creates_pending_approval_when_revi
         {
             "finding_id": finding_id,
             "decision": "confirmed",
-            "comment": "人工确认阻断",
+            "comment": "Blocked after manual review",
         },
         user=user,
         source="web",
@@ -387,7 +387,7 @@ async def test_execute_release_deploy_request_creates_pending_approval_when_revi
             "environment": "staging",
             "exploration_session_ids": [exploration["result"]["session"]["session_id"]],
             "required_tests_passed": True,
-            "change_summary": "登录链路调整",
+            "change_summary": "Login flow update",
         },
         user=user,
         source="web",
@@ -398,7 +398,7 @@ async def test_execute_release_deploy_request_creates_pending_approval_when_revi
         {
             "assessment_id": assessment["result"]["assessment"]["assessment_id"],
             "target_type": "project",
-            "comment": "待人工审批",
+            "comment": "Awaiting manual approval",
         },
         user=user,
         confirm=True,
@@ -415,7 +415,7 @@ async def test_execute_release_deploy_request_creates_pending_approval_when_revi
         project_key="demo",
         repo_id="",
         branch="",
-        request_comment="待人工审批",
+        request_comment="Awaiting manual approval",
         requested_by="user_demo",
         requested_by_name="demo",
     )
@@ -437,7 +437,7 @@ async def test_execute_release_deploy_request_keeps_production_pending_even_if_a
         "repo_id": "repo1",
         "branch": "release",
         "status": "pending",
-        "message": "等待审批",
+        "message": "Awaiting approval",
     }
     monkeypatch.setattr(
         "services.commander_command_gateway_service.get_auth_service",
@@ -551,7 +551,7 @@ async def test_execute_exploration_finding_review_returns_updated_finding(monkey
         {
             "finding_id": finding_id,
             "decision": "confirmed",
-            "comment": "人工确认",
+            "comment": "Manual review",
         },
         user=user,
         source="web",
@@ -560,7 +560,7 @@ async def test_execute_exploration_finding_review_returns_updated_finding(monkey
     assert reviewed["run"]["status"] == "succeeded"
     assert reviewed["result"]["finding"]["finding_id"] == finding_id
     assert reviewed["result"]["finding"]["review_status"] == "confirmed"
-    assert reviewed["result"]["finding"]["review_comment"] == "人工确认"
+    assert reviewed["result"]["finding"]["review_comment"] == "Manual review"
 
 
 @pytest.mark.asyncio
@@ -702,7 +702,7 @@ async def test_approve_command_run_executes_cancel_and_records_audit(monkeypatch
     approved = await service.approve_command_run(
         created["run"]["run_id"],
         user=requester,
-        comment="批准取消作业",
+        comment="Approve job cancellation",
         source="api",
     )
 
@@ -753,7 +753,7 @@ async def test_reject_command_run_marks_rejected_without_execution(monkeypatch, 
     rejected = service.reject_command_run(
         created["run"]["run_id"],
         user=requester,
-        reason="当前窗口不允许取消",
+        reason="Cancellation is not allowed in the current window",
         source="api",
     )
 

@@ -1,6 +1,6 @@
 """
-ExploratoryTestAgent 单元测试
-覆盖: _compute_state_hash, _calculate_coverage, generate_report, ActionType/PageState/AnomalyFound 数据结构
+ExploratoryTestAgent unit tests
+Coverage: _compute_state_hash, _calculate_coverage, generate_report, and the ActionType/PageState/AnomalyFound data structures.
 """
 import pytest
 from unittest.mock import AsyncMock
@@ -65,14 +65,14 @@ class TestComputeStateHash:
         assert h1 != h2
 
     def test_normalizes_numbers(self):
-        """数字被 normalize 掉，所以相同结构但不同数字 → 相同 hash"""
+        """Numbers are normalized, so identical structures with different numbers have the same hash."""
         agent = ExploratoryTestAgent()
         h1 = agent._compute_state_hash("<p>item 123</p>", "http://a.com")
         h2 = agent._compute_state_hash("<p>item 456</p>", "http://a.com")
         assert h1 == h2
 
     def test_normalizes_hex(self):
-        """Hex token 被 normalize"""
+        """Hex tokens are normalized."""
         agent = ExploratoryTestAgent()
         h1 = agent._compute_state_hash("<p>token=abcdef0123456789</p>", "http://a.com")
         h2 = agent._compute_state_hash("<p>token=1234567890abcdef</p>", "http://a.com")
@@ -98,7 +98,7 @@ class TestCalculateCoverage:
     def test_low_coverage(self):
         agent = ExploratoryTestAgent()
         agent.action_history = [ExplorationAction(ActionType.CLICK, "a")]
-        # 模拟有10个状态 (可能30条边)，但目前只探索了3条边
+        # Simulate 10 states (potentially 30 edges), with only 3 edges explored.
         agent.visited_states = {f"s{i}" for i in range(10)}
         agent.state_graph = {
             "s1": {"a1": "s2", "a2": "s3", "a3": "s4"}
@@ -108,7 +108,7 @@ class TestCalculateCoverage:
     def test_capped_at_one(self):
         agent = ExploratoryTestAgent()
         agent.action_history = [ExplorationAction(ActionType.CLICK, "a")]
-        # 模拟状态极少，边数超出预估上限的情况
+        # Simulate very few states and an edge count above the estimated maximum.
         agent.visited_states = {"s1"} # len = 1, possible = 3
         agent.state_graph = {
             "s1": {"a1": "s1", "a2": "s1", "a3": "s1", "a4": "s1"}
@@ -149,7 +149,7 @@ class TestGenerateReport:
         assert report["anomalies"][0]["type"] == "server_error"
 
     def test_action_history_limit(self):
-        """最近 20 个 action"""
+        """The 20 most recent actions."""
         agent = ExploratoryTestAgent()
         agent.action_history = [
             ExplorationAction(ActionType.CLICK, f"el{i}") for i in range(30)
@@ -202,7 +202,7 @@ class TestBrowserCompatibility:
                 if selector == "a[href]":
                     return [FakeElement(attrs={"href": "/reports"})]
                 if selector == "button, input[type=\"submit\"]":
-                    return [FakeElement(text="提交表单")]
+                    return [FakeElement(text="Submit form")]
                 if selector == "input[type=\"text\"], input[type=\"search\"]":
                     return [FakeElement(attrs={"name": "keyword"})]
                 return []
@@ -211,7 +211,7 @@ class TestBrowserCompatibility:
         actions = await agent._discover_actions()
 
         assert any(action.target == "a[href='/reports']" for action in actions)
-        assert any(action.target == "button:has-text('提交表单')" for action in actions)
+        assert any(action.target == "button:has-text('Submit form')" for action in actions)
         assert any(action.target == "input[name='keyword']" for action in actions)
 
     @pytest.mark.asyncio

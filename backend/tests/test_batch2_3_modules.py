@@ -1,6 +1,6 @@
 """
-Unit Tests for Batch 2 & 3 Modules
-测试 无障碍/i18n/合规/混沌工程/移动端模拟 五个新服务模块
+Unit Tests for Batch 2 and 3 Modules
+Covers accessibility, i18n, compliance, chaos engineering, and mobile emulation.
 """
 
 import pytest
@@ -11,7 +11,7 @@ import asyncio
 # Tests for Accessibility Testing Service
 # ============================================================
 class TestAccessibilityService:
-    """测试无障碍检测服务"""
+    """Test the accessibility service."""
 
     def test_import(self):
         from services.accessibility_testing import create_accessibility_service
@@ -35,7 +35,7 @@ class TestAccessibilityService:
 # Tests for i18n Testing Service
 # ============================================================
 class TestI18nService:
-    """测试国际化检测服务"""
+    """Test the internationalization service."""
 
     def test_import(self):
         from services.i18n_testing import create_i18n_service
@@ -53,7 +53,7 @@ class TestI18nService:
 # Tests for Compliance Testing Service
 # ============================================================
 class TestComplianceService:
-    """测试合规检测服务"""
+    """Test the compliance service."""
 
     def test_import(self):
         from services.compliance_testing import create_compliance_service
@@ -70,7 +70,7 @@ class TestComplianceService:
 # Tests for Chaos Engineering Service
 # ============================================================
 class TestChaosEngineering:
-    """测试混沌工程服务"""
+    """Test the chaos engineering service."""
 
     def test_import(self):
         from services.chaos_engineering import create_chaos_service
@@ -125,7 +125,7 @@ class TestChaosEngineering:
 # Tests for Mobile Emulation Service
 # ============================================================
 class TestMobileEmulation:
-    """测试移动端模拟服务"""
+    """Test the mobile emulation service."""
 
     def test_import(self):
         from services.mobile_emulation import create_mobile_service
@@ -195,7 +195,7 @@ class TestMobileEmulation:
 # Tests for FastAPI Routers (import validation)
 # ============================================================
 class TestRouterImports:
-    """测试路由模块导入"""
+    """Test router module imports."""
 
     def test_accessibility_router(self):
         from routers.accessibility import router
@@ -227,15 +227,15 @@ class TestRouterImports:
 # Tests for FastAPI app integration
 # ============================================================
 class TestAppIntegration:
-    """测试应用集成"""
+    """Test application integration."""
 
     def test_all_routers_in_main(self):
-        """验证 main.py 包含所有路由注册"""
+        """Verify that main.py registers every router."""
         import importlib
         main = importlib.import_module("main")
         app = main.app
         routes = [r.path for r in app.routes]
-        # 验证新路由前缀存在
+        # Verify that the new router prefixes exist.
         prefixes_to_check = [
             "/api/accessibility/audit",
             "/api/i18n/test",

@@ -5,16 +5,16 @@ from core.cookie_manager import CookieManager, COOKIE_DIR, PRESETS_FILE
 
 @pytest.fixture
 def mock_cookie_manager():
-    # 使用独立的测试目录
+    # Use an isolated test directory.
     test_dir = Path(__file__).parent / "_test_cookies"
     if test_dir.exists():
         shutil.rmtree(test_dir)
     test_dir.mkdir(parents=True)
     
-    # 临时覆盖
+    # Temporarily override the value.
     cm = CookieManager()
     
-    # 替换全局目录 (Hack for testing)
+    # Replace the global directory for testing.
     import core.cookie_manager as cm_module
     old_dir = cm_module.COOKIE_DIR
     old_presets = cm_module.PRESETS_FILE
@@ -24,7 +24,7 @@ def mock_cookie_manager():
     
     yield cm
     
-    # 清理
+    # Cleanup.
     cm_module.COOKIE_DIR = old_dir
     cm_module.PRESETS_FILE = old_presets
     shutil.rmtree(test_dir, ignore_errors=True)
@@ -61,18 +61,18 @@ class MockSyncPage:
 async def test_export_import_cookies(mock_cookie_manager):
     page = MockPage()
     
-    # 导出
+    # Export.
     res = await mock_cookie_manager.export_cookies(page, "test_export")
     assert res["count"] == 2
     assert "test_export.json" in res["file"]
     
-    # 列出
+    # List.
     saved = mock_cookie_manager.list_saved()
     assert len(saved) == 1
     assert saved[0]["name"] == "test_export"
     assert saved[0]["count"] == 2
     
-    # 导入
+    # Import.
     res2 = await mock_cookie_manager.import_cookies(page.context, "test_export")
     assert res2["count"] == 2
     assert len(page.context.added) == 2
@@ -98,10 +98,10 @@ async def test_export_import_sync_cookies(mock_cookie_manager):
 
 def test_preset_management(mock_cookie_manager):
     import json
-    # 创建个假的 cookie 文件
+    # Create a mock cookie file.
     (mock_cookie_manager.COOKIE_DIR if hasattr(mock_cookie_manager, 'COOKIE_DIR') else Path(__file__).parent / "_test_cookies" / "fake.json").write_text("[]")
     
-    # 因为上面 fixture 使用了模块级修改，这里手工创建
+    # Create this manually because the fixture above changes module-level state.
     import core.cookie_manager as cm_module
     (cm_module.COOKIE_DIR / "fake.json").write_text("[]")
     

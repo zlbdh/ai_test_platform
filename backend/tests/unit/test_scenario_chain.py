@@ -24,23 +24,23 @@ def test_upsert_scenario_by_name_updates_existing(tmp_path, monkeypatch):
     monkeypatch.setattr("core.scenario_chain.SCENARIOS_DIR", tmp_path)
     engine = ScenarioChainEngine()
     created = engine.create_scenario(
-        "示例项目登录回归",
-        description="旧描述",
-        steps=[{"name": "旧步骤", "instruction": "old"}],
+        "Example project login regression",
+        description="Old description",
+        steps=[{"name": "Old steps", "instruction": "old"}],
         tags=["old"],
     )
 
     updated = engine.upsert_scenario_by_name(
-        "示例项目登录回归",
-        description="新描述",
-        steps=[{"name": "新步骤", "instruction": "new"}],
-        tags=["wave0", "登录"],
+        "Example project login regression",
+        description="New description",
+        steps=[{"name": "New steps", "instruction": "new"}],
+        tags=["wave0", "Login"],
     )
 
     assert updated["id"] == created["id"]
-    assert updated["description"] == "新描述"
-    assert updated["steps"][0]["name"] == "新步骤"
-    assert updated["tags"] == ["wave0", "登录"]
+    assert updated["description"] == "New description"
+    assert updated["steps"][0]["name"] == "New steps"
+    assert updated["tags"] == ["wave0", "Login"]
 
 
 @pytest.mark.asyncio
@@ -48,13 +48,13 @@ async def test_execute_scenario_persists_step_runtime(tmp_path, monkeypatch):
     monkeypatch.setattr("core.scenario_chain.SCENARIOS_DIR", tmp_path)
     engine = ScenarioChainEngine()
     scenario = engine.create_scenario(
-        "登录场景",
+        "Login scenario",
         steps=[
             {
                 "id": "step_login",
-                "name": "登录",
+                "name": "Login",
                 "url": "https://example.com/login",
-                "instruction": "输入账号并登录",
+                "instruction": "Enter credentials and log in",
                 "timeout": 1,
             }
         ],
@@ -82,13 +82,13 @@ async def test_execute_scenario_resets_old_runtime_and_skips_failed_dependency(t
     monkeypatch.setattr("core.scenario_chain.SCENARIOS_DIR", tmp_path)
     engine = ScenarioChainEngine()
     scenario = engine.create_scenario(
-        "支付场景",
+        "Payment scenario",
         steps=[
             {
                 "id": "step_login",
-                "name": "登录",
+                "name": "Login",
                 "url": "https://example.com/login",
-                "instruction": "登录失败",
+                "instruction": "Login failed",
                 "timeout": 1,
                 "on_failure": "continue",
                 "status": "passed",
@@ -97,9 +97,9 @@ async def test_execute_scenario_resets_old_runtime_and_skips_failed_dependency(t
             },
             {
                 "id": "step_pay",
-                "name": "支付",
+                "name": "Payment",
                 "url": "https://example.com/pay",
-                "instruction": "提交支付",
+                "instruction": "Submit payment",
                 "timeout": 1,
                 "depends_on": "step_login",
                 "status": "passed",

@@ -1,6 +1,7 @@
 """
-notify_gateway 单元测试
-覆盖: channel 初始化、Webhook/Email 通道、等级路由、历史裁剪、环境变量加载
+notify_gateway unit tests.
+Covers channel initialization, webhook/email channels, severity routing, history
+trimming, and environment-variable configuration.
 """
 from email import message_from_string
 from email.header import decode_header, make_header
@@ -92,7 +93,7 @@ class TestConsoleChannel:
     @pytest.mark.asyncio
     async def test_send_returns_true(self):
         channel = ConsoleChannel()
-        notification = Notification(level=NotifyLevel.LOG, title="日志", body="内容")
+        notification = Notification(level=NotifyLevel.LOG, title="Log", body="Content")
         assert await channel.send(notification) is True
 
 
@@ -111,14 +112,14 @@ class TestWebhookChannel:
             ClientTimeout=lambda total: {"total": total},
         )
         channel = WebhookChannel("https://example.com/webhook", "wecom")
-        notification = Notification(title="报告", body="正文")
+        notification = Notification(title="Report", body="Body")
 
         with patch.dict(sys.modules, {"aiohttp": aiohttp}):
             result = await channel.send(notification)
 
         assert result is True
         assert session.calls[0]["json"]["msgtype"] == "markdown"
-        assert "### 报告" in session.calls[0]["json"]["markdown"]["content"]
+        assert "### Report" in session.calls[0]["json"]["markdown"]["content"]
 
     @pytest.mark.asyncio
     async def test_dingtalk_payload_non_200(self):
@@ -131,10 +132,10 @@ class TestWebhookChannel:
         channel = WebhookChannel("https://example.com/webhook", "dingtalk")
 
         with patch.dict(sys.modules, {"aiohttp": aiohttp}):
-            result = await channel.send(Notification(title="报告", body="正文"))
+            result = await channel.send(Notification(title="Report", body="Body"))
 
         assert result is False
-        assert session.calls[0]["json"]["markdown"]["title"] == "报告"
+        assert session.calls[0]["json"]["markdown"]["title"] == "Report"
 
     @pytest.mark.asyncio
     async def test_custom_payload_uses_serialized_notification(self):
@@ -144,7 +145,7 @@ class TestWebhookChannel:
             ClientSession=lambda: session,
             ClientTimeout=lambda total: {"total": total},
         )
-        notification = Notification(level=NotifyLevel.CRITICAL, title="报告", body="正文")
+        notification = Notification(level=NotifyLevel.CRITICAL, title="Report", body="Body")
         channel = WebhookChannel("https://example.com/webhook", "custom")
 
         with patch.dict(sys.modules, {"aiohttp": aiohttp}):
@@ -165,7 +166,7 @@ class TestWebhookChannel:
             return original_import(name, *args, **kwargs)
 
         with patch("builtins.__import__", side_effect=fake_import):
-            result = await channel.send(Notification(title="报告"))
+            result = await channel.send(Notification(title="Report"))
 
         assert result is False
 
@@ -174,7 +175,7 @@ class TestEmailChannel:
     @pytest.mark.asyncio
     async def test_returns_false_when_missing_config(self):
         channel = EmailChannel(smtp_host="smtp.example.com", to_addrs=["  "])
-        assert await channel.send(Notification(title="报告")) is False
+        assert await channel.send(Notification(title="Report")) is False
 
     @pytest.mark.asyncio
     async def test_send_success(self):
@@ -186,7 +187,7 @@ class TestEmailChannel:
             smtp_pass="secret",
             to_addrs=[" a@example.com ", "", "b@example.com"],
         )
-        notification = Notification(title="日报", body="内容")
+        notification = Notification(title="Daily report", body="Content")
 
         async def run_sync(func):
             func()
@@ -200,7 +201,7 @@ class TestEmailChannel:
         assert smtp_server.sent[1] == ["a@example.com", "b@example.com"]
         parsed = message_from_string(smtp_server.sent[2])
         subject = str(make_header(decode_header(parsed["Subject"])))
-        assert subject == "[AI Test Platform] 日报"
+        assert subject == "[AI Test Platform] Daily report"
 
     @pytest.mark.asyncio
     async def test_send_failure_returns_false(self):
@@ -212,7 +213,7 @@ class TestEmailChannel:
         )
 
         with patch("asyncio.to_thread", side_effect=RuntimeError("smtp down")):
-            result = await channel.send(Notification(title="日报"))
+            result = await channel.send(Notification(title="Daily report"))
 
         assert result is False
 
@@ -242,10 +243,10 @@ class TestNotifyGateway:
         email = _DummyChannel("email")
         gateway._channels = [console, webhook, email]
 
-        info_notice = await gateway.send(level="info", title="完成", body="通过")
-        report_notice = await gateway.send(level="report", title="日报", body="内容")
-        log_notice = await gateway.send(level="log", title="日志", body="内容")
-        critical_notice = await gateway.send(level="critical", title="故障", body="内容")
+        info_notice = await gateway.send(level="info", title="Completed", body="Passed")
+        report_notice = await gateway.send(level="report", title="Daily report", body="Content")
+        log_notice = await gateway.send(level="log", title="Log", body="Content")
+        critical_notice = await gateway.send(level="critical", title="Failure", body="Content")
 
         assert info_notice.channels_sent == ["console", "webhook"]
         assert report_notice.channels_sent == ["console", "email"]

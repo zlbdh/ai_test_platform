@@ -1,7 +1,7 @@
 """
-EnvironmentValidator 单元测试
-覆盖: validate_all, _check_python_deps, _check_external_tools,
-      _check_env_vars, _check_directories, _check_services
+EnvironmentValidator unit tests.
+Covers validate_all, Python dependencies, external tools, environment variables,
+directories, and services.
 """
 
 import os
@@ -56,7 +56,7 @@ class TestCheckResult:
         result = CheckResult(
             name="Python: fastapi",
             status=CheckStatus.PASSED,
-            message="已安装",
+            message="Installed",
         )
         assert result.name == "Python: fastapi"
         assert result.details is None

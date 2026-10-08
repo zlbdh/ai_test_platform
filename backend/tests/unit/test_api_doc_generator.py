@@ -1,6 +1,7 @@
 """
-api_doc_generator 单元测试
-覆盖: 路由提取、标签/参数/请求体推断、Markdown/JSON/文件导出
+api_doc_generator unit tests.
+Covers route extraction, tag/parameter/request-body inference, and Markdown, JSON,
+and file exports.
 """
 import json
 
@@ -20,9 +21,9 @@ class TestApiDocGenerator:
         @app.get("/api/auth/login/{user_id}")
         async def login(user_id: str):
             """
-            用户登录
+            User login
 
-            登录接口说明
+            Login endpoint documentation
             """
             return {"user_id": user_id}
 
@@ -36,7 +37,7 @@ class TestApiDocGenerator:
         login_endpoint = next(ep for ep in endpoints if ep.path == "/api/auth/login/{user_id}" and ep.method == "GET")
         patch_endpoint = next(ep for ep in endpoints if ep.path == "/profile" and ep.method == "PATCH")
 
-        assert login_endpoint.summary == "用户登录"
+        assert login_endpoint.summary == "User login"
         assert login_endpoint.tags == ["auth"]
         assert login_endpoint.parameters == [{
             "name": "user_id",
@@ -59,8 +60,8 @@ class TestApiDocGenerator:
             ApiEndpoint(
                 path="/api/users/{id}",
                 method="GET",
-                summary="查询用户",
-                description="查询用户详情",
+                summary="Get user",
+                description="Get user details",
                 tags=["users"],
                 parameters=[{"name": "id", "in": "path", "required": True, "type": "string"}],
                 request_body=None,
@@ -102,8 +103,8 @@ class TestApiDocGenerator:
             type("Endpoint", (), {
                 "path": "/api/demo/{id}",
                 "method": "GET",
-                "summary": "查询 Demo",
-                "description": "查询 Demo 明细",
+                "summary": "Get Demo",
+                "description": "Get Demo details",
                 "tags": ["demo"],
                 "parameters": [{"name": "id", "in": "path", "required": True, "type": "string"}],
                 "request_body": None,
@@ -131,7 +132,7 @@ class TestApiDocGenerator:
 
         @app.post("/api/items")
         async def create_item():
-            """创建项目"""
+            """Create item"""
             return {"ok": True}
 
         output_path = tmp_path / "api.md"
@@ -145,10 +146,10 @@ class TestApiDocGenerator:
 
         @app.put("/api/items/{item_id}")
         async def update_item(item_id: str):
-            """更新项目"""
+            """Update item"""
             return {"item_id": item_id}
 
         content = generate_api_docs(app, format="json")
         data = json.loads(content)
 
-        assert data["paths"]["/api/items/{item_id}"]["put"]["summary"] == "更新项目"
+        assert data["paths"]["/api/items/{item_id}"]["put"]["summary"] == "Update item"

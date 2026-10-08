@@ -1,6 +1,6 @@
 """
 Unit Tests for New Modules
-测试 gRPC、增强安全、API 文档生成、探索性测试模块
+Covers gRPC, enhanced security, API documentation, and exploratory testing.
 """
 
 import pytest
@@ -9,7 +9,7 @@ import asyncio
 
 # Tests for gRPC Testing
 class TestGrpcTesting:
-    """测试 gRPC 模块"""
+    """Test the gRPC module."""
     
     def test_import(self):
         from services.grpc_testing import create_grpc_service
@@ -31,7 +31,7 @@ class TestGrpcTesting:
 
 # Tests for Enhanced Security
 class TestEnhancedSecurity:
-    """测试增强安全扫描"""
+    """Test enhanced security scanning."""
     
     def test_import(self):
         from services.enhanced_security import get_enhanced_scanner
@@ -64,7 +64,7 @@ class TestEnhancedSecurity:
 
 # Tests for API Doc Generator
 class TestApiDocGenerator:
-    """测试 API 文档生成"""
+    """Test API documentation generation."""
     
     def test_import(self):
         from core.api_doc_generator import ApiDocGenerator
@@ -95,7 +95,7 @@ class TestApiDocGenerator:
 
 # Tests for Exploratory Agent
 class TestExploratoryAgent:
-    """测试探索性测试 Agent"""
+    """Test the exploratory testing agent."""
     
     def test_import(self):
         from agents.exploratory_agent import create_exploratory_agent
@@ -115,7 +115,7 @@ class TestExploratoryAgent:
         agent.visited_states.add("state1")
         agent.visited_states.add("state2")
         coverage = agent._calculate_coverage()
-        assert coverage == 0  # 无动作历史时为 0
+        assert coverage == 0  # Coverage is zero without action history.
     
     def test_generate_report(self):
         from agents.exploratory_agent import ExploratoryTestAgent
@@ -128,7 +128,7 @@ class TestExploratoryAgent:
 
 # Tests for Requirement Parser (existing)
 class TestRequirementParserExtended:
-    """扩展测试需求解析器"""
+    """Test the extended requirement parser."""
     
     def test_security_requirement(self):
         from core.requirement_parser import get_requirement_parser, RuleType

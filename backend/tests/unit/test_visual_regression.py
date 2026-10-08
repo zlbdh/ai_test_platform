@@ -1,8 +1,7 @@
 """
-VisualRegressionTester 单元测试
-覆盖: 枚举/数据类, save_baseline, compare (hash模式),
-      update_baseline, list_baselines, delete_baseline,
-      generate_report, 单例
+VisualRegressionTester unit tests.
+Covers enums and data classes, baseline saving, hash-based comparison, baseline
+update/list/delete operations, report generation, and the singleton.
 """
 import pytest
 import json
@@ -16,7 +15,7 @@ from services.visual_regression import (
 
 
 # ---------------------------------------------------------------------------
-# 枚举
+# Enums.
 # ---------------------------------------------------------------------------
 class TestComparisonResult:
     def test_values(self):
@@ -27,7 +26,7 @@ class TestComparisonResult:
 
 
 # ---------------------------------------------------------------------------
-# 数据类
+# Data classes.
 # ---------------------------------------------------------------------------
 class TestScreenshotData:
     def test_creation(self):
@@ -51,18 +50,18 @@ class TestDiffResult:
 # ---------------------------------------------------------------------------
 @pytest.fixture
 def tester(tmp_path):
-    """创建测试器，强制禁用 Pillow 以使用 hash 模式"""
+    """Create a tester with Pillow disabled to force hash mode."""
     t = VisualRegressionTester(baseline_dir=str(tmp_path))
     t._pillow_available = False
     return t
 
 
-IMAGE_DATA = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100  # 模拟 PNG
-IMAGE_DATA2 = b"\x89PNG\r\n\x1a\n" + b"\xff" * 100  # 不同内容
+IMAGE_DATA = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100  # Mock PNG content.
+IMAGE_DATA2 = b"\x89PNG\r\n\x1a\n" + b"\xff" * 100  # Different content.
 
 
 # ---------------------------------------------------------------------------
-# save_baseline 测试
+# save_baseline tests.
 # ---------------------------------------------------------------------------
 class TestSaveBaseline:
     def test_saves_file(self, tester, tmp_path):
@@ -81,25 +80,25 @@ class TestSaveBaseline:
 
 
 # ---------------------------------------------------------------------------
-# compare 测试 (hash 模式)
+# compare tests in hash mode.
 # ---------------------------------------------------------------------------
 class TestCompare:
     def test_new_baseline(self, tester, tmp_path):
-        """没有基线时应创建新基线"""
+        """Create a new baseline when none exists."""
         result = tester.compare("login", IMAGE_DATA)
         assert result.result == ComparisonResult.NEW_BASELINE
-        # 基线应被自动保存
+        # Save the baseline automatically.
         assert os.path.exists(os.path.join(str(tmp_path), "login.png"))
 
     def test_match(self, tester, tmp_path):
-        """相同图片应匹配"""
+        """Identical images should match."""
         tester.save_baseline("page", IMAGE_DATA)
         result = tester.compare("page", IMAGE_DATA)
         assert result.result == ComparisonResult.MATCH
         assert result.diff_percentage == 0
 
     def test_mismatch(self, tester, tmp_path):
-        """不同图片应不匹配"""
+        """Different images should not match."""
         tester.save_baseline("page", IMAGE_DATA)
         result = tester.compare("page", IMAGE_DATA2)
         assert result.result == ComparisonResult.MISMATCH
@@ -107,19 +106,19 @@ class TestCompare:
 
 
 # ---------------------------------------------------------------------------
-# update_baseline 测试
+# update_baseline tests.
 # ---------------------------------------------------------------------------
 class TestUpdateBaseline:
     def test_update_success(self, tester, tmp_path):
         tester.save_baseline("page", IMAGE_DATA)
         assert tester.update_baseline("page", IMAGE_DATA2) is True
-        # 应该用新数据覆盖
+        # Overwrite with the new data.
         with open(os.path.join(str(tmp_path), "page.png"), "rb") as f:
             assert f.read() == IMAGE_DATA2
 
 
 # ---------------------------------------------------------------------------
-# list_baselines 测试
+# list_baselines tests.
 # ---------------------------------------------------------------------------
 class TestListBaselines:
     def test_empty(self, tester):
@@ -135,7 +134,7 @@ class TestListBaselines:
 
 
 # ---------------------------------------------------------------------------
-# delete_baseline 测试
+# delete_baseline tests.
 # ---------------------------------------------------------------------------
 class TestDeleteBaseline:
     def test_delete_existing(self, tester, tmp_path):
@@ -145,12 +144,12 @@ class TestDeleteBaseline:
         assert not os.path.exists(os.path.join(str(tmp_path), "page.json"))
 
     def test_delete_nonexistent(self, tester):
-        # 不存在的文件不会崩溃，返回 True（因为源码 try/except 包裹）
+        # A missing file returns True without raising because the source catches exceptions.
         assert tester.delete_baseline("nonexistent") is True
 
 
 # ---------------------------------------------------------------------------
-# generate_report 测试
+# generate_report tests.
 # ---------------------------------------------------------------------------
 class TestGenerateReport:
     def test_empty_results(self, tester):
@@ -175,7 +174,7 @@ class TestGenerateReport:
 
 
 # ---------------------------------------------------------------------------
-# 单例
+# Singleton.
 # ---------------------------------------------------------------------------
 class TestSingleton:
     def test_singleton(self, tmp_path):

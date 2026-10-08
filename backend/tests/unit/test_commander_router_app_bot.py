@@ -65,7 +65,7 @@ async def test_deliver_commander_response_via_notification_platform_app_bot_acce
                 "ok": True,
                 "token": "t-demo-token",
                 "app_bot_configured": True,
-                "message": "应用机器人凭据校验通过，已成功获取 tenant_access_token。",
+                "message": "App bot credentials verified; tenant_access_token retrieved successfully.",
             }
         ),
     )

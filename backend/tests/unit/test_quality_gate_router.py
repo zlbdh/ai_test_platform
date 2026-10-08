@@ -19,7 +19,7 @@ def test_gate_history_route_passes_run_id_and_status_filters():
     client = _make_client()
     fake_gate = MagicMock()
     fake_gate.get_history.return_value = [
-        {"run_id": "task001", "status": "warning", "verdict": {"summary": "上下文门禁"}, "timestamp": 1712040000},
+        {"run_id": "task001", "status": "warning", "verdict": {"summary": "Context gate"}, "timestamp": 1712040000},
     ]
 
     with patch("cicd.quality_gate.get_quality_gate", return_value=fake_gate):

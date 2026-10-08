@@ -1,7 +1,7 @@
 """
-WebSocketTestService 单元测试
-覆盖: 数据类, _get_value_by_path, assert_messages,
-      send/receive (not connected), connect/disconnect mock, 工厂函数
+WebSocketTestService unit tests.
+Covers data classes, _get_value_by_path, assert_messages, disconnected send/receive,
+mocked connect/disconnect, and the factory function.
 """
 import pytest
 import time
@@ -14,7 +14,7 @@ from services.websocket_testing import (
 
 
 # ---------------------------------------------------------------------------
-# 数据类
+# Data classes.
 # ---------------------------------------------------------------------------
 class TestWSMessage:
     def test_creation(self):
@@ -66,7 +66,7 @@ class TestGetValueByPath:
 # ---------------------------------------------------------------------------
 class TestAssertMessages:
     def _setup_messages(self, svc, contents):
-        """给 svc 注入模拟接收消息"""
+        """Inject mock received messages into the service."""
         svc.messages = [
             WSMessage(direction="receive", content=c, timestamp=time.time())
             for c in contents
@@ -87,7 +87,7 @@ class TestAssertMessages:
         assert results[0]["passed"] is False
 
     def test_any_message(self, svc):
-        """message_index=-1 应搜索所有消息"""
+        """message_index=-1 should search all messages."""
         self._setup_messages(svc, [{"x": 1}, {"x": 2}, {"x": 3}])
         results = svc.assert_messages([
             WSAssertion(message_index=-1, path="x", operator="eq", expected=3)
@@ -124,7 +124,7 @@ class TestAssertMessages:
 
 
 # ---------------------------------------------------------------------------
-# send / receive 未连接
+# Disconnected send/receive.
 # ---------------------------------------------------------------------------
 class TestNotConnected:
     @pytest.mark.asyncio
@@ -194,7 +194,7 @@ class TestConnection:
 
 
 # ---------------------------------------------------------------------------
-# 工厂
+# Factory.
 # ---------------------------------------------------------------------------
 class TestFactory:
     def test_create(self):

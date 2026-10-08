@@ -1,7 +1,7 @@
 """
-EnhancedSecurityScanner 单元测试
-覆盖: 枚举, 数据类, _generate_vuln_id, _check_ssl, _check_headers(aiohttp mock),
-      _calculate_risk_score, generate_report, 单例
+EnhancedSecurityScanner unit tests.
+Covers enums, data classes, vulnerability IDs, SSL and header checks with mocked
+aiohttp, risk scoring, report generation, and the singleton.
 """
 import pytest
 from unittest.mock import patch, MagicMock, AsyncMock
@@ -13,7 +13,7 @@ from services.enhanced_security import (
 
 
 # ---------------------------------------------------------------------------
-# 枚举
+# Enums.
 # ---------------------------------------------------------------------------
 class TestSeverityLevel:
     def test_values(self):
@@ -29,7 +29,7 @@ class TestVulnerabilityType:
 
 
 # ---------------------------------------------------------------------------
-# 数据类
+# Data classes.
 # ---------------------------------------------------------------------------
 class TestVulnerability:
     def test_creation(self):
@@ -98,7 +98,7 @@ class TestCheckSSL:
 
 
 # ---------------------------------------------------------------------------
-# aiohttp mock 辅助
+# aiohttp mock helpers.
 # ---------------------------------------------------------------------------
 def _make_ctx(obj):
     ctx = MagicMock()
@@ -120,7 +120,7 @@ class TestCheckHeaders:
         mock_session.get.return_value = _make_ctx(mock_resp)
 
         headers_status, vulns = await scanner._check_headers(mock_session, "http://x.com")
-        assert len(vulns) == 7  # 7 个安全头
+        assert len(vulns) == 7  # Seven security headers.
         for v in vulns:
             assert v.vuln_type == VulnerabilityType.INSECURE_HEADERS
 
@@ -145,9 +145,9 @@ class TestCheckHeaders:
 
     @pytest.mark.asyncio
     async def test_hsts_severity_medium(self, scanner):
-        """缺少 HSTS 应为 MEDIUM, 其余为 LOW"""
+        """Missing HSTS should be MEDIUM; the others should be LOW."""
         mock_resp = MagicMock()
-        # 只缺少 HSTS
+        # Only HSTS is missing.
         mock_resp.headers = {
             "X-Content-Type-Options": "nosniff",
             "X-Frame-Options": "DENY",
@@ -176,7 +176,7 @@ class TestRiskScore:
     def test_max_score(self, scanner):
         result = ScanResult("u", 0, 0, [], {}, {},
                             {"critical": 10, "high": 10, "medium": 10, "low": 10, "info": 10})
-        assert scanner._calculate_risk_score(result) == 100  # 超过 100 截断为 100
+        assert scanner._calculate_risk_score(result) == 100  # Clamp values above 100 to 100.
 
 
 # ---------------------------------------------------------------------------
@@ -210,7 +210,7 @@ class TestPayloads:
 
 
 # ---------------------------------------------------------------------------
-# 单例
+# Singleton.
 # ---------------------------------------------------------------------------
 class TestSingleton:
     def test_same_instance(self):

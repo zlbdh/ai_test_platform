@@ -56,7 +56,7 @@ def test_release_risk_blocks_production_and_human_review(monkeypatch, tmp_path):
         environment="production",
         exploration_session_ids=[session["session_id"]],
         required_tests_passed=True,
-        change_summary="支付页样式和交互调整",
+        change_summary="Payment page styling and interaction updates",
     )
 
     assert assessment["release_risk"] in {"high", "critical"}
@@ -90,7 +90,7 @@ def test_release_risk_allows_low_risk_nonprod_auto_release(monkeypatch, tmp_path
         environment="staging",
         exploration_session_ids=[session["session_id"]],
         required_tests_passed=True,
-        change_summary="首页样式微调",
+        change_summary="Minor home page styling update",
     )
 
     assert assessment["release_risk"] == "low"
@@ -124,7 +124,7 @@ def test_release_risk_uses_review_status_for_blockers_and_effective_findings(mon
         environment="staging",
         exploration_session_ids=[session["session_id"]],
         required_tests_passed=True,
-        change_summary="搜索和登录链路调整",
+        change_summary="Search and login flow updates",
     )
 
     pending_blockers = {item["type"] for item in assessment_pending["blockers"]}
@@ -135,13 +135,13 @@ def test_release_risk_uses_review_status_for_blockers_and_effective_findings(mon
         user=user,
         finding_id=login_finding["finding_id"],
         decision="confirmed",
-        comment="人工确认需要保留阻断",
+        comment="Manual review requires retaining the block",
     )
     exploration.review_finding(
         user=user,
         finding_id=search_finding["finding_id"],
         decision="dismissed",
-        comment="人工驳回体验问题",
+        comment="Manually rejected the experience issue",
     )
 
     assessment_reviewed = release.create_assessment(
@@ -150,7 +150,7 @@ def test_release_risk_uses_review_status_for_blockers_and_effective_findings(mon
         environment="staging",
         exploration_session_ids=[session["session_id"]],
         required_tests_passed=True,
-        change_summary="复核后重新评估",
+        change_summary="Reassess after review",
     )
 
     reviewed_blockers = {item["type"] for item in assessment_reviewed["blockers"]}
@@ -191,7 +191,7 @@ def test_list_release_risk_assessments_supports_filters(monkeypatch, tmp_path):
         environment="staging",
         exploration_session_ids=[session["session_id"]],
         required_tests_passed=True,
-        change_summary="首页样式微调",
+        change_summary="Minor home page styling update",
     )
     release.create_assessment(
         user=_make_user(project_ids=["proj2"]),
@@ -199,7 +199,7 @@ def test_list_release_risk_assessments_supports_filters(monkeypatch, tmp_path):
         environment="production",
         exploration_session_ids=[],
         required_tests_passed=False,
-        change_summary="高风险变更",
+        change_summary="High-risk change",
     )
 
     payload = release.list_assessments(

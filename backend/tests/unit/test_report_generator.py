@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-测试 - Report Generator
+Tests for Report Generator.
 """
 import pytest
 import os

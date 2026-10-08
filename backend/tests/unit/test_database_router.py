@@ -18,7 +18,7 @@ async def test_db_execute_records_success_to_execution_center():
                 sql="SELECT * FROM demo",
                 session_id="sess_demo",
                 execution_group_id="batch_demo",
-                group_title="数据库专项测试",
+                group_title="Database test",
             )
         )
 
@@ -43,7 +43,7 @@ async def test_db_execute_records_failure_to_execution_center():
                     sql="SELECT * FROM broken",
                     session_id="sess_demo",
                     execution_group_id="batch_demo",
-                    group_title="数据库专项测试",
+                    group_title="Database test",
                 )
             )
 
@@ -63,7 +63,7 @@ async def test_managed_query_post_records_success_to_execution_center():
         "rows": [{"total": 24}],
         "count": 1,
         "elapsed_ms": 128,
-        "message": "查询完成，返回 1 行，用时 128 ms",
+        "message": "Query completed: 1 row returned in 128 ms",
     }
     manager.connections = {
         "conn_demo": MagicMock(name="ry_cloud", db_type="mysql", database="ry_cloud")
@@ -81,7 +81,7 @@ async def test_managed_query_post_records_success_to_execution_center():
                 limit=50,
                 session_id="sess_demo",
                 execution_group_id="batch_demo",
-                group_title="数据库专项测试",
+                group_title="Database test",
             ),
         )
 
@@ -116,7 +116,7 @@ async def test_managed_query_get_keeps_backwards_compatibility():
             limit=10,
             session_id="sess_demo",
             execution_group_id="batch_demo",
-            group_title="数据库专项测试",
+            group_title="Database test",
         )
 
     assert result["success"] is False

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-测试智能体军团 — 单元测试
+Agent fleet unit tests
 
-测试模块：
+Modules under test:
 - core/agent_bus.py
 - core/tracing.py
 - core/notify_gateway.py
@@ -15,24 +15,24 @@ import pytest
 import sys
 import os
 
-# 确保导入路径
+# Ensure the import path is available.
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
-# ── AgentBus 测试 ────────────────────────────────────────────────────────────
+# AgentBus tests
 
 
 class TestAgentBus:
-    """AgentBus 通信总线测试"""
+    """AgentBus communication bus tests."""
 
     def test_import(self):
-        """测试模块可正常导入"""
+        """Test that the module imports successfully."""
         from core.agent_bus import AgentBus, AgentMessage, Topics, get_agent_bus
         bus = get_agent_bus()
         assert isinstance(bus, AgentBus)
 
     def test_register_agent(self):
-        """测试 Agent 注册"""
+        """Test agent registration."""
         from core.agent_bus import AgentBus
 
         bus = AgentBus()
@@ -40,14 +40,14 @@ class TestAgentBus:
             agent_name="test_ui",
             agent_type="ui_tester",
             supported_test_types=["ui_e2e"],
-            description="UI 测试 Agent",
+            description="UI test agent",
         )
         assert reg.agent_name == "test_ui"
         assert reg.agent_type == "ui_tester"
         assert reg.is_active is True
 
     def test_list_agents(self):
-        """测试 Agent 列表"""
+        """Test the agent list."""
         from core.agent_bus import AgentBus
 
         bus = AgentBus()
@@ -61,7 +61,7 @@ class TestAgentBus:
         assert "a2" in names
 
     def test_find_agent_by_type(self):
-        """测试按类型查找 Agent"""
+        """Test finding agents by type."""
         from core.agent_bus import AgentBus
 
         bus = AgentBus()
@@ -71,7 +71,7 @@ class TestAgentBus:
         assert result[0].agent_name == "sec1"
 
     def test_find_agent_for_test_type(self):
-        """测试按测试类型查找 Agent"""
+        """Test finding agents by test type."""
         from core.agent_bus import AgentBus
 
         bus = AgentBus()
@@ -83,7 +83,7 @@ class TestAgentBus:
         assert agent.agent_name == "api1"
 
     def test_unregister_agent(self):
-        """测试 Agent 注销"""
+        """Test agent unregistration."""
         from core.agent_bus import AgentBus
 
         bus = AgentBus()
@@ -96,7 +96,7 @@ class TestAgentBus:
 
     @pytest.mark.asyncio
     async def test_publish_subscribe(self):
-        """测试发布/订阅"""
+        """Test publish/subscribe."""
         from core.agent_bus import AgentBus, AgentMessage
 
         bus = AgentBus()
@@ -118,12 +118,12 @@ class TestAgentBus:
 
     @pytest.mark.asyncio
     async def test_request_respond(self):
-        """测试请求/响应"""
+        """Test request/response."""
         from core.agent_bus import AgentBus, AgentMessage, Topics
 
         bus = AgentBus()
 
-        # 模拟 Agent 自动响应
+        # Simulate an automatic agent response.
         async def auto_responder(msg: AgentMessage):
             if msg.correlation_id:
                 await bus.respond(
@@ -144,7 +144,7 @@ class TestAgentBus:
         assert result["result"] == "ok"
 
     def test_statistics(self):
-        """测试统计信息"""
+        """Test statistics."""
         from core.agent_bus import AgentBus
 
         bus = AgentBus()
@@ -154,20 +154,20 @@ class TestAgentBus:
         assert stats["active_agents"] == 1
 
 
-# ── Tracing 测试 ─────────────────────────────────────────────────────────────
+# Tracing tests
 
 
 class TestTracing:
-    """Tracing 链路追踪测试"""
+    """Distributed tracing tests."""
 
     def test_import(self):
-        """测试模块可正常导入"""
+        """Test that the module imports successfully."""
         from core.tracing import Tracer, TraceSpan, get_tracer
         tracer = get_tracer()
         assert isinstance(tracer, Tracer)
 
     def test_start_end_trace(self):
-        """测试 trace 生命周期"""
+        """Test the trace lifecycle."""
         from core.tracing import Tracer
 
         tracer = Tracer()
@@ -180,7 +180,7 @@ class TestTracing:
         assert tracer.current_trace_id is None
 
     def test_span_context_manager(self):
-        """测试 span 上下文管理器"""
+        """Test the span context manager."""
         from core.tracing import Tracer
 
         tracer = Tracer()
@@ -191,12 +191,12 @@ class TestTracing:
             s.output_tokens = 200
 
         assert s.total_tokens == 300
-        assert s.duration_ms >= 0  # 空操作可能是 0.0 毫秒
+        assert s.duration_ms >= 0  # An empty operation may take 0.0 milliseconds.
 
         tracer.end_trace()
 
     def test_record_span(self):
-        """测试直接记录 span"""
+        """Test recording a span directly."""
         from core.tracing import Tracer, TraceSpan
 
         tracer = Tracer()
@@ -215,7 +215,7 @@ class TestTracing:
         assert len(spans) >= 1
 
     def test_trace_summary(self):
-        """测试 trace 统计摘要"""
+        """Test the trace statistics summary."""
         from core.tracing import Tracer
         tracer = Tracer()
         summary = tracer.get_trace_summary()
@@ -223,54 +223,54 @@ class TestTracing:
         assert "total_cost_usd" in summary
 
     def test_cost_estimate(self):
-        """测试成本估算"""
+        """Test cost estimation."""
         from core.tracing import _estimate_cost
 
         cost = _estimate_cost("deepseek-chat", 1000, 2000)
         assert cost > 0
-        assert cost < 0.01  # deepseek 很便宜
+        assert cost < 0.01  # DeepSeek has a low rate in this pricing fixture.
 
 
-# ── NotifyGateway 测试 ───────────────────────────────────────────────────────
+# NotifyGateway tests
 
 
 class TestNotifyGateway:
-    """NotifyGateway 通知网关测试"""
+    """NotifyGateway notification gateway tests."""
 
     def test_import(self):
-        """测试模块可正常导入"""
+        """Test that the module imports successfully."""
         from core.notify_gateway import NotifyGateway, get_notify_gateway
         gw = get_notify_gateway()
         assert isinstance(gw, NotifyGateway)
 
     @pytest.mark.asyncio
     async def test_send_info(self):
-        """测试发送 INFO 通知"""
+        """Test sending an INFO notification."""
         from core.notify_gateway import NotifyGateway
 
         gw = NotifyGateway()
         notification = await gw.send(
             level="info",
-            title="测试完成",
-            body="3/3 通过",
+            title="Test complete",
+            body="3/3 passed",
         )
         assert "console" in notification.channels_sent
 
     @pytest.mark.asyncio
     async def test_send_critical(self):
-        """测试发送 CRITICAL 通知"""
+        """Test sending a CRITICAL notification."""
         from core.notify_gateway import NotifyGateway
 
         gw = NotifyGateway()
         notification = await gw.send(
             level="critical",
-            title="核心接口崩溃",
-            body="API /login 返回 500",
+            title="Core API failure",
+            body="API /login returned 500",
         )
         assert "console" in notification.channels_sent
 
     def test_history(self):
-        """测试通知历史"""
+        """Test notification history."""
         from core.notify_gateway import NotifyGateway
 
         gw = NotifyGateway()
@@ -278,29 +278,29 @@ class TestNotifyGateway:
         assert isinstance(history, list)
 
 
-# ── Commander 测试 ───────────────────────────────────────────────────────────
+# Commander tests
 
 
 class TestCommander:
-    """Commander 总指挥测试"""
+    """Commander coordination tests."""
 
     def test_import(self):
-        """测试模块可正常导入"""
+        """Test that the module imports successfully."""
         from agents.commander import Commander, Mission, MissionStatus, get_commander
         commander = get_commander()
         assert isinstance(commander, Commander)
 
     def test_mission_creation(self):
-        """测试 Mission 创建"""
+        """Test mission creation."""
         from agents.commander import Mission, MissionStatus
 
-        m = Mission(user_input="测试淘宝登录")
-        assert m.user_input == "测试淘宝登录"
+        m = Mission(user_input="Test Taobao login")
+        assert m.user_input == "Test Taobao login"
         assert m.status == MissionStatus.PENDING
-        assert m.mission_id  # 自动生成
+        assert m.mission_id  # Automatically generated
 
     def test_mission_to_dict(self):
-        """测试 Mission 序列化"""
+        """Test mission serialization."""
         from agents.commander import Mission
 
         m = Mission(user_input="test")
@@ -309,16 +309,16 @@ class TestCommander:
         assert d["status"] == "pending"
 
     def test_mission_log(self):
-        """测试 Mission 日志"""
+        """Test mission logs."""
         from agents.commander import Mission
 
         m = Mission(user_input="test")
-        m.log("测试开始")
-        m.log("测试完成", level="info", data={"count": 3})
+        m.log("Test started")
+        m.log("Test complete", level="info", data={"count": 3})
         assert len(m.logs) == 2
 
     def test_list_missions(self):
-        """测试任务列表"""
+        """Test the mission list."""
         from agents.commander import Commander
 
         cmd = Commander()
@@ -326,7 +326,7 @@ class TestCommander:
         assert isinstance(missions, list)
 
     def test_cancel_nonexistent(self):
-        """测试取消不存在的任务"""
+        """Test canceling a nonexistent mission."""
         from agents.commander import Commander
 
         cmd = Commander()
@@ -334,20 +334,20 @@ class TestCommander:
         assert result is False
 
 
-# ── TestArchitect 测试 ───────────────────────────────────────────────────────
+# TestArchitect tests
 
 
 class TestTestArchitect:
-    """TestArchitect 测试架构师测试"""
+    """TestArchitect test design tests."""
 
     def test_import(self):
-        """测试模块可正常导入"""
+        """Test that the module imports successfully."""
         from agents.test_architect import TestArchitect, DiscoveryMode, get_test_architect
         arch = get_test_architect()
         assert isinstance(arch, TestArchitect)
 
     def test_infer_mode_diff(self):
-        """测试模式推断 — 变更驱动"""
+        """Test mode inference: change-driven."""
         from agents.test_architect import TestArchitect
 
         arch = TestArchitect()
@@ -355,7 +355,7 @@ class TestTestArchitect:
         assert mode.value == "change"
 
     def test_infer_mode_fault(self):
-        """测试模式推断 — 故障驱动"""
+        """Test mode inference: failure-driven."""
         from agents.test_architect import TestArchitect
 
         arch = TestArchitect()
@@ -363,7 +363,7 @@ class TestTestArchitect:
         assert mode.value == "fault"
 
     def test_infer_mode_exploration(self):
-        """测试模式推断 — 探索驱动"""
+        """Test mode inference: exploration-driven."""
         from agents.test_architect import TestArchitect
 
         arch = TestArchitect()
@@ -371,7 +371,7 @@ class TestTestArchitect:
         assert mode.value == "exploration"
 
     def test_infer_mode_coverage(self):
-        """测试模式推断 — 覆盖驱动"""
+        """Test mode inference: coverage-driven."""
         from agents.test_architect import TestArchitect
 
         arch = TestArchitect()
@@ -379,26 +379,26 @@ class TestTestArchitect:
         assert mode.value == "coverage"
 
     def test_infer_mode_requirement(self):
-        """测试模式推断 — 需求驱动（默认）"""
+        """Test mode inference: requirement-driven (default)."""
         from agents.test_architect import TestArchitect
 
         arch = TestArchitect()
-        mode = arch._infer_mode("全面测试淘宝登录", "", None, "")
+        mode = arch._infer_mode("Comprehensively test Taobao login", "", None, "")
         assert mode.value == "requirement"
 
     @pytest.mark.asyncio
     async def test_analyze_requirement(self):
-        """测试需求驱动分析"""
+        """Test requirement-driven analysis."""
         from agents.test_architect import TestArchitect
 
         arch = TestArchitect()
-        plan = await arch.analyze(input_text="用户登录功能需要验证用户名和密码")
+        plan = await arch.analyze(input_text="User login must validate the username and password")
         assert plan.discovery_mode.value == "requirement"
         assert len(plan.test_needs) > 0
 
     @pytest.mark.asyncio
     async def test_analyze_change(self):
-        """测试变更驱动分析"""
+        """Test change-driven analysis."""
         from agents.test_architect import TestArchitect
 
         arch = TestArchitect()
@@ -409,7 +409,7 @@ class TestTestArchitect:
 
     @pytest.mark.asyncio
     async def test_analyze_fault(self):
-        """测试故障驱动分析"""
+        """Test failure-driven analysis."""
         from agents.test_architect import TestArchitect
 
         arch = TestArchitect()
@@ -420,14 +420,14 @@ class TestTestArchitect:
         assert len(plan.test_needs) > 0
 
 
-# ── 路由测试 ─────────────────────────────────────────────────────────────────
+# Router tests
 
 
 class TestRouterRegistration:
-    """路由注册验证"""
+    """Verify router registration."""
 
     def test_commander_routes_registered(self):
-        """验证 Commander 路由已注册"""
+        """Verify that Commander routes are registered."""
         from main import app
 
         routes = [r.path for r in app.routes if hasattr(r, "path")]
@@ -445,8 +445,8 @@ class TestRouterRegistration:
             assert route in routes, f"Missing route: {route}"
 
     def test_total_routes_reasonable(self):
-        """验证总路由数合理"""
+        """Verify that the total route count is reasonable."""
         from main import app
 
         routes = [r for r in app.routes if hasattr(r, "path")]
-        assert len(routes) > 100  # 之前已有 ~166 条
+        assert len(routes) > 100  # There were approximately 166 existing routes.

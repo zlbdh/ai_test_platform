@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-测试 - Healer Agent
+Healer Agent tests
 """
 import pytest
 from unittest.mock import patch, MagicMock
@@ -8,24 +8,24 @@ from agents.healer import self_heal
 
 
 class TestHealer:
-    @patch("agents.healer.get_llm")
+    @patch("agents.healer.get_llm_for_role")
     def test_self_heal_success(self, mock_get_llm):
-        """测试正常自愈修复"""
+        """Test successful self-healing."""
         # Mock LLM chain
         mock_llm = MagicMock()
         mock_get_llm.return_value = mock_llm
         
-        # chain.invoke(...) 在 self_heal 中调用
-        # 这里用 patch 拦截整个 chain 也可以，或者拦截 prompt | llm | parser 的 invoke
-        # 直接拦截自愈功能依赖的 JsonOutputParser 或者 get_llm
+        # chain.invoke(...) is called inside self_heal.
+        # Patch the whole chain or the invoke method of prompt | llm | parser.
+        # Patch the JsonOutputParser or get_llm_for_role dependency directly.
         pass
 
     @patch("agents.healer.ChatPromptTemplate")
-    @patch("agents.healer.get_llm")
+    @patch("agents.healer.get_llm_for_role")
     @patch("agents.healer.JsonOutputParser")
     def test_self_heal_success_full(self, mock_parser, mock_get_llm, mock_prompt):
-        """通过 mock chain 验证自愈成功"""
-        # 构建一个 fake chain
+        """Verify successful self-healing with a mocked chain."""
+        # Build a fake chain.
         mock_chain = MagicMock()
         mock_chain.invoke.return_value = {
             "action": "click",
@@ -33,23 +33,23 @@ class TestHealer:
             "value": ""
         }
         
-        # 组装 chain 的行为： prompt | llm | parser
+        # Assemble the chain behavior: prompt | llm | parser.
         mock_prompt_instance = MagicMock()
         mock_prompt.from_template.return_value = mock_prompt_instance
         
-        # python 中的 `|` 会调用 __or__ 或 __ror__。
-        # 这里直接 patch invoke 更简单：
+        # Python's | operator calls __or__ or __ror__.
+        # Patching invoke directly is simpler here.
         with patch("agents.healer.JsonOutputParser") as mock_json_parser:
              pass
 
     @patch("agents.healer.ChatPromptTemplate")
-    @patch("agents.healer.get_llm")
+    @patch("agents.healer.get_llm_for_role")
     def test_self_heal_with_explicit_chain_mock(self, mock_get_llm, mock_prompt):
-        """通过 patch JsonOutputParser 的行为或直接替换链的 invoke"""
+        """Patch JsonOutputParser behavior or replace the chain's invoke method directly."""
         pass
         
     @patch('agents.healer.ChatPromptTemplate.from_template')
-    @patch('agents.healer.get_llm')
+    @patch('agents.healer.get_llm_for_role')
     @patch('agents.healer.JsonOutputParser')
     def test_self_heal_logic(self, mock_parser_cls, mock_get_llm, mock_prompt_from_temp):
         mock_chain = MagicMock()
@@ -59,7 +59,7 @@ class TestHealer:
             "value": ""
         }
         
-        # mock Prompt | LLM | Parser 的 `|` 操作
+        # Mock the | operation in Prompt | LLM | Parser.
         mock_prompt_obj = MagicMock()
         mock_llm_obj = MagicMock()
         mock_parser_obj = MagicMock()
@@ -68,10 +68,10 @@ class TestHealer:
         mock_get_llm.return_value = mock_llm_obj
         mock_parser_cls.return_value = mock_parser_obj
         
-        # mock (prompt | llm) 结果
+        # Mock the result of prompt | llm.
         mock_step1 = MagicMock()
         mock_prompt_obj.__or__.return_value = mock_step1
-        # mock (prompt | llm) | parser 结果
+        # Mock the result of (prompt | llm) | parser.
         mock_step1.__or__.return_value = mock_chain
         
         result = self_heal(
@@ -87,11 +87,11 @@ class TestHealer:
         assert result["target"] == "#correct-btn"
         
     @patch('agents.healer.ChatPromptTemplate.from_template')
-    @patch('agents.healer.get_llm')
+    @patch('agents.healer.get_llm_for_role')
     @patch('agents.healer.JsonOutputParser')
     def test_self_heal_skip(self, mock_parser_cls, mock_get_llm, mock_prompt_from_temp):
         mock_chain = MagicMock()
-        # 无法修复返回 skip
+        # Return skip when the problem cannot be repaired.
         mock_chain.invoke.return_value = {
             "action": "skip",
             "target": "",
@@ -108,6 +108,6 @@ class TestHealer:
             page_content="empty",
         )
         
-        # skip 返回 None
+        # skip returns None.
         assert result is None
 

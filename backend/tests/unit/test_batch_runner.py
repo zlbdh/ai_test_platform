@@ -1,9 +1,9 @@
 """
-BatchRunner 单元测试
-覆盖: 数据结构 (BatchStatus/TaskStatus/TestCase/BatchResult),
-      run_batch (并发控制/错误隔离/取消/进度回调),
-      cancel_batch, get_batch_status, load_from_csv,
-      create_from_data_factory, get_batch_runner 单例
+BatchRunner unit tests
+Coverage: data structures (BatchStatus/TaskStatus/TestCase/BatchResult),
+          run_batch (concurrency limits/error isolation/cancellation/progress callbacks),
+          cancel_batch, get_batch_status, load_from_csv,
+          create_from_data_factory, get_batch_runner singleton access.
 """
 import pytest
 from unittest.mock import patch, MagicMock, AsyncMock
@@ -19,7 +19,7 @@ from datetime import datetime, timedelta
 
 
 # ---------------------------------------------------------------------------
-# 数据结构测试
+# Data structure tests
 # ---------------------------------------------------------------------------
 class TestBatchStatus:
     def test_enum_values(self):
@@ -52,9 +52,9 @@ class TestTestCase:
         assert tc.duration is None
 
     def test_custom_fields(self):
-        tc = TestCase(id="t1", name="登录测试", instruction="测试登录", url="https://x.com")
+        tc = TestCase(id="t1", name="Login test", instruction="Test login", url="https://x.com")
         assert tc.id == "t1"
-        assert tc.name == "登录测试"
+        assert tc.name == "Login test"
 
     def test_duration_with_timestamps(self):
         t1 = datetime(2026, 1, 1, 0, 0, 0)
@@ -105,7 +105,7 @@ class TestBatchResult:
         assert br.success_rate == 0.0
 
     def test_to_dict(self):
-        tc = TestCase(id="t1", name="测试1", status=TaskStatus.SUCCESS)
+        tc = TestCase(id="t1", name="Test 1", status=TaskStatus.SUCCESS)
         br = self._make_result(tasks=[tc])
         d = br.to_dict()
         assert d["batch_id"] == "test-001"
@@ -123,7 +123,7 @@ class TestBatchResult:
 
 
 # ---------------------------------------------------------------------------
-# BatchRunner 初始化
+# BatchRunner initialization
 # ---------------------------------------------------------------------------
 class TestBatchRunnerInit:
     def test_default_concurrency(self):
@@ -136,14 +136,14 @@ class TestBatchRunnerInit:
 
 
 # ---------------------------------------------------------------------------
-# run_batch 核心测试
+# Core run_batch tests
 # ---------------------------------------------------------------------------
 class TestRunBatch:
     @pytest.mark.asyncio
     async def test_all_success(self):
-        """所有任务成功"""
+        """All tasks succeed."""
         runner = BatchRunner(max_concurrency=2)
-        cases = [TestCase(id=f"t{i}", name=f"测试{i}") for i in range(3)]
+        cases = [TestCase(id=f"t{i}", name=f"Test {i}") for i in range(3)]
 
         async def executor(tc):
             return {"ok": True}
@@ -161,13 +161,13 @@ class TestRunBatch:
 
     @pytest.mark.asyncio
     async def test_partial_failure(self):
-        """部分任务失败应标记 batch 为 FAILED"""
+        """A failed task should mark the batch FAILED."""
         runner = BatchRunner()
         cases = [TestCase(id="ok"), TestCase(id="fail")]
 
         async def executor(tc):
             if tc.id == "fail":
-                raise RuntimeError("模拟失败")
+                raise RuntimeError("Simulated failure")
             return {"ok": True}
 
         result = await runner.run_batch(cases, executor)
@@ -177,24 +177,24 @@ class TestRunBatch:
 
     @pytest.mark.asyncio
     async def test_error_isolation(self):
-        """一个任务失败不应影响其他任务"""
+        """One task failure should not affect other tasks."""
         runner = BatchRunner(max_concurrency=1)
         cases = [TestCase(id="a"), TestCase(id="b"), TestCase(id="c")]
 
         async def executor(tc):
             if tc.id == "b":
-                raise ValueError("任务 B 失败")
+                raise ValueError("Task B failed")
             return {"ok": True}
 
         result = await runner.run_batch(cases, executor)
         assert cases[0].status == TaskStatus.SUCCESS
         assert cases[1].status == TaskStatus.FAILED
-        assert cases[1].error == "任务 B 失败"
+        assert cases[1].error == "Task B failed"
         assert cases[2].status == TaskStatus.SUCCESS
 
     @pytest.mark.asyncio
     async def test_sync_executor(self):
-        """支持同步 executor (自动 to_thread)"""
+        """Support synchronous executors through automatic to_thread use."""
         runner = BatchRunner()
         cases = [TestCase(id="t1")]
 
@@ -207,7 +207,7 @@ class TestRunBatch:
 
     @pytest.mark.asyncio
     async def test_progress_callback(self):
-        """进度回调应被调用"""
+        """The progress callback should be called."""
         runner = BatchRunner()
         cases = [TestCase(id="t1"), TestCase(id="t2")]
         progress_calls = []
@@ -223,12 +223,12 @@ class TestRunBatch:
 
     @pytest.mark.asyncio
     async def test_progress_callback_error_is_graceful(self):
-        """进度回调异常不应影响执行"""
+        """A progress callback exception should not affect execution."""
         runner = BatchRunner()
         cases = [TestCase(id="t1")]
 
         def on_progress(tc, br):
-            raise RuntimeError("回调崩溃")
+            raise RuntimeError("Callback crashed")
 
         async def executor(tc):
             return {"ok": True}
@@ -238,7 +238,7 @@ class TestRunBatch:
 
     @pytest.mark.asyncio
     async def test_concurrency_limit(self):
-        """并发数应被信号量限制"""
+        """A semaphore should limit concurrency."""
         runner = BatchRunner(max_concurrency=2)
         cases = [TestCase(id=f"t{i}") for i in range(5)]
         max_concurrent = 0
@@ -261,7 +261,7 @@ class TestRunBatch:
 
     @pytest.mark.asyncio
     async def test_empty_batch(self):
-        """空批量应正常完成"""
+        """An empty batch should complete normally."""
         runner = BatchRunner()
         async def executor(tc): return {}
         result = await runner.run_batch([], executor)
@@ -271,7 +271,7 @@ class TestRunBatch:
 
     @pytest.mark.asyncio
     async def test_batch_cleanup(self):
-        """batch 完成后应清理 _running_batches"""
+        """Clean up _running_batches after the batch completes."""
         runner = BatchRunner()
         cases = [TestCase(id="t1")]
         async def executor(tc): return {}
@@ -280,7 +280,7 @@ class TestRunBatch:
 
 
 # ---------------------------------------------------------------------------
-# cancel_batch 测试
+# cancel_batch tests
 # ---------------------------------------------------------------------------
 class TestCancelBatch:
     def test_cancel_unknown_batch(self):
@@ -289,14 +289,14 @@ class TestCancelBatch:
 
     def test_cancel_running_batch(self):
         runner = BatchRunner()
-        # 模拟一个正在运行的 batch
+        # Simulate a running batch.
         runner._running_batches["b1"] = MagicMock()
         assert runner.cancel_batch("b1") is True
         assert "b1" in runner._cancelled
 
 
 # ---------------------------------------------------------------------------
-# get_batch_status 测试
+# get_batch_status tests
 # ---------------------------------------------------------------------------
 class TestGetBatchStatus:
     def test_unknown_batch(self):
@@ -311,64 +311,64 @@ class TestGetBatchStatus:
 
 
 # ---------------------------------------------------------------------------
-# load_from_csv 测试
+# load_from_csv tests
 # ---------------------------------------------------------------------------
 class TestLoadFromCsv:
     def test_csv_loading(self, tmp_path):
         csv_file = tmp_path / "tests.csv"
         csv_file.write_text(
             "name,url,username\n"
-            "登录测试,https://example.com,admin\n"
-            "注册测试,https://example.com/reg,user1\n",
+            "Login test,https://example.com,admin\n"
+            "Registration test,https://example.com/reg,user1\n",
             encoding="utf-8"
         )
         cases = BatchRunner.load_from_csv(
             str(csv_file),
-            instruction_template="在{url}上用{username}登录",
+            instruction_template="Log in at {url} as {username}",
             url_field="url"
         )
         assert len(cases) == 2
         assert cases[0].id == "csv_1"
-        assert cases[0].name == "登录测试"
+        assert cases[0].name == "Login test"
         assert cases[0].url == "https://example.com"
-        assert cases[0].instruction == "在https://example.com上用admin登录"
-        assert cases[1].instruction == "在https://example.com/reg上用user1登录"
+        assert cases[0].instruction == "Log in at https://example.com as admin"
+        assert cases[1].instruction == "Log in at https://example.com/reg as user1"
 
 
 # ---------------------------------------------------------------------------
-# create_from_data_factory 测试
+# create_from_data_factory tests
 # ---------------------------------------------------------------------------
 class TestCreateFromDataFactory:
     def test_factory_generation(self):
         mock_factory = MagicMock()
-        mock_factory.generate.return_value = {"name": "张三", "email": "zs@test.com"}
+        mock_factory.generate.return_value = {"name": "Alex Smith", "email": "zs@test.com"}
 
         with patch("core.data_factory.get_data_factory", return_value=mock_factory):
             cases = BatchRunner.create_from_data_factory(
                 template={"name": "string", "email": "email"},
-                instruction_template="用{name}({email})注册",
+                instruction_template="Register {name} ({email})",
                 count=3,
                 base_url="https://x.com"
             )
         assert len(cases) == 3
         assert cases[0].id == "gen_1"
         assert cases[0].url == "https://x.com"
-        assert cases[0].instruction == "用张三(zs@test.com)注册"
+        assert cases[0].instruction == "Register Alex Smith (zs@test.com)"
         assert mock_factory.generate.call_count == 3
 
 
 # ---------------------------------------------------------------------------
-# 全局单例测试
+# Global singleton tests
 # ---------------------------------------------------------------------------
 class TestGetBatchRunner:
     def test_singleton(self):
-        # 重置单例
+        # Reset the singleton.
         import services.batch_runner as mod
         mod._runner = None
         r1 = get_batch_runner()
         r2 = get_batch_runner()
         assert r1 is r2
-        # 清理
+        # Clean up.
         mod._runner = None
 
     def test_default_concurrency(self):

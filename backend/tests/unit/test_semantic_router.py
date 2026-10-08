@@ -27,7 +27,7 @@ class AsyncRouterPageStub:
         return b"frame-bytes"
 
     async def title(self):
-        return "语义测试页"
+        return "Semantic test page"
 
 
 class AsyncRouterContextStub:
@@ -139,7 +139,7 @@ async def test_list_active_sessions_reads_async_titles():
         {
             "session_id": "semantic_list_test",
             "url": "https://example.com/semantic",
-            "title": "语义测试页",
+            "title": "Semantic test page",
         }
     ]
 
@@ -156,5 +156,5 @@ async def test_semantic_analyze_returns_success_payload():
         result = await semantic_analyze("semantic_analyze_test")
 
     assert result["status"] == "success"
-    assert result["title"] == "语义测试页"
+    assert result["title"] == "Semantic test page"
     assert result["analysis"] == {"elements": 3}

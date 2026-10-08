@@ -1,21 +1,21 @@
 """
-MasterAgent 单元测试
-覆盖: plan_test, _extract_agents, _extract_steps, generate_report,
-       _calculate_success_rate, _generate_recommendations
+MasterAgent unit tests
+Coverage: plan_test, _extract_agents, _extract_steps, generate_report,
+          _calculate_success_rate, _generate_recommendations.
 """
 import pytest
 from unittest.mock import patch, MagicMock
 
 
 # ---------------------------------------------------------------------------
-# 测试 _extract_agents —— 纯逻辑，不需要 mock LLM
+# Test _extract_agents: pure logic, with no LLM mock needed.
 # ---------------------------------------------------------------------------
 class TestExtractAgents:
-    """测试 MasterAgent._extract_agents 关键词匹配逻辑"""
+    """Test the MasterAgent._extract_agents keyword matching logic."""
 
     @pytest.fixture(autouse=True)
     def _agent(self):
-        with patch("agents.master_agent.get_llm") as mock_llm:
+        with patch("agents.master_agent.get_llm_for_role") as mock_llm:
             mock_llm.return_value = MagicMock()
             from agents.master_agent import MasterAgent
             self.agent = MasterAgent()
@@ -44,26 +44,26 @@ class TestExtractAgents:
         assert "data_agent" in agents
 
     def test_default_agents_when_no_match(self):
-        agents = self.agent._extract_agents("这段文字不包含任何关键词xyz")
+        agents = self.agent._extract_agents("This text contains no matching keywords xyz")
         assert agents == ["ui_agent", "api_agent"]
 
 
 # ---------------------------------------------------------------------------
-# 测试 _extract_steps
+# Test _extract_steps.
 # ---------------------------------------------------------------------------
 class TestExtractSteps:
     @pytest.fixture(autouse=True)
     def _agent(self):
-        with patch("agents.master_agent.get_llm") as mock_llm:
+        with patch("agents.master_agent.get_llm_for_role") as mock_llm:
             mock_llm.return_value = MagicMock()
             from agents.master_agent import MasterAgent
             self.agent = MasterAgent()
 
     def test_numbered_steps(self):
-        plan = "1. 打开浏览器\n2. 登录系统\n3. 执行测试"
+        plan = "1. Open the browser\n2. Log in\n3. Run tests"
         steps = self.agent._extract_steps(plan)
         assert len(steps) == 3
-        assert "打开浏览器" in steps[0]
+        assert "Open the browser" in steps[0]
 
     def test_chinese_keyword_steps(self):
         plan = "步骤一：配置环境\n步骤二：运行测试"
@@ -76,33 +76,33 @@ class TestExtractSteps:
         assert len(steps) == 2
 
     def test_default_steps_when_no_match(self):
-        plan = "这段不包含编号的纯文本"
+        plan = "Plain text without numbering"
         steps = self.agent._extract_steps(plan)
-        assert len(steps) == 4  # 默认 4 步
+        assert len(steps) == 4  # Four default steps
         assert "UI Agent" in steps[0]
 
     def test_mixed_format(self):
-        plan = "准备工作\n1. 登录\n其他说明\n2. 测试"
+        plan = "Preparation\n1. Login\nOther notes\n2. Test"
         steps = self.agent._extract_steps(plan)
         assert len(steps) == 2
 
 
 # ---------------------------------------------------------------------------
-# 测试 generate_report / _calculate_success_rate / _generate_recommendations
+# Test generate_report / _calculate_success_rate / _generate_recommendations.
 # ---------------------------------------------------------------------------
 class TestReportGeneration:
     @pytest.fixture(autouse=True)
     def _agent(self):
-        with patch("agents.master_agent.get_llm") as mock_llm:
+        with patch("agents.master_agent.get_llm_for_role") as mock_llm:
             mock_llm.return_value = MagicMock()
             from agents.master_agent import MasterAgent
             self.agent = MasterAgent()
 
     def _make_state(self, **overrides):
-        """创建一个最小 QAState dict（TypedDict 不强制运行时检查）"""
+        """Create a minimal QAState dictionary; TypedDict does not enforce runtime validation."""
         base = {
-            "task_description": "测试任务",
-            "test_scenario": "登录流程",
+            "task_description": "Test task",
+            "test_scenario": "Login workflow",
             "ui_results": [],
             "api_results": [],
             "data_results": [],
@@ -140,17 +140,17 @@ class TestReportGeneration:
     def test_recommendations_with_errors(self):
         state = self._make_state(errors=[{"msg": "error1"}])
         recs = self.agent._generate_recommendations(state)
-        assert any("错误" in r for r in recs)
+        assert any("errors" in r for r in recs)
 
     def test_recommendations_with_failed_steps(self):
-        state = self._make_state(failed_steps=["步骤A"])
+        state = self._make_state(failed_steps=["Step A"])
         recs = self.agent._generate_recommendations(state)
-        assert any("步骤A" in r for r in recs)
+        assert any("Step A" in r for r in recs)
 
     def test_recommendations_all_pass(self):
         state = self._make_state()
         recs = self.agent._generate_recommendations(state)
-        assert any("通过" in r for r in recs)
+        assert any("passed" in r for r in recs)
 
     def test_generate_report_structure(self):
         state = self._make_state(
@@ -159,7 +159,7 @@ class TestReportGeneration:
             warnings=["w1"],
         )
         report = self.agent.generate_report(state)
-        assert report["test_scenario"] == "登录流程"
+        assert report["test_scenario"] == "Login workflow"
         assert report["summary"]["total_steps"] == 2
         assert report["summary"]["failed_steps"] == 0
         assert report["summary"]["success_rate"] == 100.0
@@ -169,27 +169,27 @@ class TestReportGeneration:
 
 
 # ---------------------------------------------------------------------------
-# 测试 plan_test（需要 mock LLM chain + Vector DB）
+# Test plan_test with mocked LLM chain and vector database.
 # ---------------------------------------------------------------------------
 class TestPlanTest:
     @pytest.fixture(autouse=True)
     def _setup(self):
-        with patch("agents.master_agent.get_llm") as mock_llm, \
+        with patch("agents.master_agent.get_llm_for_role") as mock_llm, \
              patch("agents.master_agent.get_similar_test_plans") as mock_similar, \
              patch("agents.master_agent.get_prd_context") as mock_prd:
 
             # Mock LLM to return a deterministic plan
             fake_llm = MagicMock()
             fake_llm.__or__ = MagicMock(return_value=fake_llm)
-            fake_llm.invoke = MagicMock(return_value="1. UI测试\n2. API测试\n3. 数据验证")
+            fake_llm.invoke = MagicMock(return_value="1. UI tests\n2. API tests\n3. Data validation")
             mock_llm.return_value = fake_llm
 
             # Mock Vector DB tools
             mock_similar.invoke = MagicMock(return_value=[
-                {"content": "历史测试计划1"}
+                {"content": "Historical test plan 1"}
             ])
             mock_prd.invoke = MagicMock(return_value=[
-                {"content": "PRD需求文档1"}
+                {"content": "PRD requirements document 1"}
             ])
 
             from agents.master_agent import MasterAgent
@@ -199,28 +199,28 @@ class TestPlanTest:
             yield
 
     def test_plan_test_basic(self):
-        # 由于 chain invoke 需要 prompt_template | llm | parser，
-        # 直接 mock prompt_template 使 chain 可用
+        # The chain invoke requires prompt_template | llm | parser.
+        # Mock prompt_template directly to make the chain usable.
         with patch.object(self.agent, 'prompt_template') as mock_prompt:
             mock_chain = MagicMock()
-            mock_chain.invoke = MagicMock(return_value="1. UI前端测试\n2. API接口验证")
+            mock_chain.invoke = MagicMock(return_value="1. UI frontend tests\n2. API validation")
             mock_prompt.__or__ = MagicMock(return_value=MagicMock(__or__=MagicMock(return_value=mock_chain)))
 
-            plan = self.agent.plan_test("登录功能测试")
-            assert plan["scenario"] == "登录功能测试"
+            plan = self.agent.plan_test("Login functionality test")
+            assert plan["scenario"] == "Login functionality test"
             assert "plan_text" in plan
             assert "required_agents" in plan
             assert "steps" in plan
             assert isinstance(plan["similar_plans_referenced"], int)
 
     def test_plan_test_vector_db_failure(self):
-        """Vector DB 失败不应阻止计划生成"""
+        """A vector database failure should not prevent plan generation."""
         self.mock_similar.invoke.side_effect = Exception("Vector DB down")
 
         with patch.object(self.agent, 'prompt_template') as mock_prompt:
             mock_chain = MagicMock()
-            mock_chain.invoke = MagicMock(return_value="1. 执行测试")
+            mock_chain.invoke = MagicMock(return_value="1. Run tests")
             mock_prompt.__or__ = MagicMock(return_value=MagicMock(__or__=MagicMock(return_value=mock_chain)))
 
-            plan = self.agent.plan_test("任何场景")
+            plan = self.agent.plan_test("Any scenario")
             assert plan["similar_plans_referenced"] == 0

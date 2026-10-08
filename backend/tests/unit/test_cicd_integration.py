@@ -1,7 +1,7 @@
 """
-CICDIntegrationService 单元测试
-覆盖: 数据类, 配置管理, Webhook验证, 触发器/历史,
-      JUnit XML/HTML 报告生成, 单例
+CICDIntegrationService unit tests.
+Covers data classes, configuration management, webhook validation, triggers and
+history, JUnit XML/HTML report generation, and the singleton.
 """
 import asyncio
 import pytest
@@ -17,7 +17,7 @@ from services.cicd_integration import (
 
 
 # ---------------------------------------------------------------------------
-# 数据类
+# Data classes.
 # ---------------------------------------------------------------------------
 class TestCICDConfig:
     def test_defaults(self):
@@ -45,7 +45,7 @@ class TestTestCaseResult:
 # ---------------------------------------------------------------------------
 @pytest.fixture
 def svc(tmp_path):
-    """隔离的 CICDIntegrationService"""
+    """An isolated CICDIntegrationService."""
     with patch("services.cicd_integration.CONFIG_FILE", tmp_path / "cfg.json"), \
          patch("services.cicd_integration.HISTORY_FILE", tmp_path / "history.json"), \
          patch("services.cicd_integration.REPORTS_DIR", tmp_path / "reports"), \
@@ -64,7 +64,7 @@ def svc(tmp_path):
 
 @pytest.fixture
 def svc_with_reports(tmp_path):
-    """包含报告目录 patch 的 service"""
+    """A service with a patched report directory."""
     reports_dir = tmp_path / "reports"
     reports_dir.mkdir(exist_ok=True)
     with patch("services.cicd_integration.CONFIG_FILE", tmp_path / "cfg.json"), \
@@ -83,14 +83,14 @@ def svc_with_reports(tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# 配置管理
+# Configuration management.
 # ---------------------------------------------------------------------------
 class TestConfigManagement:
     def test_get_config(self, svc):
         cfg = svc.get_config()
         assert "webhook_url" in cfg
         assert cfg["enabled"] is True
-        assert "..." in cfg["webhook_secret"]  # 掩码
+        assert "..." in cfg["webhook_secret"]  # Masking.
 
     def test_update_config(self, svc):
         cfg = svc.update_config({"enabled": False})
@@ -108,7 +108,7 @@ class TestConfigManagement:
 
 
 # ---------------------------------------------------------------------------
-# Webhook 验证
+# Webhook validation.
 # ---------------------------------------------------------------------------
 class TestWebhookVerification:
     def test_verify_valid(self, svc):
@@ -128,7 +128,7 @@ class TestWebhookVerification:
 
 
 # ---------------------------------------------------------------------------
-# 触发器 / 历史
+# Triggers and history.
 # ---------------------------------------------------------------------------
 class TestTrigger:
     def test_trigger_test(self, svc):
@@ -175,14 +175,14 @@ class TestTrigger:
 
         with patch("agents.commander.get_commander", return_value=commander):
             await svc._run_commander(record, {
-                "requirement": "回归测试",
+                "requirement": "Regression test",
                 "target_url": "http://example.com",
                 "parallel": False,
                 "timeout_seconds": 321,
             })
 
         commander.run.assert_awaited_once_with(
-            user_input="回归测试",
+            user_input="Regression test",
             target_url="http://example.com",
             parallel=False,
             timeout_seconds=321,
@@ -192,7 +192,7 @@ class TestTrigger:
 
 
 # ---------------------------------------------------------------------------
-# 报告生成
+# Report generation.
 # ---------------------------------------------------------------------------
 class TestReportGeneration:
     def _make_test_results(self):
@@ -241,7 +241,7 @@ class TestReportGeneration:
 
 
 # ---------------------------------------------------------------------------
-# 单例
+# Singleton.
 # ---------------------------------------------------------------------------
 class TestSingleton:
     def test_singleton(self):

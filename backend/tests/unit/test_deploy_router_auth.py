@@ -134,7 +134,7 @@ def test_add_project_accepts_token_from_json_body():
         "name": "Demo",
         "repos": [
             {
-                "label": "前端",
+                "label": "Frontend",
                 "repo_url": "https://example.com/demo.git",
                 "branch": "main",
                 "install_cmd": "npm install",
@@ -434,7 +434,7 @@ def test_approve_approval_requires_deploy_approve_permission():
     with patch("core.auth_dependencies.get_auth_service", return_value=auth):
         response = client.post(
             "/api/deploy/approvals/approval_demo/approve?token=dev-token",
-            json={"comment": "请执行"},
+            json={"comment": "Please execute"},
         )
 
     assert response.status_code == 403
@@ -464,7 +464,7 @@ def test_approve_approval_rejects_out_of_scope_project():
         response = client.post(
             "/api/deploy/approvals/approval_demo/approve",
             headers={"Authorization": "Bearer approver-token"},
-            json={"comment": "批准发布"},
+            json={"comment": "Approve release"},
         )
 
     assert response.status_code == 403
@@ -497,7 +497,7 @@ def test_approve_approval_returns_service_payload_for_approver():
         response = client.post(
             "/api/deploy/approvals/approval_demo/approve",
             headers={"Authorization": "Bearer approver-token"},
-            json={"comment": "批准发布"},
+            json={"comment": "Approve release"},
         )
 
     assert response.status_code == 200
@@ -507,7 +507,7 @@ def test_approve_approval_returns_service_payload_for_approver():
         approved=True,
         reviewed_by="ops1",
         reviewed_by_name="ops",
-        comment="批准发布",
+        comment="Approve release",
     )
     auth.record_audit_event.assert_called_once_with(
         action="deploy_approval_approve",

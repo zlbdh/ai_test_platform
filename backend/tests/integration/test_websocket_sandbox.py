@@ -1,13 +1,13 @@
 """
-WebSocket 沙箱集成测试
-覆盖: /ws/sandbox 连接、heartbeat、状态推送
-需要后端运行才能执行
+WebSocket sandbox integration tests.
+Covers /ws/sandbox connections, heartbeats, and status updates.
+Requires a running backend.
 """
 import pytest
 import asyncio
 import json
 
-# 跳过条件：如果没有安装 websockets 库
+# Skip if the websockets package is not installed.
 try:
     import websockets
     HAS_WEBSOCKETS = True
@@ -22,16 +22,16 @@ WS_URL = "ws://127.0.0.1:8020/ws/sandbox"
 @pytest.mark.skipif(not HAS_WEBSOCKETS, reason="websockets not installed")
 class TestWebSocketSandbox:
     """
-    集成测试：验证 WebSocket 沙箱端点的连通性和消息格式。
-    需要后端服务在 127.0.0.1:8020 运行方可执行。
+    Verify WebSocket sandbox connectivity and message formats.
+    Requires the backend service at 127.0.0.1:8020.
     """
 
     @pytest.mark.asyncio
     async def test_connect_and_receive(self):
-        """连接 /ws/sandbox 并接收第一条消息"""
+        """Connect to /ws/sandbox and receive the first message."""
         try:
             async with websockets.connect(WS_URL, close_timeout=3) as ws:
-                # 等待第一条消息（通常是 status heartbeat）
+                # Wait for the first message, usually a status heartbeat.
                 msg = await asyncio.wait_for(ws.recv(), timeout=5)
                 data = json.loads(msg)
                 assert "type" in data or "status" in data, f"Unexpected message format: {data}"
@@ -40,10 +40,10 @@ class TestWebSocketSandbox:
 
     @pytest.mark.asyncio
     async def test_heartbeat_format(self):
-        """验证 heartbeat 消息包含必要字段"""
+        """Verify that heartbeat messages contain the required fields."""
         try:
             async with websockets.connect(WS_URL, close_timeout=3) as ws:
-                # 收集几条消息
+                # Collect several messages.
                 messages = []
                 for _ in range(3):
                     try:
@@ -54,7 +54,7 @@ class TestWebSocketSandbox:
 
                 assert len(messages) >= 1, "Should receive at least one message"
 
-                # 检查第一条消息是否包含状态信息
+                # Check whether the first message contains status information.
                 first = messages[0]
                 assert isinstance(first, dict)
         except (ConnectionRefusedError, OSError):
@@ -62,7 +62,7 @@ class TestWebSocketSandbox:
 
     @pytest.mark.asyncio
     async def test_multiple_connections(self):
-        """验证多个客户端可以同时连接"""
+        """Verify that multiple clients can connect simultaneously."""
         try:
             async with websockets.connect(WS_URL, close_timeout=3) as ws1, \
                        websockets.connect(WS_URL, close_timeout=3) as ws2:

@@ -1,7 +1,7 @@
 """
-DistributedLoadTester 单元测试
-覆盖: 枚举, 数据类, generate_locustfile, stop_test, add_worker,
-      get_status, start_test(locust不可用回退), 单例
+DistributedLoadTester unit tests.
+Covers enums, data classes, generate_locustfile, stop_test, add_worker, get_status,
+start_test with a fallback when Locust is unavailable, and the singleton.
 """
 import pytest
 from unittest.mock import patch, MagicMock
@@ -13,7 +13,7 @@ from services.distributed_load_testing import (
 
 
 # ---------------------------------------------------------------------------
-# 枚举
+# Enums.
 # ---------------------------------------------------------------------------
 class TestLoadTestStatus:
     def test_values(self):
@@ -22,7 +22,7 @@ class TestLoadTestStatus:
 
 
 # ---------------------------------------------------------------------------
-# 数据类
+# Data classes.
 # ---------------------------------------------------------------------------
 class TestLoadTestConfig:
     def test_creation(self):
@@ -124,12 +124,12 @@ class TestGetStatus:
 
 
 # ---------------------------------------------------------------------------
-# start_test (locust 不可用 → 回退到简单压测)
+# start_test: use a simple load test when Locust is unavailable.
 # ---------------------------------------------------------------------------
 class TestStartTest:
     @pytest.mark.asyncio
     async def test_no_locust_fallback(self, tester):
-        """Locust 不可用时应使用简单压测"""
+        """Use a simple load test when Locust is unavailable."""
         config = LoadTestConfig("http://example.com", 1, 1.0, 1)
         with patch.object(tester, "_run_simple_load_test", return_value={"status": "completed"}) as mock:
             result = await tester.start_test(config)
@@ -138,7 +138,7 @@ class TestStartTest:
 
 
 # ---------------------------------------------------------------------------
-# 单例
+# Singleton.
 # ---------------------------------------------------------------------------
 class TestSingleton:
     def test_same_instance(self):

@@ -4,7 +4,7 @@ import time
 from core.session_manager import SessionManager, SessionState
 
 class TestSessionManager:
-    """测试 SessionManager 与 SessionState 的多会话隔离及线程安全"""
+    """Test SessionManager and SessionState session isolation and thread safety."""
 
     def setup_method(self):
         SessionManager._sessions.clear()

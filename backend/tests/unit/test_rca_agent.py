@@ -1,6 +1,6 @@
 """
-RCAAgent 单元测试
-覆盖: _categorize_errors, diagnose_error, generate_root_cause_report
+RCAAgent unit tests
+Coverage: _categorize_errors, diagnose_error, generate_root_cause_report.
 """
 import pytest
 from unittest.mock import patch, MagicMock
@@ -8,8 +8,8 @@ from unittest.mock import patch, MagicMock
 
 @pytest.fixture(autouse=True)
 def _patch_deps():
-    """Mock RCA Agent 的外部依赖"""
-    with patch("agents.rca_agent.get_llm") as mock_llm, \
+    """Mock external RCA Agent dependencies."""
+    with patch("agents.rca_agent.get_llm_for_role") as mock_llm, \
          patch("agents.rca_agent.OPS_TOOLS") as mock_ops, \
          patch("agents.rca_agent.search_similar_bugs") as mock_search, \
          patch("agents.rca_agent.git_blame") as mock_blame, \
@@ -30,7 +30,7 @@ def _make_rca():
 
 
 # ---------------------------------------------------------------------------
-# 测试 _categorize_errors
+# Test _categorize_errors.
 # ---------------------------------------------------------------------------
 class TestCategorizeErrors:
     def test_null_pointer(self):
@@ -93,7 +93,7 @@ class TestCategorizeErrors:
 
 
 # ---------------------------------------------------------------------------
-# 测试 diagnose_error（需要 mock LLM + Vector DB）
+# Test diagnose_error with mocked LLM and vector database.
 # ---------------------------------------------------------------------------
 class TestDiagnoseError:
     def test_basic_diagnosis(self):
@@ -109,7 +109,7 @@ class TestDiagnoseError:
 
 
 # ---------------------------------------------------------------------------
-# 测试 generate_root_cause_report
+# Test generate_root_cause_report.
 # ---------------------------------------------------------------------------
 class TestGenerateReport:
     def test_report_structure(self):

@@ -135,7 +135,7 @@ def test_commander_command_execute_supports_release_deploy_request():
                     "target_type": "repo",
                     "repo_id": "repo-1",
                     "branch": "main",
-                    "comment": "自动发布",
+                    "comment": "Automatic release",
                 },
                 "confirm": True,
             },
@@ -150,7 +150,7 @@ def test_commander_command_execute_supports_release_deploy_request():
             "target_type": "repo",
             "repo_id": "repo-1",
             "branch": "main",
-            "comment": "自动发布",
+            "comment": "Automatic release",
         },
         user=deploy_user,
         confirm=True,
@@ -166,7 +166,7 @@ def test_commander_command_execute_maps_confirmation_error():
     auth.check_permission.return_value = True
     gateway = MagicMock()
     gateway.execute_command = AsyncMock(
-        side_effect=CommandConfirmationRequiredError("命令 deploy.job.cancel 为高风险动作，需显式确认 confirm=true")
+        side_effect=CommandConfirmationRequiredError("Command deploy.job.cancel is a high-risk action and requires explicit confirmation with confirm=true")
     )
 
     with patch("core.auth_dependencies.get_auth_service", return_value=auth), \
@@ -238,7 +238,7 @@ def test_commander_command_run_approve_returns_gateway_payload():
         response = client.post(
             "/api/commander/commands/runs/cmdrun_demo/approve",
             headers={"Authorization": "Bearer admin-token"},
-            json={"comment": "批准", "confirm": True},
+            json={"comment": "Approve", "confirm": True},
         )
 
     assert response.status_code == 200
@@ -247,7 +247,7 @@ def test_commander_command_run_approve_returns_gateway_payload():
     gateway.approve_command_run.assert_awaited_once_with(
         "cmdrun_demo",
         user=admin_user,
-        comment="批准",
+        comment="Approve",
         confirm=True,
         source="web",
     )
@@ -270,7 +270,7 @@ def test_commander_command_run_reject_returns_gateway_payload():
         response = client.post(
             "/api/commander/commands/runs/cmdrun_demo/reject",
             headers={"Authorization": "Bearer admin-token"},
-            json={"comment": "驳回"},
+            json={"comment": "Reject"},
         )
 
     assert response.status_code == 200
@@ -279,6 +279,6 @@ def test_commander_command_run_reject_returns_gateway_payload():
     gateway.reject_command_run.assert_called_once_with(
         "cmdrun_demo",
         user=admin_user,
-        reason="驳回",
+        reason="Reject",
         source="web",
     )

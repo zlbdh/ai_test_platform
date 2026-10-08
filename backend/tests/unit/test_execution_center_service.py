@@ -19,26 +19,26 @@ def test_upsert_and_ignore(tmp_path):
     with patch("core.db_helper.sqlite3.connect", side_effect=_connect):
         svc.upsert_run(
             task_id="performance_demo",
-            requirement="性能测试 · http://example.com",
+            requirement="Performance test · http://example.com",
             status="failed",
             target_url="http://example.com",
             mode="performance",
             logs=[{"type": "assertion", "status": "fail", "content": "HTTP 401"}],
             duration_ms=1200,
             execution_group_id="batch_demo",
-            group_title="服务商品中心全链路测试",
+            group_title="Service catalog end-to-end test",
             record_kind="child",
         )
         svc.upsert_run(
             task_id="performance_demo",
-            requirement="性能测试 · http://example.com",
+            requirement="Performance test · http://example.com",
             status="success",
             target_url="http://example.com",
             mode="performance",
             logs=[{"type": "assertion", "status": "pass", "content": "HTTP 200"}],
             duration_ms=800,
             execution_group_id="batch_demo",
-            group_title="服务商品中心全链路测试",
+            group_title="Service catalog end-to-end test",
             record_kind="child",
         )
 
@@ -58,7 +58,7 @@ def test_upsert_and_ignore(tmp_path):
         svc.mark_ignored(["security_demo"])
         svc.upsert_run(
             task_id="security_demo",
-            requirement="安全扫描 · http://example.com",
+            requirement="Security scan · http://example.com",
             status="failed",
             target_url="http://example.com",
             mode="security",
@@ -109,7 +109,7 @@ def test_record_database_result_keeps_duration_and_repairs_placeholder_titles(tm
             """,
             (
                 "api_workbench_bad",
-                "API 工作台 · ??????",
+                "API Workbench · ??????",
                 "success",
                 1,
                 0,
@@ -126,12 +126,12 @@ def test_record_database_result_keeps_duration_and_repairs_placeholder_titles(tm
         conn.close()
 
         svc.record_database_result(
-            action="查询",
+            action="Query",
             connection_name="ry_cloud_readonly_live",
             db_type="mysql",
             database="ry_cloud",
             success=True,
-            message="查询完成，返回 1 行，用时 321 ms",
+            message="Query completed: 1 row returned in 321 ms",
             duration_ms=321,
             execution_group_id="batch_bad",
             session_id="sess_bad",
@@ -186,7 +186,7 @@ def test_repair_text_artifacts_reports_repaired_counts(tmp_path):
             """,
             (
                 "api_fix",
-                "API 工作台 · ??????",
+                "API Workbench · ??????",
                 "success",
                 1,
                 0,
@@ -234,8 +234,8 @@ def test_commander_group_keeps_commander_mode_when_smart_root_exists(tmp_path):
     with patch("core.db_helper.sqlite3.connect", side_effect=_connect):
         svc.ensure_group(
             group_id="mission_demo",
-            title="军团测试 · 登录回归",
-            requirement="登录回归",
+            title="Legion test · Login regression",
+            requirement="Login regression",
             target_url="http://example.com/login",
             mode="commander",
             source="commander",
@@ -245,28 +245,28 @@ def test_commander_group_keeps_commander_mode_when_smart_root_exists(tmp_path):
         )
         svc.upsert_run(
             task_id="task_ui_demo",
-            requirement="登录回归",
+            requirement="Login regression",
             status="success",
             target_url="http://example.com/login",
             mode="smart",
-            logs=[{"type": "observation", "content": "UI 通过"}],
+            logs=[{"type": "observation", "content": "UI passed"}],
             duration_ms=1200,
             execution_group_id="mission_demo",
             session_id="commander_mission_demo",
-            group_title="军团测试 · 登录回归",
+            group_title="Legion test · Login regression",
             record_kind="root",
         )
         svc.upsert_run(
             task_id="mission_demo",
-            requirement="军团任务 · 登录回归",
+            requirement="Legion task · Login regression",
             status="failed",
             target_url="http://example.com/login",
             mode="commander",
-            logs=[{"type": "error", "content": "API 登录失败"}],
+            logs=[{"type": "error", "content": "Login API failed"}],
             duration_ms=1800,
             execution_group_id="mission_demo",
             session_id="commander_mission_demo",
-            group_title="军团测试 · 登录回归",
+            group_title="Legion test · Login regression",
             record_kind="child",
         )
 
@@ -296,7 +296,7 @@ def test_upsert_run_keeps_display_requirement_and_text_state_metadata(tmp_path):
             status="success",
             target_url="https://example.com/login",
             mode="smart",
-            logs=[{"type": "system", "event": "text_encoding_fallback", "content": "需求文本疑似编码损坏，已回退为可读标题。"}],
+            logs=[{"type": "system", "event": "text_encoding_fallback", "content": "The requirement text appears corrupted; a readable title was used as a fallback."}],
             execution_group_id="batch_encoding_guard",
             group_title="https://example.com/login",
             record_kind="root",

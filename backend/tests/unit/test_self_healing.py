@@ -1,7 +1,7 @@
 """
-SelfHealingEngine 单元测试
-覆盖: FailureType 枚举, HealingAction/HealingResult 数据类,
-      classify_failure (7 种类型), get_statistics, get_healing_engine 单例
+SelfHealingEngine unit tests
+Coverage: FailureType enum; HealingAction/HealingResult data classes;
+          classify_failure (7 types); get_statistics; get_healing_engine singleton access.
 """
 import pytest
 from core.self_healing import (
@@ -11,7 +11,7 @@ from core.self_healing import (
 
 
 # ---------------------------------------------------------------------------
-# 数据结构测试
+# Data structure tests
 # ---------------------------------------------------------------------------
 class TestFailureType:
     def test_enum_values(self):
@@ -28,7 +28,7 @@ class TestHealingAction:
     def test_creation(self):
         action = HealingAction(
             action_type="retry",
-            description="重试操作",
+            description="Retry the operation",
             parameters={"delay": 1.0},
             success_probability=0.8,
         )
@@ -62,7 +62,7 @@ class TestHealingResult:
 
 
 # ---------------------------------------------------------------------------
-# classify_failure 测试 (7 种类型)
+# classify_failure tests (7 types)
 # ---------------------------------------------------------------------------
 class TestClassifyFailure:
     @pytest.fixture
@@ -104,7 +104,7 @@ class TestClassifyFailure:
 
 
 # ---------------------------------------------------------------------------
-# get_statistics 测试
+# get_statistics tests
 # ---------------------------------------------------------------------------
 class TestGetStatistics:
     def test_empty(self):
@@ -129,7 +129,7 @@ class TestGetStatistics:
 
 
 # ---------------------------------------------------------------------------
-# 初始化 + 单例测试
+# Initialization and singleton tests
 # ---------------------------------------------------------------------------
 class TestInit:
     def test_defaults(self):

@@ -1,6 +1,6 @@
 """
-api_response 单元测试
-覆盖: ok, fail, safe_handler (sync/async/http/value/general exception)
+api_response unit tests.
+Covers ok, fail, and safe_handler for sync/async, HTTP, value, and general exceptions.
 """
 import pytest
 from fastapi import HTTPException
