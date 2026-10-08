@@ -2,9 +2,9 @@
 """
 Execution Center Service
 
-将平台内各类测试结果统一沉淀为：
-1. execution_groups：单次测试记录（父级）
-2. test_runs：单条测试记录（子级）
+Persist platform test results consistently as:
+1. execution_groups: parent records for test executions
+2. test_runs: child records for individual tests
 """
 from __future__ import annotations
 
@@ -23,21 +23,21 @@ logger = logging.getLogger(__name__)
 
 
 class ExecutionCenterService:
-    """统一执行中心落库与分组服务。"""
+    """Unified execution-center persistence and grouping service."""
 
     _MODE_LABELS: Dict[str, str] = {
-        "api_workbench": "API 工作台",
-        "database": "数据库查询",
-        "performance": "性能测试",
-        "security": "安全扫描",
-        "accessibility": "无障碍测试",
-        "i18n": "国际化测试",
-        "compliance": "合规审计",
-        "graphql": "GraphQL 测试",
-        "websocket": "WebSocket 测试",
-        "grpc": "gRPC 测试",
-        "chaos": "混沌测试",
-        "mobile": "移动端测试",
+        "api_workbench": "API Workbench",
+        "database": "Database Query",
+        "performance": "Performance Test",
+        "security": "Security Scan",
+        "accessibility": "Accessibility Test",
+        "i18n": "Internationalization Test",
+        "compliance": "Compliance Audit",
+        "graphql": "GraphQL Test",
+        "websocket": "WebSocket Test",
+        "grpc": "gRPC Test",
+        "chaos": "Chaos Test",
+        "mobile": "Mobile Test",
     }
 
     @staticmethod
@@ -58,7 +58,7 @@ class ExecutionCenterService:
         display, detected_state = resolve_display_text(
             requirement_display if requirement_display is not None else requirement,
             target_url,
-            fallback or "未命名测试",
+            fallback or "Untitled Test",
         )
         normalized_state = str(task_text_state or detected_state or NORMAL_TEXT_STATE).strip() or NORMAL_TEXT_STATE
         if normalized_state != BROKEN_TEXT_STATE and self._looks_broken_text(raw):
@@ -86,15 +86,15 @@ class ExecutionCenterService:
         return raw
 
     def _build_group_title(self, mode: str, target_url: str, fallback: str = "") -> str:
-        label = self._compact_target(target_url) or str(fallback or "").strip() or "专项测试批次"
-        return f"专项测试 · {label}"
+        label = self._compact_target(target_url) or str(fallback or "").strip() or "Specialized Test Batch"
+        return f"Specialized Test · {label}"
 
     def _build_requirement_title(self, mode: str, target_url: str, fallback: str = "") -> str:
         label = str(target_url or "").strip() or str(fallback or "").strip()
         prefix = self._MODE_LABELS.get(str(mode or "").strip(), "")
         if prefix and label:
             return f"{prefix} · {label}"
-        return label or prefix or "未命名测试记录"
+        return label or prefix or "Untitled Test Record"
 
     def _prefer_text(
         self,
@@ -211,7 +211,7 @@ class ExecutionCenterService:
         ).fetchall()
         for row in rows:
             group_id = str(row["task_id"])
-            requirement = str(row["requirement"] or row["task_id"] or "未命名测试")
+            requirement = str(row["requirement"] or row["task_id"] or "Untitled Test")
             created_at = str(row["created_at"] or datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
             legacy_groups += 1
             self._ensure_group(
@@ -821,8 +821,8 @@ class ExecutionCenterService:
     def _serialize_record_row(self, row: sqlite3.Row) -> Dict[str, Any]:
         return {
             "task_id": row["task_id"],
-            "requirement": row["requirement"] or "未命名测试记录",
-            "requirement_display": row["requirement_display"] or row["requirement"] or "未命名测试记录",
+            "requirement": row["requirement"] or "Untitled Test Record",
+            "requirement_display": row["requirement_display"] or row["requirement"] or "Untitled Test Record",
             "status": row["status"] or "unknown",
             "log_count": int(row["log_count"] or 0),
             "error_count": int(row["error_count"] or 0),
@@ -958,11 +958,11 @@ class ExecutionCenterService:
     ) -> str:
         detail_items = detail_items or []
         task_id = f"database_{action}_{uuid.uuid4().hex[:8]}"
-        title = f"数据库{action} · {connection_name} · {db_type}"
+        title = f"Database {action} · {connection_name} · {db_type}"
         logs: List[Dict[str, Any]] = [
-            self._build_system_log(f"数据库测试完成：{connection_name} ({db_type})"),
+            self._build_system_log(f"Database test completed: {connection_name} ({db_type})"),
             self._build_assertion_log(
-                target=f"数据库{action}",
+                target=f"Database {action}",
                 passed=success,
                 content=message,
             ),
@@ -996,14 +996,14 @@ class ExecutionCenterService:
         issues = report.get("issues", []) or []
         total = int(report.get("total") if quick else report.get("total_issues", 0) or 0)
         success = report.get("status", "success") != "error" and total == 0 and report.get("score", 0) != -1
-        label = "快速检查" if quick else "无障碍审计"
+        label = "Quick Check" if quick else "Accessibility Audit"
         task_id = f"accessibility_{'quick' if quick else 'audit'}_{uuid.uuid4().hex[:8]}"
         logs: List[Dict[str, Any]] = [
-            self._build_system_log(f"{label}完成：{report.get('url', '')}"),
+            self._build_system_log(f"{label} completed: {report.get('url', '')}"),
             self._build_assertion_log(
                 target=label,
                 passed=success,
-                content=report.get("summary") or f"共发现 {total} 个问题",
+                content=report.get("summary") or f"Found {total} issues",
             ),
         ]
         for issue in issues:
@@ -1015,7 +1015,7 @@ class ExecutionCenterService:
                 )
             )
         if report.get("status") == "error":
-            logs.append(self._build_error_log(str(report.get("error") or "无障碍测试失败")))
+            logs.append(self._build_error_log(str(report.get("error") or "Accessibility test failed")))
         return self.upsert_run(
             task_id=task_id,
             requirement=f"{label} · {report.get('url', '')}",
@@ -1039,15 +1039,15 @@ class ExecutionCenterService:
         issues = report.get("issues", []) or []
         total = int(report.get("total") if quick else report.get("total_issues", 0) or 0)
         success = report.get("status", "success") != "error" and total == 0 and report.get("score", 0) != -1
-        label = "i18n快速检查" if quick else "i18n专项测试"
+        label = "i18n Quick Check" if quick else "i18n Specialized Test"
         locale_info = report.get("locale") or ",".join(report.get("locales_tested", []) or [])
         task_id = f"i18n_{'quick' if quick else 'audit'}_{uuid.uuid4().hex[:8]}"
         logs: List[Dict[str, Any]] = [
-            self._build_system_log(f"{label}完成：{report.get('url', '')}"),
+            self._build_system_log(f"{label} completed: {report.get('url', '')}"),
             self._build_assertion_log(
                 target=label,
                 passed=success,
-                content=report.get("summary") or f"Locale={locale_info}，共发现 {total} 个问题",
+                content=report.get("summary") or f"Locale={locale_info}; found {total} issues",
             ),
         ]
         for issue in issues:
@@ -1059,7 +1059,7 @@ class ExecutionCenterService:
                 )
             )
         if report.get("status") == "error":
-            logs.append(self._build_error_log(str(report.get("error") or "i18n测试失败")))
+            logs.append(self._build_error_log(str(report.get("error") or "i18n test failed")))
         return self.upsert_run(
             task_id=task_id,
             requirement=f"{label} · {report.get('url', '')}",
@@ -1084,11 +1084,11 @@ class ExecutionCenterService:
         success = total == 0 and report.get("score", 0) != -1
         task_id = f"compliance_{uuid.uuid4().hex[:8]}"
         logs: List[Dict[str, Any]] = [
-            self._build_system_log(f"合规审计完成：{report.get('url', '')}"),
+            self._build_system_log(f"Compliance audit completed: {report.get('url', '')}"),
             self._build_assertion_log(
-                target="合规审计",
+                target="Compliance Audit",
                 passed=success,
-                content=report.get("summary") or f"共发现 {total} 个问题",
+                content=report.get("summary") or f"Found {total} issues",
             ),
         ]
         for issue in issues:
@@ -1101,7 +1101,7 @@ class ExecutionCenterService:
             )
         return self.upsert_run(
             task_id=task_id,
-            requirement=f"合规审计 · {report.get('url', '')}",
+            requirement=f"Compliance Audit · {report.get('url', '')}",
             status="success" if success else "failed",
             target_url=report.get("url", ""),
             mode="compliance",
@@ -1129,7 +1129,7 @@ class ExecutionCenterService:
         detail_items = detail_items or []
         task_id = f"{task_prefix or mode}_{uuid.uuid4().hex[:8]}"
         logs: List[Dict[str, Any]] = [
-            self._build_system_log(f"{title}完成：{target_url or '-'}"),
+            self._build_system_log(f"{title} completed: {target_url or '-'}"),
             self._build_assertion_log(
                 target=title,
                 passed=success,
@@ -1169,11 +1169,11 @@ class ExecutionCenterService:
         success = result.status.value == "completed" and len(alerts) == 0 and not result.errors
         task_id = f"security_{result.scan_id}"
         logs: List[Dict[str, Any]] = [
-            self._build_system_log(f"安全扫描完成：{config.target_url}"),
+            self._build_system_log(f"Security scan completed: {config.target_url}"),
             self._build_assertion_log(
-                target="安全扫描",
+                target="Security Scan",
                 passed=success,
-                content=f"告警 {len(alerts)} 个，高危 {stats.get('high', 0)} 个",
+                content=f"Warnings: {len(alerts)}; high risk: {stats.get('high', 0)}",
             ),
         ]
         for alert in alerts:
@@ -1189,7 +1189,7 @@ class ExecutionCenterService:
         duration_ms = int(result.duration * 1000) if result.duration else 0
         return self.upsert_run(
             task_id=task_id,
-            requirement=f"安全扫描 · {config.target_url}",
+            requirement=f"Security Scan · {config.target_url}",
             status="success" if success else "failed",
             target_url=config.target_url,
             mode="security",
@@ -1210,19 +1210,19 @@ class ExecutionCenterService:
         success = result.status.value == "completed" and failures == 0 and http_5xx == 0 and not result.errors
         task_id = f"performance_{result.test_id}"
         logs: List[Dict[str, Any]] = [
-            self._build_system_log(f"性能测试完成：{config.target_url}"),
+            self._build_system_log(f"Performance test completed: {config.target_url}"),
             self._build_assertion_log(
-                target="业务成功率",
+                target="Business Success Rate",
                 passed=business_success_rate >= 99.9,
-                content=f"业务成功率 {business_success_rate:.2f}% / 总请求 {stats.get('total_requests', 0)}",
+                content=f"Business success rate: {business_success_rate:.2f}% / total requests: {stats.get('total_requests', 0)}",
             ),
             self._build_assertion_log(
-                target="服务端错误",
+                target="Server Errors",
                 passed=http_5xx == 0,
-                content=f"HTTP 5xx 数量 {http_5xx}",
+                content=f"HTTP 5xx count: {http_5xx}",
             ),
             self._build_observation_log(
-                f"平均响应 {stats.get('avg_response_time', 0)}ms，RPS {stats.get('requests_per_second', 0)}"
+                f"Average response: {stats.get('avg_response_time', 0)}ms, RPS {stats.get('requests_per_second', 0)}"
             ),
         ]
         for error in result.errors:
@@ -1230,7 +1230,7 @@ class ExecutionCenterService:
         duration_ms = int(result.duration * 1000) if result.duration else 0
         return self.upsert_run(
             task_id=task_id,
-            requirement=f"性能测试 · {config.target_url}",
+            requirement=f"Performance Test · {config.target_url}",
             status="success" if success else "failed",
             target_url=config.target_url,
             mode="performance",

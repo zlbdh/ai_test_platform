@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Commander ChatOps 绑定服务
+Commander ChatOps Binding Service
 
-负责管理通知平台身份与平台用户的受控绑定关系。
+Manage controlled bindings between notification platform identities and platform users.
 """
 from __future__ import annotations
 
@@ -15,11 +15,11 @@ from services.auth_service import User, get_auth_service
 
 
 class ChatOpsBindingError(Exception):
-    """通知平台绑定流程基类异常。"""
+    """Base exception for notification platform binding flows."""
 
 
 class ChatOpsBindingValidationError(ChatOpsBindingError):
-    """绑定参数或状态非法。"""
+    """Invalid binding parameters or state."""
 
 
 def _now_iso() -> str:
@@ -27,7 +27,7 @@ def _now_iso() -> str:
 
 
 class CommanderChatOpsBindingService:
-    """通知平台用户绑定与一次性绑定码管理。"""
+    """Manage notification platform user bindings and single-use binding codes."""
 
     def __init__(self) -> None:
         self._ensure_schema()
@@ -190,9 +190,9 @@ class CommanderChatOpsBindingService:
         normalized_open_id = str(notification_platform_open_id or "").strip()
         normalized_chat_id = str(chat_id or "").strip()
         if not normalized_code:
-            raise ChatOpsBindingValidationError("缺少绑定码")
+            raise ChatOpsBindingValidationError("Binding code is required")
         if not normalized_open_id:
-            raise ChatOpsBindingValidationError("缺少通知平台 open_id")
+            raise ChatOpsBindingValidationError("Notification platform open_id is required")
 
         now = _now_iso()
         auth = get_auth_service()
@@ -210,21 +210,21 @@ class CommanderChatOpsBindingService:
                 (normalized_code,),
             ).fetchone()
             if not code_row:
-                raise ChatOpsBindingValidationError("绑定码不存在")
+                raise ChatOpsBindingValidationError("Binding code does not exist")
             code_payload = dict(code_row)
             if str(code_payload.get("status") or "") != "issued":
-                raise ChatOpsBindingValidationError("绑定码已失效，请重新在 Legion 中生成")
+                raise ChatOpsBindingValidationError("Binding code is no longer valid; generate a new code in Legion")
             if str(code_payload.get("expires_at") or "") < now:
                 conn.execute(
                     "UPDATE notification_platform_binding_codes SET status = 'expired' WHERE code = ?",
                     (normalized_code,),
                 )
-                raise ChatOpsBindingValidationError("绑定码已过期，请重新生成")
+                raise ChatOpsBindingValidationError("Binding code has expired; generate a new code")
 
             user_id = str(code_payload.get("user_id") or "")
             user = auth.users.get(user_id)
             if not user:
-                raise ChatOpsBindingValidationError("绑定码对应的平台用户不存在")
+                raise ChatOpsBindingValidationError("The platform user for this binding code does not exist")
 
             existing_open_id = conn.execute(
                 """
@@ -236,7 +236,7 @@ class CommanderChatOpsBindingService:
                 (normalized_open_id,),
             ).fetchone()
             if existing_open_id and str(existing_open_id["user_id"] or "") != user.user_id:
-                raise ChatOpsBindingValidationError("当前通知平台身份已绑定其他平台账号")
+                raise ChatOpsBindingValidationError("This notification platform identity is already bound to another platform account")
 
             conn.execute(
                 """
@@ -282,7 +282,7 @@ class CommanderChatOpsBindingService:
 
         binding = self.get_binding_for_open_id(normalized_open_id)
         if not binding:
-            raise ChatOpsBindingValidationError("通知平台绑定写入失败")
+            raise ChatOpsBindingValidationError("Failed to save the notification platform binding")
         return binding
 
     def revoke_binding_for_user(self, user: User) -> Dict[str, Any]:

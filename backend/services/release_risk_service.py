@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-发布风险评估服务
+Release Risk Assessment Service
 
-聚合探索性测试发现与发布输入信号，生成业务风险、体验风险、
-发布风险和自动发布资格结论。
+Combine exploratory testing findings and release input signals to assess business,
+experience, and release risk and determine automatic release eligibility.
 """
 from __future__ import annotations
 
@@ -17,15 +17,15 @@ from services.exploration_service import get_exploration_service
 
 
 class ReleaseRiskServiceError(Exception):
-    """发布风险评估服务异常。"""
+    """Release risk assessment service error."""
 
 
 class ReleaseRiskAssessmentNotFoundError(ReleaseRiskServiceError):
-    """未找到发布风险评估。"""
+    """Release risk assessment not found."""
 
 
 class ReleaseRiskPermissionError(ReleaseRiskServiceError):
-    """发布风险评估权限异常。"""
+    """Release risk assessment permission error."""
 
 
 def _now_iso() -> str:
@@ -47,7 +47,7 @@ def _json_load(payload: Optional[str], default: Any) -> Any:
 
 
 class ReleaseRiskService:
-    """发布风险评估持久化与策略判定服务。"""
+    """Persistence and policy evaluation service for release risk assessments."""
 
     def __init__(self):
         self._ensure_schema()
@@ -137,7 +137,7 @@ class ReleaseRiskService:
                 (assessment_id,),
             ).fetchone()
         if not row:
-            raise ReleaseRiskAssessmentNotFoundError(f"未找到发布风险评估 {assessment_id}")
+            raise ReleaseRiskAssessmentNotFoundError(f"Release risk assessment not found: {assessment_id}")
         payload = self._serialize_assessment(dict(row))
         self._ensure_project_scope(user, payload["project_key"])
         return payload
@@ -204,13 +204,13 @@ class ReleaseRiskService:
         if not project_key:
             return
         if not user:
-            raise ReleaseRiskPermissionError("需要登录态")
+            raise ReleaseRiskPermissionError("Authentication is required")
         role_value = getattr(getattr(user, "role", None), "value", getattr(user, "role", ""))
         if role_value == "admin":
             return
         scope = {str(item).strip() for item in (getattr(user, "project_ids", None) or []) if str(item).strip()}
         if scope and "*" not in scope and project_key not in scope:
-            raise ReleaseRiskPermissionError(f"当前账号无权访问项目 {project_key}")
+            raise ReleaseRiskPermissionError(f"The current account does not have access to project {project_key}")
 
     def _analyze(
         self,
@@ -264,7 +264,7 @@ class ReleaseRiskService:
                             "title": finding.get("title"),
                             "severity": severity,
                             "review_status": review_status,
-                            "message": "存在待人工复核发现，禁止自动发布。",
+                            "message": "Findings await manual review; automatic release is prohibited.",
                         }
                     )
                 elif review_status == "confirmed":
@@ -276,7 +276,7 @@ class ReleaseRiskService:
                             "title": finding.get("title"),
                             "severity": severity,
                             "review_status": review_status,
-                            "message": "存在已确认问题，需人工放行。",
+                            "message": "Confirmed issues exist; manual release approval is required.",
                         }
                     )
 
@@ -287,7 +287,7 @@ class ReleaseRiskService:
             blockers.append(
                 {
                     "type": "required_tests_failed",
-                    "message": "所需测试尚未全部通过，禁止自动发布。",
+                    "message": "Required tests have not all passed; automatic release is prohibited.",
                 }
             )
 
@@ -295,7 +295,7 @@ class ReleaseRiskService:
             blockers.append(
                 {
                     "type": "production_requires_manual_approval",
-                    "message": "生产环境发布必须保留人工批准。",
+                    "message": "Production releases must retain manual approval.",
                 }
             )
 

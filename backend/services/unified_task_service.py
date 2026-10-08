@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-统一任务前门服务
+Unified task entry service.
 
-第一阶段目标：
-1. 统一 general / prototype / exploration 的入口协议
-2. 统一任务读模型、证据摘要、门禁摘要和结果骨架
-3. 保持底层执行器不重写，旧页面与旧接口继续可用
+Phase one goals:
+1. Unify the general / prototype / exploration entry protocol.
+2. Unify task read models, evidence summaries, gate summaries, and result structures.
+3. Keep existing executors, pages, and APIs operational without rewriting them.
 """
 from __future__ import annotations
 
@@ -46,7 +46,7 @@ def _safe_bool(value: Any, default: bool = False) -> bool:
 
 
 class UnifiedTaskService:
-    """统一任务门面。"""
+    """Unified task facade."""
 
     def create_task(
         self,
@@ -61,7 +61,7 @@ class UnifiedTaskService:
     ) -> Dict[str, Any]:
         normalized_kind = str(task_kind or "").strip().lower()
         if normalized_kind not in SUPPORTED_TASK_KINDS:
-            raise ValueError(f"不支持的 task_kind: {task_kind}")
+            raise ValueError(f"Unsupported task_kind: {task_kind}")
 
         if normalized_kind == "general":
             return self._create_general_task(
@@ -167,17 +167,17 @@ class UnifiedTaskService:
                 "task_id": task_id,
                 "cancelled": False,
                 "status": current_status or "unknown",
-                "message": "当前任务已结束，无法再次停止。",
+                "message": "This task has already finished and cannot be stopped again.",
             }
 
         cancelled = False
-        message = "当前任务暂不支持停止。"
+        message = "Stopping is not currently supported for this task."
         if task_kind == "exploration":
             cancelled = self._cancel_exploration_task(mission)
-            message = "探索任务已停止。" if cancelled else "探索任务当前无法可靠停止。"
+            message = "Exploration task stopped." if cancelled else "The exploration task cannot currently be stopped reliably."
         else:
             cancelled = bool(getattr(commander, "cancel_mission")(task_id))
-            message = "任务已停止。" if cancelled else "当前任务停止失败。"
+            message = "Task stopped." if cancelled else "Failed to stop the current task."
 
         if cancelled:
             self._set_mission_value(mission, "status", "cancelled")
@@ -193,7 +193,7 @@ class UnifiedTaskService:
                     agent_states[agent_id] = "cancelled"
             self._append_log(
                 mission,
-                "统一前门已停止任务",
+                "The unified entry service stopped the task",
                 level="warn",
                 data={"task_kind": task_kind, "agent_id": "commander"},
             )
@@ -231,7 +231,7 @@ class UnifiedTaskService:
         if isinstance(previous_logs, list):
             self._append_log(
                 mission,
-                f"统一前门已基于当前任务重新运行，新任务 {rerun_task['task_id']}",
+                f"The unified entry service reran this task as new task {rerun_task['task_id']}",
                 data={"task_kind": task_kind, "agent_id": "commander", "rerun_task_id": rerun_task["task_id"]},
             )
             self._save(commander)
@@ -279,7 +279,7 @@ class UnifiedTaskService:
         getattr(commander, "_missions", {})[mission_id] = mission
         self._append_log(
             mission,
-            "统一前门已创建通用任务",
+            "The unified entry service created a general task",
             data={"task_kind": "general", "agent_id": "commander"},
         )
         self._save(commander)
@@ -306,7 +306,7 @@ class UnifiedTaskService:
                     failed_mission["agent_states"]["commander"] = "error"
                     self._append_log(
                         failed_mission,
-                        f"通用任务异常: {exc}",
+                        f"General task error: {exc}",
                         level="error",
                         data={"task_kind": "general", "agent_id": "commander"},
                     )
@@ -339,7 +339,7 @@ class UnifiedTaskService:
         mission = service.create_mission(payload, mission_id=mission_id)
         mission["unified_task"] = True
         mission["task_kind"] = "prototype"
-        mission["user_input"] = user_goal or mission.get("user_input") or "原型测试"
+        mission["user_input"] = user_goal or mission.get("user_input") or "Prototype testing"
         mission["source_context"] = source_context
         mission["strategy"] = {
             **(mission.get("strategy") or {}),
@@ -350,7 +350,7 @@ class UnifiedTaskService:
         getattr(commander, "_missions", {})[mission_id] = mission
         self._append_log(
             mission,
-            "统一前门已创建原型任务",
+            "The unified entry service created a prototype task",
             data={"task_kind": "prototype", "agent_id": "orchestrator"},
         )
         self._save(commander)
@@ -369,7 +369,7 @@ class UnifiedTaskService:
                     failed_mission["agent_states"]["reporter"] = "error"
                     self._append_log(
                         failed_mission,
-                        f"原型任务异常: {exc}",
+                        f"Prototype task error: {exc}",
                         level="error",
                         data={"task_kind": "prototype", "agent_id": "orchestrator"},
                     )
@@ -395,7 +395,7 @@ class UnifiedTaskService:
             "mission_kind": "exploration_frontdoor",
             "task_kind": "exploration",
             "unified_task": True,
-            "user_input": user_goal or f"探索性测试 · {target_url or '未命名目标'}",
+            "user_input": user_goal or f"Exploratory testing · {target_url or 'Unnamed target'}",
             "target_url": target_url,
             "status": "pending",
             "created_at": _now_iso(),
@@ -419,7 +419,7 @@ class UnifiedTaskService:
         getattr(commander, "_missions", {})[mission_id] = mission
         self._append_log(
             mission,
-            "统一前门已创建探索任务",
+            "The unified entry service created an exploration task",
             data={"task_kind": "exploration", "agent_id": "orchestrator"},
         )
         self._save(commander)
@@ -443,7 +443,7 @@ class UnifiedTaskService:
                     failed_mission["agent_states"]["orchestrator"] = "error"
                     self._append_log(
                         failed_mission,
-                        f"探索任务异常: {exc}",
+                        f"Exploration task error: {exc}",
                         level="error",
                         data={"task_kind": "exploration", "agent_id": "orchestrator"},
                     )
@@ -465,7 +465,7 @@ class UnifiedTaskService:
 
         mission = getattr(commander, "_missions", {}).get(mission_id)
         if not isinstance(mission, dict):
-            raise ValueError(f"未找到统一探索任务: {mission_id}")
+            raise ValueError(f"Unified exploration task not found: {mission_id}")
 
         session_id = f"frontdoor_{mission_id}"
         target_url = str(source_context.get("target_url") or "").strip()
@@ -476,14 +476,14 @@ class UnifiedTaskService:
         interaction_policy = str(strategy.get("interaction_policy") or "default")
         exclusion = str(strategy.get("exclude_paths") or "").strip()
         hint_parts = [
-            f"探索性测试: 自动探索 {target_url or '目标页面'}",
-            f"目标={user_goal or '发现潜在问题'}",
-            f"最大步骤={max_steps}",
-            f"点击深度={click_depth}",
+            f"Exploratory testing: automatically explore {target_url or 'the target page'}",
+            f"Goal={user_goal or 'Find potential issues'}",
+            f"Maximum steps={max_steps}",
+            f"Click depth={click_depth}",
         ]
         if exclusion:
-            hint_parts.append(f"排除路径={exclusion}")
-        task_requirement = "，".join(hint_parts)
+            hint_parts.append(f"Excluded paths={exclusion}")
+        task_requirement = ", ".join(hint_parts)
 
         orch = get_orchestrator(session_id)
         mission["started_at"] = _now_iso()
@@ -495,7 +495,7 @@ class UnifiedTaskService:
         }
         self._append_log(
             mission,
-            "探索任务已进入编排主链",
+            "Exploration task entered the main orchestration workflow",
             data={
                 "task_kind": "exploration",
                 "session_id": session_id,
@@ -572,7 +572,7 @@ class UnifiedTaskService:
         mission["bug_summary"] = [
             {
                 "test_type": "exploration",
-                "title": item.get("title") or "探索性问题",
+                "title": item.get("title") or "Exploratory finding",
                 "status": "failed",
                 "summary": item.get("summary") or "",
             }
@@ -587,7 +587,7 @@ class UnifiedTaskService:
         }
         self._append_log(
             mission,
-            "探索任务已完成",
+            "Exploration task completed",
             data={
                 "task_kind": "exploration",
                 "agent_id": "orchestrator",
@@ -606,7 +606,7 @@ class UnifiedTaskService:
             level = "warn"
         elif log_type == "assertion" and str(log.get("status") or "").lower() == "fail":
             level = "error"
-        message = str(log.get("content") or log.get("message") or log_type or "日志")
+        message = str(log.get("content") or log.get("message") or log_type or "Log")
         self._append_log(
             mission,
             message,
@@ -623,8 +623,8 @@ class UnifiedTaskService:
                     {
                         "finding_id": f"explore-error-{index}",
                         "severity": "major",
-                        "title": "探索过程中发现错误日志",
-                        "summary": str(log.get("content") or "执行过程中出现错误"),
+                        "title": "Error log detected during exploration",
+                        "summary": str(log.get("content") or "An error occurred during execution"),
                         "category": "broken_flow",
                         "agent_id": "executor",
                     }
@@ -634,8 +634,8 @@ class UnifiedTaskService:
                     {
                         "finding_id": f"explore-assert-{index}",
                         "severity": "major",
-                        "title": "探索过程中出现断言失败",
-                        "summary": str(log.get("content") or "断言失败"),
+                        "title": "Assertion failed during exploration",
+                        "summary": str(log.get("content") or "Assertion failed"),
                         "category": "broken_flow",
                         "agent_id": "executor",
                     }
@@ -644,11 +644,11 @@ class UnifiedTaskService:
 
     def _build_exploration_recommendations(self, findings: List[Dict[str, Any]]) -> List[str]:
         if not findings:
-            return ["当前探索性测试未发现明显阻断问题，建议继续补充真实业务路径和异常边界复核。"]
+            return ["This exploratory test found no obvious blocking issues. Add real business paths and review exception boundaries."]
         return [
-            "优先复核探索过程中出现的错误日志和断言失败，确认是否为真实流程断点。",
-            "将探索结果回灌为场景链或显式测试用例，避免问题只停留在一次性探索发现。",
-            "对静态或当前上下文无法证明的点，安排真实账号、真实数据或更完整环境复测。",
+            "First review error logs and assertion failures from exploration to determine whether they indicate actual workflow failures.",
+            "Convert exploratory findings into scenario chains or explicit test cases so they become repeatable checks.",
+            "For points that static evidence or the current context cannot prove, retest with real accounts, real data, or a more complete environment.",
         ]
 
     def _normalize_task(self, mission: Dict[str, Any]) -> Dict[str, Any]:
@@ -743,7 +743,7 @@ class UnifiedTaskService:
     ) -> Dict[str, Any]:
         metrics: Dict[str, Any] = {}
         status = "passed"
-        summary = "当前任务已通过统一门面校验。"
+        summary = "This task passed the unified facade checks."
 
         if task_kind == "prototype":
             metrics = dict(report.get("quality_gate_metrics") or {})
@@ -751,20 +751,20 @@ class UnifiedTaskService:
             critical_page_missing = _safe_int(metrics.get("critical_page_missing_count"))
             if blocking_count > 0 or critical_page_missing > 0:
                 status = "failed"
-                summary = "原型门禁未通过，存在阻断级差异或关键页面缺口。"
+                summary = "The prototype gate failed because of blocking discrepancies or missing critical pages."
             elif findings:
                 status = "warning"
-                summary = "原型门禁通过，但仍有需复核的结构或流程差异。"
+                summary = "The prototype gate passed, but structural or workflow discrepancies still need review."
         elif task_kind == "exploration":
             metrics = dict(report.get("quality_gate_metrics") or {})
             error_count = _safe_int(metrics.get("error_count"), len(findings))
             static_unprovable = _safe_int(metrics.get("static_unprovable_count"), 1)
             if error_count > 0:
                 status = "failed"
-                summary = "探索任务发现错误日志或断言失败，建议进入专家页深挖。"
+                summary = "The exploration task found error logs or assertion failures. Investigate further on the expert page."
             elif static_unprovable > 0:
                 status = "warning"
-                summary = "探索任务完成，但仍有当前上下文无法证明的点。"
+                summary = "The exploration task completed, but some points cannot be proven in the current context."
         else:
             summary_block = report.get("summary") or {}
             failed_count = _safe_int(summary_block.get("failed"))
@@ -775,10 +775,10 @@ class UnifiedTaskService:
             }
             if failed_count > 0:
                 status = "failed"
-                summary = "通用编排存在失败测试线，建议进入执行中心复核。"
+                summary = "General orchestration has failed test tracks. Review them in the execution center."
             elif findings:
                 status = "warning"
-                summary = "通用编排已完成，但仍有需要人工确认的失败摘要。"
+                summary = "General orchestration completed, but some failure summaries still require human confirmation."
 
         return {
             "status": status,
@@ -799,31 +799,31 @@ class UnifiedTaskService:
         if gate_status == "failed":
             return {
                 "status": "issues_found",
-                "label": "有明确问题",
-                "summary": "当前任务已发现明确问题，需要进入执行中心、专家页或质量门禁继续处理。",
+                "label": "Issues found",
+                "summary": "This task found definite issues. Continue investigating in the execution center, expert page, or quality gate.",
             }
         if static_unprovable > 0:
             return {
                 "status": "context_unprovable",
-                "label": "当前上下文无法证明",
-                "summary": "当前会话、静态原型或当前环境仍无法证明全部关键点，不能视为完全通过。",
+                "label": "Cannot be proven in the current context",
+                "summary": "The current session, static prototype, or environment cannot prove all key points, so this is not a complete pass.",
             }
         if gate_status == "warning" or findings:
             return {
                 "status": "issues_found",
-                "label": "有明确问题",
-                "summary": "当前任务虽未命中阻断失败，但仍存在需人工确认或复核的问题。",
+                "label": "Issues found",
+                "summary": "This task has no blocking failure, but some issues still need human confirmation or review.",
             }
         if gate_status == "passed":
             return {
                 "status": "verified_passed",
-                "label": "已验证通过",
-                "summary": "当前任务在现有上下文下未发现明确问题，且没有未证明项残留。",
+                "label": "Verified pass",
+                "summary": "This task found no definite issues in the current context and has no remaining unproven items.",
             }
         return {
             "status": "pending",
-            "label": "待判定",
-            "summary": "当前任务还没有形成稳定结论，建议等待执行完成或补充上下文。",
+            "label": "Pending assessment",
+            "summary": "This task has no stable conclusion yet. Wait for execution to finish or provide more context.",
         }
 
     def _build_recommendations(
@@ -840,18 +840,18 @@ class UnifiedTaskService:
         if task_kind == "prototype":
             if findings:
                 return [
-                    "优先处理阻断级原型差异和关键页面映射问题，再进入视觉或样式细节复核。",
-                    "对嵌入式承接与独立页面边界不清的地方，先补页面映射依据，避免误判为已覆盖。",
+                    "Resolve blocking prototype discrepancies and critical page-mapping issues before reviewing visual or styling details.",
+                    "Where embedded destinations and standalone pages are hard to distinguish, document the mapping evidence first to avoid false coverage.",
                 ]
-            return ["当前原型任务未发现明显问题，建议继续补充真实 provider 与门禁规则以提高可信度。"]
+            return ["This prototype task found no obvious issues. Add real providers and gate rules to increase confidence."]
         if task_kind == "exploration":
             return self._build_exploration_recommendations(findings)
         if findings:
             return [
-                "优先复核失败测试线和失败摘要，确认是否为真实缺陷还是环境/数据波动。",
-                "将高频失败模式沉淀成专项 workflow 或 quality gate，避免重复人工判断。",
+                "First review failed test tracks and failure summaries to distinguish actual defects from environment or data variability.",
+                "Turn recurring failure patterns into dedicated workflows or quality gates to avoid repeated manual judgments.",
             ]
-        return ["当前通用任务已完成，建议把稳定路径沉淀成场景链和门禁规则。"]
+        return ["This general task is complete. Capture stable paths as scenario chains and gate rules."]
 
     def _extract_findings(self, mission: Dict[str, Any]) -> List[Dict[str, Any]]:
         report = self._mission_value(mission, "report") or {}
@@ -864,7 +864,7 @@ class UnifiedTaskService:
                 {
                     "finding_id": f"summary-{index}",
                     "severity": "major",
-                    "title": str(item.get("title") or "问题摘要"),
+                    "title": str(item.get("title") or "Issue summary"),
                     "summary": str(item.get("summary") or ""),
                     "category": "broken_flow",
                     "agent_id": str(item.get("test_type") or "commander"),
@@ -883,7 +883,7 @@ class UnifiedTaskService:
                     "finding_id": finding_id,
                     "evidence_id": str(item.get("evidence_id") or finding_id),
                     "severity": severity,
-                    "title": str(item.get("title") or "问题发现"),
+                    "title": str(item.get("title") or "Finding"),
                     "summary": str(item.get("summary") or ""),
                     "category": str(item.get("category") or "scope_gap"),
                     "agent_id": str(item.get("agent_id") or "unknown"),
@@ -948,7 +948,7 @@ class UnifiedTaskService:
                 orch.stop_task()
             return True
         except Exception:
-            logger.warning("探索任务停止失败", exc_info=True)
+            logger.warning("Failed to stop the exploration task", exc_info=True)
             return False
 
     def _save(self, commander: Any) -> None:

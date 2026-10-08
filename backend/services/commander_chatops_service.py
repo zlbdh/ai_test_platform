@@ -2,11 +2,10 @@
 """
 Commander ChatOps Service
 
-统一计算通知平台双向指令链路的当前状态，供：
-- 通知配置页
-- 平台信息 / 就绪度 / 整改项
-- 后续运维观测
-复用同一份口径。
+Compute a consistent status for the bidirectional notification command channel, shared by:
+- Notification settings
+- Platform information, readiness, and remediation
+- Future operational monitoring
 """
 from __future__ import annotations
 
@@ -79,11 +78,11 @@ class CommanderChatOpsService:
             "running": False,
             "pid": None,
             "status": "unsupported" if os.name != "nt" else "missing_script" if not script_path.exists() else "stopped",
-            "summary": "当前环境不是 Windows，本机反向隧道脚本不可用。"
+            "summary": "This environment is not Windows; the local reverse tunnel script is unavailable."
             if os.name != "nt"
-            else "未找到本机反向隧道脚本。"
+            else "Local reverse tunnel script not found."
             if not script_path.exists()
-            else "未检测到本机 OpenSSH 反向隧道进程。",
+            else "No local OpenSSH reverse tunnel process detected.",
             "checked_at": checked_at,
             "stdout_tail": cls._read_log_tail(log_paths["stdout"]),
             "stderr_tail": cls._read_log_tail(log_paths["stderr"]),
@@ -111,30 +110,30 @@ if ($null -eq $proc) { '' } else { $proc | ConvertTo-Json -Compress }
             )
         except subprocess.TimeoutExpired:
             result["status"] = "unknown"
-            result["summary"] = "检测本机反向隧道状态超时。"
+            result["summary"] = "Local reverse tunnel status check timed out."
             return result
         except OSError as exc:
             result["status"] = "unknown"
-            result["summary"] = f"检测本机反向隧道状态失败：{exc.__class__.__name__}"
+            result["summary"] = f"Failed to check local reverse tunnel status: {exc.__class__.__name__}"
             return result
 
         if completed.returncode != 0:
             stderr = str(completed.stderr or "").strip()
             result["status"] = "unknown"
-            result["summary"] = f"检测本机反向隧道状态失败：{stderr or 'PowerShell 返回异常'}"
+            result["summary"] = f"Failed to check local reverse tunnel status: {stderr or 'PowerShell returned an error'}"
             return result
 
         payload = str(completed.stdout or "").strip()
         if not payload:
             if result["stderr_tail"]:
-                result["summary"] = f"未检测到隧道进程。最近错误：{result['stderr_tail']}"
+                result["summary"] = f"No tunnel process detected. Latest error: {result['stderr_tail']}"
             return result
 
         try:
             proc = json.loads(payload)
         except json.JSONDecodeError:
             result["status"] = "unknown"
-            result["summary"] = "本机反向隧道状态输出无法解析。"
+            result["summary"] = "Could not parse the local reverse tunnel status output."
             return result
 
         pid = proc.get("ProcessId")
@@ -144,7 +143,7 @@ if ($null -eq $proc) { '' } else { $proc | ConvertTo-Json -Compress }
             "created_at": str(proc.get("CreationDate") or ""),
             "command_line": str(proc.get("CommandLine") or ""),
             "status": "running",
-            "summary": f"检测到本机 OpenSSH 反向隧道进程（PID {pid}）。" if pid is not None else "检测到本机 OpenSSH 反向隧道进程。",
+            "summary": f"Local OpenSSH reverse tunnel process detected (PID {pid})." if pid is not None else "Local OpenSSH reverse tunnel process detected.",
         })
         return result
 
@@ -153,7 +152,7 @@ if ($null -eq $proc) { '' } else { $proc | ConvertTo-Json -Compress }
         if not before.get("supported"):
             return {
                 "ok": False,
-                "message": before.get("summary") or "当前环境不支持本机反向隧道。",
+                "message": before.get("summary") or "This environment does not support a local reverse tunnel.",
                 "tunnel": before,
                 "overview": self.get_overview(),
             }
@@ -161,7 +160,7 @@ if ($null -eq $proc) { '' } else { $proc | ConvertTo-Json -Compress }
         if not script_path.exists():
             return {
                 "ok": False,
-                "message": "未找到本机反向隧道脚本，无法执行重启。",
+                "message": "Local reverse tunnel script not found; restart is unavailable.",
                 "tunnel": before,
                 "overview": self.get_overview(),
             }
@@ -186,7 +185,7 @@ if ($null -eq $proc) { '' } else { $proc | ConvertTo-Json -Compress }
             after = self._get_local_tunnel_status()
             return {
                 "ok": False,
-                "message": "重启本机反向隧道超时。",
+                "message": "Local reverse tunnel restart timed out.",
                 "stdout": "",
                 "stderr": "",
                 "tunnel": after,
@@ -196,7 +195,7 @@ if ($null -eq $proc) { '' } else { $proc | ConvertTo-Json -Compress }
             after = self._get_local_tunnel_status()
             return {
                 "ok": False,
-                "message": f"重启本机反向隧道失败：{exc.__class__.__name__}",
+                "message": f"Failed to restart the local reverse tunnel: {exc.__class__.__name__}",
                 "stdout": "",
                 "stderr": str(exc),
                 "tunnel": after,
@@ -206,10 +205,10 @@ if ($null -eq $proc) { '' } else { $proc | ConvertTo-Json -Compress }
         after = self._get_local_tunnel_status()
         ok = completed.returncode == 0 and bool(after.get("running"))
         message = (
-            "本机反向隧道已重启。"
+            "Local reverse tunnel restarted."
             if ok
             else str(completed.stderr or "").strip()
-            or str(after.get("summary") or "本机反向隧道仍未恢复。")
+            or str(after.get("summary") or "Local reverse tunnel has not recovered.")
         )
         return {
             "ok": ok,
@@ -433,7 +432,7 @@ if ($null -eq $proc) { '' } else { $proc | ConvertTo-Json -Compress }
         if any(marker in from_user for marker in synthetic_user_markers):
             return True
         response = str(item.get("response") or "")
-        if "平台公网自测通过" in response:
+        if "Platform public endpoint self-test passed" in response:
             return True
         return False
 
@@ -444,7 +443,7 @@ if ($null -eq $proc) { '' } else { $proc | ConvertTo-Json -Compress }
         content_type: str,
         excerpt: str,
         response_json: Any,
-        summary_prefix: str = "公网回调地址",
+        summary_prefix: str = "Public callback URL",
     ) -> Dict[str, Any]:
         lowered_excerpt = str(excerpt or "").lower()
         lowered_type = str(content_type or "").lower()
@@ -453,19 +452,19 @@ if ($null -eq $proc) { '' } else { $proc | ConvertTo-Json -Compress }
 
         if status_code == 200 and isinstance(response_json, dict) and response_json.get("challenge") == "chatops-probe":
             success = True
-            summary = f"{summary_prefix}已通过主动回探，当前入口对外可达。"
+            summary = f"{summary_prefix} passed an active probe; the current endpoint is publicly reachable."
         elif "pinggy" in lowered_excerpt or "caution" in lowered_excerpt:
             issue = "interstitial_page"
-            summary = f"{summary_prefix}返回了隧道警告页，通知平台云侧大概率无法直接命中平台回调。"
+            summary = f"{summary_prefix} returned a tunnel warning page; the notification provider will likely be unable to reach the platform callback directly."
         elif "tunnel unavailable" in lowered_excerpt or status_code == 503:
             issue = "tunnel_unavailable"
-            summary = f"{summary_prefix}当前返回 Tunnel Unavailable，隧道未稳定建立。"
+            summary = f"{summary_prefix} currently returns Tunnel Unavailable; the tunnel is not stable."
         elif "text/html" in lowered_type:
             issue = "html_response"
-            summary = f"{summary_prefix}返回了 HTML 页面，而不是 challenge JSON，当前外部回调链路不可用。"
+            summary = f"{summary_prefix} returned an HTML page instead of challenge JSON; the external callback channel is unavailable."
         else:
             issue = "unexpected_response"
-            summary = f"{summary_prefix}已响应，但返回内容不符合通知平台 challenge 预期（HTTP {status_code}）。"
+            summary = f"{summary_prefix} responded, but the response does not match the notification provider's expected challenge (HTTP {status_code})."
 
         return CommanderChatOpsService._build_probe_result(
             attempted=True,
@@ -523,14 +522,14 @@ if ($null -eq $proc) { '' } else { $proc | ConvertTo-Json -Compress }
                 attempted=True,
                 success=False,
                 issue="timeout",
-                summary="公网回调地址回探超时（curl 回退），通知平台云侧当前大概率无法稳定访问该入口。",
+                summary="Public callback probe timed out (curl fallback); the notification provider will likely be unable to reach this endpoint reliably.",
             )
         except OSError as exc:
             return CommanderChatOpsService._build_probe_result(
                 attempted=True,
                 success=False,
                 issue="connect_error",
-                summary=f"公网回调地址回探失败（curl 回退）：{exc.__class__.__name__}",
+                summary=f"Public callback probe failed (curl fallback): {exc.__class__.__name__}",
                 response_excerpt=str(exc)[:240],
             )
 
@@ -552,7 +551,7 @@ if ($null -eq $proc) { '' } else { $proc | ConvertTo-Json -Compress }
                 attempted=True,
                 success=False,
                 issue=issue,
-                summary=f"公网回调地址回探失败（curl 回退）：{excerpt or '未知错误'}",
+                summary=f"Public callback probe failed (curl fallback): {excerpt or 'Unknown error'}",
                 response_excerpt=excerpt,
                 status_code=status_code,
             )
@@ -572,7 +571,7 @@ if ($null -eq $proc) { '' } else { $proc | ConvertTo-Json -Compress }
             content_type=content_type,
             excerpt=excerpt,
             response_json=response_json,
-            summary_prefix="公网回调地址（curl 回退）",
+            summary_prefix="Public callback URL (curl fallback)",
         )
 
     @staticmethod
@@ -611,7 +610,7 @@ if ($null -eq $proc) { '' } else { $proc | ConvertTo-Json -Compress }
         if not text:
             return {
                 "key": "unknown",
-                "label": "未知",
+                "label": "Unknown",
                 "host": "",
             }
         try:
@@ -621,13 +620,13 @@ if ($null -eq $proc) { '' } else { $proc | ConvertTo-Json -Compress }
         if not host:
             return {
                 "key": "unknown",
-                "label": "未知",
+                "label": "Unknown",
                 "host": "",
             }
         if host in {"127.0.0.1", "localhost", "::1", "0.0.0.0"}:
             return {
                 "key": "local",
-                "label": "本地地址",
+                "label": "Local URL",
                 "host": host,
             }
         if host.endswith(".loca.lt"):
@@ -651,7 +650,7 @@ if ($null -eq $proc) { '' } else { $proc | ConvertTo-Json -Compress }
         if host.endswith(".lhr.life"):
             return {
                 "key": "lhr_life_tunnel",
-                "label": "LHR 临时隧道",
+                "label": "Temporary LHR tunnel",
                 "host": host,
             }
         if host.endswith("localhost.run"):
@@ -668,37 +667,37 @@ if ($null -eq $proc) { '' } else { $proc | ConvertTo-Json -Compress }
             }
         return {
             "key": "custom",
-            "label": "自定义公网地址",
+            "label": "Custom public URL",
             "host": host,
         }
 
     @staticmethod
     def _build_provider_recommendation(provider: Dict[str, str], issue: str, callback_public: bool) -> str:
-        provider_label = provider.get("label") or "当前公网入口"
+        provider_label = provider.get("label") or "Current public endpoint"
         provider_key = provider.get("key") or "unknown"
         if not callback_public:
-            return "先把 PUBLIC_API_BASE_URL 改成通知平台云侧可访问的公网地址，再执行 challenge 回探。"
+            return "First set PUBLIC_API_BASE_URL to a public URL reachable by the notification provider, then run the challenge probe."
         if not issue:
-            return f"{provider_label} 已通过 challenge 回探，可以继续去通知平台开发者后台完成事件订阅和真实群测。"
+            return f"{provider_label} passed the challenge probe. Complete event subscription in the notification provider's developer console and test with real group messages."
         if issue == "tunnel_unavailable":
             if provider_key == "localtunnel":
-                return f"{provider_label} 当前已失效，建议重新建立一条 LocalTunnel，或直接换成更稳定的固定公网入口。"
+                return f"{provider_label} is no longer valid. Create a new LocalTunnel or switch to a more stable fixed public endpoint."
             if provider_key == "cloudflare_quick_tunnel":
-                return f"{provider_label} 当前不可用，建议重建隧道并优先使用自有域名/固定反代，而不是临时 Quick Tunnel。"
-            return f"{provider_label} 当前返回 Tunnel Unavailable，建议先重建隧道，再重新执行回探。"
+                return f"{provider_label} is unavailable. Rebuild the tunnel and prefer your own domain or fixed reverse proxy over a temporary Quick Tunnel."
+            return f"{provider_label} currently returns Tunnel Unavailable. Rebuild the tunnel, then run the probe again."
         if issue == "interstitial_page":
-            return f"{provider_label} 返回了中间警告页，通知平台 challenge 无法直接命中平台；建议换成无中间页的公网反向代理或隧道。"
+            return f"{provider_label} returned an intermediate warning page, preventing the notification challenge from reaching the platform directly. Use a public reverse proxy or tunnel without an intermediate page."
         if issue == "html_response":
-            return f"{provider_label} 当前回的是 HTML 页而不是 challenge JSON，说明外层代理还没直通到平台回调接口。"
+            return f"{provider_label} currently returns HTML instead of challenge JSON, indicating that the outer proxy is not forwarding directly to the platform callback API."
         if issue == "timeout":
-            return f"{provider_label} 回探超时，建议更换为时延更稳定的公网入口，或检查当前隧道是否被网络策略阻断。"
+            return f"{provider_label} probe timed out. Use a public endpoint with more stable latency, or check whether network policies are blocking the tunnel."
         if issue == "connect_error":
-            return f"{provider_label} 当前连接失败，建议检查隧道进程是否存活，并确认公网域名仍指向本机 8020。"
+            return f"{provider_label} connection failed. Check that the tunnel process is running and the public domain still forwards to local port 8020."
         if issue == "unexpected_response":
-            return f"{provider_label} 已有响应，但返回格式不符合通知平台 challenge 预期；请检查外层代理是否改写了请求或响应。"
+            return f"{provider_label} responded, but the response format does not match the notification challenge. Check whether the outer proxy is rewriting requests or responses."
         if provider_key == "local":
-            return "当前还是本地地址，通知平台云侧无法直接访问；请先配置公网入口。"
-        return f"{provider_label} 仍需进一步联调，建议先确认 challenge 回探成功，再去通知平台后台做最终事件订阅。"
+            return "The URL is still local and cannot be reached directly by the notification provider. Configure a public endpoint first."
+        return f"{provider_label} needs further integration testing. Confirm that the challenge probe passes before completing event subscription in the notification provider's console."
 
     @staticmethod
     def _build_probe_result(
@@ -843,14 +842,14 @@ if ($null -eq $proc) { '' } else { $proc | ConvertTo-Json -Compress }
                 attempted=False,
                 success=False,
                 issue="local_callback",
-                summary="当前回调地址仍是本地或内网地址，暂不执行公网回探。",
+                summary="The callback URL is still local or private; skipping the public probe.",
             )
         if not verification_token:
             return self._build_probe_result(
                 attempted=False,
                 success=False,
                 issue="token_missing",
-                summary="verification token 尚未配置，暂不执行公网回探。",
+                summary="The verification token is not configured; skipping the public probe.",
             )
 
         cache_key = f"{callback_url}|{verification_token}"
@@ -904,7 +903,7 @@ if ($null -eq $proc) { '' } else { $proc | ConvertTo-Json -Compress }
                 attempted=True,
                 success=False,
                 issue="timeout",
-                summary="公网回调地址回探超时，通知平台云侧当前大概率无法稳定访问该入口。",
+                summary="Public callback probe timed out; the notification provider will likely be unable to reach this endpoint reliably.",
             )
         except requests.RequestException as exc:
             result = (
@@ -915,7 +914,7 @@ if ($null -eq $proc) { '' } else { $proc | ConvertTo-Json -Compress }
                 attempted=True,
                 success=False,
                 issue="connect_error",
-                summary=f"公网回调地址回探失败：{exc.__class__.__name__}",
+                summary=f"Public callback probe failed: {exc.__class__.__name__}",
                 response_excerpt=str(exc)[:240],
             )
         finally:
@@ -1070,7 +1069,7 @@ if ($null -eq $proc) { '' } else { $proc | ConvertTo-Json -Compress }
                 attempted=False,
                 success=False,
                 issue="probe_skipped",
-                summary="当前仅复用最近一次公网回探结果；如需立刻验证，请手动执行“立即重试回探”或“跑公网链路自测”。",
+                summary="Reusing the most recent public probe result. To verify immediately, run \"Retry probe now\" or \"Run public channel self-test\" manually.",
             )
         local_tunnel = self._get_local_tunnel_status()
         recent_chat_bindings = self._load_recent_chat_bindings()
@@ -1105,7 +1104,7 @@ if ($null -eq $proc) { '' } else { $proc | ConvertTo-Json -Compress }
             or recent_subscription_check_on_current_callback
         )
         external_history_observed = latest_external_success is not None
-        # external_connected 代表“当前入口仍健康，且历史上已验证过真实群消息回流”。
+        # external_connected means the current endpoint is healthy and real group-message delivery was verified previously.
         external_connected = current_callback_reachable and external_history_observed
         external_connection_stale = external_history_observed and not external_connected
         platform_ready = webhook_ready and verification_token_configured and subscription_endpoint_verified
@@ -1126,117 +1125,117 @@ if ($null -eq $proc) { '' } else { $proc | ConvertTo-Json -Compress }
             else "unconfigured"
         )
         delivery_strategy_summary = (
-            "对外建议只暴露当前项目专属的通知平台应用机器人，群内命令回复优先走应用机器人，Webhook 仅作为兜底通知通道。"
+            "Expose only the notification app bot dedicated to this project. Prefer the app bot for group command replies, with Webhook as a fallback notification channel."
             if app_bot_ready and webhook_ready
-            else "当前只有当前项目专属通知平台应用机器人配置，群内指令可以逐步统一到同一机器人身份，但还缺少 Webhook 兜底。"
+            else "Only the app bot dedicated to this project is configured. Group commands can gradually use one bot identity, but the Webhook fallback is still missing."
             if app_bot_ready
-            else "当前项目专属通知平台应用机器人凭据已保存，但最近一次校验未通过；当前还不能把它当成稳定主通道。"
+            else "Credentials for this project's dedicated app bot are saved, but the latest validation failed. It cannot yet be treated as a stable primary channel."
             if app_bot_configured
-            else "当前仍主要依赖通知平台 Webhook 机器人发通知，尚未形成“一个机器人”对外体验。"
+            else "Notifications still primarily rely on a Webhook bot; a single-bot experience is not yet established."
             if webhook_ready
-            else "通知平台机器人通道尚未完成配置。"
+            else "Notification bot channels are not fully configured."
         )
 
         if recent_external_success_on_current_callback and probe_timeout_like and not bool(callback_probe.get("success")):
             callback_recommendation = (
-                "当前公网地址在最近 15 分钟内已收到真实通知平台群消息回流，说明链路仍可用；"
-                "当前更像是临时隧道抖动。可以继续在群里联调，如后续持续超时再更换更稳定的公网入口。"
+                "The current public URL received real notification group messages within the last 15 minutes, indicating that the channel remains available; "
+                "this appears to be temporary tunnel instability. Continue testing in the group; switch to a more stable public endpoint if timeouts persist."
             )
         elif recent_subscription_check_on_current_callback and external_history_observed:
             callback_recommendation = (
-                "当前公网地址最近已通过通知平台 challenge 校验，且平台历史上已有真实通知平台群消息回流；"
-                "说明当前双向链路仍可继续使用。若后续持续超时，再考虑更换更稳定的公网入口。"
+                "The current public URL recently passed the notification challenge, and the platform previously received real notification group messages; "
+                "the bidirectional channel remains usable. Consider a more stable public endpoint if timeouts persist."
             )
         elif recent_subscription_check_on_current_callback and not external_history_observed:
             callback_recommendation = (
-                "当前公网地址最近已通过通知平台 challenge 校验，说明通知平台云侧可以打到回调入口；"
-                "下一步请在目标群或单聊里发送一条真实消息，完成最终联调。"
+                "The current public URL recently passed the notification challenge, confirming that the provider can reach the callback endpoint; "
+                "send a real message in the target group or direct chat to complete integration testing."
             )
         elif recent_external_self_check_on_current_callback and external_history_observed:
             callback_recommendation = (
-                "当前公网地址最近已通过平台公网自测，且平台历史上已有真实通知平台群消息回流；"
-                "说明当前双向链路仍可继续使用。若后续持续超时，再考虑更换更稳定的公网入口。"
+                "The current public URL recently passed the platform public endpoint self-test, and the platform previously received real notification group messages; "
+                "the bidirectional channel remains usable. Consider a more stable public endpoint if timeouts persist."
             )
         elif recent_external_self_check_on_current_callback and not external_history_observed:
             callback_recommendation = (
-                "当前公网地址已通过平台公网自测，说明 challenge 与文本消息都能打到回调入口；"
-                "下一步请在通知平台开发者后台完成事件订阅，并在目标群里发送一条真实消息做最终联调。"
+                "The current public URL passed the platform public endpoint self-test, confirming that challenge and text messages can reach the callback endpoint; "
+                "complete event subscription in the notification provider's developer console, then send a real message in the target group for final integration testing."
             )
 
         if not webhook_ready:
-            summary = "已提供通知平台事件回调入口，但还没有健康的通知平台回推通道。"
+            summary = "The notification event callback endpoint is available, but there is no healthy reply channel yet."
         elif not verification_token_configured:
-            summary = "通知平台回推通道已健康，但还缺少事件订阅 verification token，群消息还不能稳定回流到平台。"
+            summary = "The notification reply channel is healthy, but the event subscription verification token is missing; group messages cannot reliably reach the platform yet."
         elif not subscription_endpoint_verified:
-            summary = "verification token 已配置，但平台侧还没完成事件订阅 challenge 自检；请先执行一次平台侧回调验证。"
+            summary = "The verification token is configured, but the platform has not completed the event subscription challenge self-check. Run platform callback verification first."
         elif not callback_url_public:
             summary = (
-                "平台历史上曾收到真实通知平台群消息回流，但当前回调地址已退回本地或内网；请重新配置一个通知平台可访问的公网回调地址。"
+                "The platform previously received real notification group messages, but the callback URL has reverted to a local or private address. Configure a public callback URL reachable by the notification provider."
                 if external_history_observed
-                else "平台侧事件订阅已就绪，但当前回调地址仍是本地或内网地址；请先配置一个通知平台可访问的公网回调地址。"
+                else "Platform event subscription is ready, but the callback URL is still local or private. Configure a public callback URL reachable by the notification provider."
             )
         elif recent_external_success_on_current_callback and probe_timeout_like and not bool(callback_probe.get("success")):
             summary = (
-                f"{str(callback_probe.get('summary') or '公网回调地址回探超时。')} "
-                "但当前公网地址在最近 15 分钟内已收到真实通知平台群消息回流，说明双向链路仍可用，当前更像是临时隧道抖动。"
+                f"{str(callback_probe.get('summary') or 'Public callback probe timed out.')} "
+                "However, the current public URL received real notification group messages within the last 15 minutes, indicating that the bidirectional channel remains available. This appears to be temporary tunnel instability."
             )
         elif recent_external_self_check_on_current_callback and external_history_observed:
             summary = (
-                "最近一次平台公网自测已经通过，且平台历史上已收到过真实通知平台群消息回流；"
-                "说明当前双向链路仍可继续使用。"
+                "The latest platform public endpoint self-test passed, and the platform previously received real notification group messages; "
+                "the bidirectional channel remains usable."
             )
         elif recent_subscription_check_on_current_callback and external_history_observed:
             summary = (
-                "最近一次通知平台 challenge 校验已经通过，且平台历史上已收到过真实通知平台群消息回流；"
-                "说明当前双向链路仍可继续使用。"
+                "The latest notification challenge passed, and the platform previously received real notification group messages; "
+                "the bidirectional channel remains usable."
             )
         elif recent_subscription_check_on_current_callback and not external_history_observed:
             summary = (
-                "最近一次通知平台 challenge 校验已经通过，说明当前公网回调入口可达；"
-                "下一步请在目标群或单聊里发送一条真实消息完成最终联调。"
+                "The latest notification challenge passed, confirming that the current public callback endpoint is reachable; "
+                "send a real message in the target group or direct chat to complete integration testing."
             )
         elif callback_probe.get("attempted") and not callback_probe.get("success"):
             if external_history_observed:
                 summary = (
-                    f"{str(callback_probe.get('summary') or '公网回调地址回探失败，请先修复公网入口可达性。')} "
-                    "平台历史上曾收到过真实通知平台群消息回流，说明当前是公网入口退化，而不是平台完全没有打通过。"
+                    f"{str(callback_probe.get('summary') or 'Public callback probe failed. Restore public endpoint reachability first.')} "
+                    "The platform previously received real notification group messages, indicating degradation of the public endpoint rather than a channel that never worked."
                 )
             elif recent_external_self_check_on_current_callback:
                 summary = (
-                    f"{str(callback_probe.get('summary') or '公网回调地址回探失败，请先修复公网入口可达性。')} "
-                    "不过最近一次平台公网自测已经通过，说明 challenge 和文本消息仍能打到平台；"
-                    "当前更像是临时探针抖动，仍需再做一次真实通知平台群聊联调。"
+                    f"{str(callback_probe.get('summary') or 'Public callback probe failed. Restore public endpoint reachability first.')} "
+                    "However, the latest platform public endpoint self-test passed, confirming that challenge and text messages still reach the platform; "
+                    "this appears to be temporary probe instability. Repeat integration testing with real notification group messages."
                 )
             else:
-                summary = str(callback_probe.get("summary") or "公网回调地址回探失败，请先修复公网入口可达性。")
+                summary = str(callback_probe.get("summary") or "Public callback probe failed. Restore public endpoint reachability first.")
         elif recent_external_self_check_on_current_callback and not external_history_observed:
             summary = (
-                "最近一次平台公网自测已经通过，说明公网回调入口、challenge 和文本消息链路都可用；"
-                "但这还不等同于真实通知平台群消息已经联通；下一步请在通知平台开放平台确认事件订阅已启用、"
-                "把应用机器人加入目标群，并在群里发送一条真实消息完成最终联调。"
+                "The latest platform public endpoint self-test passed, confirming that the public callback endpoint, challenge, and text-message channel are available; "
+                "this does not yet establish connectivity for real notification group messages. Confirm that event subscription is enabled in the provider's developer console, "
+                "add the app bot to the target group, and send a real message in the group to complete integration testing."
             )
         elif not external_history_observed:
             summary = (
-                "当前项目专属通知平台应用机器人已配置，平台侧和公网回调都已就绪；"
-                "当前建议对外只保留这一个机器人，Webhook 作为兜底。"
-                "但还没收到真实群消息回流，请把应用机器人加入目标群并发一条测试消息。"
+                "This project's dedicated notification app bot is configured, and the platform and public callback are ready; "
+                "expose only this bot and use Webhook as a fallback. "
+                "However, no real group messages have arrived yet. Add the app bot to the target group and send a test message."
             )
         elif latest and latest["status"] == "ignored" and latest_successful:
-            summary = "最近收到一条未处理事件，但最近一次文本指令仍然成功回推。"
+            summary = "A recent event was unhandled, but the latest text command was still successfully sent back."
         elif latest_external_success is not None:
             summary = (
-                "最近一次通知平台文本指令已通过公网回调接入，并成功回推到群里。"
+                "The latest notification text command arrived through the public callback and was successfully sent back to the group."
                 if app_bot_configured
-                else "最近一次通知平台文本指令已通过公网回调接入，并成功回推到群里。平台当前未保存 App Bot 凭据，但现有双向链路已可用。"
+                else "The latest notification text command arrived through the public callback and was successfully sent back to the group. The platform has no saved App Bot credentials, but the existing bidirectional channel is usable."
             )
         elif not latest:
-            summary = "通知平台双向指令入口已就绪，尚未收到新的事件。"
+            summary = "The bidirectional notification command endpoint is ready; no new events have arrived yet."
         elif latest["status"] == "ok" and latest["delivery_delivered"] > 0:
-            summary = "最近一条通知平台指令已接收并成功回推到群里。"
+            summary = "The latest notification command was received and successfully sent back to the group."
         elif latest["status"] == "ok":
-            summary = "最近一条通知平台指令已接收，但未成功回推到群里。"
+            summary = "The latest notification command was received but could not be sent back to the group."
         else:
-            summary = "最近一条通知平台事件未正常完成，请检查消息格式和回推通道。"
+            summary = "The latest notification event did not complete normally. Check the message format and reply channel."
 
         return {
             "channel": "notification_platform",
@@ -1280,15 +1279,15 @@ if ($null -eq $proc) { '' } else { $proc | ConvertTo-Json -Compress }
             "recent_chat_bindings": recent_chat_bindings,
             "summary": summary,
             "supported_commands": [
-                "状态",
-                "报告 <mission_id>",
-                "测试 <url/需求>",
-                "发现 <session_id>",
-                "风险 <assessment_id>",
-                "停止 <mission_id>",
-                "批准 <run_id> [备注]",
-                "驳回 <run_id> [备注]",
-                "绑定 <code>",
+                "status",
+                "report <mission_id>",
+                "test <url/requirement>",
+                "findings <session_id>",
+                "risk <assessment_id>",
+                "stop <mission_id>",
+                "approve <run_id> [note]",
+                "reject <run_id> [note]",
+                "bind <code>",
             ],
             "latest_event": latest,
             "latest_successful_event": latest_successful,

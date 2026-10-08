@@ -135,15 +135,15 @@ def test_record_database_result_keeps_duration_and_repairs_placeholder_titles(tm
             duration_ms=321,
             execution_group_id="batch_bad",
             session_id="sess_bad",
-            group_title="专项测试 · ry_cloud",
+            group_title="Specialized Test · ry_cloud",
         )
 
         grouped = svc.list_grouped_runs(limit=10)
         batch = next(item for item in grouped["items"] if item["group_id"] == "batch_bad")
-        assert batch["title"] == "专项测试 · ry_cloud"
+        assert batch["title"] == "Specialized Test · ry_cloud"
         assert batch["duration_ms"] == 321
         repaired_child = next(item for item in batch["records"] if item["task_id"] == "api_workbench_bad")
-        assert repaired_child["requirement"] == "API 工作台 · http://127.0.0.1:8020/api/health"
+        assert repaired_child["requirement"] == "API Workbench · http://127.0.0.1:8020/api/health"
 
 
 def test_repair_text_artifacts_reports_repaired_counts(tmp_path):
@@ -215,9 +215,9 @@ def test_repair_text_artifacts_reports_repaired_counts(tmp_path):
         ).fetchone()
         conn.close()
 
-        assert group_row["title"] == "专项测试 · ry_cloud"
-        assert group_row["requirement"] == "专项测试 · ry_cloud"
-        assert run_row["requirement"] == "API 工作台 · http://127.0.0.1:8020/api/health"
+        assert group_row["title"] == "Specialized Test · ry_cloud"
+        assert group_row["requirement"] == "Specialized Test · ry_cloud"
+        assert run_row["requirement"] == "API Workbench · http://127.0.0.1:8020/api/health"
 
 
 def test_commander_group_keeps_commander_mode_when_smart_root_exists(tmp_path):

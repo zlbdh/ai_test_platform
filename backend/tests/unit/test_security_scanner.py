@@ -1,8 +1,8 @@
 """
-SecurityScanner 单元测试
-覆盖: 枚举/数据类, ScanResult 属性,
-      scan (ZAP/simple 路由), _check_security_headers, _check_ssl,
-      _check_sensitive_files, stop/history/report, 单例
+SecurityScanner unit tests.
+Coverage: enums/data classes, ScanResult properties,
+      scan (ZAP/simple routing), _check_security_headers, _check_ssl,
+      _check_sensitive_files, stop/history/report, and singleton behavior.
 """
 import pytest
 import json
@@ -25,7 +25,7 @@ def _stub_execution_center():
 
 
 # ---------------------------------------------------------------------------
-# 枚举测试
+# Enum tests
 # ---------------------------------------------------------------------------
 class TestEnums:
     def test_scan_type(self):
@@ -48,13 +48,13 @@ class TestEnums:
 
 
 # ---------------------------------------------------------------------------
-# 数据类测试
+# Data class tests
 # ---------------------------------------------------------------------------
 class TestSecurityAlert:
     def test_creation(self):
         alert = SecurityAlert(
             name="XSS", risk=AlertRisk.HIGH, confidence="High",
-            url="http://x.com", description="XSS漏洞", solution="过滤输入"
+            url="http://x.com", description="XSS vulnerability", solution="Filter input"
         )
         assert alert.name == "XSS"
         assert alert.risk == AlertRisk.HIGH
@@ -105,7 +105,7 @@ class TestScanResult:
 
 
 # ---------------------------------------------------------------------------
-# SecurityScanner 初始化
+# SecurityScanner initialization
 # ---------------------------------------------------------------------------
 class TestScannerInit:
     def test_default_init(self, tmp_path):
@@ -115,12 +115,12 @@ class TestScannerInit:
 
 
 # ---------------------------------------------------------------------------
-# scan (路由 ZAP vs simple)
+# scan (ZAP versus simple routing)
 # ---------------------------------------------------------------------------
 class TestScan:
     @pytest.mark.asyncio
     async def test_scan_falls_back_to_simple(self, tmp_path):
-        """ZAP 不可用时应回退到简化扫描"""
+        """Fall back to the simple scanner when ZAP is unavailable."""
         scanner = SecurityScanner(results_dir=str(tmp_path))
         config = ScanConfig(target_url="http://example.com")
 
@@ -134,7 +134,7 @@ class TestScan:
 
     @pytest.mark.asyncio
     async def test_scan_uses_zap_when_available(self, tmp_path):
-        """ZAP 可用时应使用 ZAP 扫描"""
+        """Use the ZAP scanner when it is available."""
         scanner = SecurityScanner(results_dir=str(tmp_path))
         config = ScanConfig(target_url="http://example.com")
 
@@ -148,7 +148,7 @@ class TestScan:
 
     @pytest.mark.asyncio
     async def test_scan_exception_marks_failed(self, tmp_path):
-        """扫描异常应标记为 FAILED"""
+        """A scan exception marks the result FAILED."""
         scanner = SecurityScanner(results_dir=str(tmp_path))
         config = ScanConfig(target_url="http://example.com")
 
@@ -160,7 +160,7 @@ class TestScan:
 
 
 # ---------------------------------------------------------------------------
-# _check_ssl 测试
+# _check_ssl tests
 # ---------------------------------------------------------------------------
 class TestCheckSsl:
     @pytest.mark.asyncio
@@ -179,10 +179,10 @@ class TestCheckSsl:
 
 
 # ---------------------------------------------------------------------------
-# _check_security_headers 测试
+# _check_security_headers tests
 # ---------------------------------------------------------------------------
 def _make_aiohttp_ctx(mock_resp):
-    """创建兼容 aiohttp 'async with session.get()' 的 mock"""
+    """Create a mock compatible with aiohttp 'async with session.get()'."""
     ctx = MagicMock()
     ctx.__aenter__ = AsyncMock(return_value=mock_resp)
     ctx.__aexit__ = AsyncMock(return_value=False)
@@ -192,22 +192,22 @@ def _make_aiohttp_ctx(mock_resp):
 class TestCheckSecurityHeaders:
     @pytest.mark.asyncio
     async def test_missing_headers(self, tmp_path):
-        """缺少安全头应生成告警"""
+        """Missing security headers generate alerts."""
         scanner = SecurityScanner(results_dir=str(tmp_path))
 
         mock_resp = MagicMock()
-        mock_resp.headers = {}  # 没有安全头
+        mock_resp.headers = {}  # No security headers
         mock_resp.status = 200
 
         mock_session = MagicMock()
         mock_session.get.return_value = _make_aiohttp_ctx(mock_resp)
 
         alerts = await scanner._check_security_headers(mock_session, "http://example.com")
-        assert len(alerts) >= 3  # 至少缺少 CSP, X-Frame, HSTS 等
+        assert len(alerts) >= 3  # At least CSP, X-Frame, HSTS, and similar headers are missing.
 
     @pytest.mark.asyncio
     async def test_all_headers_present(self, tmp_path):
-        """所有安全头都存在时不应告警"""
+        """No alerts are generated when all security headers are present."""
         scanner = SecurityScanner(results_dir=str(tmp_path))
 
         mock_resp = MagicMock()
@@ -228,12 +228,12 @@ class TestCheckSecurityHeaders:
 
 
 # ---------------------------------------------------------------------------
-# _check_sensitive_files 测试
+# _check_sensitive_files tests
 # ---------------------------------------------------------------------------
 class TestCheckSensitiveFiles:
     @pytest.mark.asyncio
     async def test_html_fallback_not_treated_as_exposed_file(self, tmp_path):
-        """HTML fallback 页面不应被判定为敏感文件泄露"""
+        """An HTML fallback is not treated as an exposed sensitive file."""
         scanner = SecurityScanner(results_dir=str(tmp_path))
 
         mock_resp = MagicMock()
@@ -249,7 +249,7 @@ class TestCheckSensitiveFiles:
 
     @pytest.mark.asyncio
     async def test_real_sensitive_file_content_triggers_alert(self, tmp_path):
-        """真实敏感文件内容应被识别"""
+        """Recognize actual sensitive file contents."""
         scanner = SecurityScanner(results_dir=str(tmp_path))
 
         mock_resp = MagicMock()
@@ -265,7 +265,7 @@ class TestCheckSensitiveFiles:
 
     @pytest.mark.asyncio
     async def test_no_exposed_files(self, tmp_path):
-        """敏感文件返回 404 时不应告警"""
+        """Do not alert when sensitive file requests return 404."""
         scanner = SecurityScanner(results_dir=str(tmp_path))
 
         mock_resp = MagicMock()
@@ -281,7 +281,7 @@ class TestCheckSensitiveFiles:
 
 
 # ---------------------------------------------------------------------------
-# stop_scan 测试
+# stop_scan tests
 # ---------------------------------------------------------------------------
 class TestStopScan:
     def test_stop_scan(self, tmp_path):
@@ -302,7 +302,7 @@ class TestStopScan:
 
 
 # ---------------------------------------------------------------------------
-# 历史管理测试
+# History management tests
 # ---------------------------------------------------------------------------
 class TestHistory:
     def test_get_history_empty(self, tmp_path):
@@ -311,7 +311,7 @@ class TestHistory:
 
     def test_get_history_with_results(self, tmp_path):
         scanner = SecurityScanner(results_dir=str(tmp_path))
-        # 写入模拟数据
+        # Write mock data.
         for i in range(3):
             (tmp_path / f"result_s{i}.json").write_text(
                 json.dumps({"scan_id": f"s{i}"}), encoding="utf-8"
@@ -341,7 +341,7 @@ class TestHistory:
 
 
 # ---------------------------------------------------------------------------
-# 报告生成测试
+# Report generation tests
 # ---------------------------------------------------------------------------
 class TestGenerateReport:
     def test_report_not_found(self, tmp_path):
@@ -366,7 +366,7 @@ class TestGenerateReport:
 
 
 # ---------------------------------------------------------------------------
-# 单例测试
+# Singleton tests
 # ---------------------------------------------------------------------------
 class TestSingleton:
     def test_singleton(self, tmp_path):

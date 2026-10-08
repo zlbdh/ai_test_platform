@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-安全测试服务 - 基于 OWASP ZAP 的漏洞扫描模块
-提供 SQL 注入、XSS、CSRF 等常见漏洞检测
+Security testing service: OWASP ZAP vulnerability scanning.
+Detect common vulnerabilities such as SQL injection, XSS, and CSRF.
 """
 import os
 import json
@@ -19,9 +19,9 @@ from services.execution_center_service import get_execution_center_service
 
 
 class ScanType(str, Enum):
-    QUICK = "quick"       # 快速扫描 (Spider only)
-    STANDARD = "standard"  # 标准扫描 (Spider + Passive)
-    FULL = "full"         # 完整扫描 (Spider + Active)
+    QUICK = "quick"       # Quick scan (Spider only)
+    STANDARD = "standard"  # Standard scan (Spider + Passive)
+    FULL = "full"         # Full scan (Spider + Active)
 
 
 class ScanStatus(str, Enum):
@@ -41,7 +41,7 @@ class AlertRisk(str, Enum):
 
 @dataclass
 class SecurityAlert:
-    """安全告警"""
+    """Security alert."""
     name: str
     risk: AlertRisk
     confidence: str
@@ -55,7 +55,7 @@ class SecurityAlert:
 
 @dataclass
 class ScanConfig:
-    """扫描配置"""
+    """Scan configuration."""
     target_url: str
     scan_type: ScanType = ScanType.STANDARD
     max_depth: int = 5
@@ -69,7 +69,7 @@ class ScanConfig:
 
 @dataclass
 class ScanResult:
-    """扫描结果"""
+    """Scan result."""
     scan_id: str
     status: ScanStatus
     config: ScanConfig
@@ -99,7 +99,7 @@ class ScanResult:
 
 
 class SecurityScanner:
-    """安全扫描器"""
+    """Security scanner."""
 
     def __init__(self, results_dir: str = "data/security", zap_api_url: str = None):
         self.results_dir = Path(results_dir)
@@ -114,7 +114,7 @@ class SecurityScanner:
         return self._status
 
     async def scan(self, config: ScanConfig) -> ScanResult:
-        """执行安全扫描"""
+        """Run a security scan."""
         import uuid
         
         scan_id = str(uuid.uuid4())[:8]
@@ -129,11 +129,11 @@ class SecurityScanner:
         self._current_result = result
         
         try:
-            # 尝试使用 ZAP API
+            # Try the ZAP API.
             if await self._check_zap_available():
                 result = await self._run_zap_scan(result, config)
             else:
-                # 使用简化扫描器
+                # Use the simple scanner.
                 result = await self._run_simple_scan(result, config)
                 
         except Exception as e:
@@ -147,7 +147,7 @@ class SecurityScanner:
         return result
 
     async def _check_zap_available(self) -> bool:
-        """检查 ZAP API 是否可用"""
+        """Check whether the ZAP API is available."""
         try:
             async with aiohttp.ClientSession() as session:
                 url = f"{self.zap_api_url}/JSON/core/view/version/"
@@ -159,9 +159,9 @@ class SecurityScanner:
             return False
 
     async def _run_zap_scan(self, result: ScanResult, config: ScanConfig) -> ScanResult:
-        """使用 ZAP API 执行扫描"""
+        """Run a scan through the ZAP API."""
         async with aiohttp.ClientSession() as session:
-            # 1. Spider 扫描
+            # 1. Spider scan
             spider_url = f"{self.zap_api_url}/JSON/spider/action/scan/"
             params = {
                 "url": config.target_url,
@@ -177,7 +177,7 @@ class SecurityScanner:
                 spider_data = await resp.json()
                 spider_id = spider_data.get("scan")
             
-            # 等待 Spider 完成
+            # Wait for the spider to finish.
             while True:
                 status_url = f"{self.zap_api_url}/JSON/spider/view/status/"
                 params = {"scanId": spider_id}
@@ -190,7 +190,7 @@ class SecurityScanner:
                         break
                 await asyncio.sleep(2)
             
-            # 2. Active Scan (仅 FULL 模式)
+            # 2. Active scan (FULL mode only)
             if config.scan_type == ScanType.FULL:
                 ascan_url = f"{self.zap_api_url}/JSON/ascan/action/scan/"
                 params = {"url": config.target_url, "recurse": "true", "inScopeOnly": "false"}
@@ -201,7 +201,7 @@ class SecurityScanner:
                     ascan_data = await resp.json()
                     ascan_id = ascan_data.get("scan")
                 
-                # 等待 Active Scan 完成
+                # Wait for the active scan to finish.
                 while True:
                     status_url = f"{self.zap_api_url}/JSON/ascan/view/status/"
                     params = {"scanId": ascan_id}
@@ -214,7 +214,7 @@ class SecurityScanner:
                             break
                     await asyncio.sleep(5)
             
-            # 3. 获取告警
+            # 3. Retrieve alerts
             alerts_url = f"{self.zap_api_url}/JSON/core/view/alerts/"
             params = {"baseurl": config.target_url}
             if self.zap_api_key:
@@ -251,11 +251,11 @@ class SecurityScanner:
         return result
 
     async def _run_simple_scan(self, result: ScanResult, config: ScanConfig) -> ScanResult:
-        """简化的安全扫描（不依赖 ZAP）"""
+        """Run a simple security scan without ZAP."""
         try:
             timeout = aiohttp.ClientTimeout(total=60, connect=10)
             async with aiohttp.ClientSession(timeout=timeout) as session:
-                # 检测常见漏洞
+                # Check for common vulnerabilities.
                 checks = [
                     self._check_security_headers(session, config.target_url),
                     self._check_ssl(session, config.target_url),
@@ -286,14 +286,14 @@ class SecurityScanner:
         return result
 
     async def _check_security_headers(self, session, url: str) -> List[SecurityAlert]:
-        """检查安全响应头"""
+        """Check security response headers."""
         alerts = []
         required_headers = {
-            "Content-Security-Policy": ("Medium", "CSP 可防止 XSS 攻击"),
-            "X-Frame-Options": ("Medium", "防止点击劫持"),
-            "X-Content-Type-Options": ("Low", "防止 MIME 嗅探"),
-            "Strict-Transport-Security": ("Medium", "强制 HTTPS"),
-            "X-XSS-Protection": ("Low", "XSS 过滤器")
+            "Content-Security-Policy": ("Medium", "CSP helps prevent XSS attacks"),
+            "X-Frame-Options": ("Medium", "Prevents clickjacking"),
+            "X-Content-Type-Options": ("Low", "Prevents MIME sniffing"),
+            "Strict-Transport-Security": ("Medium", "Enforces HTTPS"),
+            "X-XSS-Protection": ("Low", "XSS filter")
         }
         
         try:
@@ -301,12 +301,12 @@ class SecurityScanner:
                 for header, (risk, desc) in required_headers.items():
                     if header.lower() not in [h.lower() for h in resp.headers.keys()]:
                         alerts.append(SecurityAlert(
-                            name=f"缺少安全头: {header}",
+                            name=f"Missing security header: {header}",
                             risk=AlertRisk(risk),
                             confidence="High",
                             url=url,
-                            description=f"响应中缺少 {header} 头。{desc}。",
-                            solution=f"添加 {header} 响应头"
+                            description=f"The response is missing the {header} header. {desc}.",
+                            solution=f"Add the {header} response header"
                         ))
         except Exception:
             pass
@@ -314,31 +314,31 @@ class SecurityScanner:
         return alerts
 
     async def _check_ssl(self, session, url: str) -> List[SecurityAlert]:
-        """检查 SSL/TLS 配置"""
+        """Check SSL/TLS configuration."""
         alerts = []
         
         if url.startswith("http://"):
             alerts.append(SecurityAlert(
-                name="未使用 HTTPS",
+                name="HTTPS is not enabled",
                 risk=AlertRisk.HIGH,
                 confidence="High",
                 url=url,
-                description="网站使用 HTTP 而非 HTTPS，数据传输未加密。",
-                solution="启用 SSL/TLS 证书，强制使用 HTTPS"
+                description="The website uses HTTP instead of HTTPS, so data in transit is not encrypted.",
+                solution="Enable an SSL/TLS certificate and require HTTPS"
             ))
             
         return alerts
 
     async def _check_sensitive_files(self, session, url: str) -> List[SecurityAlert]:
-        """检查敏感文件暴露"""
+        """Check for exposed sensitive files."""
         alerts = []
         sensitive_paths = [
-            ("/.git/config", "Git 配置泄露"),
-            ("/.env", "环境变量泄露"),
-            ("/wp-config.php", "WordPress 配置泄露"),
-            ("/backup.sql", "数据库备份泄露"),
-            ("/.htpasswd", "密码文件泄露"),
-            ("/phpinfo.php", "PHP 信息泄露")
+            ("/.git/config", "Exposed Git configuration"),
+            ("/.env", "Exposed environment variables"),
+            ("/wp-config.php", "Exposed WordPress configuration"),
+            ("/backup.sql", "Exposed database backup"),
+            ("/.htpasswd", "Exposed password file"),
+            ("/phpinfo.php", "Exposed PHP information")
         ]
         
         base_url = url.rstrip("/")
@@ -355,8 +355,8 @@ class SecurityScanner:
                             risk=AlertRisk.HIGH,
                             confidence="High",
                             url=f"{base_url}{path}",
-                            description=f"发现敏感文件 {path} 可被公开访问",
-                            solution=f"删除或限制访问 {path}"
+                            description=f"Sensitive file {path} is publicly accessible",
+                            solution=f"Remove or restrict access to {path}"
                         ))
             except Exception:
                 pass
@@ -364,7 +364,7 @@ class SecurityScanner:
         return alerts
 
     def _looks_like_sensitive_content(self, path: str, headers: Dict[str, str], body: str) -> bool:
-        """通过内容特征避免将 HTML fallback / JSON 错误页误判为敏感文件暴露。"""
+        """Use content signatures to avoid mistaking HTML fallbacks or JSON error pages for exposed sensitive files."""
         sample = (body or "").strip()
         lowered = sample.lower()
         content_type = (headers.get("Content-Type") or headers.get("content-type") or "").lower()
@@ -393,7 +393,7 @@ class SecurityScanner:
         return False
 
     def _save_result(self, result: ScanResult):
-        """保存扫描结果"""
+        """Save scan results."""
         result_file = self.results_dir / f"result_{result.scan_id}.json"
         
         data = {
@@ -416,7 +416,7 @@ class SecurityScanner:
             result.errors.append(f"execution center sync failed: {exc}")
 
     def stop_scan(self):
-        """停止当前扫描"""
+        """Stop the current scan."""
         self._status = ScanStatus.STOPPED
         if self._current_result:
             self._current_result.status = ScanStatus.STOPPED
@@ -424,7 +424,7 @@ class SecurityScanner:
             self._save_result(self._current_result)
 
     def get_history(self, limit: int = 10) -> List[Dict]:
-        """获取扫描历史"""
+        """Retrieve scan history."""
         results = []
         
         for f in sorted(self.results_dir.glob("result_*.json"), reverse=True)[:limit]:
@@ -434,11 +434,11 @@ class SecurityScanner:
         return results
 
     def delete_history(self, scan_id: str) -> bool:
-        """删除单条扫描历史"""
+        """Delete one scan history entry."""
         result_file = self.results_dir / f"result_{scan_id}.json"
         if result_file.exists():
             result_file.unlink()
-            # 同时清理报告文件
+            # Also remove its report file.
             report_file = self.results_dir / f"report_{scan_id}.html"
             if report_file.exists():
                 report_file.unlink()
@@ -446,7 +446,7 @@ class SecurityScanner:
         return False
 
     def clear_history(self) -> int:
-        """清空全部扫描历史，返回删除数量"""
+        """Clear all scan history and return the number of deleted results."""
         count = 0
         for f in self.results_dir.glob("result_*.json"):
             f.unlink()
@@ -456,7 +456,7 @@ class SecurityScanner:
         return count
 
     def generate_report(self, scan_id: str) -> Dict[str, Any]:
-        """生成安全报告"""
+        """Generate a security report."""
         result_file = self.results_dir / f"result_{scan_id}.json"
         
         if not result_file.exists():
@@ -465,7 +465,7 @@ class SecurityScanner:
         with open(result_file, 'r', encoding='utf-8') as f:
             data = json.load(f)
         
-        # 生成 HTML 报告
+        # Generate an HTML report.
         html = self._build_security_report(data)
         report_file = self.results_dir / f"report_{scan_id}.html"
         
@@ -479,7 +479,7 @@ class SecurityScanner:
         }
 
     def _build_security_report(self, data: Dict) -> str:
-        """构建安全报告 HTML"""
+        """Build the security report HTML."""
         alerts = data.get("alerts", [])
         stats = data.get("stats", {})
         
@@ -497,10 +497,10 @@ class SecurityScanner:
         
         return f"""
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="en-US">
 <head>
     <meta charset="UTF-8">
-    <title>安全扫描报告 - {data.get('scan_id', '')}</title>
+    <title>Security Scan Report - {data.get('scan_id', '')}</title>
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         body {{ font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #1a1a2e; color: #e0e0e0; padding: 20px; }}
@@ -526,19 +526,19 @@ class SecurityScanner:
 </head>
 <body>
     <div class="container">
-        <h1>🔒 安全扫描报告</h1>
-        <p>扫描 ID: {data.get('scan_id', '')} | 时间: {data.get('finished_at', '')}</p>
+        <h1>🔒 Security Scan Report</h1>
+        <p>Scan ID: {data.get('scan_id', '')} | Time: {data.get('finished_at', '')}</p>
         
         <div class="stats">
-            <div class="stat-card high"><h3>{stats.get('high', 0)}</h3><p>高风险</p></div>
-            <div class="stat-card medium"><h3>{stats.get('medium', 0)}</h3><p>中风险</p></div>
-            <div class="stat-card low"><h3>{stats.get('low', 0)}</h3><p>低风险</p></div>
-            <div class="stat-card info"><h3>{stats.get('info', 0)}</h3><p>信息</p></div>
+            <div class="stat-card high"><h3>{stats.get('high', 0)}</h3><p>High Risk</p></div>
+            <div class="stat-card medium"><h3>{stats.get('medium', 0)}</h3><p>Medium Risk</p></div>
+            <div class="stat-card low"><h3>{stats.get('low', 0)}</h3><p>Low Risk</p></div>
+            <div class="stat-card info"><h3>{stats.get('info', 0)}</h3><p>Informational</p></div>
         </div>
         
         <table>
-            <thead><tr><th>风险</th><th>漏洞</th><th>URL</th><th>描述</th></tr></thead>
-            <tbody>{alert_rows if alert_rows else '<tr><td colspan="4" style="text-align:center;">未发现漏洞 ✅</td></tr>'}</tbody>
+            <thead><tr><th>Risk</th><th>Vulnerability</th><th>URL</th><th>Description</th></tr></thead>
+            <tbody>{alert_rows if alert_rows else '<tr><td colspan="4" style="text-align:center;">No vulnerabilities found ✅</td></tr>'}</tbody>
         </table>
     </div>
 </body>
@@ -546,12 +546,12 @@ class SecurityScanner:
 """
 
 
-# 全局实例
+# Global instance
 _scanner: Optional[SecurityScanner] = None
 
 
 def get_security_scanner() -> SecurityScanner:
-    """获取安全扫描器单例"""
+    """Return the security scanner singleton."""
     global _scanner
     if _scanner is None:
         from core.config import Config

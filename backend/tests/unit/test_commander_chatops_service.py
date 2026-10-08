@@ -84,9 +84,9 @@ def test_chatops_overview_marks_callback_probe_success_when_public_callback_retu
     assert overview["callback_probe"]["attempted"] is True
     assert overview["callback_probe"]["success"] is True
     assert overview["callback_probe"]["issue"] == ""
-    assert "公网回调地址已通过主动回探" in overview["callback_probe"]["summary"]
-    assert overview["callback_provider"]["label"] == "自定义公网地址"
-    assert "已通过 challenge 回探" in overview["callback_recommendation"]
+    assert "Public callback URL passed an active probe" in overview["callback_probe"]["summary"]
+    assert overview["callback_provider"]["label"] == "Custom public URL"
+    assert "passed the challenge probe" in overview["callback_recommendation"]
 
 
 def test_chatops_overview_can_skip_live_probe_and_reuse_cached_state():
@@ -116,7 +116,7 @@ def test_chatops_overview_can_skip_live_probe_and_reuse_cached_state():
     mock_probe.assert_not_called()
     assert overview["callback_probe"]["attempted"] is False
     assert overview["callback_probe"]["issue"] == "probe_skipped"
-    assert "仅复用最近一次公网回探结果" in overview["callback_probe"]["summary"]
+    assert "Reusing the most recent public probe result" in overview["callback_probe"]["summary"]
 
 
 def test_chatops_overview_detects_interstitial_warning_page_from_public_tunnel():
@@ -170,11 +170,11 @@ def test_chatops_overview_detects_interstitial_warning_page_from_public_tunnel()
     assert overview["callback_probe"]["attempted"] is True
     assert overview["callback_probe"]["success"] is False
     assert overview["callback_probe"]["issue"] == "interstitial_page"
-    assert "隧道警告页" in overview["callback_probe"]["summary"]
+    assert "tunnel warning page" in overview["callback_probe"]["summary"]
     assert overview["ready"] is False
-    assert "公网回调地址返回了隧道警告页" in overview["summary"]
-    assert overview["callback_provider"]["label"] == "自定义公网地址"
-    assert "无中间页的公网反向代理" in overview["callback_recommendation"]
+    assert "Public callback URL returned a tunnel warning page" in overview["summary"]
+    assert overview["callback_provider"]["label"] == "Custom public URL"
+    assert "public reverse proxy or tunnel without an intermediate page" in overview["callback_recommendation"]
 
 
 def test_chatops_overview_marks_external_history_as_stale_when_current_probe_fails():
@@ -208,7 +208,7 @@ def test_chatops_overview_marks_external_history_as_stale_when_current_probe_fai
             "message": "状态",
             "from_user": "user",
             "chat_id": "oc_live",
-            "response": "最近一条通知平台指令已接收并成功回推到群里。",
+            "response": "The latest notification command was received and successfully sent back to the group.",
             "status": "ok",
             "delivery_configured": 1,
             "delivery_delivered": 1,
@@ -244,7 +244,7 @@ def test_chatops_overview_marks_external_history_as_stale_when_current_probe_fai
                  "attempted": True,
                  "success": False,
                  "issue": "timeout",
-                 "summary": "公网回调地址回探超时，通知平台云侧当前大概率无法稳定访问该入口。",
+                 "summary": "Public callback probe timed out; the notification provider will likely be unable to reach this endpoint reliably.",
                  "status_code": None,
                  "content_type": "",
                  "response_excerpt": "",
@@ -266,8 +266,8 @@ def test_chatops_overview_marks_external_history_as_stale_when_current_probe_fai
     assert overview["subscription_check_recent_success"] is True
     assert overview["external_callback_ready"] is True
     assert overview["ready"] is False
-    assert "最近一次通知平台 challenge 校验已经通过" in overview["summary"]
-    assert "下一步请在目标群或单聊里发送一条真实消息" in overview["callback_recommendation"]
+    assert "The latest notification challenge passed" in overview["summary"]
+    assert "send a real message in the target group or direct chat" in overview["callback_recommendation"]
 
 
 def test_chatops_overview_keeps_chatops_ready_when_public_callback_is_ready_without_saved_app_bot():
@@ -281,7 +281,7 @@ def test_chatops_overview_keeps_chatops_ready_when_public_callback_is_ready_with
             "message": "状态",
             "from_user": "user",
             "chat_id": "oc_live",
-            "response": "最近一条通知平台指令已接收并成功回推到群里。",
+            "response": "The latest notification command was received and successfully sent back to the group.",
             "status": "ok",
             "delivery_configured": 1,
             "delivery_delivered": 1,
@@ -323,7 +323,7 @@ def test_chatops_overview_keeps_chatops_ready_when_public_callback_is_ready_with
                  "attempted": True,
                  "success": True,
                  "issue": "",
-                 "summary": "公网回调地址已通过主动回探，当前入口对外可达。",
+                 "summary": "Public callback URL passed an active probe; the current endpoint is publicly reachable.",
                  "status_code": 200,
                  "content_type": "application/json",
                  "response_excerpt": "{\"challenge\":\"chatops-probe\"}",
@@ -344,8 +344,8 @@ def test_chatops_overview_keeps_chatops_ready_when_public_callback_is_ready_with
     assert overview["external_callback_ready"] is True
     assert overview["direct_chat_ready"] is True
     assert overview["ready"] is True
-    assert "成功回推到群里" in overview["summary"]
-    assert "已通过 challenge 回探" in overview["callback_recommendation"]
+    assert "successfully sent back to the group" in overview["summary"]
+    assert "passed the challenge probe" in overview["callback_recommendation"]
 
 
 def test_chatops_probe_uses_curl_fallback_when_requests_times_out():
@@ -371,7 +371,7 @@ def test_chatops_probe_uses_curl_fallback_when_requests_times_out():
     assert result["attempted"] is True
     assert result["success"] is True
     assert result["issue"] == ""
-    assert "curl 回退" in result["summary"]
+    assert "curl fallback" in result["summary"]
 
 
 def test_chatops_overview_identifies_localtunnel_provider_and_recommendation():
@@ -395,7 +395,7 @@ def test_chatops_overview_identifies_localtunnel_provider_and_recommendation():
                  "attempted": True,
                  "success": False,
                  "issue": "tunnel_unavailable",
-                 "summary": "公网回调地址当前返回 Tunnel Unavailable，隧道未稳定建立。",
+                 "summary": "Public callback URL currently returns Tunnel Unavailable; the tunnel is not stable.",
                  "status_code": 503,
                  "content_type": "text/html",
                  "response_excerpt": "<h1>no tunnel here :(</h1>",
@@ -410,7 +410,7 @@ def test_chatops_overview_identifies_localtunnel_provider_and_recommendation():
 
     assert overview["callback_provider"]["key"] == "localtunnel"
     assert overview["callback_provider"]["label"] == "LocalTunnel"
-    assert "重新建立一条 LocalTunnel" in overview["callback_recommendation"]
+    assert "Create a new LocalTunnel" in overview["callback_recommendation"]
 
 
 def test_chatops_refresh_probe_bypasses_cache_and_returns_latest_overview():
@@ -422,7 +422,7 @@ def test_chatops_refresh_probe_bypasses_cache_and_returns_latest_overview():
             "attempted": True,
             "success": False,
             "issue": "connect_error",
-            "summary": "公网回调地址回探失败：ConnectionError",
+            "summary": "Public callback probe failed: ConnectionError",
             "status_code": None,
             "content_type": "",
             "response_excerpt": "",
@@ -479,7 +479,7 @@ def test_chatops_overview_reuses_recent_probe_history_before_live_reprobe():
             "attempted": 1,
             "success": 1,
             "issue": "",
-            "summary": "最近一次回探成功（历史缓存）。",
+            "summary": "The latest probe succeeded (cached history).",
             "status_code": 200,
             "content_type": "application/json",
             "response_excerpt": '{"challenge":"chatops-probe"}',
@@ -499,7 +499,7 @@ def test_chatops_overview_reuses_recent_probe_history_before_live_reprobe():
         overview = service.get_overview()
 
     assert overview["callback_probe"]["success"] is True
-    assert overview["callback_probe"]["summary"] == "最近一次回探成功（历史缓存）。"
+    assert overview["callback_probe"]["summary"] == "The latest probe succeeded (cached history)."
     assert overview["callback_probe"]["probed_at"] == recent_probe_at
 
 
@@ -519,7 +519,7 @@ def test_chatops_overview_uses_quick_probe_without_curl_fallback():
                  "attempted": True,
                  "success": False,
                  "issue": "timeout",
-                 "summary": "公网回调地址回探超时。",
+                 "summary": "Public callback probe timed out.",
                  "status_code": None,
                  "content_type": "",
                  "response_excerpt": "",
@@ -572,7 +572,7 @@ def test_chatops_overview_accepts_recent_real_event_on_current_callback_when_pro
             "message": "状态",
             "from_user": "user",
             "chat_id": "oc_live",
-            "response": "最近一条通知平台指令已接收并成功回推到群里。",
+            "response": "The latest notification command was received and successfully sent back to the group.",
             "status": "ok",
             "delivery_configured": 1,
             "delivery_delivered": 1,
@@ -599,7 +599,7 @@ def test_chatops_overview_accepts_recent_real_event_on_current_callback_when_pro
                  "attempted": True,
                  "success": False,
                  "issue": "timeout",
-                 "summary": "公网回调地址回探失败（curl 回退）：curl: (28) Operation timed out after 10006 milliseconds with 0 bytes received",
+                 "summary": "Public callback probe failed (curl fallback): curl: (28) Operation timed out after 10006 milliseconds with 0 bytes received",
                  "status_code": 0,
                  "content_type": "",
                  "response_excerpt": "curl: (28) Operation timed out after 10006 milliseconds with 0 bytes received",
@@ -622,8 +622,8 @@ def test_chatops_overview_accepts_recent_real_event_on_current_callback_when_pro
     assert overview["external_callback_ready"] is True
     assert overview["direct_chat_ready"] is True
     assert overview["ready"] is True
-    assert "最近 15 分钟内已收到真实通知平台群消息回流" in overview["summary"]
-    assert "当前公网地址在最近 15 分钟内已收到真实通知平台群消息回流" in overview["callback_recommendation"]
+    assert "received real notification group messages within the last 15 minutes" in overview["summary"]
+    assert "The current public URL received real notification group messages within the last 15 minutes" in overview["callback_recommendation"]
 
 
 def test_chatops_overview_separates_external_self_check_from_real_group_message():
@@ -642,7 +642,7 @@ def test_chatops_overview_separates_external_self_check_from_real_group_message(
             "message": "status",
             "from_user": "user",
             "chat_id": "oc_external_self_check",
-            "response": "平台公网自测通过",
+            "response": "Platform public endpoint self-test passed",
             "status": "ok",
             "delivery_configured": 1,
             "delivery_delivered": 1,
@@ -677,7 +677,7 @@ def test_chatops_overview_separates_external_self_check_from_real_group_message(
                  "attempted": True,
                  "success": False,
                  "issue": "timeout",
-                 "summary": "公网回调地址回探失败：timeout",
+                 "summary": "Public callback probe failed: timeout",
                  "status_code": 0,
                  "content_type": "",
                  "response_excerpt": "timeout",
@@ -699,8 +699,8 @@ def test_chatops_overview_separates_external_self_check_from_real_group_message(
     assert overview["external_connected"] is False
     assert overview["direct_chat_ready"] is False
     assert overview["ready"] is False
-    assert "最近一次通知平台 challenge 校验已经通过" in overview["summary"]
-    assert "下一步请在目标群或单聊里发送一条真实消息" in overview["callback_recommendation"]
+    assert "The latest notification challenge passed" in overview["summary"]
+    assert "send a real message in the target group or direct chat" in overview["callback_recommendation"]
 
 
 def test_chatops_overview_prefers_positive_summary_when_recent_self_check_and_history_both_exist():
@@ -720,7 +720,7 @@ def test_chatops_overview_prefers_positive_summary_when_recent_self_check_and_hi
             "message": "status",
             "from_user": "ops-live-check",
             "chat_id": "oc_external_self_check",
-            "response": "平台公网自测通过",
+            "response": "Platform public endpoint self-test passed",
             "status": "ok",
             "delivery_configured": 1,
             "delivery_delivered": 1,
@@ -735,7 +735,7 @@ def test_chatops_overview_prefers_positive_summary_when_recent_self_check_and_hi
             "message": "状态",
             "from_user": "real-user",
             "chat_id": "oc_live_group",
-            "response": "最近一条通知平台指令已接收并成功回推到群里。",
+            "response": "The latest notification command was received and successfully sent back to the group.",
             "status": "ok",
             "delivery_configured": 1,
             "delivery_delivered": 1,
@@ -770,7 +770,7 @@ def test_chatops_overview_prefers_positive_summary_when_recent_self_check_and_hi
                  "attempted": True,
                  "success": False,
                  "issue": "timeout",
-                 "summary": "公网回调地址回探失败：timeout",
+                 "summary": "Public callback probe failed: timeout",
                  "status_code": 0,
                  "content_type": "",
                  "response_excerpt": "timeout",
@@ -789,9 +789,9 @@ def test_chatops_overview_prefers_positive_summary_when_recent_self_check_and_hi
     assert overview["external_connected"] is True
     assert overview["direct_chat_ready"] is True
     assert overview["ready"] is True
-    assert "最近一次平台公网自测已经通过" in overview["summary"]
-    assert "当前双向链路仍可继续使用" in overview["summary"]
-    assert "当前双向链路仍可继续使用" in overview["callback_recommendation"]
+    assert "The latest platform public endpoint self-test passed" in overview["summary"]
+    assert "the bidirectional channel remains usable" in overview["summary"]
+    assert "the bidirectional channel remains usable" in overview["callback_recommendation"]
 
 
 def test_chatops_overview_treats_recent_subscription_check_as_current_connectivity_signal():
@@ -810,7 +810,7 @@ def test_chatops_overview_treats_recent_subscription_check_as_current_connectivi
             "message": "状态",
             "from_user": "real-user",
             "chat_id": "oc_live_group",
-            "response": "最近一条通知平台指令已接收并成功回推到群里。",
+            "response": "The latest notification command was received and successfully sent back to the group.",
             "status": "ok",
             "delivery_configured": 1,
             "delivery_delivered": 1,
@@ -845,7 +845,7 @@ def test_chatops_overview_treats_recent_subscription_check_as_current_connectivi
                  "attempted": True,
                  "success": False,
                  "issue": "timeout",
-                 "summary": "公网回调地址回探超时。",
+                 "summary": "Public callback probe timed out.",
                  "status_code": 0,
                  "content_type": "",
                  "response_excerpt": "timeout",
@@ -869,9 +869,9 @@ def test_chatops_overview_treats_recent_subscription_check_as_current_connectivi
     assert overview["external_callback_ready"] is True
     assert overview["direct_chat_ready"] is True
     assert overview["ready"] is True
-    assert "最近一次通知平台 challenge 校验已经通过" in overview["summary"]
-    assert "当前双向链路仍可继续使用" in overview["summary"]
-    assert "当前双向链路仍可继续使用" in overview["callback_recommendation"]
+    assert "The latest notification challenge passed" in overview["summary"]
+    assert "the bidirectional channel remains usable" in overview["summary"]
+    assert "the bidirectional channel remains usable" in overview["callback_recommendation"]
 
 
 def test_chatops_overview_treats_legacy_self_check_event_as_non_external_history():
@@ -890,7 +890,7 @@ def test_chatops_overview_treats_legacy_self_check_event_as_non_external_history
             "message": "status",
             "from_user": "user",
             "chat_id": "oc_external_self_check",
-            "response": "📡 军团状态",
+            "response": "📡 Legion status",
             "status": "ok",
             "delivery_configured": 1,
             "delivery_delivered": 1,
@@ -925,7 +925,7 @@ def test_chatops_overview_treats_legacy_self_check_event_as_non_external_history
                  "attempted": True,
                  "success": False,
                  "issue": "connect_error",
-                 "summary": "公网回调地址回探失败：ConnectionError",
+                 "summary": "Public callback probe failed: ConnectionError",
                  "status_code": 0,
                  "content_type": "",
                  "response_excerpt": "ConnectionError",
@@ -943,7 +943,7 @@ def test_chatops_overview_treats_legacy_self_check_event_as_non_external_history
     assert overview["external_connected"] is False
     assert overview["direct_chat_ready"] is False
     assert overview["latest_external_success_at"] == ""
-    assert "平台历史上曾收到过真实通知平台群消息回流" not in overview["summary"]
+    assert "The platform previously received real notification group messages" not in overview["summary"]
 
 
 def test_chatops_overview_treats_pinggy_live_status_as_synthetic_validation_message():
@@ -962,7 +962,7 @@ def test_chatops_overview_treats_pinggy_live_status_as_synthetic_validation_mess
             "message": "status",
             "from_user": "user",
             "chat_id": "oc_pinggy_live_status",
-            "response": "📡 军团状态",
+            "response": "📡 Legion status",
             "status": "ok",
             "delivery_configured": 1,
             "delivery_delivered": 1,
@@ -997,7 +997,7 @@ def test_chatops_overview_treats_pinggy_live_status_as_synthetic_validation_mess
                  "attempted": True,
                  "success": False,
                  "issue": "connect_error",
-                 "summary": "公网回调地址回探失败：ConnectionError",
+                 "summary": "Public callback probe failed: ConnectionError",
                  "status_code": 0,
                  "content_type": "",
                  "response_excerpt": "ConnectionError",
@@ -1028,7 +1028,7 @@ def test_chatops_overview_exposes_single_robot_strategy_with_webhook_fallback():
             "message": "状态",
             "from_user": "user",
             "chat_id": "oc_real_group",
-            "response": "📡 军团状态",
+            "response": "📡 Legion status",
             "status": "ok",
             "delivery_configured": 1,
             "delivery_delivered": 1,
@@ -1058,7 +1058,7 @@ def test_chatops_overview_exposes_single_robot_strategy_with_webhook_fallback():
         {
             "id": 1,
             "success": 1,
-            "message": "应用机器人凭据校验通过，已成功获取 tenant_access_token。",
+            "message": "App bot credentials validated; tenant_access_token obtained successfully.",
             "status_code": 200,
             "source": "config_save",
             "app_id_masked": "cli...app",
@@ -1074,7 +1074,7 @@ def test_chatops_overview_exposes_single_robot_strategy_with_webhook_fallback():
                  "attempted": True,
                  "success": True,
                  "issue": "",
-                 "summary": "公网回调地址已通过主动回探，当前入口对外可达。",
+                 "summary": "Public callback URL passed an active probe; the current endpoint is publicly reachable.",
                  "status_code": 200,
                  "content_type": "application/json",
                  "response_excerpt": '{"challenge":"chatops-probe"}',
@@ -1098,7 +1098,7 @@ def test_chatops_overview_exposes_single_robot_strategy_with_webhook_fallback():
     assert overview["unified_robot_platform_ready"] is True
     assert overview["unified_robot_ready"] is True
     assert overview["delivery_strategy"] == "single_robot_with_webhook_fallback"
-    assert "Webhook 仅作为兜底通知通道" in overview["delivery_strategy_summary"]
+    assert "Webhook as a fallback notification channel" in overview["delivery_strategy_summary"]
 
 
 def test_chatops_overview_marks_unified_robot_as_in_progress_without_app_bot():
@@ -1123,7 +1123,7 @@ def test_chatops_overview_marks_unified_robot_as_in_progress_without_app_bot():
                  "attempted": True,
                  "success": True,
                  "issue": "",
-                 "summary": "公网回调地址已通过主动回探，当前入口对外可达。",
+                 "summary": "Public callback URL passed an active probe; the current endpoint is publicly reachable.",
                  "status_code": 200,
                  "content_type": "application/json",
                  "response_excerpt": '{"challenge":"chatops-probe"}',
@@ -1195,7 +1195,7 @@ def test_chatops_overview_exposes_recent_chat_bindings():
         {
             "id": 1,
             "success": 1,
-            "message": "应用机器人凭据校验通过，已成功获取 tenant_access_token。",
+            "message": "App bot credentials validated; tenant_access_token obtained successfully.",
             "status_code": 200,
             "source": "config_save",
             "app_id_masked": "cli...app",
@@ -1212,7 +1212,7 @@ def test_chatops_overview_exposes_recent_chat_bindings():
                  "attempted": True,
                  "success": True,
                  "issue": "",
-                 "summary": "公网回调地址已通过主动回探，当前入口对外可达。",
+                 "summary": "Public callback URL passed an active probe; the current endpoint is publicly reachable.",
                  "status_code": 200,
                  "content_type": "application/json",
                  "response_excerpt": '{"challenge":"chatops-probe"}',
@@ -1281,7 +1281,7 @@ def test_chatops_restart_local_tunnel_returns_running_overview(tmp_path):
         "script_exists": True,
         "running": False,
         "status": "stopped",
-        "summary": "未检测到本机 OpenSSH 反向隧道进程。",
+        "summary": "No local OpenSSH reverse tunnel process detected.",
     }
     after = {
         "supported": True,
@@ -1290,7 +1290,7 @@ def test_chatops_restart_local_tunnel_returns_running_overview(tmp_path):
         "running": True,
         "pid": 4321,
         "status": "running",
-        "summary": "检测到本机 OpenSSH 反向隧道进程（PID 4321）。",
+        "summary": "Local OpenSSH reverse tunnel process detected (PID 4321).",
         "stdout_tail": "native_ssh_reverse_tunnel_pid=4321",
         "stderr_tail": "",
     }
@@ -1306,7 +1306,7 @@ def test_chatops_restart_local_tunnel_returns_running_overview(tmp_path):
         result = service.restart_local_tunnel()
 
     assert result["ok"] is True
-    assert result["message"] == "本机反向隧道已重启。"
+    assert result["message"] == "Local reverse tunnel restarted."
     assert result["stdout"] == "native_ssh_reverse_tunnel_pid=4321"
     assert result["stderr"] == ""
     assert result["tunnel"]["running"] is True

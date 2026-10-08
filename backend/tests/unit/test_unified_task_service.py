@@ -42,7 +42,7 @@ def test_list_tasks_filters_unified_only_and_sorts_desc():
             "unified_task": True,
             "created_at": "2026-04-02T10:00:00",
             "status": "completed",
-            "user_input": "较早任务",
+            "user_input": "Earlier task",
             "logs": [],
             "report": {},
         },
@@ -52,7 +52,7 @@ def test_list_tasks_filters_unified_only_and_sorts_desc():
             "unified_task": False,
             "created_at": "2026-04-02T11:00:00",
             "status": "completed",
-            "user_input": "普通任务",
+            "user_input": "Ordinary task",
             "logs": [],
             "report": {},
         },
@@ -62,7 +62,7 @@ def test_list_tasks_filters_unified_only_and_sorts_desc():
             "unified_task": True,
             "created_at": "2026-04-02T12:00:00",
             "status": "completed",
-            "user_input": "较新任务",
+            "user_input": "Later task",
             "logs": [],
             "report": {},
         },
@@ -84,7 +84,7 @@ def test_list_tasks_supports_kind_and_status_filters():
             "unified_task": True,
             "created_at": "2026-04-02T10:00:00",
             "status": "completed",
-            "user_input": "通用任务",
+            "user_input": "General task",
             "logs": [],
             "report": {},
         },
@@ -94,7 +94,7 @@ def test_list_tasks_supports_kind_and_status_filters():
             "unified_task": True,
             "created_at": "2026-04-02T12:00:00",
             "status": "pending",
-            "user_input": "原型任务",
+            "user_input": "Prototype task",
             "logs": [],
             "report": {},
         },
@@ -115,7 +115,7 @@ def test_list_tasks_supports_lineage_filter():
             "unified_task": True,
             "created_at": "2026-04-02T10:00:00",
             "status": "completed",
-            "user_input": "首轮任务",
+            "user_input": "Initial task",
             "logs": [],
             "report": {},
             "lineage_root_id": "chain_1",
@@ -126,7 +126,7 @@ def test_list_tasks_supports_lineage_filter():
             "unified_task": True,
             "created_at": "2026-04-02T11:00:00",
             "status": "completed",
-            "user_input": "复跑任务",
+            "user_input": "Rerun task",
             "logs": [],
             "report": {},
             "lineage_root_id": "chain_1",
@@ -138,7 +138,7 @@ def test_list_tasks_supports_lineage_filter():
             "unified_task": True,
             "created_at": "2026-04-02T12:00:00",
             "status": "completed",
-            "user_input": "其他链路任务",
+            "user_input": "Task from another chain",
             "logs": [],
             "report": {},
             "lineage_root_id": "chain_2",
@@ -160,7 +160,7 @@ async def test_create_general_task_builds_unified_pending_mission():
         task = service.create_task(
             commander=commander,
             task_kind="general",
-            user_goal="检查登录主链路",
+            user_goal="Check the main sign-in workflow",
             source_context={"target_url": "https://demo.example.com/login"},
             strategy={"parallel": False},
         )
@@ -203,7 +203,7 @@ async def test_create_prototype_task_keeps_context_and_expert_path():
         task = service.create_task(
             commander=commander,
             task_kind="prototype",
-            user_goal="对目录执行原型测试",
+            user_goal="Run prototype tests on the directory",
             source_context={
                 "source_type": "directory",
                 "source": "D:\\prototype",
@@ -232,10 +232,10 @@ def test_get_task_result_builds_general_fallback_findings_and_failed_gate():
         "mission_kind": "commander",
         "task_kind": "general",
         "unified_task": True,
-        "user_input": "通用任务",
+        "user_input": "General task",
         "status": "completed",
         "created_at": "2026-04-02T12:00:00",
-        "logs": [{"timestamp": "2026-04-02T12:00:01", "level": "error", "message": "失败"}],
+        "logs": [{"timestamp": "2026-04-02T12:00:01", "level": "error", "message": "Failed"}],
         "report": {
             "summary": {
                 "total_tests": 3,
@@ -246,8 +246,8 @@ def test_get_task_result_builds_general_fallback_findings_and_failed_gate():
         "bug_summary": [
             {
                 "test_type": "api_rest",
-                "title": "登录接口异常",
-                "summary": "接口返回 500",
+                "title": "Sign-in API error",
+                "summary": "API returned 500",
             }
         ],
         "execution_group_id": "general_1",
@@ -257,7 +257,7 @@ def test_get_task_result_builds_general_fallback_findings_and_failed_gate():
 
     assert result is not None
     assert result["gate_summary"]["status"] == "failed"
-    assert result["findings"][0]["title"] == "登录接口异常"
+    assert result["findings"][0]["title"] == "Sign-in API error"
     assert result["quality_gate_path"] == "/quality-gate?task_id=general_1&run_id=general_1&task_kind=general&status=completed&focus=history"
     assert result["recommendations"]
     assert result["evidence_summary"]["finding_count"] == 1
@@ -273,7 +273,7 @@ def test_get_task_marks_exploration_as_warning_when_static_unprovable():
         "mission_kind": "exploration_frontdoor",
         "task_kind": "exploration",
         "unified_task": True,
-        "user_input": "探索订单链路",
+        "user_input": "Explore the order workflow",
         "status": "completed",
         "created_at": "2026-04-02T12:00:00",
         "logs": [],
@@ -291,7 +291,7 @@ def test_get_task_marks_exploration_as_warning_when_static_unprovable():
 
     assert result is not None
     assert result["gate_summary"]["status"] == "warning"
-    assert "无法证明" in result["gate_summary"]["summary"]
+    assert "cannot be proven" in result["gate_summary"]["summary"]
     assert result["expert_path"] == "/exploratory"
     assert result["verification_state"]["status"] == "context_unprovable"
 
@@ -329,7 +329,7 @@ def test_rerun_task_clones_original_context():
         "mission_kind": "prototype_agents",
         "task_kind": "prototype",
         "unified_task": True,
-        "user_input": "原型复跑",
+        "user_input": "Prototype rerun",
         "source_context": {"source_type": "directory", "source": "D:\\demo"},
         "strategy": {"wcag_level": "AA"},
         "status": "completed",
@@ -344,7 +344,7 @@ def test_rerun_task_clones_original_context():
     create_task.assert_called_once_with(
         commander=commander,
         task_kind="prototype",
-        user_goal="原型复跑",
+        user_goal="Prototype rerun",
         source_context={"source_type": "directory", "source": "D:\\demo"},
         strategy={"wcag_level": "AA"},
         lineage_root_id="prototype_root",

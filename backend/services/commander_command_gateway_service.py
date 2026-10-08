@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Commander 命令网关服务
+Commander Command Gateway Service
 
-为 Web / ChatOps / 通知平台提供统一命令注册、权限判定、审批与受控执行入口。
+Provide unified command registration, permission checks, approval, and controlled execution for Web, ChatOps, and notification platforms.
 """
 from __future__ import annotations
 
@@ -22,31 +22,31 @@ Handler = Callable[["CommandExecutionContext"], Awaitable[Dict[str, Any]]]
 
 
 class CommandGatewayError(Exception):
-    """命令网关基类异常。"""
+    """Base command gateway error."""
 
 
 class CommandNotFoundError(CommandGatewayError):
-    """未找到命令。"""
+    """Command not found."""
 
 
 class CommandPermissionError(CommandGatewayError):
-    """无权限执行命令。"""
+    """Permission denied for command execution."""
 
 
 class CommandValidationError(CommandGatewayError):
-    """命令参数不合法。"""
+    """Invalid command arguments."""
 
 
 class CommandConfirmationRequiredError(CommandGatewayError):
-    """命令需要显式确认。"""
+    """The command requires explicit confirmation."""
 
 
 class CommandRunNotFoundError(CommandGatewayError):
-    """未找到命令运行记录。"""
+    """Command run not found."""
 
 
 class CommandApprovalError(CommandGatewayError):
-    """命令审批状态异常。"""
+    """Invalid command approval state."""
 
 
 def _now_iso() -> str:
@@ -112,7 +112,7 @@ class CommandExecutionContext:
 
 
 class CommanderCommandGatewayService:
-    """统一命令注册表、审批队列与受控执行入口。"""
+    """Unified command registry, approval queue, and controlled execution entry point."""
 
     def __init__(self):
         self._commands: Dict[str, CommandDefinition] = {}
@@ -196,8 +196,8 @@ class CommanderCommandGatewayService:
         self._register(
             CommandDefinition(
                 command_id="platform.status",
-                summary="查询平台状态",
-                description="返回 Agent 军团、ChatOps 双向链路与平台摘要状态。",
+                summary="Query platform status",
+                description="Return the agent legion, bidirectional ChatOps channel, and platform summary status.",
                 permission=Permission.VIEW_RESULTS,
                 risk_level="low",
                 read_only=True,
@@ -211,8 +211,8 @@ class CommanderCommandGatewayService:
         self._register(
             CommandDefinition(
                 command_id="commander.mission.start",
-                summary="启动蜂群测试任务",
-                description="创建一个 Commander 蜂群测试任务，并在后台执行。",
+                summary="Start a swarm testing mission",
+                description="Create a Commander swarm testing mission and execute it in the background.",
                 permission=Permission.RUN_TEST,
                 risk_level="medium",
                 read_only=False,
@@ -222,12 +222,12 @@ class CommanderCommandGatewayService:
                 timeout_s=30,
                 aliases=["测试", "test"],
                 arguments=[
-                    CommandArgumentSpec("project_key", "string", description="项目标识", default=""),
-                    CommandArgumentSpec("user_input", "string", required=True, description="自然语言测试需求"),
-                    CommandArgumentSpec("target_url", "string", description="目标 URL", default=""),
-                    CommandArgumentSpec("diff_text", "string", description="变更 diff", default=""),
-                    CommandArgumentSpec("mode", "string", description="发现模式", default=""),
-                    CommandArgumentSpec("parallel", "boolean", description="是否并行执行", default=True),
+                    CommandArgumentSpec("project_key", "string", description="Project identifier", default=""),
+                    CommandArgumentSpec("user_input", "string", required=True, description="Natural-language test requirement"),
+                    CommandArgumentSpec("target_url", "string", description="Target URL", default=""),
+                    CommandArgumentSpec("diff_text", "string", description="Change diff", default=""),
+                    CommandArgumentSpec("mode", "string", description="Discovery mode", default=""),
+                    CommandArgumentSpec("parallel", "boolean", description="Run in parallel", default=True),
                 ],
                 handler=self._handle_commander_mission_start,
             )
@@ -235,8 +235,8 @@ class CommanderCommandGatewayService:
         self._register(
             CommandDefinition(
                 command_id="commander.mission.cancel",
-                summary="停止测试任务",
-                description="取消一个仍在执行中的 Commander 任务。",
+                summary="Stop a testing mission",
+                description="Cancel a Commander mission that is still running.",
                 permission=Permission.RUN_TEST,
                 risk_level="medium",
                 read_only=False,
@@ -246,7 +246,7 @@ class CommanderCommandGatewayService:
                 timeout_s=30,
                 aliases=["停止", "cancel"],
                 arguments=[
-                    CommandArgumentSpec("mission_id", "string", required=True, description="任务 ID"),
+                    CommandArgumentSpec("mission_id", "string", required=True, description="Mission ID"),
                 ],
                 handler=self._handle_commander_mission_cancel,
             )
@@ -254,8 +254,8 @@ class CommanderCommandGatewayService:
         self._register(
             CommandDefinition(
                 command_id="commander.mission.report",
-                summary="查询任务报告",
-                description="按 mission_id 返回 Commander 任务摘要。",
+                summary="Query the mission report",
+                description="Return a Commander mission summary by mission_id.",
                 permission=Permission.VIEW_RESULTS,
                 risk_level="low",
                 read_only=True,
@@ -264,7 +264,7 @@ class CommanderCommandGatewayService:
                 sandbox_profile="read_only",
                 aliases=["报告", "report"],
                 arguments=[
-                    CommandArgumentSpec("mission_id", "string", required=True, description="任务 ID"),
+                    CommandArgumentSpec("mission_id", "string", required=True, description="Mission ID"),
                 ],
                 handler=self._handle_mission_report,
             )
@@ -272,8 +272,8 @@ class CommanderCommandGatewayService:
         self._register(
             CommandDefinition(
                 command_id="exploration.session.create",
-                summary="启动探索性测试会话",
-                description="按测试章程生成探索性测试会话与结构化发现。",
+                summary="Start an exploratory testing session",
+                description="Generate an exploratory testing session and structured findings from a test charter.",
                 permission=Permission.RUN_TEST,
                 risk_level="medium",
                 read_only=False,
@@ -282,10 +282,10 @@ class CommanderCommandGatewayService:
                 sandbox_profile="exploration",
                 timeout_s=120,
                 arguments=[
-                    CommandArgumentSpec("project_key", "string", description="项目标识", default=""),
-                    CommandArgumentSpec("group_id", "string", description="执行分组", default=""),
-                    CommandArgumentSpec("target_url", "string", required=True, description="目标 URL"),
-                    CommandArgumentSpec("charter", "string", required=True, description="探索性测试章程"),
+                    CommandArgumentSpec("project_key", "string", description="Project identifier", default=""),
+                    CommandArgumentSpec("group_id", "string", description="Execution group", default=""),
+                    CommandArgumentSpec("target_url", "string", required=True, description="Target URL"),
+                    CommandArgumentSpec("charter", "string", required=True, description="Exploratory test charter"),
                 ],
                 handler=self._handle_exploration_session_create,
             )
@@ -293,8 +293,8 @@ class CommanderCommandGatewayService:
         self._register(
             CommandDefinition(
                 command_id="exploration.findings.list",
-                summary="查询探索性测试发现",
-                description="按会话查询探索性测试的结构化发现列表。",
+                summary="Query exploratory testing findings",
+                description="Return structured exploratory findings for a session.",
                 permission=Permission.VIEW_RESULTS,
                 risk_level="low",
                 read_only=True,
@@ -302,10 +302,10 @@ class CommanderCommandGatewayService:
                 env_scope="testing",
                 sandbox_profile="read_only",
                 arguments=[
-                    CommandArgumentSpec("session_id", "string", required=True, description="探索会话 ID"),
-                    CommandArgumentSpec("severity", "string", description="严重级别筛选", default=""),
-                    CommandArgumentSpec("review_only", "boolean", description="仅看待人工复核", default=False),
-                    CommandArgumentSpec("review_status", "string", description="复核状态筛选", default=""),
+                    CommandArgumentSpec("session_id", "string", required=True, description="Exploration session ID"),
+                    CommandArgumentSpec("severity", "string", description="Severity filter", default=""),
+                    CommandArgumentSpec("review_only", "boolean", description="Only findings awaiting manual review", default=False),
+                    CommandArgumentSpec("review_status", "string", description="Review status filter", default=""),
                 ],
                 handler=self._handle_exploration_findings_list,
             )
@@ -313,8 +313,8 @@ class CommanderCommandGatewayService:
         self._register(
             CommandDefinition(
                 command_id="exploration.review.queue.list",
-                summary="查询人工复核队列",
-                description="返回探索发现里的人工复核队列，用于 Legion 统一处理证据。",
+                summary="Query the manual review queue",
+                description="Return the exploratory findings manual review queue for unified evidence handling in Legion.",
                 permission=Permission.VIEW_RESULTS,
                 risk_level="low",
                 read_only=True,
@@ -322,10 +322,10 @@ class CommanderCommandGatewayService:
                 env_scope="testing",
                 sandbox_profile="read_only",
                 arguments=[
-                    CommandArgumentSpec("project_key", "string", description="项目筛选", default=""),
-                    CommandArgumentSpec("severity", "string", description="严重级别筛选", default=""),
-                    CommandArgumentSpec("review_status", "string", description="复核状态筛选", default="pending"),
-                    CommandArgumentSpec("limit", "integer", description="返回条数", default=20),
+                    CommandArgumentSpec("project_key", "string", description="Project filter", default=""),
+                    CommandArgumentSpec("severity", "string", description="Severity filter", default=""),
+                    CommandArgumentSpec("review_status", "string", description="Review status filter", default="pending"),
+                    CommandArgumentSpec("limit", "integer", description="Maximum number of results", default=20),
                 ],
                 handler=self._handle_exploration_review_queue_list,
             )
@@ -333,8 +333,8 @@ class CommanderCommandGatewayService:
         self._register(
             CommandDefinition(
                 command_id="exploration.finding.review",
-                summary="处理探索发现复核",
-                description="对一条探索发现给出 confirmed 或 dismissed 复核结论。",
+                summary="Review an exploratory finding",
+                description="Provide a confirmed or dismissed review decision for an exploratory finding.",
                 permission=Permission.RUN_TEST,
                 risk_level="medium",
                 read_only=False,
@@ -343,9 +343,9 @@ class CommanderCommandGatewayService:
                 sandbox_profile="review_control",
                 timeout_s=30,
                 arguments=[
-                    CommandArgumentSpec("finding_id", "string", required=True, description="探索发现 ID"),
-                    CommandArgumentSpec("decision", "string", required=True, description="复核结论"),
-                    CommandArgumentSpec("comment", "string", description="复核备注", default=""),
+                    CommandArgumentSpec("finding_id", "string", required=True, description="Exploratory finding ID"),
+                    CommandArgumentSpec("decision", "string", required=True, description="Review decision"),
+                    CommandArgumentSpec("comment", "string", description="Review comment", default=""),
                 ],
                 handler=self._handle_exploration_finding_review,
             )
@@ -353,8 +353,8 @@ class CommanderCommandGatewayService:
         self._register(
             CommandDefinition(
                 command_id="release.risk.assess",
-                summary="生成发布风险评估",
-                description="聚合探索性发现和测试信号，生成发布风险结论。",
+                summary="Generate a release risk assessment",
+                description="Combine exploratory findings and test signals to assess release risk.",
                 permission=Permission.DEPLOY_VIEW,
                 risk_level="medium",
                 read_only=False,
@@ -363,11 +363,11 @@ class CommanderCommandGatewayService:
                 sandbox_profile="risk_assessment",
                 timeout_s=60,
                 arguments=[
-                    CommandArgumentSpec("project_key", "string", description="项目标识", default=""),
-                    CommandArgumentSpec("environment", "string", description="环境标识", default="test"),
-                    CommandArgumentSpec("exploration_session_ids", "csv", description="探索会话 ID 列表", default=[]),
-                    CommandArgumentSpec("required_tests_passed", "boolean", description="所需测试是否通过", default=True),
-                    CommandArgumentSpec("change_summary", "string", description="变更摘要", default=""),
+                    CommandArgumentSpec("project_key", "string", description="Project identifier", default=""),
+                    CommandArgumentSpec("environment", "string", description="Environment identifier", default="test"),
+                    CommandArgumentSpec("exploration_session_ids", "csv", description="Exploration session IDs", default=[]),
+                    CommandArgumentSpec("required_tests_passed", "boolean", description="Whether required tests passed", default=True),
+                    CommandArgumentSpec("change_summary", "string", description="Change summary", default=""),
                 ],
                 handler=self._handle_release_risk_assess,
             )
@@ -375,8 +375,8 @@ class CommanderCommandGatewayService:
         self._register(
             CommandDefinition(
                 command_id="release.risk.get",
-                summary="查询发布风险评估",
-                description="按 assessment_id 查询发布风险评估详情。",
+                summary="Query a release risk assessment",
+                description="Return release risk assessment details by assessment_id.",
                 permission=Permission.DEPLOY_VIEW,
                 risk_level="low",
                 read_only=True,
@@ -384,7 +384,7 @@ class CommanderCommandGatewayService:
                 env_scope="release",
                 sandbox_profile="read_only",
                 arguments=[
-                    CommandArgumentSpec("assessment_id", "string", required=True, description="评估 ID"),
+                    CommandArgumentSpec("assessment_id", "string", required=True, description="Assessment ID"),
                 ],
                 handler=self._handle_release_risk_get,
             )
@@ -392,8 +392,8 @@ class CommanderCommandGatewayService:
         self._register(
             CommandDefinition(
                 command_id="release.deploy.request",
-                summary="按发布评估发起受控发布",
-                description="复用 Deploy 审批与作业链路，按当前 assessment 创建受控发布动作。",
+                summary="Request a controlled release from an assessment",
+                description="Reuse deployment approvals and jobs to create a controlled release action from the current assessment.",
                 permission=Permission.DEPLOY_REQUEST,
                 risk_level="high",
                 read_only=False,
@@ -405,11 +405,11 @@ class CommanderCommandGatewayService:
                 sandbox_profile="release_deploy",
                 timeout_s=60,
                 arguments=[
-                    CommandArgumentSpec("assessment_id", "string", required=True, description="发布风险评估 ID"),
-                    CommandArgumentSpec("target_type", "string", required=True, description="发布目标类型 repo 或 project"),
-                    CommandArgumentSpec("repo_id", "string", description="仓库发布时的 repo_id", default=""),
-                    CommandArgumentSpec("branch", "string", description="仓库发布分支", default=""),
-                    CommandArgumentSpec("comment", "string", description="发布申请备注", default=""),
+                    CommandArgumentSpec("assessment_id", "string", required=True, description="Release risk assessment ID"),
+                    CommandArgumentSpec("target_type", "string", required=True, description="Release target type: repo or project"),
+                    CommandArgumentSpec("repo_id", "string", description="repo_id for repository releases", default=""),
+                    CommandArgumentSpec("branch", "string", description="Repository release branch", default=""),
+                    CommandArgumentSpec("comment", "string", description="Release request comment", default=""),
                 ],
                 handler=self._handle_release_deploy_request,
             )
@@ -417,8 +417,8 @@ class CommanderCommandGatewayService:
         self._register(
             CommandDefinition(
                 command_id="deploy.approvals.list",
-                summary="查询部署审批",
-                description="按状态筛选部署审批单列表。",
+                summary="Query deployment approvals",
+                description="List deployment approval requests by status.",
                 permission=Permission.DEPLOY_VIEW,
                 risk_level="low",
                 read_only=True,
@@ -426,8 +426,8 @@ class CommanderCommandGatewayService:
                 env_scope="deploy",
                 sandbox_profile="read_only",
                 arguments=[
-                    CommandArgumentSpec("status", "string", description="审批状态筛选", default=""),
-                    CommandArgumentSpec("limit", "integer", description="返回条数", default=10),
+                    CommandArgumentSpec("status", "string", description="Approval status filter", default=""),
+                    CommandArgumentSpec("limit", "integer", description="Maximum number of results", default=10),
                 ],
                 handler=self._handle_deploy_approvals_list,
             )
@@ -435,8 +435,8 @@ class CommanderCommandGatewayService:
         self._register(
             CommandDefinition(
                 command_id="deploy.jobs.list",
-                summary="查询部署作业",
-                description="按状态筛选后台部署作业列表。",
+                summary="Query deployment jobs",
+                description="List background deployment jobs by status.",
                 permission=Permission.DEPLOY_VIEW,
                 risk_level="low",
                 read_only=True,
@@ -444,8 +444,8 @@ class CommanderCommandGatewayService:
                 env_scope="deploy",
                 sandbox_profile="read_only",
                 arguments=[
-                    CommandArgumentSpec("status", "string", description="作业状态筛选", default=""),
-                    CommandArgumentSpec("limit", "integer", description="返回条数", default=10),
+                    CommandArgumentSpec("status", "string", description="Job status filter", default=""),
+                    CommandArgumentSpec("limit", "integer", description="Maximum number of results", default=10),
                 ],
                 handler=self._handle_deploy_jobs_list,
             )
@@ -453,8 +453,8 @@ class CommanderCommandGatewayService:
         self._register(
             CommandDefinition(
                 command_id="deploy.history.list",
-                summary="查询部署历史",
-                description="返回最近部署历史记录。",
+                summary="Query deployment history",
+                description="Return recent deployment history records.",
                 permission=Permission.DEPLOY_VIEW,
                 risk_level="low",
                 read_only=True,
@@ -462,8 +462,8 @@ class CommanderCommandGatewayService:
                 env_scope="deploy",
                 sandbox_profile="read_only",
                 arguments=[
-                    CommandArgumentSpec("limit", "integer", description="返回条数", default=10),
-                    CommandArgumentSpec("status", "string", description="记录状态筛选", default=""),
+                    CommandArgumentSpec("limit", "integer", description="Maximum number of results", default=10),
+                    CommandArgumentSpec("status", "string", description="Record status filter", default=""),
                 ],
                 handler=self._handle_deploy_history_list,
             )
@@ -471,8 +471,8 @@ class CommanderCommandGatewayService:
         self._register(
             CommandDefinition(
                 command_id="deploy.audit.list",
-                summary="查询部署审计",
-                description="返回最近部署审计日志。",
+                summary="Query deployment audit logs",
+                description="Return recent deployment audit logs.",
                 permission=Permission.DEPLOY_VIEW,
                 risk_level="low",
                 read_only=True,
@@ -480,10 +480,10 @@ class CommanderCommandGatewayService:
                 env_scope="deploy",
                 sandbox_profile="read_only",
                 arguments=[
-                    CommandArgumentSpec("limit", "integer", description="返回条数", default=10),
-                    CommandArgumentSpec("action", "string", description="审计动作筛选", default=""),
-                    CommandArgumentSpec("project_key", "string", description="项目筛选", default=""),
-                    CommandArgumentSpec("user_id", "string", description="操作人筛选", default=""),
+                    CommandArgumentSpec("limit", "integer", description="Maximum number of results", default=10),
+                    CommandArgumentSpec("action", "string", description="Audit action filter", default=""),
+                    CommandArgumentSpec("project_key", "string", description="Project filter", default=""),
+                    CommandArgumentSpec("user_id", "string", description="Actor filter", default=""),
                 ],
                 handler=self._handle_deploy_audit_list,
             )
@@ -491,8 +491,8 @@ class CommanderCommandGatewayService:
         self._register(
             CommandDefinition(
                 command_id="deploy.job.cancel",
-                summary="取消部署作业",
-                description="取消一个仍在运行或排队中的部署作业。",
+                summary="Cancel a deployment job",
+                description="Cancel a deployment job that is running or queued.",
                 permission=Permission.ADMIN,
                 risk_level="high",
                 read_only=False,
@@ -505,7 +505,7 @@ class CommanderCommandGatewayService:
                 sandbox_profile="deploy_control",
                 timeout_s=30,
                 arguments=[
-                    CommandArgumentSpec("job_id", "string", required=True, description="部署作业 ID"),
+                    CommandArgumentSpec("job_id", "string", required=True, description="Deployment job ID"),
                 ],
                 handler=self._handle_deploy_job_cancel,
             )
@@ -520,10 +520,10 @@ class CommanderCommandGatewayService:
             if definition.permission and user:
                 allowed = auth.check_permission(user, definition.permission)
                 if not allowed:
-                    denial_reason = f"缺少权限 {definition.permission.value}"
+                    denial_reason = f"Missing permission: {definition.permission.value}"
             elif not user:
                 allowed = False
-                denial_reason = "需要登录态"
+                denial_reason = "Authentication is required"
 
             commands.append(
                 {
@@ -564,23 +564,23 @@ class CommanderCommandGatewayService:
     ) -> Dict[str, Any]:
         definition = self._get_command_definition(command_id)
         if not user:
-            raise CommandPermissionError("需要登录态")
+            raise CommandPermissionError("Authentication is required")
 
         auth = get_auth_service()
         if definition.permission and not auth.check_permission(user, definition.permission):
             raise CommandPermissionError(
-                f"执行命令 {definition.command_id} 需要权限 {definition.permission.value}"
+                f"Executing command {definition.command_id} requires permission {definition.permission.value}"
             )
 
         if definition.requires_confirmation and not confirm:
             raise CommandConfirmationRequiredError(
-                f"命令 {definition.command_id} 为高风险动作，需显式确认 confirm=true"
+                f"Command {definition.command_id} is a high-risk action and requires explicit confirmation with confirm=true"
             )
 
         normalized_arguments = self._normalize_arguments(definition, arguments or {})
         project_key = self._resolve_project_key(definition, normalized_arguments, user=user)
         if project_key and not self._is_scope_allowed(user, project_key):
-            raise CommandPermissionError(f"当前账号无权操作项目 {project_key}")
+            raise CommandPermissionError(f"The current account cannot operate on project {project_key}")
 
         run_id = self._create_command_run(
             definition=definition,
@@ -655,9 +655,9 @@ class CommanderCommandGatewayService:
         limit: int = 20,
     ) -> Dict[str, Any]:
         if not user:
-            raise CommandPermissionError("需要登录态")
+            raise CommandPermissionError("Authentication is required")
         if project_key and not self._is_scope_allowed(user, project_key):
-            raise CommandPermissionError(f"当前账号无权查看项目 {project_key}")
+            raise CommandPermissionError(f"The current account cannot view project {project_key}")
 
         sql = [
             "SELECT * FROM command_runs",
@@ -696,9 +696,9 @@ class CommanderCommandGatewayService:
     def get_command_run(self, run_id: str, *, user: Optional[User]) -> Dict[str, Any]:
         payload = self._get_command_run_payload(run_id)
         if not user:
-            raise CommandPermissionError("需要登录态")
+            raise CommandPermissionError("Authentication is required")
         if not self._can_access_run(user, payload):
-            raise CommandPermissionError(f"当前账号无权查看命令运行 {run_id}")
+            raise CommandPermissionError(f"The current account cannot view command run {run_id}")
         return payload
 
     async def approve_command_run(
@@ -711,7 +711,7 @@ class CommanderCommandGatewayService:
         source: str = "api",
     ) -> Dict[str, Any]:
         if not user:
-            raise CommandPermissionError("需要登录态")
+            raise CommandPermissionError("Authentication is required")
 
         run = self._get_command_run_payload(run_id)
         definition = self._get_command_definition(run["command_id"])
@@ -719,7 +719,7 @@ class CommanderCommandGatewayService:
         self._ensure_approval_permission(user, definition)
         project_key = str(run.get("project_key") or "")
         if project_key and not self._is_scope_allowed(user, project_key):
-            raise CommandPermissionError(f"当前账号无权审批项目 {project_key}")
+            raise CommandPermissionError(f"The current account cannot approve requests for project {project_key}")
 
         self._mark_approval_decision(
             approval_id=approval["approval_id"],
@@ -768,7 +768,7 @@ class CommanderCommandGatewayService:
         source: str = "api",
     ) -> Dict[str, Any]:
         if not user:
-            raise CommandPermissionError("需要登录态")
+            raise CommandPermissionError("Authentication is required")
 
         run = self._get_command_run_payload(run_id)
         definition = self._get_command_definition(run["command_id"])
@@ -776,7 +776,7 @@ class CommanderCommandGatewayService:
         self._ensure_approval_permission(user, definition)
         project_key = str(run.get("project_key") or "")
         if project_key and not self._is_scope_allowed(user, project_key):
-            raise CommandPermissionError(f"当前账号无权审批项目 {project_key}")
+            raise CommandPermissionError(f"The current account cannot approve requests for project {project_key}")
 
         self._mark_approval_decision(
             approval_id=approval["approval_id"],
@@ -789,7 +789,7 @@ class CommanderCommandGatewayService:
             status="rejected",
             approval_status="rejected",
             finished_at=_now_iso(),
-            error_json={"reason": reason or "审批已拒绝"},
+            error_json={"reason": reason or "Approval rejected"},
         )
         self._record_command_approval_decision_audit(
             definition=definition,
@@ -809,7 +809,7 @@ class CommanderCommandGatewayService:
     def _get_command_definition(self, command_id: str) -> CommandDefinition:
         definition = self._commands.get(str(command_id or "").strip())
         if not definition or not definition.handler:
-            raise CommandNotFoundError(f"未找到命令 {command_id}")
+            raise CommandNotFoundError(f"Command not found: {command_id}")
         return definition
 
     async def _execute_existing_run(
@@ -873,7 +873,7 @@ class CommanderCommandGatewayService:
                     status="failed",
                     error={"message": str(exc), "type": exc.__class__.__name__},
                 )
-            raise CommandGatewayError(f"命令执行失败: {exc}") from exc
+            raise CommandGatewayError(f"Command execution failed: {exc}") from exc
 
         self._update_run_status(
             run_id,
@@ -902,7 +902,7 @@ class CommanderCommandGatewayService:
         for spec in definition.arguments:
             raw_value = arguments.get(spec.name, spec.default)
             if spec.required and (raw_value is None or raw_value == ""):
-                raise CommandValidationError(f"缺少必填参数 {spec.name}")
+                raise CommandValidationError(f"Required argument is missing: {spec.name}")
             if raw_value is None:
                 normalized[spec.name] = raw_value
                 continue
@@ -920,9 +920,9 @@ class CommanderCommandGatewayService:
             try:
                 number = int(value)
             except (TypeError, ValueError) as exc:
-                raise CommandValidationError(f"参数 {spec.name} 必须是整数") from exc
+                raise CommandValidationError(f"Argument {spec.name} must be an integer") from exc
             if number < 0:
-                raise CommandValidationError(f"参数 {spec.name} 不能小于 0")
+                raise CommandValidationError(f"Argument {spec.name} must not be less than 0")
             return number
         if spec.type == "boolean":
             if isinstance(value, bool):
@@ -932,7 +932,7 @@ class CommanderCommandGatewayService:
                 return True
             if text in {"0", "false", "no", "n", "off"}:
                 return False
-            raise CommandValidationError(f"参数 {spec.name} 必须是布尔值")
+            raise CommandValidationError(f"Argument {spec.name} must be a boolean")
         return str(value).strip()
 
     def _get_project_scope(self, user: Optional[User]) -> Optional[set[str]]:
@@ -995,7 +995,7 @@ class CommanderCommandGatewayService:
                 return ""
             current = get_deploy_service().get_job_detail(job_id)
             if not current:
-                raise CommandValidationError(f"未找到部署作业 {job_id}")
+                raise CommandValidationError(f"Deployment job not found: {job_id}")
             return str(current.get("project_key") or "").strip()
         return ""
 
@@ -1141,7 +1141,7 @@ class CommanderCommandGatewayService:
                 (run_id,),
             ).fetchone()
         if not row:
-            raise CommandRunNotFoundError(f"未找到命令运行 {run_id}")
+            raise CommandRunNotFoundError(f"Command run not found: {run_id}")
         return dict(row)
 
     def _load_approval_row(self, approval_id: str) -> Dict[str, Any]:
@@ -1151,7 +1151,7 @@ class CommanderCommandGatewayService:
                 (approval_id,),
             ).fetchone()
         if not row:
-            raise CommandApprovalError(f"未找到命令审批 {approval_id}")
+            raise CommandApprovalError(f"Command approval not found: {approval_id}")
         return dict(row)
 
     def _serialize_approval_row(self, row: Dict[str, Any]) -> Dict[str, Any]:
@@ -1231,23 +1231,23 @@ class CommanderCommandGatewayService:
 
     def _require_pending_approval(self, run: Dict[str, Any]) -> Dict[str, Any]:
         if str(run.get("approval_status") or "") != "pending":
-            raise CommandApprovalError(f"命令运行 {run['run_id']} 当前不处于待审批状态")
+            raise CommandApprovalError(f"Command run {run['run_id']} is not awaiting approval")
         approval_id = str(run.get("approval_id") or "")
         if not approval_id:
-            raise CommandApprovalError(f"命令运行 {run['run_id']} 缺少审批单")
+            raise CommandApprovalError(f"Command run {run['run_id']} has no approval request")
         approval = self._get_command_approval(approval_id)
         if approval.get("status") != "pending":
-            raise CommandApprovalError(f"命令审批 {approval_id} 当前状态不是 pending")
+            raise CommandApprovalError(f"Command approval {approval_id} is not currently pending")
         return approval
 
     def _ensure_approval_permission(self, user: Optional[User], definition: CommandDefinition):
         if not user:
-            raise CommandPermissionError("需要登录态")
+            raise CommandPermissionError("Authentication is required")
         permission = definition.approval_permission or Permission.ADMIN
         auth = get_auth_service()
         if not auth.check_permission(user, permission):
             raise CommandPermissionError(
-                f"审批命令 {definition.command_id} 需要权限 {permission.value}"
+                f"Approving command {definition.command_id} requires permission {permission.value}"
             )
 
     def _mark_approval_decision(
@@ -1430,7 +1430,7 @@ class CommanderCommandGatewayService:
 
         user_input = str(context.arguments.get("user_input") or "").strip()
         if not user_input:
-            raise CommandValidationError("缺少测试需求 user_input")
+            raise CommandValidationError("Test requirement user_input is required")
 
         target_url = str(context.arguments.get("target_url") or "").strip()
         diff_text = str(context.arguments.get("diff_text") or "").strip()
@@ -1476,7 +1476,7 @@ class CommanderCommandGatewayService:
                         {
                             "timestamp": datetime.now().isoformat(),
                             "level": "error",
-                            "message": f"❌ 任务异常: {exc}",
+                            "message": f"❌ Mission error: {exc}",
                             "data": {},
                         }
                     )
@@ -1493,12 +1493,12 @@ class CommanderCommandGatewayService:
 
         mission_id = str(context.arguments.get("mission_id") or "").strip()
         if not mission_id:
-            raise CommandValidationError("缺少任务 ID")
+            raise CommandValidationError("Mission ID is required")
 
         commander = get_commander()
         cancelled = commander.cancel_mission(mission_id)
         if not cancelled:
-            raise CommandValidationError(f"任务 {mission_id} 不存在或当前不可取消")
+            raise CommandValidationError(f"Mission {mission_id} does not exist or cannot currently be canceled")
         mission = commander.get_mission(mission_id)
         return {
             "mission_id": mission_id,
@@ -1513,7 +1513,7 @@ class CommanderCommandGatewayService:
         commander = get_commander()
         mission = commander.get_mission(mission_id)
         if not mission:
-            raise CommandValidationError(f"未找到任务 {mission_id}")
+            raise CommandValidationError(f"Mission not found: {mission_id}")
 
         report = mission.get("report") if isinstance(mission, dict) else {}
         summary = report.get("summary", {}) if isinstance(report, dict) else {}
@@ -1607,17 +1607,17 @@ class CommanderCommandGatewayService:
         )
         project_key = str(assessment.get("project_key") or "").strip()
         if project_key and not self._is_scope_allowed(context.user, project_key):
-            raise CommandPermissionError(f"当前账号无权操作项目 {project_key}")
+            raise CommandPermissionError(f"The current account cannot operate on project {project_key}")
 
         target_type = str(context.arguments.get("target_type") or "").strip().lower()
         if target_type not in {"repo", "project"}:
-            raise CommandValidationError("target_type 必须是 repo 或 project")
+            raise CommandValidationError("target_type must be repo or project")
 
         repo_id = str(context.arguments.get("repo_id") or "").strip()
         branch = str(context.arguments.get("branch") or "").strip()
         comment = str(context.arguments.get("comment") or "").strip()
         if target_type == "repo" and not repo_id:
-            raise CommandValidationError("target_type=repo 时必须提供 repo_id")
+            raise CommandValidationError("repo_id is required when target_type=repo")
 
         environment = str(
             assessment.get("environment")
@@ -1772,10 +1772,10 @@ class CommanderCommandGatewayService:
         job_id = context.arguments["job_id"]
         current = svc.get_job_detail(job_id)
         if not current:
-            raise CommandValidationError(f"未找到部署作业 {job_id}")
+            raise CommandValidationError(f"Deployment job not found: {job_id}")
         project_key = str(current.get("project_key") or "")
         if not self._is_scope_allowed(context.user, project_key):
-            raise CommandPermissionError(f"当前账号无权操作项目 {project_key}")
+            raise CommandPermissionError(f"The current account cannot operate on project {project_key}")
 
         job = svc.cancel_job(job_id)
         return {"job": job}

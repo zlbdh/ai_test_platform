@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-探索性测试会话服务
+Exploratory Testing Session Service
 
-提供探索性测试会话、结构化发现与证据包的持久化能力。
-当前版本先基于测试章程和目标 URL 做受控启发式归纳，
-为后续接入真实浏览器探索和 VLM 分析预留稳定数据模型。
+Persist exploratory testing sessions, structured findings, and evidence packages.
+The current version uses controlled heuristics based on the test charter and target URL,
+providing a stable data model for future browser exploration and VLM analysis.
 """
 from __future__ import annotations
 
@@ -17,19 +17,19 @@ from core.db_helper import get_connection
 
 
 class ExplorationServiceError(Exception):
-    """探索性测试服务异常。"""
+    """Exploratory testing service error."""
 
 
 class ExplorationPermissionError(ExplorationServiceError):
-    """探索性测试访问权限异常。"""
+    """Exploratory testing permission error."""
 
 
 class ExplorationSessionNotFoundError(ExplorationServiceError):
-    """未找到探索性测试会话。"""
+    """Exploratory testing session not found."""
 
 
 class ExplorationFindingNotFoundError(ExplorationServiceError):
-    """未找到探索发现。"""
+    """Exploratory finding not found."""
 
 
 def _now_iso() -> str:
@@ -51,7 +51,7 @@ def _json_load(payload: Optional[str], default: Any) -> Any:
 
 
 class ExplorationService:
-    """探索性测试会话与发现持久化服务。"""
+    """Persistence service for exploratory testing sessions and findings."""
 
     def __init__(self):
         self._ensure_schema()
@@ -291,7 +291,7 @@ class ExplorationService:
         self._ensure_project_scope(user, str(row.get("project_key") or ""))
         next_status = str(decision or "").strip().lower()
         if next_status not in {"confirmed", "dismissed"}:
-            raise ExplorationServiceError("复核结论仅支持 confirmed 或 dismissed")
+            raise ExplorationServiceError("Review decision must be confirmed or dismissed")
 
         reviewed_by = str(getattr(user, "username", "") or getattr(user, "user_id", "") or "")
         reviewed_at = _now_iso()
@@ -379,7 +379,7 @@ class ExplorationService:
                 (session_id,),
             ).fetchone()
         if not row:
-            raise ExplorationSessionNotFoundError(f"未找到探索会话 {session_id}")
+            raise ExplorationSessionNotFoundError(f"Exploratory session not found: {session_id}")
         return dict(row)
 
     def _load_finding(self, finding_id: str) -> Dict[str, Any]:
@@ -389,7 +389,7 @@ class ExplorationService:
                 (finding_id,),
             ).fetchone()
         if not row:
-            raise ExplorationFindingNotFoundError(f"未找到探索发现 {finding_id}")
+            raise ExplorationFindingNotFoundError(f"Exploratory finding not found: {finding_id}")
         return dict(row)
 
     def _serialize_session(self, row: Dict[str, Any]) -> Dict[str, Any]:
@@ -433,13 +433,13 @@ class ExplorationService:
         if not project_key:
             return
         if not user:
-            raise ExplorationPermissionError("需要登录态")
+            raise ExplorationPermissionError("Authentication is required")
         role_value = getattr(getattr(user, "role", None), "value", getattr(user, "role", ""))
         if role_value == "admin":
             return
         scope = {str(item).strip() for item in (getattr(user, "project_ids", None) or []) if str(item).strip()}
         if scope and "*" not in scope and project_key not in scope:
-            raise ExplorationPermissionError(f"当前账号无权访问项目 {project_key}")
+            raise ExplorationPermissionError(f"The current account does not have access to project {project_key}")
 
     def _generate_findings(self, *, target_url: str, charter: str) -> List[Dict[str, Any]]:
         text = f"{target_url}\n{charter}".lower()
@@ -449,11 +449,11 @@ class ExplorationService:
                 self._build_finding(
                     severity="medium",
                     finding_type="business",
-                    title="登录主链路需重点复核",
-                    summary="探索性章程涉及登录/认证流程，建议对鉴权跳转、失败提示和重试链路做人工复核。",
+                    title="The primary sign-in flow requires close review",
+                    summary="The exploratory charter covers sign-in or authentication. Manually review authentication redirects, failure messages, and retry flows.",
                     confidence=0.74,
                     requires_human_review=True,
-                    impact_scope="认证主链路",
+                    impact_scope="Primary authentication flow",
                 )
             )
         if any(keyword in text for keyword in ("payment", "支付", "checkout", "下单")):
@@ -461,11 +461,11 @@ class ExplorationService:
                 self._build_finding(
                     severity="high",
                     finding_type="business",
-                    title="交易链路存在高业务风险",
-                    summary="章程覆盖支付/下单场景，任何异常都会直接影响成交，需要发布前人工签核。",
+                    title="The transaction flow has high business risk",
+                    summary="The charter covers payment or checkout. Any anomaly directly affects conversion and requires manual sign-off before release.",
                     confidence=0.82,
                     requires_human_review=True,
-                    impact_scope="交易转化链路",
+                    impact_scope="Transaction conversion flow",
                 )
             )
         if any(keyword in text for keyword in ("search", "搜索", "discover", "browse", "列表")):
@@ -473,11 +473,11 @@ class ExplorationService:
                 self._build_finding(
                     severity="medium",
                     finding_type="ux",
-                    title="信息发现路径需补体验评估",
-                    summary="探索性章程覆盖搜索/浏览场景，建议补充空态、筛选器和移动端首屏体验检查。",
+                    title="The discovery path needs additional experience assessment",
+                    summary="The exploratory charter covers search or browsing. Add checks for empty states, filters, and the first mobile screen.",
                     confidence=0.68,
                     requires_human_review=False,
-                    impact_scope="发现与浏览体验",
+                    impact_scope="Discovery and browsing experience",
                 )
             )
         if not findings:
@@ -485,11 +485,11 @@ class ExplorationService:
                 self._build_finding(
                     severity="low",
                     finding_type="regression",
-                    title="需补默认回归关注项",
-                    summary="当前章程未命中特定高风险域，已生成通用回归关注项并建议抽样人工复核关键路径。",
+                    title="Add default regression focus areas",
+                    summary="The charter did not match a specific high-risk domain. General regression focus areas were generated; manually sample key paths.",
                     confidence=0.61,
                     requires_human_review=False,
-                    impact_scope="通用回归覆盖面",
+                    impact_scope="General regression coverage",
                 )
             )
         return findings
@@ -510,9 +510,9 @@ class ExplorationService:
             "dom_excerpt": "<synthetic-exploration-context />",
             "network_excerpt": "pending_live_capture",
             "reproduction_steps": [
-                "阅读探索性测试章程并锁定目标主链路",
-                "基于章程生成优先探索路径",
-                "对高风险节点补人工复核建议",
+                "Read the exploratory test charter and identify the primary target flow",
+                "Generate prioritized exploration paths from the charter",
+                "Add manual review recommendations for high-risk steps",
             ],
             "impact_scope": impact_scope,
             "ai_confidence": confidence,
@@ -556,7 +556,7 @@ class ExplorationService:
             "severity_breakdown": severity_counts,
             "requires_human_review_count": sum(1 for item in findings if item.get("requires_human_review")),
             "risk_score": risk_score,
-            "conclusion": "探索性测试会话已生成结构化发现，建议结合人工复核队列做最终发布判断。",
+            "conclusion": "The exploratory testing session generated structured findings. Use the manual review queue for the final release decision.",
         }
 
 

@@ -32,7 +32,7 @@ def test_create_unified_task_route_delegates_to_service():
             "/api/commander/tasks",
             json={
                 "task_kind": "general",
-                "user_goal": "检查登录链路",
+                "user_goal": "Check the sign-in workflow",
                 "source_context": {"target_url": "https://demo.example.com"},
                 "strategy": {"parallel": True},
             },
@@ -43,7 +43,7 @@ def test_create_unified_task_route_delegates_to_service():
     service.create_task.assert_called_once_with(
         commander=fake_commander,
         task_kind="general",
-        user_goal="检查登录链路",
+        user_goal="Check the sign-in workflow",
         source_context={"target_url": "https://demo.example.com"},
         strategy={"parallel": True},
     )
@@ -114,7 +114,7 @@ def test_cancel_unified_task_route_returns_action_payload():
         "task_id": "task001",
         "cancelled": True,
         "status": "cancelled",
-        "message": "任务已停止。",
+        "message": "Task stopped.",
     }
 
     with patch("agents.commander.get_commander", return_value=fake_commander), \

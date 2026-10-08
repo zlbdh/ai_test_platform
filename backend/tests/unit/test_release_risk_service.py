@@ -115,8 +115,8 @@ def test_release_risk_uses_review_status_for_blockers_and_effective_findings(mon
         charter="覆盖搜索、浏览与登录主链路",
     )
     findings = {item["title"]: item for item in session["findings"]}
-    login_finding = findings["登录主链路需重点复核"]
-    search_finding = findings["信息发现路径需补体验评估"]
+    login_finding = findings["The primary sign-in flow requires close review"]
+    search_finding = findings["The discovery path needs additional experience assessment"]
 
     assessment_pending = release.create_assessment(
         user=user,
