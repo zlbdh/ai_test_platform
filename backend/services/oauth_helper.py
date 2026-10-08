@@ -1,11 +1,11 @@
 """
-OAuth Authentication Helper - OAuth 认证助手
+OAuth authentication helper.
 
-自动处理 OAuth 登录流程：
-- 支持多种 OAuth 提供商
-- 自动获取和刷新 Token
-- Token 缓存和管理
-- 浏览器自动登录
+Automates OAuth sign-in flows:
+- Multiple OAuth providers
+- Token retrieval and refresh
+- Token caching and management
+- Automated browser sign-in
 """
 
 from typing import Dict, Any, List, Optional
@@ -29,7 +29,7 @@ class OAuthProvider(Enum):
 
 @dataclass
 class OAuthConfig:
-    """OAuth 配置"""
+    """OAuth configuration"""
     provider: OAuthProvider
     client_id: str
     client_secret: str
@@ -51,11 +51,11 @@ class OAuthToken:
 
 
 class OAuthHelper:
-    """OAuth 助手"""
+    """OAuth helper"""
 
     __test__ = False
     
-    # 预配置的 OAuth 提供商
+    # Preconfigured OAuth providers
     PROVIDER_CONFIGS = {
         OAuthProvider.GOOGLE: {
             "auth_url": "https://accounts.google.com/o/oauth2/v2/auth",
@@ -81,12 +81,12 @@ class OAuthHelper:
         self._load_cached_tokens()
     
     def _get_cache_key(self, provider: str, client_id: str) -> str:
-        """生成缓存键"""
+        """Generate a cache key"""
         content = f"{provider}:{client_id}"
         return hashlib.md5(content.encode()).hexdigest()
     
     def _load_cached_tokens(self):
-        """加载缓存的 Token"""
+        """Load cached tokens"""
         cache_file = os.path.join(self.cache_dir, "tokens.json")
         if os.path.exists(cache_file):
             try:
@@ -101,7 +101,7 @@ class OAuthHelper:
                 logging.getLogger(__name__).warning("Failed to load OAuth token cache: %s", exc)
     
     def _save_tokens(self):
-        """保存 Token 缓存"""
+        """Save the token cache"""
         cache_file = os.path.join(self.cache_dir, "tokens.json")
         data = {
             key: {
@@ -125,7 +125,7 @@ class OAuthHelper:
         redirect_uri: str = "http://localhost:8020/oauth/callback",
         custom_config: Optional[Dict[str, str]] = None
     ) -> OAuthConfig:
-        """配置 OAuth 提供商"""
+        """Configure an OAuth provider"""
         base_config = dict(self.PROVIDER_CONFIGS.get(provider, {}))
 
         if custom_config:
@@ -142,7 +142,7 @@ class OAuthHelper:
         )
     
     def get_authorization_url(self, config: OAuthConfig, state: Optional[str] = None) -> str:
-        """获取授权 URL"""
+        """Get the authorization URL"""
         import urllib.parse
         
         params = {
@@ -166,7 +166,7 @@ class OAuthHelper:
         data: Dict[str, str],
         headers: Optional[Dict[str, str]] = None
     ) -> Dict[str, Any]:
-        """请求 OAuth Token 端点"""
+        """Request an OAuth token endpoint"""
         async with aiohttp.ClientSession() as session:
             async with session.post(token_url, data=data, headers=headers or {}) as resp:
                 result = await resp.json(content_type=None)
@@ -182,7 +182,7 @@ class OAuthHelper:
         config: OAuthConfig,
         code: str
     ) -> OAuthToken:
-        """用授权码换取 Token"""
+        """Exchange an authorization code for a token"""
         data = {
             "client_id": config.client_id,
             "client_secret": config.client_secret,
@@ -218,7 +218,7 @@ class OAuthHelper:
         config: OAuthConfig,
         refresh_token: str
     ) -> OAuthToken:
-        """刷新 Token"""
+        """Refresh a token"""
         data = {
             "client_id": config.client_id,
             "client_secret": config.client_secret,
@@ -255,12 +255,12 @@ class OAuthHelper:
         provider: OAuthProvider,
         client_id: str
     ) -> Optional[OAuthToken]:
-        """获取缓存的 Token"""
+        """Get a cached token"""
         cache_key = self._get_cache_key(provider.value, client_id)
         token = self.tokens.get(cache_key)
         
         if token:
-            # 检查是否过期
+            # Check expiration
             expires_at = datetime.fromisoformat(token.expires_at)
             if datetime.now() < expires_at:
                 return token
@@ -272,16 +272,16 @@ class OAuthHelper:
         self,
         config: OAuthConfig
     ) -> Optional[OAuthToken]:
-        """获取有效 Token（自动刷新）"""
+        """Get a valid token with automatic refresh"""
         token = self.get_cached_token(config.provider, config.client_id)
         
         if token:
-            # 检查是否快过期（提前 5 分钟刷新）
+            # Check whether the token expires soon; refresh five minutes early
             expires_at = datetime.fromisoformat(token.expires_at)
             if datetime.now() + timedelta(minutes=5) < expires_at:
                 return token
             
-            # 尝试刷新
+            # Attempt refresh
             if token.refresh_token:
                 try:
                     return await self.refresh_token(config, token.refresh_token)
@@ -297,7 +297,7 @@ class OAuthHelper:
         provider: str = "custom",
         expires_hours: int = 24
     ) -> OAuthToken:
-        """保存测试用 Token（手动配置）"""
+        """Save a manually configured test token"""
         expires_at = (datetime.now() + timedelta(hours=expires_hours)).isoformat()
         
         token = OAuthToken(
@@ -316,12 +316,12 @@ class OAuthHelper:
         return token
     
     def get_test_token(self, name: str) -> Optional[OAuthToken]:
-        """获取测试用 Token"""
+        """Get a test token"""
         cache_key = f"test_{name}"
         return self.tokens.get(cache_key)
     
     def list_tokens(self) -> List[Dict[str, Any]]:
-        """列出所有缓存的 Token"""
+        """List all cached tokens"""
         return [
             {
                 "key": key,
@@ -333,7 +333,7 @@ class OAuthHelper:
         ]
     
     def clear_expired(self) -> int:
-        """清理过期 Token"""
+        """Remove expired tokens"""
         now = datetime.now()
         expired_keys = [
             key for key, token in self.tokens.items()
@@ -347,11 +347,11 @@ class OAuthHelper:
         return len(expired_keys)
 
 
-# 单例
+# Singleton
 _oauth_helper: Optional[OAuthHelper] = None
 
 def get_oauth_helper() -> OAuthHelper:
-    """获取 OAuth 助手"""
+    """Get the OAuth helper"""
     global _oauth_helper
     if _oauth_helper is None:
         _oauth_helper = OAuthHelper()

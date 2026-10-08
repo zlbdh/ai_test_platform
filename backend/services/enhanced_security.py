@@ -1,13 +1,13 @@
 """
-Enhanced Security Scanner - 增强安全扫描器
+Enhanced security scanner.
 
-集成多种安全检测：
-- OWASP Top 10 检测
-- SQL 注入检测
-- XSS 检测
-- CSRF 检测
-- 依赖漏洞扫描
-- Header 安全检查
+Combines security checks:
+- OWASP Top 10 checks
+- SQL injection checks
+- XSS checks
+- CSRF checks
+- Dependency vulnerability scanning
+- Header security checks
 """
 
 from typing import Dict, Any, List, Optional
@@ -46,7 +46,7 @@ class VulnerabilityType(Enum):
 
 @dataclass
 class Vulnerability:
-    """漏洞"""
+    """Vulnerability"""
     vuln_id: str
     vuln_type: VulnerabilityType
     severity: SeverityLevel
@@ -61,7 +61,7 @@ class Vulnerability:
 
 @dataclass
 class ScanResult:
-    """扫描结果"""
+    """Scan result"""
     target_url: str
     scan_time: float
     total_requests: int
@@ -72,13 +72,13 @@ class ScanResult:
 
 
 class EnhancedSecurityScanner:
-    """增强安全扫描器"""
+    """Enhanced security scanner"""
     
     def __init__(self):
         self.vuln_counter = 0
         self.session: Optional[aiohttp.ClientSession] = None
         
-        # SQL 注入 Payload
+        # SQL injection payloads
         self.sqli_payloads = [
             "' OR '1'='1",
             "'; DROP TABLE users--",
@@ -99,7 +99,7 @@ class EnhancedSecurityScanner:
             "\" onfocus=\"alert('XSS')\" autofocus=\""
         ]
         
-        # 安全 Header 检查
+        # Security header checks
         self.security_headers = {
             "X-Content-Type-Options": "nosniff",
             "X-Frame-Options": ["DENY", "SAMEORIGIN"],
@@ -111,24 +111,24 @@ class EnhancedSecurityScanner:
         }
     
     async def _get_session(self) -> aiohttp.ClientSession:
-        """获取 HTTP 会话"""
+        """Get the HTTP session"""
         if self.session is None or self.session.closed:
             timeout = aiohttp.ClientTimeout(total=30)
             self.session = aiohttp.ClientSession(timeout=timeout)
         return self.session
     
     async def close(self):
-        """关闭会话"""
+        """Close the session"""
         if self.session and not self.session.closed:
             await self.session.close()
     
     def _generate_vuln_id(self) -> str:
-        """生成漏洞 ID"""
+        """Generate a vulnerability ID"""
         self.vuln_counter += 1
         return f"VULN-{self.vuln_counter:04d}"
     
     async def scan(self, target_url: str, scan_types: List[str] = None) -> ScanResult:
-        """执行安全扫描"""
+        """Run a security scan"""
         start_time = time.time()
         vulnerabilities = []
         total_requests = 0
@@ -137,37 +137,37 @@ class EnhancedSecurityScanner:
         
         session = await self._get_session()
         
-        # 1. Header 安全检查
+        # 1. Security header checks
         headers_check = {}
         if "headers" in scan_types:
             headers_check, header_vulns = await self._check_headers(session, target_url)
             vulnerabilities.extend(header_vulns)
             total_requests += 1
         
-        # 2. SSL 检查
+        # 2. SSL checks
         ssl_check = {}
         if "ssl" in scan_types:
             ssl_check = await self._check_ssl(target_url)
         
-        # 3. SQL 注入检测
+        # 3. SQL injection checks
         if "sqli" in scan_types:
             sqli_vulns, sqli_reqs = await self._test_sqli(session, target_url)
             vulnerabilities.extend(sqli_vulns)
             total_requests += sqli_reqs
         
-        # 4. XSS 检测
+        # 4. XSS checks
         if "xss" in scan_types:
             xss_vulns, xss_reqs = await self._test_xss(session, target_url)
             vulnerabilities.extend(xss_vulns)
             total_requests += xss_reqs
         
-        # 5. 敏感信息泄露
+        # 5. Sensitive data exposure
         if "sensitive" in scan_types:
             sensitive_vulns, sens_reqs = await self._check_sensitive_data(session, target_url)
             vulnerabilities.extend(sensitive_vulns)
             total_requests += sens_reqs
         
-        # 统计
+        # Summarize statistics
         summary = {
             "critical": sum(1 for v in vulnerabilities if v.severity == SeverityLevel.CRITICAL),
             "high": sum(1 for v in vulnerabilities if v.severity == SeverityLevel.HIGH),
@@ -193,7 +193,7 @@ class EnhancedSecurityScanner:
         session: aiohttp.ClientSession,
         url: str
     ) -> tuple:
-        """检查安全 Header"""
+        """Check security headers"""
         vulnerabilities = []
         headers_status = {}
         
@@ -225,7 +225,7 @@ class EnhancedSecurityScanner:
         return headers_status, vulnerabilities
     
     async def _check_ssl(self, url: str) -> Dict[str, Any]:
-        """检查 SSL/TLS 配置"""
+        """Check SSL/TLS configuration"""
         result = {
             "https": url.startswith("https"),
             "valid_cert": None,
@@ -242,15 +242,15 @@ class EnhancedSecurityScanner:
         session: aiohttp.ClientSession,
         url: str
     ) -> tuple:
-        """测试 SQL 注入"""
+        """Test for SQL injection"""
         vulnerabilities = []
         request_count = 0
         
-        # 检测常见参数
+        # Check common parameters
         test_params = ["id", "user", "name", "search", "q", "page"]
         
         for param in test_params:
-            for payload in self.sqli_payloads[:3]:  # 限制请求数
+            for payload in self.sqli_payloads[:3]:  # Limit the number of requests
                 test_url = f"{url}?{param}={payload}"
                 request_count += 1
                 
@@ -258,7 +258,7 @@ class EnhancedSecurityScanner:
                     async with session.get(test_url, ssl=False) as response:
                         text = await response.text()
                         
-                        # 检测错误信息
+                        # Check error messages
                         error_patterns = [
                             r"SQL syntax.*MySQL",
                             r"Warning.*mysql_",
@@ -294,7 +294,7 @@ class EnhancedSecurityScanner:
         session: aiohttp.ClientSession,
         url: str
     ) -> tuple:
-        """测试 XSS"""
+        """Test for XSS"""
         vulnerabilities = []
         request_count = 0
         
@@ -309,7 +309,7 @@ class EnhancedSecurityScanner:
                     async with session.get(test_url, ssl=False) as response:
                         text = await response.text()
                         
-                        # 检测反射
+                        # Check reflected content
                         if payload in text:
                             vulnerabilities.append(Vulnerability(
                                 vuln_id=self._generate_vuln_id(),
@@ -335,11 +335,11 @@ class EnhancedSecurityScanner:
         session: aiohttp.ClientSession,
         url: str
     ) -> tuple:
-        """检查敏感数据泄露"""
+        """Check for sensitive data exposure"""
         vulnerabilities = []
         request_count = 0
         
-        # 敏感路径
+        # Sensitive paths
         sensitive_paths = [
             "/.env",
             "/.git/config",
@@ -365,7 +365,7 @@ class EnhancedSecurityScanner:
                     if response.status == 200:
                         text = await response.text()
                         
-                        # 检测敏感内容
+                        # Check sensitive content
                         sensitive_patterns = [
                             (r"password\s*=", "password"),
                             (r"DB_PASSWORD", "database password"),
@@ -395,7 +395,7 @@ class EnhancedSecurityScanner:
         return vulnerabilities, request_count
     
     def generate_report(self, result: ScanResult) -> Dict[str, Any]:
-        """生成扫描报告"""
+        """Generate a scan report"""
         return {
             "target": result.target_url,
             "scan_time_seconds": round(result.scan_time, 2),
@@ -421,7 +421,7 @@ class EnhancedSecurityScanner:
         }
     
     def _calculate_risk_score(self, result: ScanResult) -> float:
-        """计算风险评分 (0-100)"""
+        """Calculate a risk score from 0 to 100"""
         weights = {
             "critical": 25,
             "high": 15,
@@ -438,11 +438,11 @@ class EnhancedSecurityScanner:
         return min(100, score)
 
 
-# 单例
+# Singleton
 _enhanced_scanner: Optional[EnhancedSecurityScanner] = None
 
 def get_enhanced_scanner() -> EnhancedSecurityScanner:
-    """获取增强安全扫描器"""
+    """Get the enhanced security scanner"""
     global _enhanced_scanner
     if _enhanced_scanner is None:
         _enhanced_scanner = EnhancedSecurityScanner()

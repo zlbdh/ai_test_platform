@@ -1,11 +1,11 @@
 """
-WebSocket Testing Service - WebSocket 测试服务
+WebSocket testing service.
 
-支持 WebSocket 连接的完整测试：
-- 连接建立/断开
-- 消息发送/接收
-- 断言验证
-- 性能指标
+Supports:
+- Connection and disconnection
+- Sending and receiving messages
+- Assertion verification
+- Performance metrics
 """
 
 from typing import Dict, Any, List, Optional, Callable
@@ -19,7 +19,7 @@ from websockets.exceptions import WebSocketException
 
 @dataclass
 class WSMessage:
-    """WebSocket 消息"""
+    """WebSocket message"""
     direction: str  # send, receive
     content: Any
     timestamp: float
@@ -28,16 +28,16 @@ class WSMessage:
 
 @dataclass 
 class WSAssertion:
-    """WebSocket 断言"""
-    message_index: int  # -1 表示任意消息
-    path: Optional[str]  # JSON 路径
+    """WebSocket assertion"""
+    message_index: int  # -1 means any message
+    path: Optional[str]  # JSON path
     operator: str  # eq, ne, contains, exists, type
     expected: Any
 
 
 @dataclass
 class WSTestResult:
-    """WebSocket 测试结果"""
+    """WebSocket test result"""
     connected: bool
     messages: List[WSMessage]
     assertions_passed: int
@@ -47,7 +47,7 @@ class WSTestResult:
 
 
 class WebSocketTestService:
-    """WebSocket 测试服务"""
+    """WebSocket testing service"""
     
     def __init__(
         self,
@@ -62,7 +62,7 @@ class WebSocketTestService:
         self.connection = None
     
     async def connect(self, timeout: float = 10.0) -> bool:
-        """建立连接"""
+        """Connect"""
         try:
             connect_kwargs = {
                 "subprotocols": self.subprotocols,
@@ -94,13 +94,13 @@ class WebSocketTestService:
             return False
     
     async def disconnect(self):
-        """断开连接"""
+        """Disconnect"""
         if self.connection:
             await self.connection.close()
             self.connection = None
     
     async def send(self, message: Any, is_json: bool = True):
-        """发送消息"""
+        """Send a message"""
         if not self.connection:
             raise RuntimeError("Not connected")
         
@@ -118,7 +118,7 @@ class WebSocketTestService:
         ))
     
     async def receive(self, timeout: float = 10.0) -> Any:
-        """接收消息"""
+        """Receive a message"""
         if not self.connection:
             raise RuntimeError("Not connected")
         
@@ -128,7 +128,7 @@ class WebSocketTestService:
                 timeout=timeout
             )
             
-            # 尝试解析 JSON
+            # Attempt to parse JSON
             try:
                 content = json.loads(data)
             except Exception:
@@ -151,7 +151,7 @@ class WebSocketTestService:
         count: int = 10,
         timeout: float = 5.0
     ) -> List[Any]:
-        """接收多条消息"""
+        """Receive multiple messages"""
         received = []
         for _ in range(count):
             msg = await self.receive(timeout=timeout)
@@ -161,7 +161,7 @@ class WebSocketTestService:
         return received
     
     def _get_value_by_path(self, data: Any, path: str) -> Any:
-        """根据路径获取值"""
+        """Get a value by path"""
         if not path:
             return data
         
@@ -182,14 +182,14 @@ class WebSocketTestService:
         self,
         assertions: List[WSAssertion]
     ) -> List[Dict[str, Any]]:
-        """验证消息"""
+        """Verify a message"""
         results = []
         
         received_messages = [m for m in self.messages if m.direction == "receive"]
         
         for assertion in assertions:
             if assertion.message_index == -1:
-                # 检查任意消息
+                # Check any message
                 targets = received_messages
             elif 0 <= assertion.message_index < len(received_messages):
                 targets = [received_messages[assertion.message_index]]
@@ -236,19 +236,19 @@ class WebSocketTestService:
         scenario: List[Dict[str, Any]],
         assertions: Optional[List[WSAssertion]] = None
     ) -> WSTestResult:
-        """运行测试场景"""
+        """Run a test scenario"""
         start_time = time.time()
         self.messages.clear()
         error = None
         connected = False
         
         try:
-            # 连接
+            # Connect
             connected = await self.connect()
             if not connected:
                 raise RuntimeError("Failed to connect")
             
-            # 执行场景步骤
+            # Execute scenario steps
             for step in scenario:
                 action = step.get("action")
                 
@@ -273,7 +273,7 @@ class WebSocketTestService:
         finally:
             await self.disconnect()
         
-        # 验证断言
+        # Verify assertions
         assertions_passed = 0
         assertions_failed = 0
         
@@ -298,5 +298,5 @@ def create_ws_test_service(
     url: str,
     headers: Optional[Dict[str, str]] = None
 ) -> WebSocketTestService:
-    """创建 WebSocket 测试服务"""
+    """Create a WebSocket testing service"""
     return WebSocketTestService(url, headers)

@@ -1,11 +1,11 @@
 ﻿# -*- coding: utf-8 -*-
 """
-AI 部署分析器 — 用 LLM 深度分析项目结构并生成部署配置推荐
+AI deployment analyzer: use an LLM to analyze project structure and recommend deployment settings.
 
-参考 Railway AI Assisted DevOps 模式:
-  克隆完成 → 采集项目文件 → 构造 Prompt → LLM 分析 → 结构化 JSON 配置
+Inspired by the Railway AI-assisted DevOps workflow:
+  Clone → collect project files → construct prompt → analyze with LLM → structured JSON configuration
 
-若 LLM 调用失败，自动降级到规则引擎 (detect_tech_stack)
+Fall back to the rule engine (detect_tech_stack) when the LLM call fails.
 """
 
 import json
@@ -15,7 +15,7 @@ from typing import Dict, Optional
 
 logger = logging.getLogger(__name__)
 
-# 需要采集的关键文件 (按优先级排列)
+# Key files to collect, in priority order
 KEY_FILES = [
     "package.json",
     "pom.xml",
@@ -41,50 +41,50 @@ KEY_FILES = [
     "Procfile",
 ]
 
-# 忽略的目录
+# Directories to ignore
 IGNORE_DIRS = {
     "node_modules", ".git", ".idea", ".vscode", "__pycache__",
     "dist", "build", "target", ".gradle", ".mvn", "vendor",
     ".next", ".nuxt", ".output", "coverage", ".cache",
 }
 
-# 单个文件最大 / 总上下文最大字符数 (严控避免 token 溢出)
+# Per-file and total context character limits to prevent token overflow
 MAX_FILE_SIZE = 1500
 MAX_TOTAL_CONTEXT = 6000
 
 
-SYSTEM_PROMPT = """你是一名资深 DevOps 工程师。根据项目源码结构，精准推荐部署配置。
+SYSTEM_PROMPT = """You are a senior DevOps engineer. Recommend accurate deployment settings based on the project source structure.
 
-规则:
-1. 只基于给定内容分析
-2. start_cmd 是开发模式启动命令；前端项目加 --host 0.0.0.0
-3. port 根据配置或框架默认端口推断
-4. 如果给出了“当前生效环境变量”，默认沿用它们，除非源码或用户信息明确要求变更
-5. 不要凭空把 test 改成 dev，也不要随意改动 Nacos 命名空间、分组等环境标识
-6. notes 用简短中文说明
-7. confidence 为信心度 (0.0-1.0)
+Rules:
+1. Analyze only the supplied content.
+2. start_cmd is the development startup command; add --host 0.0.0.0 for frontend projects.
+3. Infer port from configuration or the default for the framework.
+4. Retain any current effective environment variables unless the source or user information explicitly requires a change.
+5. Do not arbitrarily change test to dev, or alter environment identifiers such as Nacos namespaces or groups.
+6. Write concise notes in English.
+7. confidence is a value from 0.0 to 1.0.
 
-回复纯 JSON，不要 markdown 代码块。"""
+Return only JSON, without Markdown code fences."""
 
-USER_PROMPT_TEMPLATE = """分析以下项目并给出部署配置。
+USER_PROMPT_TEMPLATE = """Analyze the following project and provide deployment settings.
 
-仓库: {label} ({repo_url})
+Repository: {label} ({repo_url})
 
-目录结构:
+Directory structure:
 {tree}
 
-关键文件:
+Key files:
 {files_content}
 
-当前生效环境变量（如无必要请沿用）:
+Current effective environment variables (retain unless a change is necessary):
 {current_env_text}
 
-JSON 格式:
+JSON format:
 {{"tech_stack":"","install_cmd":"","start_cmd":"","build_cmd":"","port":0,"env_vars":{{}},"notes":"","confidence":0.9}}"""
 
 
 def _get_dir_tree(root: Path, max_depth: int = 2, prefix: str = "") -> str:
-    """生成简洁的目录树"""
+    """Generate a compact directory tree"""
     lines = []
     try:
         entries = sorted(root.iterdir(), key=lambda e: (not e.is_dir(), e.name))
@@ -110,7 +110,7 @@ def _get_dir_tree(root: Path, max_depth: int = 2, prefix: str = "") -> str:
 
 
 def _read_key_files(root: Path) -> str:
-    """读取关键配置文件内容（严控总量）"""
+    """Read key configuration files within the total size limit"""
     sections = []
     total = 0
 
@@ -122,30 +122,30 @@ def _read_key_files(root: Path) -> str:
             try:
                 content = fpath.read_text(encoding="utf-8", errors="replace")
                 if len(content) > MAX_FILE_SIZE:
-                    content = content[:MAX_FILE_SIZE] + "\n...(截断)"
+                    content = content[:MAX_FILE_SIZE] + "\n...(truncated)"
                 sections.append(f"### {fname}\n```\n{content}\n```")
                 total += len(content)
             except Exception:
                 pass
 
-    return "\n\n".join(sections) if sections else "(未找到配置文件)"
+    return "\n\n".join(sections) if sections else "(No configuration files found)"
 
 
 def collect_project_context(project_dir: Path, label: str = "", repo_url: str = "", current_env_text: str = "") -> str:
-    """采集项目上下文"""
+    """Collect project context"""
     tree = _get_dir_tree(project_dir)
     files_content = _read_key_files(project_dir)
     return USER_PROMPT_TEMPLATE.format(
-        label=label or "未知",
-        repo_url=repo_url or "未知",
+        label=label or "Unknown",
+        repo_url=repo_url or "Unknown",
         tree=tree,
         files_content=files_content,
-        current_env_text=current_env_text or "(未检测到当前生效环境变量)",
+        current_env_text=current_env_text or "(No effective environment variables detected)",
     )
 
 
 def _parse_llm_response(text: str) -> Optional[Dict]:
-    """从 LLM 响应中提取 JSON"""
+    """Extract JSON from an LLM response"""
     import re
     text = text.strip()
 
@@ -173,7 +173,7 @@ def _parse_llm_response(text: str) -> Optional[Dict]:
 
 
 def _fallback_detect(project_dir: Path) -> Dict:
-    """LLM 失败时降级到规则引擎"""
+    """Fall back to the rule engine when the LLM fails"""
     from services.deploy_service import detect_tech_stack
     detected = detect_tech_stack(project_dir)
     return {
@@ -183,7 +183,7 @@ def _fallback_detect(project_dir: Path) -> Dict:
         "build_cmd": "",
         "port": detected.get("port", 0),
         "env_vars": {},
-        "notes": "⚠️ AI 分析失败，已降级为规则引擎自动检测",
+        "notes": "⚠️ AI analysis failed; using automatic rule-based detection",
         "confidence": 0.6,
         "source": "rule_fallback",
     }
@@ -197,48 +197,49 @@ async def analyze_project(
     current_env_text: str = "",
 ) -> Dict:
     """
-    调用 LLM 分析项目结构并返回部署配置推荐。
-    使用 LangChain 统一调用（llm_manager 已修复网关兼容性），LLM 失败时自动降级到规则引擎。
+    Analyze project structure with an LLM and return deployment recommendations.
+    Use the shared LangChain interface, whose llm_manager handles gateway compatibility.
+    Fall back to the rule engine when the LLM fails.
     """
     try:
         from core.llm_manager import get_llm_for_role, traced_invoke
         from langchain_core.messages import SystemMessage, HumanMessage
     except ImportError as e:
-        logger.warning(f"[AI 分析] LLM 不可用，降级: {e}")
+        logger.warning(f"[AI analysis] LLM unavailable; falling back: {e}")
         return _fallback_detect(project_dir)
 
-    # 1. 采集项目上下文
+    # 1. Collect project context
     user_prompt = collect_project_context(project_dir, label, repo_url, current_env_text=current_env_text)
-    logger.info(f"[AI 分析] 项目: {project_dir.name}, prompt 长度={len(user_prompt)}")
+    logger.info(f"[AI analysis] Project: {project_dir.name}, prompt length={len(user_prompt)}")
 
-    # 2. 调用 LLM (使用全局配置的模型，如 claude-opus-4-6-thinking)
+    # 2. Call the globally configured LLM, such as claude-opus-4-6-thinking
     try:
         import asyncio
         llm = get_llm_for_role("planner")
         messages = [
             SystemMessage(content=SYSTEM_PROMPT),
             HumanMessage(content=user_prompt + (
-                f"\n\n部署记忆（历史经验，优先参考）:\n{memory_hint}" if memory_hint else ""
+                f"\n\nDeployment memory (prior experience; consult first):\n{memory_hint}" if memory_hint else ""
             )),
         ]
-        # 使用 asyncio.to_thread 避免阻塞事件循环（thinking 模型可能耗时 60s+）
+        # Use asyncio.to_thread to avoid blocking the event loop; reasoning models may take 60+ seconds
         result = await asyncio.to_thread(
             traced_invoke, llm, messages,
             agent_name="deploy_analyzer", action="analyze_project"
         )
         raw_text = result.content
-        logger.info(f"[AI 分析] LLM 返回 {len(raw_text)} 字符")
+        logger.info(f"[AI analysis] LLM returned {len(raw_text)} characters")
     except Exception as e:
-        logger.warning(f"[AI 分析] LLM 调用失败，降级到规则引擎: {e}")
+        logger.warning(f"[AI analysis] LLM call failed; falling back to the rule engine: {e}")
         return _fallback_detect(project_dir)
 
-    # 3. 解析 JSON
+    # 3. Parse JSON
     parsed = _parse_llm_response(raw_text)
     if not parsed:
-        logger.warning(f"[AI 分析] JSON 解析失败，降级")
+        logger.warning(f"[AI analysis] JSON parsing failed; falling back")
         return _fallback_detect(project_dir)
 
-    # 4. 标准化输出
+    # 4. Normalize output
     config = {
         "tech_stack": str(parsed.get("tech_stack", "")),
         "install_cmd": str(parsed.get("install_cmd", "")),
@@ -250,8 +251,8 @@ async def analyze_project(
         "confidence": float(parsed.get("confidence", 0.0)),
         "source": "ai",
     }
-    logger.info(f"[AI 分析] ✅ {config['tech_stack']} | confidence={config['confidence']}")
-    # 5. 检测 pom.xml 建议修改（Maven 项目）
+    logger.info(f"[AI analysis] ✅ {config['tech_stack']} | confidence={config['confidence']}")
+    # 5. Suggest pom.xml changes for Maven projects
     pom_suggestions = detect_pom_suggestions(project_dir)
     if pom_suggestions:
         config["suggested_changes"] = pom_suggestions
@@ -261,25 +262,25 @@ async def analyze_project(
 
 def detect_pom_suggestions(project_dir: Path) -> list:
     """
-    检测 Maven 多模块项目中可能需要 Profile 排除的模块。
-    返回 suggested_changes 列表供用户确认。
+    Detect Maven multi-module project modules that may need to be excluded through a profile.
+    Return suggested_changes for user confirmation.
     """
     import re as _re
     suggestions = []
 
-    # 已知可能编译失败的模块模式
+    # Known patterns for modules that may fail to compile
     PROBLEMATIC_MODULES = {"sample-aigc", "sample-api-aigc"}
 
     for pom_path in project_dir.rglob("pom.xml"):
         if pom_path.resolve() == (project_dir / "pom.xml").resolve():
-            continue  # 跳过根 pom
+            continue  # Skip the root pom
 
         try:
             content = pom_path.read_text(encoding="utf-8")
         except Exception:
             continue
 
-        # 提取当前 <modules> 中的模块列表
+        # Extract the current <modules> list
         modules_match = _re.search(r'<modules>(.*?)</modules>', content, _re.DOTALL)
         if not modules_match:
             continue
@@ -287,22 +288,22 @@ def detect_pom_suggestions(project_dir: Path) -> list:
         modules_block = modules_match.group(1)
         current_modules = _re.findall(r'<module>([\w-]+)</module>', modules_block)
 
-        # 检查是否包含已知问题模块
+        # Check for known problematic modules
         problematic_found = [m for m in current_modules if m in PROBLEMATIC_MODULES]
         if not problematic_found:
             continue
 
-        # 检查这些模块的目录是否存在、是否有编译问题的迹象
+        # Check whether those module directories exist and show signs of compilation problems
         rel_path = str(pom_path.relative_to(project_dir).parent)
         for mod in problematic_found:
             mod_dir = pom_path.parent / mod
-            # 生成 Maven Profile 建议
+            # Generate a Maven profile recommendation
             remaining = [m for m in current_modules if m != mod]
             suggestion = {
                 "file": str(pom_path.relative_to(project_dir)),
                 "type": "maven_profile",
                 "module": mod,
-                "description": f"将 {mod} 移至 Maven Profile 中，默认不参与编译",
+                "description": f"Move {mod} into a Maven profile and exclude it from the default build",
                 "original_modules": current_modules,
                 "new_modules": remaining,
                 "profile_id": "aigc",
@@ -313,60 +314,60 @@ def detect_pom_suggestions(project_dir: Path) -> list:
     return suggestions
 
 
-# ── AI 二次确认 Prompt ─────────────────────────────────────────────────────────
+# AI confirmation prompt
 
-REFINE_SYSTEM_PROMPT = """你是一名资深 DevOps 工程师。用户已经提供了额外的部署上下文信息。
-请综合初始 AI 分析结果和用户补充的信息，输出最终的部署配置。
+REFINE_SYSTEM_PROMPT = """You are a senior DevOps engineer. The user has supplied additional deployment context.
+Combine the initial AI analysis with this information to produce final deployment settings.
 
-规则:
-1. 如果用户提供了服务器地址，在 notes 中说明部署目标
-2. 如果用户提供了数据库连接，将其加入 env_vars
-3. 如果用户提供了环境变量，合并到 env_vars 中
-4. 根据用户备注调整命令或配置
-5. confidence 应该随着用户补充信息的完善而提高
-6. notes 中简要说明你做了哪些调整
+Rules:
+1. If a server address is supplied, describe the deployment target in notes.
+2. If a database connection is supplied, add it to env_vars.
+3. Merge any supplied environment variables into env_vars.
+4. Adjust commands or configuration according to the user notes.
+5. Confidence should increase as the additional information becomes more complete.
+6. Briefly explain your adjustments in notes, in English.
 
-回复纯 JSON，不要 markdown 代码块。"""
+Return only JSON, without Markdown code fences."""
 
-REFINE_USER_TEMPLATE = """初始 AI 分析结果:
+REFINE_USER_TEMPLATE = """Initial AI analysis:
 {initial_config}
 
-用户补充的部署上下文:
-- 目标服务器: {server_address}
-- 数据库连接: {db_connection}
-- 环境变量:
+Additional deployment context supplied by the user:
+- Target server: {server_address}
+- Database connection: {db_connection}
+- Environment variables:
 {env_vars_text}
-- 备注: {user_notes}
+- Notes: {user_notes}
 
-请综合以上信息，输出最终部署配置 JSON:
+Combine this information and return the final deployment settings as JSON:
 {{"tech_stack":"","install_cmd":"","start_cmd":"","build_cmd":"","port":0,"env_vars":{{}},"notes":"","confidence":0.9}}"""
 
 
 async def refine_deploy_config(initial_config: Dict, deploy_context: Dict) -> Dict:
     """
-    AI 二次确认：结合用户补充的部署上下文，优化部署配置。
+    AI confirmation: refine deployment settings using additional user context.
     """
     try:
         from core.llm_manager import get_llm_for_role, traced_invoke
         from langchain_core.messages import SystemMessage, HumanMessage
     except ImportError as e:
-        logger.warning(f"[AI 确认] LLM 不可用: {e}")
-        # 降级：直接将用户上下文合并到初始配置
+        logger.warning(f"[AI confirmation] LLM unavailable: {e}")
+        # Fallback: merge user context directly into the initial configuration
         return _merge_context_fallback(initial_config, deploy_context)
 
-    # 构造环境变量文本
+    # Construct the environment variable text
     env_vars_text = ""
     if deploy_context.get("env_vars"):
         env_vars_text = deploy_context["env_vars"]
     if not env_vars_text:
-        env_vars_text = "(无)"
+        env_vars_text = "(None)"
 
     user_prompt = REFINE_USER_TEMPLATE.format(
         initial_config=json.dumps(initial_config, ensure_ascii=False, indent=2),
-        server_address=deploy_context.get("server_address", "(未提供)"),
-        db_connection=deploy_context.get("db_connection", "(未提供)"),
+        server_address=deploy_context.get("server_address", "(Not provided)"),
+        db_connection=deploy_context.get("db_connection", "(Not provided)"),
         env_vars_text=env_vars_text,
-        user_notes=deploy_context.get("user_notes", "(无)"),
+        user_notes=deploy_context.get("user_notes", "(None)"),
     )
 
     try:
@@ -381,14 +382,14 @@ async def refine_deploy_config(initial_config: Dict, deploy_context: Dict) -> Di
             agent_name="deploy_analyzer", action="refine_config"
         )
         raw_text = result.content
-        logger.info(f"[AI 确认] LLM 返回 {len(raw_text)} 字符")
+        logger.info(f"[AI confirmation] LLM returned {len(raw_text)} characters")
     except Exception as e:
-        logger.warning(f"[AI 确认] LLM 调用失败，降级: {e}")
+        logger.warning(f"[AI confirmation] LLM call failed; falling back: {e}")
         return _merge_context_fallback(initial_config, deploy_context)
 
     parsed = _parse_llm_response(raw_text)
     if not parsed:
-        logger.warning("[AI 确认] JSON 解析失败，降级")
+        logger.warning("[AI confirmation] JSON parsing failed; falling back")
         return _merge_context_fallback(initial_config, deploy_context)
 
     config = {
@@ -402,20 +403,20 @@ async def refine_deploy_config(initial_config: Dict, deploy_context: Dict) -> Di
         "confidence": float(parsed.get("confidence", 0.0)),
         "source": "ai_refined",
     }
-    logger.info(f"[AI 确认] ✅ confidence={config['confidence']}")
+    logger.info(f"[AI confirmation] ✅ confidence={config['confidence']}")
     return config
 
 
 def _merge_context_fallback(initial_config: Dict, deploy_context: Dict) -> Dict:
-    """LLM 不可用时，手动合并用户上下文到配置"""
+    """Merge user context manually when the LLM is unavailable"""
     config = dict(initial_config)
     env_vars = dict(config.get("env_vars", {}))
 
-    # 合并数据库连接
+    # Merge database connection
     if deploy_context.get("db_connection"):
         env_vars["DATABASE_URL"] = deploy_context["db_connection"]
 
-    # 合并用户自定义环境变量
+    # Merge user-supplied environment variables
     if deploy_context.get("env_vars"):
         for line in deploy_context["env_vars"].strip().split("\n"):
             line = line.strip()
@@ -425,10 +426,10 @@ def _merge_context_fallback(initial_config: Dict, deploy_context: Dict) -> Dict:
 
     config["env_vars"] = env_vars
 
-    # 合并备注
+    # Merge notes
     notes = [config.get("notes", "")]
     if deploy_context.get("server_address"):
-        notes.append(f"目标服务器: {deploy_context['server_address']}")
+        notes.append(f"Target server: {deploy_context['server_address']}")
     if deploy_context.get("user_notes"):
         notes.append(deploy_context["user_notes"])
     config["notes"] = " | ".join(n for n in notes if n)

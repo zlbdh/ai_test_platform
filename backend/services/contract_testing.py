@@ -1,11 +1,11 @@
 """
-Contract Testing Service - 契约测试服务
+Contract testing service.
 
-支持 API 契约测试：
-- Provider 验证
-- Consumer 驱动契约
-- 契约版本管理
-- Pact 格式兼容
+Supports API contract testing:
+- Provider verification
+- Consumer-driven contracts
+- Contract version management
+- Pact format compatibility
 """
 
 from typing import Dict, Any, List, Optional
@@ -26,7 +26,7 @@ class ContractStatus(Enum):
 
 @dataclass
 class ContractInteraction:
-    """契约交互"""
+    """Contract interaction"""
     description: str
     request: Dict[str, Any]
     response: Dict[str, Any]
@@ -34,7 +34,7 @@ class ContractInteraction:
 
 @dataclass 
 class Contract:
-    """API 契约"""
+    """API contract"""
     contract_id: str
     consumer: str
     provider: str
@@ -46,7 +46,7 @@ class Contract:
 
 @dataclass
 class VerificationResult:
-    """验证结果"""
+    """Verification result"""
     contract_id: str
     passed: bool
     total_interactions: int
@@ -57,14 +57,14 @@ class VerificationResult:
 
 
 class ContractTestingService:
-    """契约测试服务"""
+    """Contract testing service"""
     
     def __init__(self):
         self.contracts: Dict[str, Contract] = {}
         self.verification_history: List[VerificationResult] = []
     
     def _generate_id(self, consumer: str, provider: str) -> str:
-        """生成契约 ID"""
+        """Generate a contract ID"""
         content = f"{consumer}:{provider}:{datetime.now().isoformat()}"
         return hashlib.md5(content.encode()).hexdigest()[:12]
     
@@ -75,7 +75,7 @@ class ContractTestingService:
         interactions: List[Dict[str, Any]],
         version: str = "1.0.0"
     ) -> Contract:
-        """创建契约"""
+        """Create a contract"""
         contract_id = self._generate_id(consumer, provider)
         
         parsed_interactions = [
@@ -105,7 +105,7 @@ class ContractTestingService:
         contract_id: str,
         provider_base_url: str
     ) -> VerificationResult:
-        """验证契约"""
+        """Verify a contract"""
         contract = self.contracts.get(contract_id)
         if not contract:
             return VerificationResult(
@@ -165,7 +165,7 @@ class ContractTestingService:
         base_url: str,
         interaction: ContractInteraction
     ) -> Dict[str, Any]:
-        """验证单个交互"""
+        """Verify a single interaction"""
         request = interaction.request
         expected = interaction.response
         
@@ -185,7 +185,7 @@ class ContractTestingService:
                 actual_status = response.status
                 actual_body = await response.json() if response.content_type == "application/json" else await response.text()
                 
-                # 验证状态码
+                # Verify the status code
                 expected_status = expected.get("status", 200)
                 if actual_status != expected_status:
                     return {
@@ -195,7 +195,7 @@ class ContractTestingService:
                         "actual": actual_status
                     }
                 
-                # 验证响应体 (简化: 检查关键字段)
+                # Verify the response body by checking key fields
                 expected_body = expected.get("body", {})
                 if expected_body:
                     for key, exp_value in expected_body.items():
@@ -218,7 +218,7 @@ class ContractTestingService:
             }
     
     def export_pact(self, contract_id: str) -> Dict[str, Any]:
-        """导出为 Pact 格式"""
+        """Export in Pact format"""
         contract = self.contracts.get(contract_id)
         if not contract:
             return {}
@@ -240,7 +240,7 @@ class ContractTestingService:
         }
     
     def import_pact(self, pact_data: Dict[str, Any]) -> Contract:
-        """导入 Pact 格式契约"""
+        """Import a Pact contract"""
         consumer = pact_data.get("consumer", {}).get("name", "unknown")
         provider = pact_data.get("provider", {}).get("name", "unknown")
         interactions = pact_data.get("interactions", [])
@@ -248,7 +248,7 @@ class ContractTestingService:
         return self.create_contract(consumer, provider, interactions)
     
     def get_statistics(self) -> Dict[str, Any]:
-        """获取统计信息"""
+        """Get statistics"""
         total = len(self.contracts)
         verified = sum(1 for c in self.contracts.values() if c.status == ContractStatus.VERIFIED)
         failed = sum(1 for c in self.contracts.values() if c.status == ContractStatus.FAILED)
@@ -262,11 +262,11 @@ class ContractTestingService:
         }
 
 
-# 单例
+# Singleton
 _contract_service: Optional[ContractTestingService] = None
 
 def get_contract_service() -> ContractTestingService:
-    """获取契约测试服务"""
+    """Get the contract testing service"""
     global _contract_service
     if _contract_service is None:
         _contract_service = ContractTestingService()

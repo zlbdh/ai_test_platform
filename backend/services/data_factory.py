@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Data Factory 服务代理
-实际实现在 core/data_factory.py，此文件提供 services.data_factory 导入路径兼容
+Data factory service proxy.
+The implementation lives in core/data_factory.py; this module preserves the services.data_factory import path.
 """
 from core.data_factory import (
     DataFactory,
@@ -11,8 +11,8 @@ from core.data_factory import (
 )
 
 
-def create_data_factory(locale: str = "zh_CN") -> DataFactory:
-    """创建数据工厂实例"""
+def create_data_factory(locale: str = "en_US") -> DataFactory:
+    """Create a data factory instance"""
     return get_data_factory(locale)
 
 

@@ -1,8 +1,8 @@
 """
-ComplianceTestService 单元测试
-覆盖: 数据类, _check_security_headers (aiohttp mock),
+ComplianceTestService unit tests
+Coverage: data classes, _check_security_headers (aiohttp mock),
       _check_page_compliance (Playwright mock/ImportError),
-      audit 总流程, create_compliance_service
+      complete audit flow, create_compliance_service
 """
 import pytest
 from unittest.mock import patch, MagicMock, AsyncMock
@@ -14,7 +14,7 @@ from services.compliance_testing import (
 
 
 # ---------------------------------------------------------------------------
-# 数据类
+# Data classes
 # ---------------------------------------------------------------------------
 class TestComplianceIssue:
     def test_creation(self):
@@ -32,7 +32,7 @@ class TestComplianceReport:
 
 
 # ---------------------------------------------------------------------------
-# aiohttp mock 辅助
+# aiohttp mock helpers
 # ---------------------------------------------------------------------------
 def _make_aiohttp_ctx(mock_resp):
     ctx = MagicMock()
@@ -42,16 +42,16 @@ def _make_aiohttp_ctx(mock_resp):
 
 
 # ---------------------------------------------------------------------------
-# _check_security_headers 测试
+# _check_security_headers tests
 # ---------------------------------------------------------------------------
 class TestCheckSecurityHeaders:
     @pytest.mark.asyncio
     async def test_all_headers_missing(self):
-        """所有安全头都缺失时应报告多个问题"""
+        """Report multiple issues when all security headers are missing."""
         svc = ComplianceTestService()
 
         mock_resp = MagicMock()
-        mock_resp.headers = {}  # 空头
+        mock_resp.headers = {}  # Empty headers
         mock_session = MagicMock()
         mock_session.get.return_value = _make_aiohttp_ctx(mock_resp)
         mock_session_ctx = _make_aiohttp_ctx(mock_session)
@@ -60,14 +60,14 @@ class TestCheckSecurityHeaders:
             issues, checks = await svc._check_security_headers("http://example.com")
 
         rule_ids = [i["rule_id"] for i in issues]
-        assert "sec-https" in rule_ids  # 非 HTTPS
+        assert "sec-https" in rule_ids  # Not HTTPS
         assert "sec-hsts" in rule_ids
         assert "sec-csp" in rule_ids
         assert checks >= 6
 
     @pytest.mark.asyncio
     async def test_https_no_issue(self):
-        """HTTPS URL 不应报告 sec-https"""
+        """Do not report sec-https for an HTTPS URL."""
         svc = ComplianceTestService()
 
         mock_resp = MagicMock()
@@ -91,7 +91,7 @@ class TestCheckSecurityHeaders:
 
     @pytest.mark.asyncio
     async def test_connection_error(self):
-        """连接失败应返回 error issue"""
+        """Return an error issue when the connection fails."""
         svc = ComplianceTestService()
 
         mock_session_ctx = MagicMock()
@@ -104,14 +104,14 @@ class TestCheckSecurityHeaders:
 
 
 # ---------------------------------------------------------------------------
-# _check_page_compliance 测试
+# _check_page_compliance tests
 # ---------------------------------------------------------------------------
 class TestCheckPageCompliance:
     @pytest.mark.asyncio
     async def test_playwright_not_installed(self):
-        """Playwright 不可用时应返回提示 issue"""
+        """Return an informative issue when Playwright is unavailable."""
         svc = ComplianceTestService()
-        # 选择性 mock: 仅拦截 playwright 相关的 import
+        # Selective mock: intercept only Playwright imports.
         original_import = __builtins__.__import__ if hasattr(__builtins__, '__import__') else __import__
         def selective_import(name, *args, **kwargs):
             if 'playwright' in name:
@@ -124,15 +124,15 @@ class TestCheckPageCompliance:
 
 
 # ---------------------------------------------------------------------------
-# audit 总流程
+# Complete audit flow
 # ---------------------------------------------------------------------------
 class TestAudit:
     @pytest.mark.asyncio
     async def test_audit_computes_score(self):
-        """审计应计算评分和统计"""
+        """Compute the audit score and statistics."""
         svc = ComplianceTestService()
 
-        # Mock 两个子方法
+        # Mock both component methods.
         header_issues = [
             {"rule_id": "sec-https", "standard": "SOC2", "description": "no https", "severity": "critical"},
             {"rule_id": "sec-csp", "standard": "SOC2", "description": "no csp", "severity": "major"}
@@ -152,13 +152,13 @@ class TestAudit:
         assert report.total_issues == 3
         assert report.critical == 2
         assert report.major == 1
-        # 评分: 100 - (2*15 + 1*8) = 62
+        # Score: 100 - (2*15 + 1*8) = 62
         assert report.score == 62.0
-        assert "合规审计完成" in report.summary
+        assert "Compliance audit completed" in report.summary
 
     @pytest.mark.asyncio
     async def test_audit_custom_standards(self):
-        """仅选择 SOC2 时不应检查 GDPR 页面内容"""
+        """Skip GDPR page content checks when only SOC2 is selected."""
         svc = ComplianceTestService()
 
         with patch.object(svc, "_check_security_headers", new_callable=AsyncMock,

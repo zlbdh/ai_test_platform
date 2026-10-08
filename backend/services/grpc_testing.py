@@ -1,11 +1,11 @@
 """
-gRPC Testing Service - gRPC 测试服务
+gRPC testing service.
 
-支持 gRPC 服务的完整测试：
-- Unary 调用
-- 服务反射
-- 断言验证
-- 性能指标
+Supports:
+- Unary calls
+- Service reflection
+- Assertion verification
+- Performance metrics
 """
 
 from typing import Dict, Any, List, Optional
@@ -19,7 +19,7 @@ import shutil
 
 @dataclass
 class GrpcRequest:
-    """gRPC 请求"""
+    """gRPC request"""
     service: str
     method: str
     data: Dict[str, Any]
@@ -28,7 +28,7 @@ class GrpcRequest:
 
 @dataclass
 class GrpcResponse:
-    """gRPC 响应"""
+    """gRPC response"""
     success: bool
     data: Optional[Dict[str, Any]]
     error: Optional[str]
@@ -38,14 +38,14 @@ class GrpcResponse:
 
 @dataclass
 class GrpcAssertion:
-    """gRPC 断言"""
+    """gRPC assertion"""
     path: str
     operator: str  # eq, ne, contains, exists, type
     expected: Any
 
 
 class GrpcTestService:
-    """gRPC 测试服务"""
+    """gRPC testing service"""
     
     def __init__(self, host: str, port: int = 50051, use_tls: bool = False):
         self.host = host
@@ -55,7 +55,7 @@ class GrpcTestService:
         self._grpcurl_available = self._check_grpcurl()
     
     def _check_grpcurl(self) -> bool:
-        """检查 grpcurl 是否可用"""
+        """Check whether grpcurl is available"""
         return shutil.which("grpcurl") is not None
     
     def _build_command(
@@ -65,29 +65,29 @@ class GrpcTestService:
         data: Dict[str, Any],
         metadata: Optional[Dict[str, str]] = None
     ) -> List[str]:
-        """构建 grpcurl 命令"""
+        """Build a grpcurl command"""
         cmd = ["grpcurl"]
         
-        # TLS 选项
+        # TLS options
         if not self.use_tls:
             cmd.append("-plaintext")
         
-        # 元数据
+        # Metadata
         if metadata:
             for k, v in metadata.items():
                 cmd.extend(["-H", f"{k}: {v}"])
         
-        # 数据
+        # Data
         cmd.extend(["-d", json.dumps(data)])
         
-        # 地址和方法
+        # Address and method
         cmd.append(self.address)
         cmd.append(f"{service}/{method}")
         
         return cmd
     
     async def call(self, request: GrpcRequest) -> GrpcResponse:
-        """执行 gRPC 调用"""
+        """Execute a gRPC call"""
         if not self._grpcurl_available:
             return GrpcResponse(
                 success=False,
@@ -159,7 +159,7 @@ class GrpcTestService:
             )
     
     async def list_services(self) -> List[str]:
-        """列出可用服务 (需要服务端启用反射)"""
+        """List available services; server reflection must be enabled"""
         if not self._grpcurl_available:
             return []
         
@@ -184,7 +184,7 @@ class GrpcTestService:
         return []
     
     async def describe_service(self, service: str) -> Dict[str, Any]:
-        """描述服务方法"""
+        """Describe a service method"""
         if not self._grpcurl_available:
             return {}
         
@@ -209,7 +209,7 @@ class GrpcTestService:
         return {}
     
     def _get_value_by_path(self, data: Any, path: str) -> Any:
-        """根据路径获取值"""
+        """Get a value by path"""
         if not path:
             return data
         
@@ -231,7 +231,7 @@ class GrpcTestService:
         response: GrpcResponse,
         assertions: List[GrpcAssertion]
     ) -> List[Dict[str, Any]]:
-        """验证响应"""
+        """Verify the response"""
         results = []
         
         for assertion in assertions:
@@ -263,7 +263,7 @@ class GrpcTestService:
         self,
         tests: List[Dict[str, Any]]
     ) -> Dict[str, Any]:
-        """运行测试套件"""
+        """Run a test suite"""
         results = []
         total_passed = 0
         total_failed = 0
@@ -312,5 +312,5 @@ def create_grpc_service(
     port: int = 50051,
     use_tls: bool = False
 ) -> GrpcTestService:
-    """创建 gRPC 测试服务"""
+    """Create a gRPC testing service"""
     return GrpcTestService(host, port, use_tls)

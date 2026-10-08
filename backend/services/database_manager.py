@@ -58,12 +58,12 @@ class ValidationRule:
 class DatabaseManagerService:
     """Database connection and data management service"""
 
-    # SQL 标识符合法性正则：只允许字母、数字、下划线，首字符不能是数字
+    # SQL identifier validation: allow letters, digits, and underscores; the first character cannot be a digit
     _IDENTIFIER_RE = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_]*$')
 
     @staticmethod
     def _validate_identifier(name: str) -> bool:
-        """校验 SQL 标识符（表名/列名）是否安全"""
+        """Validate the safety of SQL table and column identifiers"""
         return bool(DatabaseManagerService._IDENTIFIER_RE.match(name))
 
     def __init__(self):
@@ -407,8 +407,8 @@ class DatabaseManagerService:
                     )
                     columns = list(cursor.fetchall())
                     if not columns:
-                        # 某些远端账号可读取表列表，但无 information_schema.columns 权限；
-                        # 这里回退到 SHOW FULL COLUMNS，保证 Schema 视图仍可用。
+                        # Some remote accounts can list tables but cannot read information_schema.columns.
+                        # Fall back to SHOW FULL COLUMNS so the schema view remains available.
                         cursor.execute(f"SHOW FULL COLUMNS FROM `{table_name}`")
                         fallback_rows = cursor.fetchall()
                         columns = [
@@ -440,7 +440,7 @@ class DatabaseManagerService:
         if not data:
             return {"success": True, "message": "No data to inject", "inserted": 0}
 
-        # 安全校验: 表名
+        # Validate table name safety
         if not self._validate_identifier(table_name):
             return {"success": False, "error": "Invalid table name", "inserted": 0}
 
@@ -505,11 +505,11 @@ class DatabaseManagerService:
         if conn.read_only:
             return {"success": False, "error": "Connection is read-only", "deleted": 0}
 
-        # 安全校验: 表名
+        # Validate table name safety
         if not self._validate_identifier(table_name):
             return {"success": False, "error": "Invalid table name", "deleted": 0}
 
-        # 安全校验: where_clause 禁止危险关键词
+        # Validate where_clause by rejecting dangerous keywords
         if where_clause:
             _upper = where_clause.upper()
             FORBIDDEN = ['DROP', 'INSERT', 'UPDATE', 'DELETE', 'ALTER', 'CREATE', 'EXEC', '--', ';']
@@ -562,13 +562,13 @@ class DatabaseManagerService:
         if not sql_stripped.upper().startswith('SELECT'):
             return {"success": False, "error": "Only SELECT queries are allowed", "rows": []}
 
-        # Security: 禁止分号（防止多语句注入）和破坏性关键词
+        # Security: reject semicolons to prevent multiple statements, and reject destructive keywords
         _upper = sql_stripped.upper()
         FORBIDDEN = ['DROP', 'INSERT', 'UPDATE', 'DELETE', 'ALTER', 'CREATE', 'EXEC', 'ATTACH', 'DETACH']
         if ';' in sql_stripped:
             return {"success": False, "error": "Semicolons are not allowed in queries", "rows": []}
         for kw in FORBIDDEN:
-            # 只检测独立关键词
+            # Match standalone keywords only
             if re.search(rf'\b{kw}\b', _upper):
                 return {"success": False, "error": f"Forbidden keyword: {kw}", "rows": []}
 
@@ -592,7 +592,7 @@ class DatabaseManagerService:
                     "rows": rows,
                     "count": len(rows),
                     "elapsed_ms": elapsed_ms,
-                    "message": f"查询完成，返回 {len(rows)} 行，用时 {elapsed_ms} ms",
+                    "message": f"Query completed: returned {len(rows)} rows in {elapsed_ms} ms",
                 }
             elif conn.db_type == 'mysql':
                 db_conn = self._get_mysql_connection(conn)
@@ -608,7 +608,7 @@ class DatabaseManagerService:
                     "rows": rows,
                     "count": len(rows),
                     "elapsed_ms": elapsed_ms,
-                    "message": f"查询完成，返回 {len(rows)} 行，用时 {elapsed_ms} ms",
+                    "message": f"Query completed: returned {len(rows)} rows in {elapsed_ms} ms",
                 }
 
             else:
@@ -671,7 +671,7 @@ class DatabaseManagerService:
                 expected = rule.get('expected')
                 where = rule.get('where_clause', '')
 
-                # 安全校验: 表名和列名
+                # Validate table and column name safety
                 if not self._validate_identifier(table):
                     results.append({"rule": rule, "actual": None, "passed": False, "message": "Invalid table name"})
                     all_passed = False

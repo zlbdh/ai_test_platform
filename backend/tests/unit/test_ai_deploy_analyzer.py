@@ -24,7 +24,7 @@ from services.ai_deploy_analyzer import (
     [
         ('{"tech_stack":"React","port":3000}', {"tech_stack": "React", "port": 3000}),
         ("```json\n{\"tech_stack\":\"Vue\",\"port\":5173}\n```", {"tech_stack": "Vue", "port": 5173}),
-        ("分析结果如下：{\"tech_stack\":\"Python\",\"port\":8000}", {"tech_stack": "Python", "port": 8000}),
+        ("Analysis results: {\"tech_stack\":\"Python\",\"port\":8000}", {"tech_stack": "Python", "port": 8000}),
     ],
 )
 def test_parse_llm_response_supports_multiple_payload_shapes(raw_text: str, expected: dict):
@@ -53,7 +53,7 @@ def test_read_key_files_truncates_large_known_files(tmp_path: Path):
     content = _read_key_files(tmp_path)
 
     assert "### package.json" in content
-    assert "...(截断)" in content
+    assert "...(truncated)" in content
     assert "README.md" not in content
 
 
@@ -89,7 +89,7 @@ def test_analyze_project_appends_memory_hint_and_normalizes_ai_output(tmp_path: 
                 "content": (
                     '{"tech_stack":"React + Vite","install_cmd":"npm install",'
                     '"start_cmd":"npm run dev -- --host 0.0.0.0","build_cmd":"npm run build",'
-                    '"port":"3000","env_vars":{"MODE":"test"},"notes":"已识别","confidence":"0.95"}'
+                    '"port":"3000","env_vars":{"MODE":"test"},"notes":"Detected","confidence":"0.95"}'
                 )
             },
         )()
@@ -112,16 +112,16 @@ def test_analyze_project_appends_memory_hint_and_normalizes_ai_output(tmp_path: 
         result = asyncio.run(
             analyze_project(
                 tmp_path,
-                label="前端",
+                label="Frontend",
                 repo_url="https://example.com/demo.git",
-                memory_hint="上次成功命令: npm run dev",
+                memory_hint="Previous successful command: npm run dev",
                 current_env_text="SPRING_PROFILES_ACTIVE=test\nNACOS_GROUP=TEST",
             )
         )
 
     assert captured["agent_name"] == "deploy_analyzer"
     assert captured["action"] == "analyze_project"
-    assert "上次成功命令" in captured["human_content"]
+    assert "Previous successful command" in captured["human_content"]
     assert "SPRING_PROFILES_ACTIVE=test" in captured["human_content"]
     assert result["source"] == "ai"
     assert result["port"] == 3000
@@ -179,12 +179,12 @@ def test_detect_pom_suggestions_finds_problematic_module(tmp_path: Path):
 
 
 def test_refine_deploy_config_falls_back_to_context_merge():
-    initial_config = {"notes": "基础配置", "env_vars": {"MODE": "dev"}}
+    initial_config = {"notes": "Base configuration", "env_vars": {"MODE": "dev"}}
     deploy_context = {
         "server_address": "10.0.0.8",
         "db_connection": "mysql://demo",
         "env_vars": "REDIS_URL=redis://127.0.0.1:6379/0",
-        "user_notes": "启用测试环境",
+        "user_notes": "Enable the test environment",
     }
     original_import = builtins.__import__
 
@@ -201,13 +201,13 @@ def test_refine_deploy_config_falls_back_to_context_merge():
     assert result["env_vars"]["DATABASE_URL"] == "mysql://demo"
     assert result["env_vars"]["REDIS_URL"] == "redis://127.0.0.1:6379/0"
     assert "10.0.0.8" in result["notes"]
-    assert "启用测试环境" in result["notes"]
+    assert "Enable the test environment" in result["notes"]
 
 
 def test_merge_context_fallback_keeps_existing_notes():
     result = _merge_context_fallback(
-        {"notes": "已有说明", "env_vars": {}},
-        {"user_notes": "补充说明"},
+        {"notes": "Existing notes", "env_vars": {}},
+        {"user_notes": "Additional notes"},
     )
 
-    assert result["notes"] == "已有说明 | 补充说明"
+    assert result["notes"] == "Existing notes | Additional notes"

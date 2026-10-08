@@ -1,11 +1,11 @@
 """
-Visual Regression Testing - 视觉回归测试
+Visual regression testing.
 
-支持：
-- 截图对比
-- 像素级差异检测
-- 阈值控制
-- 基线管理
+Supports:
+- Screenshot comparison
+- Pixel-level difference detection
+- Threshold configuration
+- Baseline management
 """
 
 from typing import Dict, Any, List, Optional, Tuple
@@ -27,7 +27,7 @@ class ComparisonResult(Enum):
 
 @dataclass
 class ScreenshotData:
-    """截图数据"""
+    """Screenshot data"""
     name: str
     filepath: str
     width: int
@@ -38,7 +38,7 @@ class ScreenshotData:
 
 @dataclass
 class DiffResult:
-    """差异结果"""
+    """Difference result"""
     baseline: ScreenshotData
     current: ScreenshotData
     result: ComparisonResult
@@ -48,7 +48,7 @@ class DiffResult:
 
 
 class VisualRegressionTester:
-    """视觉回归测试器"""
+    """Visual regression tester"""
     
     def __init__(self, baseline_dir: str = "./data/baselines"):
         self.baseline_dir = baseline_dir
@@ -59,7 +59,7 @@ class VisualRegressionTester:
         self._pillow_available = self._check_pillow()
     
     def _check_pillow(self) -> bool:
-        """检查 Pillow 是否可用"""
+        """Check whether Pillow is available"""
         try:
             from PIL import Image
             return True
@@ -67,7 +67,7 @@ class VisualRegressionTester:
             return False
     
     def _compute_hash(self, filepath: str) -> str:
-        """计算文件哈希"""
+        """Calculate a file hash"""
         with open(filepath, 'rb') as f:
             return hashlib.md5(f.read()).hexdigest()
     
@@ -77,13 +77,13 @@ class VisualRegressionTester:
         image_data: bytes,
         metadata: Optional[Dict[str, Any]] = None
     ) -> ScreenshotData:
-        """保存基线图片"""
+        """Save a baseline image"""
         filepath = os.path.join(self.baseline_dir, f"{name}.png")
         
         with open(filepath, 'wb') as f:
             f.write(image_data)
         
-        # 获取图片尺寸
+        # Get image dimensions
         width, height = 0, 0
         if self._pillow_available:
             from PIL import Image
@@ -99,7 +99,7 @@ class VisualRegressionTester:
             hash=self._compute_hash(filepath)
         )
         
-        # 保存元数据
+        # Save metadata
         meta_filepath = os.path.join(self.baseline_dir, f"{name}.json")
         with open(meta_filepath, 'w') as f:
             json.dump({
@@ -119,17 +119,17 @@ class VisualRegressionTester:
         current_image: bytes,
         threshold: float = 0.01
     ) -> DiffResult:
-        """比较图片"""
+        """Compare images"""
         baseline_path = os.path.join(self.baseline_dir, f"{name}.png")
         current_path = os.path.join(self.results_dir, f"{name}_current.png")
         
-        # 保存当前图片
+        # Save the current image
         with open(current_path, 'wb') as f:
             f.write(current_image)
         
-        # 检查基线是否存在
+        # Check whether a baseline exists
         if not os.path.exists(baseline_path):
-            # 新基线
+            # New baseline
             self.save_baseline(name, current_image)
             return DiffResult(
                 baseline=ScreenshotData(name, baseline_path, 0, 0, "", ""),
@@ -140,9 +140,9 @@ class VisualRegressionTester:
                 threshold=threshold
             )
         
-        # 比较
+        # Compare
         if not self._pillow_available:
-            # 简单哈希比较
+            # Basic hash comparison
             baseline_hash = self._compute_hash(baseline_path)
             current_hash = self._compute_hash(current_path)
             
@@ -156,30 +156,30 @@ class VisualRegressionTester:
                 threshold=threshold
             )
         
-        # Pillow 像素级比较
+        # Pixel-level comparison using Pillow
         from PIL import Image, ImageChops
         
         baseline_img = Image.open(baseline_path).convert('RGBA')
         current_img = Image.open(current_path).convert('RGBA')
         
-        # 尺寸调整
+        # Resize
         if baseline_img.size != current_img.size:
             current_img = current_img.resize(baseline_img.size)
         
-        # 计算差异
+        # Calculate differences
         diff = ImageChops.difference(baseline_img, current_img)
         
-        # 计算差异百分比
+        # Calculate the difference percentage
         diff_data = list(diff.getdata())
         total_pixels = len(diff_data)
         diff_pixels = sum(1 for pixel in diff_data if any(c > 10 for c in pixel[:3]))
         diff_percentage = (diff_pixels / total_pixels) * 100 if total_pixels > 0 else 0
         
-        # 保存差异图
+        # Save the difference image
         diff_filepath = os.path.join(self.results_dir, f"{name}_diff.png")
         diff.save(diff_filepath)
         
-        # 判断结果
+        # Determine the result
         result = ComparisonResult.MATCH if diff_percentage <= threshold * 100 else ComparisonResult.MISMATCH
         
         return DiffResult(
@@ -192,7 +192,7 @@ class VisualRegressionTester:
         )
     
     def update_baseline(self, name: str, current_image: bytes) -> bool:
-        """更新基线"""
+        """Update a baseline"""
         try:
             self.save_baseline(name, current_image)
             return True
@@ -200,7 +200,7 @@ class VisualRegressionTester:
             return False
     
     def list_baselines(self) -> List[Dict[str, Any]]:
-        """列出所有基线"""
+        """List all baselines"""
         baselines = []
         
         for filename in os.listdir(self.baseline_dir):
@@ -212,7 +212,7 @@ class VisualRegressionTester:
         return baselines
     
     def delete_baseline(self, name: str) -> bool:
-        """删除基线"""
+        """Delete a baseline"""
         png_path = os.path.join(self.baseline_dir, f"{name}.png")
         json_path = os.path.join(self.baseline_dir, f"{name}.json")
         
@@ -226,7 +226,7 @@ class VisualRegressionTester:
             return False
     
     def generate_report(self, results: List[DiffResult]) -> Dict[str, Any]:
-        """生成报告"""
+        """Generate a report"""
         total = len(results)
         matches = sum(1 for r in results if r.result == ComparisonResult.MATCH)
         mismatches = sum(1 for r in results if r.result == ComparisonResult.MISMATCH)
@@ -253,11 +253,11 @@ class VisualRegressionTester:
         }
 
 
-# 单例
+# Singleton
 _visual_tester: Optional[VisualRegressionTester] = None
 
 def get_visual_tester() -> VisualRegressionTester:
-    """获取视觉测试器"""
+    """Get the visual regression tester"""
     global _visual_tester
     if _visual_tester is None:
         _visual_tester = VisualRegressionTester()

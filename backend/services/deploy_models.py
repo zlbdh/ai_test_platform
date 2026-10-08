@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Deploy Models — 部署服务数据模型与工具函数
+Deployment models: data models and utility functions.
 
-从 deploy_service.py 提取的公共数据结构和实用工具。
+Shared structures and utilities extracted from deploy_service.py.
 """
 
 import json
@@ -19,7 +19,7 @@ from typing import Dict, List
 logger = logging.getLogger(__name__)
 
 
-# ── 路径常量 ──────────────────────────────────────────────────────────────────
+# Path constants
 BASE_DIR = Path(__file__).resolve().parent.parent          # backend
 PROJECT_ROOT = BASE_DIR.parent                              # ai_test_platform
 DEPLOY_DIR = PROJECT_ROOT / "data" / "deploy"
@@ -34,35 +34,35 @@ MEMORY_DIR = DEPLOY_DIR / "memory"
 MEMORY_DIR.mkdir(parents=True, exist_ok=True)
 
 
-# ── 数据类 ────────────────────────────────────────────────────────────────────
+# Data classes
 
 @dataclass
 class RepoConfig:
-    """项目内的单个仓库配置（前端/后端/微服务等）"""
-    id: str                          # 仓库唯一标识
-    label: str                       # 显示名称: "前端" / "后端"
-    repo_url: str                    # Git 仓库 URL
-    local_dir: str                   # 本地目录名
-    tech_stack: str = ""             # 技术栈 (可自动探测)
-    install_cmd: str = ""            # 安装命令
-    start_cmd: str = ""              # 启动命令
-    port: int = 0                    # 端口
-    branch: str = "master"           # 分支
-    deploy_context: dict = field(default_factory=dict)  # 用户补充的部署上下文
+    """Configuration for a repository within a project, such as a frontend, backend, or microservice"""
+    id: str                          # Unique repository identifier
+    label: str                       # Display name, such as Frontend or Backend
+    repo_url: str                    # Git repository URL
+    local_dir: str                   # Local directory name
+    tech_stack: str = ""             # Technology stack, which can be detected automatically
+    install_cmd: str = ""            # Installation command
+    start_cmd: str = ""              # Startup command
+    port: int = 0                    # Port
+    branch: str = "master"           # Branch
+    deploy_context: dict = field(default_factory=dict)  # Additional deployment context supplied by the user
 
 
 @dataclass
 class ProjectConfig:
-    """待测项目 (可包含多个仓库)"""
-    key: str                         # 项目唯一标识
-    name: str                        # 项目显示名称
+    """Project under test, which can contain multiple repositories"""
+    key: str                         # Unique project identifier
+    name: str                        # Project display name
     repos: List[RepoConfig] = field(default_factory=list)
-    git_token: str = ""              # 项目级 Git 令牌
+    git_token: str = ""              # Project-level Git token
 
 
 @dataclass
 class DeployStep:
-    """一键部署的子步骤"""
+    """Substep of a one-click deployment"""
     name: str = ""                   # clone / install / start
     status: str = "pending"          # pending / running / success / failed
     message: str = ""
@@ -72,11 +72,11 @@ class DeployStep:
 
 @dataclass
 class DeployRecord:
-    """部署历史记录"""
+    """Deployment history record"""
     id: str = field(default_factory=lambda: str(uuid.uuid4())[:8])
     project_key: str = ""
-    repo_id: str = ""                # 关联仓库 ID
-    repo_label: str = ""             # 仓库名称
+    repo_id: str = ""                # Associated repository ID
+    repo_label: str = ""             # Repository name
     action: str = ""
     status: str = "pending"
     message: str = ""
@@ -89,7 +89,7 @@ class DeployRecord:
 
 @dataclass
 class DeployJob:
-    """后台部署作业记录。"""
+    """Background deployment job record."""
     id: str = field(default_factory=lambda: f"job_{uuid.uuid4().hex[:12]}")
     action: str = ""
     project_key: str = ""
@@ -106,7 +106,7 @@ class DeployJob:
 
 @dataclass
 class DeployApproval:
-    """部署审批单。"""
+    """Deployment approval request."""
     id: str = field(default_factory=lambda: f"approval_{uuid.uuid4().hex[:12]}")
     action: str = ""
     project_key: str = ""
@@ -127,21 +127,21 @@ class DeployApproval:
     record_id: str = ""
 
 
-# ── 工具函数 ──────────────────────────────────────────────────────────────────
+# Utility functions
 
 def cmd_available(cmd: str) -> bool:
-    """检查系统命令是否可用"""
+    """Check whether a system command is available"""
     return shutil.which(cmd) is not None
 
 
 def dir_name_from_url(url: str) -> str:
-    """从 Git URL 提取目录名"""
+    """Extract a directory name from a Git URL"""
     name = url.rstrip("/").split("/")[-1]
     return name[:-4] if name.endswith(".git") else name
 
 
 def detect_tech_stack(project_dir: Path) -> Dict[str, str]:
-    """根据项目文件自动探测技术栈并返回推荐的命令"""
+    """Detect the technology stack from project files and recommend commands"""
     result = {"tech_stack": "", "install_cmd": "", "start_cmd": "", "port": 0}
 
     if (project_dir / "package.json").exists():
@@ -182,7 +182,7 @@ def detect_tech_stack(project_dir: Path) -> Dict[str, str]:
                 result["tech_stack"] = f"Java {m.group(1)} + {result['tech_stack'].split('+ ', 1)[-1]}"
         except Exception:
             pass
-        # 优先使用 Maven Wrapper
+        # Prefer Maven Wrapper
         if (project_dir / "mvnw.cmd").exists() and os.name == "nt":
             mvn_cmd = ".\\mvnw.cmd"
         elif (project_dir / "mvnw").exists():

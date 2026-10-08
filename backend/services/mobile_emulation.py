@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-移动端模拟测试服务
-基于 Playwright 设备描述符模拟多种移动设备，检测响应式布局问题
+Mobile emulation testing service.
+Uses Playwright device descriptors to emulate mobile devices and detect responsive layout problems.
 """
 import asyncio
 import logging
@@ -12,7 +12,7 @@ from typing import List, Dict, Any, Optional
 logger = logging.getLogger(__name__)
 
 
-# 预定义设备配置
+# Predefined device configurations
 DEVICE_PRESETS = {
     "iphone_14": {
         "name": "iPhone 14",
@@ -64,21 +64,21 @@ DEVICE_PRESETS = {
     },
 }
 
-# 显示名 -> 内部 ID 反查映射（支持前端使用显示名或内部 ID）
+# Reverse mapping from display names to internal IDs; accept either from the frontend
 DEVICE_NAME_MAP = {}
 for _id, _preset in DEVICE_PRESETS.items():
     DEVICE_NAME_MAP[_id] = _id
     DEVICE_NAME_MAP[_preset["name"]] = _id
     DEVICE_NAME_MAP[_preset["name"].lower()] = _id
 
-# 前端常用别名 → 后端设备 ID
+# Common frontend aliases mapped to backend device IDs
 _ALIASES = {
     "iPhone 14 Pro": "iphone_14",
     "iPhone 14": "iphone_14",
     "iPad Air": "ipad_pro",
     "iPad": "ipad_pro",
     "Galaxy Tab S8": "galaxy_tab_s8",
-    "Desktop 1920": None,  # 桌面分辨率无需移动端模拟
+    "Desktop 1920": None,  # Desktop resolutions do not require mobile emulation
 }
 for _alias, _target in _ALIASES.items():
     if _target:
@@ -86,25 +86,25 @@ for _alias, _target in _ALIASES.items():
         DEVICE_NAME_MAP[_alias.lower()] = _target
 
 
-# 移动端检查 JS
+# JavaScript for mobile checks
 MOBILE_CHECK_SCRIPT = """
 (deviceName) => {
     const issues = [];
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     
-    // 1. 水平溢出检查 — 页面是否可横向滚动
+    // 1. Check horizontal overflow and page scrolling
     if (document.documentElement.scrollWidth > vw + 5) {
         issues.push({
             rule_id: 'horizontal-overflow',
-            description: `页面存在水平溢出 (页面宽 ${document.documentElement.scrollWidth}px > 视口 ${vw}px)`,
+            description: `Horizontal overflow: page width ${document.documentElement.scrollWidth}px exceeds viewport width ${vw}px`,
             severity: 'major',
             device: deviceName,
-            suggestion: '检查是否有元素设置了固定宽度或 min-width 超出视口'
+            suggestion: 'Check for fixed widths or min-width values exceeding the viewport'
         });
     }
     
-    // 2. 触控目标尺寸检查 (最小 44x44px)
+    // 2. Check touch target size (minimum 44x44 px)
     const interactive = document.querySelectorAll('a, button, input, select, textarea, [role="button"], [onclick]');
     let smallTargets = 0;
     interactive.forEach(el => {
@@ -116,14 +116,14 @@ MOBILE_CHECK_SCRIPT = """
     if (smallTargets > 3) {
         issues.push({
             rule_id: 'touch-target',
-            description: `发现 ${smallTargets} 个触控目标小于 44x44px`,
+            description: `Found ${smallTargets} touch targets smaller than 44x44 px`,
             severity: 'major',
             device: deviceName,
-            suggestion: '增大按钮和链接的可点击区域至少 44x44px (WCAG 2.5.5)'
+            suggestion: 'Increase button and link hit areas to at least 44x44 px (WCAG 2.5.5)'
         });
     }
     
-    // 3. 文字大小检查 — 小于 12px 的文本
+    // 3. Check text smaller than 12 px
     const textElements = document.querySelectorAll('p, span, a, li, td, th, label, div');
     let smallText = 0;
     const sampleSize = Math.min(textElements.length, 100);
@@ -137,37 +137,37 @@ MOBILE_CHECK_SCRIPT = """
     if (smallText > 5) {
         issues.push({
             rule_id: 'font-size',
-            description: `发现 ${smallText} 处文字小于 12px`,
+            description: `Found ${smallText} text elements smaller than 12 px`,
             severity: 'minor',
             device: deviceName,
-            suggestion: '移动端文字大小建议不小于 14px，最低 12px'
+            suggestion: 'Use at least 14 px for mobile text where possible, with a minimum of 12 px'
         });
     }
     
-    // 4. Viewport meta 标签检查
+    // 4. Check the viewport meta tag
     const viewportMeta = document.querySelector('meta[name="viewport"]');
     if (!viewportMeta) {
         issues.push({
             rule_id: 'viewport-meta',
-            description: '缺少 viewport meta 标签',
+            description: 'Missing viewport meta tag',
             severity: 'critical',
             device: deviceName,
-            suggestion: '添加 <meta name="viewport" content="width=device-width, initial-scale=1">'
+            suggestion: 'Add <meta name="viewport" content="width=device-width, initial-scale=1">'
         });
     } else {
         const content = viewportMeta.getAttribute('content') || '';
         if (content.includes('user-scalable=no') || content.includes('maximum-scale=1')) {
             issues.push({
                 rule_id: 'viewport-zoom',
-                description: '禁用了用户缩放 (user-scalable=no)',
+                description: 'User zoom is disabled (user-scalable=no)',
                 severity: 'major',
                 device: deviceName,
-                suggestion: '允许用户缩放以提升无障碍性'
+                suggestion: 'Allow user zoom to improve accessibility'
             });
         }
     }
     
-    // 5. 固定定位元素检查 — 是否遮挡内容
+    // 5. Check whether fixed elements obscure content
     const fixedElements = document.querySelectorAll('*');
     let fixedCount = 0;
     let fixedHeight = 0;
@@ -184,14 +184,14 @@ MOBILE_CHECK_SCRIPT = """
     if (fixedHeight > vh * 0.3) {
         issues.push({
             rule_id: 'fixed-elements',
-            description: `固定定位元素占视口高度 ${Math.round(fixedHeight / vh * 100)}%`,
+            description: `Fixed elements occupy ${Math.round(fixedHeight / vh * 100)}% of the viewport height`,
             severity: 'major',
             device: deviceName,
-            suggestion: '减少固定定位元素面积，在移动端考虑隐藏非关键固定栏'
+            suggestion: 'Reduce fixed element size and consider hiding nonessential fixed bars on mobile'
         });
     }
     
-    // 6. 媒体查询响应式检查
+    // 6. Check responsive media queries
     const hasMediaQueries = Array.from(document.styleSheets).some(sheet => {
         try {
             return Array.from(sheet.cssRules || []).some(rule => rule instanceof CSSMediaRule);
@@ -200,10 +200,10 @@ MOBILE_CHECK_SCRIPT = """
     if (!hasMediaQueries) {
         issues.push({
             rule_id: 'no-media-queries',
-            description: '未检测到 CSS 媒体查询',
+            description: 'No CSS media queries detected',
             severity: 'minor',
             device: deviceName,
-            suggestion: '使用 @media 媒体查询实现响应式布局'
+            suggestion: 'Use @media queries for responsive layouts'
         });
     }
     
@@ -229,7 +229,7 @@ class DeviceTestResult:
     viewport: str
     issues: List[Dict] = field(default_factory=list)
     metrics: Dict[str, Any] = field(default_factory=dict)
-    screenshot_base64: str = ""  # 可选截图
+    screenshot_base64: str = ""  # Optional screenshot
 
     def to_dict(self):
         return asdict(self)
@@ -249,19 +249,19 @@ class MobileReport:
 
 
 class MobileEmulationService:
-    """移动端模拟测试服务"""
+    """Mobile emulation testing service"""
 
     async def test_devices(
         self, url: str, devices: Optional[List[str]] = None, screenshot: bool = False
     ) -> MobileReport:
-        """在多种设备上测试页面"""
-        # 使用 sync_playwright 在线程中运行 (避免 Windows asyncio 兼容性问题)
+        """Test a page on multiple devices"""
+        # Run sync_playwright in a worker thread to avoid Windows asyncio compatibility issues
         return await asyncio.to_thread(self._test_devices_sync, url, devices, screenshot)
 
     def _test_devices_sync(
         self, url: str, devices: Optional[List[str]] = None, screenshot: bool = False
     ) -> MobileReport:
-        """同步版本：在多种设备上测试页面"""
+        """Synchronous implementation of testing on multiple devices"""
         if devices is None:
             devices = ["iphone_14", "pixel_7", "ipad_pro"]
 
@@ -276,11 +276,11 @@ class MobileEmulationService:
                 browser = p.chromium.launch(headless=True)
 
                 for device_id in devices:
-                    # 支持显示名和内部 ID 两种查找方式
+                    # Support lookups by display name or internal ID
                     resolved_id = DEVICE_NAME_MAP.get(device_id) or DEVICE_NAME_MAP.get(device_id.lower())
                     preset = DEVICE_PRESETS.get(resolved_id) if resolved_id else None
                     if not preset:
-                        logger.warning(f"未知设备: {device_id}，跳过")
+                        logger.warning(f"Unknown device: {device_id}; skipping")
                         continue
 
                     context = browser.new_context(
@@ -296,10 +296,10 @@ class MobileEmulationService:
                         page.goto(url, wait_until="networkidle", timeout=20000)
                         time.sleep(1)
 
-                        # 执行移动端检查
+                        # Run mobile checks
                         result_data = page.evaluate(MOBILE_CHECK_SCRIPT, preset["name"])
 
-                        # 可选截图
+                        # Optional screenshot
                         screenshot_b64 = ""
                         if screenshot:
                             buf = page.screenshot(full_page=False)
@@ -317,7 +317,7 @@ class MobileEmulationService:
                         report.devices_tested += 1
 
                     except Exception as e:
-                        logger.warning(f"设备 {preset['name']} 测试失败: {repr(e)}")
+                        logger.warning(f"Device {preset['name']} test failed: {repr(e)}")
                         report.results.append(
                             {
                                 "device": preset["name"],
@@ -325,7 +325,7 @@ class MobileEmulationService:
                                 "issues": [
                                     {
                                         "rule_id": "device-error",
-                                        "description": f"测试失败: {repr(e)}",
+                                        "description": f"Test failed: {repr(e)}",
                                         "severity": "major",
                                         "device": preset["name"],
                                     }
@@ -342,15 +342,15 @@ class MobileEmulationService:
                 browser.close()
 
         except ImportError as e:
-            logger.error(f"Playwright 未安装: {repr(e)}")
-            report.summary = "Playwright 未安装，请运行 pip install playwright && playwright install chromium"
+            logger.error(f"Playwright is not installed: {repr(e)}")
+            report.summary = "Playwright is not installed. Run pip install playwright && playwright install chromium"
             report.score = -1
             return report
         except Exception as e:
             import traceback
             err_msg = repr(e) or str(type(e).__name__)
-            logger.error(f"移动端测试失败: {err_msg}\n{traceback.format_exc()}")
-            report.summary = f"移动端测试失败: {err_msg}"
+            logger.error(f"Mobile testing failed: {err_msg}\n{traceback.format_exc()}")
+            report.summary = f"Mobile testing failed: {err_msg}"
             report.score = -1
             return report
 
@@ -361,13 +361,13 @@ class MobileEmulationService:
         deduction = critical * 20 + major * 10 + minor * 3
         report.score = max(0, min(100, 100 - deduction))
         report.summary = (
-            f"测试 {report.devices_tested} 个设备: "
-            f"{report.total_issues} 个问题, 评分 {report.score}/100"
+            f"Tested {report.devices_tested} devices: "
+            f"{report.total_issues} issues, score {report.score}/100"
         )
         return report
 
     def list_devices(self) -> List[Dict[str, Any]]:
-        """列出所有预定义设备"""
+        """List all predefined devices"""
         return [
             {
                 "id": k,

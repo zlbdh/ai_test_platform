@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-无障碍测试服务 — WCAG 2.1 AA 级别自动化审计
-基于 Playwright + JS 注入实现规则检测
+Accessibility testing service: automated WCAG 2.1 AA audits.
+Checks rules using Playwright and injected JavaScript.
 """
 import asyncio
 import json
@@ -57,27 +57,27 @@ class AccessibilityReport:
         return asdict(self)
 
 
-# JS 注入脚本：在浏览器中执行无障碍检查
+# JavaScript injected into the browser to run accessibility checks
 A11Y_CHECK_SCRIPT = """
 () => {
     const issues = [];
     
-    // 1. 图片 alt 属性检查 (WCAG 1.1.1 - Level A)
+    // 1. Check image alt attributes (WCAG 1.1.1 - Level A)
     document.querySelectorAll('img').forEach((img, i) => {
         if (!img.alt && !img.getAttribute('aria-label') && !img.getAttribute('aria-labelledby') && img.getAttribute('role') !== 'presentation') {
             issues.push({
                 rule_id: 'img-alt',
-                description: '图片缺少 alt 属性',
+                description: 'Image is missing an alt attribute',
                 severity: 'critical',
                 wcag_level: 'A',
                 element: img.outerHTML.substring(0, 120),
                 selector: img.id ? `#${img.id}` : `img:nth-of-type(${i + 1})`,
-                suggestion: '为图片添加描述性 alt 文本，或设置 role="presentation" 标记装饰性图片'
+                suggestion: 'Add descriptive alt text, or use role="presentation" for decorative images'
             });
         }
     });
     
-    // 2. 表单 label 关联检查 (WCAG 1.3.1 - Level A)
+    // 2. Check form label associations (WCAG 1.3.1 - Level A)
     document.querySelectorAll('input, select, textarea').forEach((el, i) => {
         const type = el.getAttribute('type');
         if (type === 'hidden' || type === 'submit' || type === 'button' || type === 'reset') return;
@@ -88,17 +88,17 @@ A11Y_CHECK_SCRIPT = """
         if (!hasLabel && !hasAriaLabel && !parentLabel) {
             issues.push({
                 rule_id: 'form-label',
-                description: '表单控件缺少关联 label',
+                description: 'Form control has no associated label',
                 severity: 'major',
                 wcag_level: 'A',
                 element: el.outerHTML.substring(0, 120),
                 selector: id ? `#${id}` : `${el.tagName.toLowerCase()}:nth-of-type(${i + 1})`,
-                suggestion: '使用 <label for="id"> 或 aria-label 关联表单控件'
+                suggestion: 'Associate the form control with <label for="id"> or aria-label'
             });
         }
     });
     
-    // 3. 颜色对比度检查 (WCAG 1.4.3 - Level AA) - 采样检查文本元素
+    // 3. Check color contrast (WCAG 1.4.3 - Level AA) - Sample text elements
     const textElements = document.querySelectorAll('p, span, a, h1, h2, h3, h4, h5, h6, li, td, th, label, button');
     const sampleSize = Math.min(textElements.length, 50);
     for (let i = 0; i < sampleSize; i++) {
@@ -115,31 +115,31 @@ A11Y_CHECK_SCRIPT = """
             if (ratio < minRatio) {
                 issues.push({
                     rule_id: 'color-contrast',
-                    description: `颜色对比度不足: ${ratio.toFixed(2)}:1 (最低要求 ${minRatio}:1)`,
+                    description: `Insufficient color contrast: ${ratio.toFixed(2)}:1 (minimum ${minRatio}:1)`,
                     severity: 'major',
                     wcag_level: 'AA',
                     element: el.textContent.substring(0, 60),
                     selector: el.id ? `#${el.id}` : el.tagName.toLowerCase(),
-                    suggestion: `调整前景色或背景色以达到 ${minRatio}:1 的对比度`
+                    suggestion: `Adjust foreground or background colors to reach a ${minRatio}:1 contrast ratio`
                 });
             }
         }
     }
     
-    // 4. 页面标题检查 (WCAG 2.4.2 - Level A)
+    // 4. Check page title (WCAG 2.4.2 - Level A)
     if (!document.title || document.title.trim() === '') {
         issues.push({
             rule_id: 'page-title',
-            description: '页面缺少 title 标签',
+            description: 'Page has no title element',
             severity: 'major',
             wcag_level: 'A',
             element: '<head>',
             selector: 'head > title',
-            suggestion: '添加描述性的 <title> 标签'
+            suggestion: 'Add a descriptive <title> element'
         });
     }
     
-    // 5. 标题层级检查 (WCAG 1.3.1 - Level A)
+    // 5. Check heading order (WCAG 1.3.1 - Level A)
     const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
     let lastLevel = 0;
     headings.forEach(h => {
@@ -147,31 +147,31 @@ A11Y_CHECK_SCRIPT = """
         if (level > lastLevel + 1 && lastLevel > 0) {
             issues.push({
                 rule_id: 'heading-order',
-                description: `标题层级跳跃: h${lastLevel} → h${level}`,
+                description: `Heading level skipped: h${lastLevel} → h${level}`,
                 severity: 'minor',
                 wcag_level: 'A',
                 element: h.textContent.substring(0, 60),
                 selector: h.tagName.toLowerCase(),
-                suggestion: '确保标题层级连续递增，不跳过层级'
+                suggestion: 'Keep heading levels sequential without skipping levels'
             });
         }
         lastLevel = level;
     });
     
-    // 6. 语言属性检查 (WCAG 3.1.1 - Level A)
+    // 6. Check language attribute (WCAG 3.1.1 - Level A)
     if (!document.documentElement.lang) {
         issues.push({
             rule_id: 'html-lang',
-            description: 'HTML 元素缺少 lang 属性',
+            description: 'HTML element has no lang attribute',
             severity: 'major',
             wcag_level: 'A',
             element: '<html>',
             selector: 'html',
-            suggestion: '在 <html> 标签上添加 lang 属性，如 lang="zh-CN"'
+            suggestion: 'Add a lang attribute to <html>, such as lang="en-US"'
         });
     }
     
-    // 7. ARIA 角色检查
+    // 7. Check ARIA roles
     document.querySelectorAll('[role]').forEach(el => {
         const role = el.getAttribute('role');
         const validRoles = ['alert','alertdialog','application','article','banner','button','cell',
@@ -186,58 +186,58 @@ A11Y_CHECK_SCRIPT = """
         if (!validRoles.includes(role)) {
             issues.push({
                 rule_id: 'aria-role',
-                description: `无效的 ARIA role: "${role}"`,
+                description: `Invalid ARIA role: "${role}"`,
                 severity: 'minor',
                 wcag_level: 'A',
                 element: el.outerHTML.substring(0, 120),
                 selector: el.id ? `#${el.id}` : el.tagName.toLowerCase(),
-                suggestion: '使用有效的 WAI-ARIA role 值'
+                suggestion: 'Use a valid WAI-ARIA role'
             });
         }
     });
     
-    // 8. 链接文本检查 (WCAG 2.4.4 - Level A)
+    // 8. Check link text (WCAG 2.4.4 - Level A)
     document.querySelectorAll('a').forEach(a => {
         const text = (a.textContent || '').trim();
         const ariaLabel = a.getAttribute('aria-label');
         if (!text && !ariaLabel && !a.querySelector('img[alt]')) {
             issues.push({
                 rule_id: 'link-text',
-                description: '链接缺少可访问文本',
+                description: 'Link has no accessible text',
                 severity: 'critical',
                 wcag_level: 'A',
                 element: a.outerHTML.substring(0, 120),
                 selector: a.id ? `#${a.id}` : 'a',
-                suggestion: '为链接添加描述性文本或 aria-label'
+                suggestion: 'Add descriptive link text or aria-label'
             });
         }
     });
     
-    // 9. Tab 键可聚焦检查 (WCAG 2.1.1 - Level A) - interactive elements
+    // 9. Check keyboard focus (WCAG 2.1.1 - Level A) - interactive elements
     document.querySelectorAll('a[href], button, input, select, textarea, [tabindex]').forEach(el => {
         const tabindex = el.getAttribute('tabindex');
         if (tabindex && parseInt(tabindex) > 0) {
             issues.push({
                 rule_id: 'tabindex-positive',
-                description: `tabindex 为正数 (${tabindex})，可能导致焦点顺序混乱`,
+                description: `Positive tabindex (${tabindex}) may disrupt focus order`,
                 severity: 'minor',
                 wcag_level: 'A',
                 element: el.outerHTML.substring(0, 120),
                 selector: el.id ? `#${el.id}` : el.tagName.toLowerCase(),
-                suggestion: '将 tabindex 设为 0（使用 DOM 顺序）或 -1（仅编程可聚焦）'
+                suggestion: 'Set tabindex to 0 for DOM order or -1 for programmatic focus only'
             });
         }
     });
     
     return issues;
     
-    // 辅助函数：解析颜色
+    // Helper: parse a color
     function parseColor(c) {
         const m = c.match(/rgba?\\((\\d+),\\s*(\\d+),\\s*(\\d+)/);
         return m ? { r: parseInt(m[1]), g: parseInt(m[2]), b: parseInt(m[3]) } : { r: 0, g: 0, b: 0 };
     }
     
-    // 辅助函数：计算对比度
+    // Helper: calculate contrast
     function getContrastRatio(c1, c2) {
         const l1 = getLuminance(c1);
         const l2 = getLuminance(c2);
@@ -258,14 +258,14 @@ A11Y_CHECK_SCRIPT = """
 
 
 class AccessibilityTestService:
-    """WCAG 2.1 无障碍测试服务"""
+    """WCAG 2.1 accessibility testing service"""
     
     async def audit(self, url: str, level: str = "AA") -> AccessibilityReport:
-        """对指定 URL 执行无障碍审计"""
+        """Run an accessibility audit for the specified URL"""
         return await asyncio.to_thread(self._audit_sync, url, level)
 
     def _audit_sync(self, url: str, level: str = "AA") -> AccessibilityReport:
-        """同步版本：对指定 URL 执行无障碍审计"""
+        """Synchronous implementation of the URL accessibility audit"""
         import time
         report = AccessibilityReport(url=url)
         
@@ -307,20 +307,20 @@ class AccessibilityTestService:
             deduction = report.critical * 15 + report.major * 8 + report.minor * 3
             report.score = max(0, min(100, 100 - deduction))
             
-            report.summary = f"审计完成: 共发现 {report.total_issues} 个问题 (严重 {report.critical}, 重要 {report.major}, 轻微 {report.minor}), 无障碍评分 {report.score}/100"
+            report.summary = f"Audit completed: found {report.total_issues} issues (critical {report.critical}, major {report.major}, minor {report.minor}), accessibility score {report.score}/100"
             
         except ImportError:
-            report.summary = "Playwright 未安装，请执行: pip install playwright && playwright install chromium"
+            report.summary = "Playwright is not installed. Run: pip install playwright && playwright install chromium"
             report.score = -1
         except Exception as e:
-            logger.error(f"无障碍审计失败: {repr(e)}")
-            report.summary = f"审计失败: {repr(e)}"
+            logger.error(f"Accessibility audit failed: {repr(e)}")
+            report.summary = f"Audit failed: {repr(e)}"
             report.score = -1
         
         return report
     
     async def quick_check(self, url: str) -> Dict[str, Any]:
-        """快速检查（不使用 Playwright，通过 HTTP 获取 HTML 分析）"""
+        """Quick check using HTTP and static HTML analysis without Playwright"""
         import aiohttp
         
         issues = []
@@ -329,19 +329,19 @@ class AccessibilityTestService:
                 async with session.get(url, timeout=aiohttp.ClientTimeout(total=15)) as resp:
                     html = await resp.text()
             
-            # 基础 HTML 静态分析
+            # Basic static HTML analysis
             if '<html' in html.lower() and 'lang=' not in html[:200].lower():
-                issues.append({"rule_id": "html-lang", "description": "HTML 缺少 lang 属性", "severity": "major", "wcag_level": "A"})
+                issues.append({"rule_id": "html-lang", "description": "HTML is missing the lang attribute", "severity": "major", "wcag_level": "A"})
             
             if '<title>' not in html.lower() or '<title></title>' in html.lower():
-                issues.append({"rule_id": "page-title", "description": "页面缺少 title", "severity": "major", "wcag_level": "A"})
+                issues.append({"rule_id": "page-title", "description": "The page is missing a title", "severity": "major", "wcag_level": "A"})
             
-            # 检查 img 标签
+            # Check img elements
             import re
             imgs_no_alt = re.findall(r'<img(?![^>]*alt=)[^>]*>', html, re.IGNORECASE)
             for img in imgs_no_alt[:5]:
                 if 'role="presentation"' not in img.lower():
-                    issues.append({"rule_id": "img-alt", "description": "图片缺少 alt 属性", "severity": "critical", "wcag_level": "A", "element": img[:100]})
+                    issues.append({"rule_id": "img-alt", "description": "Image is missing an alt attribute", "severity": "critical", "wcag_level": "A", "element": img[:100]})
             
             return {"status": "success", "url": url, "issues": issues, "total": len(issues), "mode": "quick"}
         except Exception as e:

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-国际化 (i18n) 测试服务
-检测多语言支持、文本截断、RTL 布局、编码问题
+Internationalization testing service.
+Checks multilingual support, text truncation, RTL layout, and encoding problems.
 """
 import asyncio
 import logging
@@ -38,12 +38,12 @@ class I18nReport:
         return asdict(self)
 
 
-# JS 注入：检测文本截断和编码问题
+# Injected JavaScript for text truncation and encoding checks
 I18N_CHECK_SCRIPT = """
 (locale) => {
     const issues = [];
     
-    // 1. 文本截断检测 — 检查 overflow
+    // 1. Check text truncation and overflow
     document.querySelectorAll('*').forEach(el => {
         const style = window.getComputedStyle(el);
         if (style.overflow === 'hidden' || style.textOverflow === 'ellipsis') {
@@ -52,31 +52,31 @@ I18N_CHECK_SCRIPT = """
                 if (text) {
                     issues.push({
                         rule_id: 'text-truncation',
-                        description: `文本被截断: "${text}..."`,
+                        description: `Text is truncated: "${text}..."`,
                         severity: 'major',
                         locale: locale,
                         element: el.tagName.toLowerCase() + (el.className ? '.' + el.className.split(' ')[0] : ''),
-                        suggestion: '增大容器宽度或使用自适应布局'
+                        suggestion: 'Increase the container width or use an adaptive layout'
                     });
                 }
             }
         }
     });
     
-    // 2. 编码问题检测 — 替代字符
+    // 2. Check encoding issues using replacement characters
     const bodyText = document.body.innerText || '';
     const replacementChars = (bodyText.match(/[\\ufffd\\u25a1\\?]{2,}/g) || []);
     if (replacementChars.length > 0) {
         issues.push({
             rule_id: 'encoding-issue',
-            description: `发现 ${replacementChars.length} 处可能的编码问题（替代字符 □ 或 ?）`,
+            description: `Found ${replacementChars.length} possible encoding issues (replacement characters □ or ?)`,
             severity: 'critical',
             locale: locale,
-            suggestion: '确保页面使用 UTF-8 编码，检查字体是否支持目标语言字符集'
+            suggestion: 'Use UTF-8 encoding and verify font support for the target character set'
         });
     }
     
-    // 3. 硬编码文本检测 — 检查常见的未翻译模式
+    // 3. Check common untranslated, hardcoded text patterns
     const hardcodedPatterns = [
         { pattern: /\\b(OK|Cancel|Submit|Loading|Error|Success|Warning|Delete|Save|Edit|Back|Next|Previous|Close)\\b/g, lang: 'en' },
     ];
@@ -88,44 +88,44 @@ I18N_CHECK_SCRIPT = """
         if (text.length > 2 && text.length < 100) textNodes.push(text);
     }
     
-    // 仅当 locale 不是英语时检查英文硬编码
+    // Check hardcoded English text only when the locale is not English
     if (locale && !locale.startsWith('en')) {
         const englishMatches = textNodes.filter(t => /^[A-Za-z\\s]{3,}$/.test(t));
         if (englishMatches.length > 5) {
             issues.push({
                 rule_id: 'hardcoded-text',
-                description: `发现 ${englishMatches.length} 处可能的硬编码英文文本`,
+                description: `Found ${englishMatches.length} possible instances of hardcoded English text`,
                 severity: 'minor',
                 locale: locale,
                 element: englishMatches.slice(0, 3).join(', '),
-                suggestion: '将硬编码文本替换为 i18n 翻译函数调用'
+                suggestion: 'Replace hardcoded text with i18n translation calls'
             });
         }
     }
     
-    // 4. RTL 布局检查
+    // 4. Check RTL layout
     const dir = document.documentElement.dir || document.body.dir || '';
     const isRTL = ['ar', 'he', 'fa', 'ur'].some(l => locale.startsWith(l));
     if (isRTL && dir !== 'rtl') {
         issues.push({
             rule_id: 'rtl-missing',
-            description: 'RTL 语言但页面未设置 dir="rtl"',
+            description: 'An RTL language is in use, but the page has no dir="rtl"',
             severity: 'critical',
             locale: locale,
-            suggestion: '为 RTL 语言设置 <html dir="rtl"> 或使用 CSS logical properties'
+            suggestion: 'Use <html dir="rtl"> or CSS logical properties for RTL languages'
         });
     }
     
-    // 5. 日期格式检测
+    // 5. Check date formatting
     const datePatterns = bodyText.match(/\\d{1,2}\\/\\d{1,2}\\/\\d{2,4}/g) || [];
     if (datePatterns.length > 0 && locale && !locale.startsWith('en')) {
         issues.push({
             rule_id: 'date-format',
-            description: `发现 ${datePatterns.length} 处可能的非本地化日期格式 (MM/DD/YYYY)`,
+            description: `Found ${datePatterns.length} possibly unlocalized dates (MM/DD/YYYY)`,
             severity: 'minor',
             locale: locale,
             element: datePatterns.slice(0, 2).join(', '),
-            suggestion: '使用 Intl.DateTimeFormat 或 locale-aware 日期格式化'
+            suggestion: 'Use Intl.DateTimeFormat or locale-aware date formatting'
         });
     }
     
@@ -135,14 +135,14 @@ I18N_CHECK_SCRIPT = """
 
 
 class I18nTestService:
-    """国际化测试服务"""
+    """Internationalization testing service"""
     
     async def test_locale(self, url: str, locales: List[str]) -> I18nReport:
-        """测试多个 locale 下的页面表现"""
+        """Test page behavior across multiple locales"""
         return await asyncio.to_thread(self._test_locale_sync, url, locales)
 
     def _test_locale_sync(self, url: str, locales: List[str]) -> I18nReport:
-        """同步版本：测试多个 locale 下的页面表现"""
+        """Synchronous implementation of testing page behavior across multiple locales"""
         import time
         report = I18nReport(url=url, locales_tested=locales)
         all_issues = []
@@ -170,7 +170,7 @@ class I18nTestService:
                     except Exception as e:
                         all_issues.append({
                             "rule_id": "locale-error",
-                            "description": f"Locale {locale} 测试失败: {str(e)}",
+                            "description": f"Locale {locale} test failed: {str(e)}",
                             "severity": "major",
                             "locale": locale
                         })
@@ -178,11 +178,11 @@ class I18nTestService:
                 browser.close()
             
         except ImportError:
-            report.summary = "Playwright 未安装，请执行: pip install playwright && playwright install chromium"
+            report.summary = "Playwright is not installed. Run: pip install playwright && playwright install chromium"
             report.score = -1
             return report
         except Exception as e:
-            report.summary = f"测试失败: {repr(e)}"
+            report.summary = f"Test failed: {repr(e)}"
             report.score = -1
             return report
         
@@ -193,12 +193,12 @@ class I18nTestService:
         minor = sum(1 for i in all_issues if i.get("severity") == "minor")
         deduction = critical * 20 + major * 10 + minor * 3
         report.score = max(0, min(100, 100 - deduction))
-        report.summary = f"测试了 {len(locales)} 个语言: 发现 {report.total_issues} 个问题, 评分 {report.score}/100"
+        report.summary = f"Tested {len(locales)} locales: found {report.total_issues} issues, score {report.score}/100"
         
         return report
     
-    async def quick_check(self, url: str, locale: str = "zh-CN") -> Dict[str, Any]:
-        """快速检查（HTTP 获取 HTML 静态分析）"""
+    async def quick_check(self, url: str, locale: str = "en-US") -> Dict[str, Any]:
+        """Quick check using HTTP and static HTML analysis"""
         import aiohttp
         
         issues = []
@@ -208,13 +208,13 @@ class I18nTestService:
                 async with session.get(url, headers=headers, timeout=aiohttp.ClientTimeout(total=15)) as resp:
                     html = await resp.text()
             
-            # 编码检查
+            # Check encoding
             if '<meta' in html.lower() and 'charset' not in html[:500].lower():
-                issues.append({"rule_id": "charset-missing", "description": "未声明字符编码", "severity": "major", "locale": locale})
+                issues.append({"rule_id": "charset-missing", "description": "Character encoding is not declared", "severity": "major", "locale": locale})
             
-            # lang 属性
+            # lang attribute
             if 'lang=' not in html[:300].lower():
-                issues.append({"rule_id": "html-lang", "description": "HTML 缺少 lang 属性", "severity": "major", "locale": locale})
+                issues.append({"rule_id": "html-lang", "description": "HTML is missing the lang attribute", "severity": "major", "locale": locale})
             
             return {"status": "success", "url": url, "locale": locale, "issues": issues, "total": len(issues), "mode": "quick"}
         except Exception as e:

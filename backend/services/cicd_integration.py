@@ -158,7 +158,7 @@ class CICDIntegrationService:
         return secrets.compare_digest(signature, expected)
 
     def trigger_test(self, source: str, ref: str = "", commit: str = "", task_config: Dict = None) -> TriggerRecord:
-        """Trigger a test run from CI/CD — 调用 Commander 执行真实测试"""
+        """Trigger a test run from CI/CD by invoking Commander for real testing"""
         record = TriggerRecord(
             source=source,
             ref=ref,
@@ -171,22 +171,22 @@ class CICDIntegrationService:
         record.status = "running"
         self._save_history()
 
-        # 异步调用 Commander 执行真实测试
+        # Invoke Commander asynchronously for real testing
         import asyncio
         asyncio.ensure_future(self._run_commander(record, task_config or {}))
 
         return record
 
     async def _run_commander(self, record: TriggerRecord, task_config: Dict):
-        """后台执行 Commander 任务"""
+        """Run a Commander task in the background"""
         try:
             from agents.commander import get_commander
             commander = get_commander()
 
-            # 构建测试需求
+            # Construct test requirements
             user_input = task_config.get("requirement", "")
             if not user_input:
-                user_input = f"回归测试 (CI/CD trigger: {record.source}, ref: {record.ref}, commit: {record.commit[:8] if record.commit else 'N/A'})"
+                user_input = f"Regression testing (CI/CD trigger: {record.source}, ref: {record.ref}, commit: {record.commit[:8] if record.commit else 'N/A'})"
 
             target_url = task_config.get("target_url", "")
 
@@ -197,7 +197,7 @@ class CICDIntegrationService:
                 timeout_seconds=int(task_config.get("timeout_seconds", 900)),
             )
 
-            # 更新触发记录
+            # Update the trigger record
             record.status = "completed"
             record.task_id = result.get("mission_id", "")
             summary = result.get("summary", {})
@@ -205,11 +205,11 @@ class CICDIntegrationService:
             record.passed_count = summary.get("passed", 0)
             record.failed_count = summary.get("failed", 0)
             record.duration_ms = summary.get("duration_ms", 0)
-            logger.info(f"[CICD] Commander 任务完成: {record.task_id}")
+            logger.info(f"[CICD] Commander task completed: {record.task_id}")
 
         except Exception as e:
             record.status = "failed"
-            logger.error(f"[CICD] Commander 任务失败: {e}")
+            logger.error(f"[CICD] Commander task failed: {e}")
 
         self._save_history()
 
@@ -310,7 +310,7 @@ class CICDIntegrationService:
         trigger_time = trigger.get('triggered_at', '') if trigger else ''
 
         html = f"""<!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en-US">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-混沌工程服务 — 网络/延迟/资源故障注入
-通过 Playwright 的网络拦截和设备模拟实现混沌场景
+Chaos engineering service: network, latency, and resource fault injection.
+Uses Playwright network interception and device emulation.
 
-使用 sync_playwright + asyncio.to_thread 避免 Windows 上的 NotImplementedError
+Uses sync_playwright with asyncio.to_thread to avoid NotImplementedError on Windows.
 """
 import asyncio
 import logging
@@ -44,49 +44,49 @@ class ChaosReport:
 
 
 class ChaosEngineeringService:
-    """混沌工程服务 — 前端韧性测试"""
+    """Chaos engineering service for frontend resilience testing"""
 
     SCENARIOS = {
         "slow_network": {
-            "name": "慢速网络 (3G)",
-            "description": "模拟 3G 网络条件下页面加载表现",
+            "name": "Slow network (3G)",
+            "description": "Simulate page loading under 3G network conditions",
         },
         "offline_recovery": {
-            "name": "断网恢复",
-            "description": "模拟断网 → 恢复后页面能否正常工作",
+            "name": "Offline recovery",
+            "description": "Check whether the page recovers after losing and regaining connectivity",
         },
         "api_timeout": {
-            "name": "API 超时",
-            "description": "拦截所有 API 请求并延迟 10s，检查超时处理",
+            "name": "API timeout",
+            "description": "Intercept all API requests and delay them for 10 seconds to check timeout handling",
         },
         "api_500": {
-            "name": "API 500 错误",
-            "description": "拦截 API 请求返回 500，检查错误处理 UI",
+            "name": "API 500 error",
+            "description": "Return 500 for intercepted API requests and check the error handling UI",
         },
         "cpu_throttle": {
-            "name": "CPU 节流",
-            "description": "模拟低端设备 CPU (6x 减速)，检查页面响应性",
+            "name": "CPU throttling",
+            "description": "Emulate a low-end CPU with a 6x slowdown and check page responsiveness",
         },
         "large_payload": {
-            "name": "大负载响应",
-            "description": "注入超大 JSON 响应，检查前端渲染性能",
+            "name": "Large response payload",
+            "description": "Inject an oversized JSON response to check frontend rendering performance",
         },
         "memory_pressure": {
-            "name": "内存压力",
-            "description": "创建大量 DOM 元素，检测内存泄漏风险",
+            "name": "Memory pressure",
+            "description": "Create many DOM elements to assess memory leak risk",
         },
     }
 
     async def run_scenarios(
         self, url: str, scenarios: Optional[List[str]] = None
     ) -> ChaosReport:
-        """运行混沌测试场景（异步入口，内部在线程中同步执行 Playwright）"""
+        """Run chaos scenarios asynchronously, with synchronous Playwright calls in a worker thread"""
         return await asyncio.to_thread(self._run_scenarios_sync, url, scenarios)
 
     def _run_scenarios_sync(
         self, url: str, scenarios: Optional[List[str]] = None
     ) -> ChaosReport:
-        """同步版本：运行混沌测试场景"""
+        """Synchronous implementation of chaos scenario execution"""
         if scenarios is None:
             scenarios = list(self.SCENARIOS.keys())
 
@@ -119,24 +119,24 @@ class ChaosEngineeringService:
                 browser.close()
 
         except ImportError:
-            report.summary = "Playwright 未安装，请执行: pip install playwright && playwright install chromium"
+            report.summary = "Playwright is not installed. Run: pip install playwright && playwright install chromium"
             return report
         except Exception as e:
-            logger.error(f"混沌测试失败: {repr(e)}")
-            report.summary = f"混沌测试失败: {repr(e)}"
+            logger.error(f"Chaos testing failed: {repr(e)}")
+            report.summary = f"Chaos testing failed: {repr(e)}"
             return report
 
         report.total_duration_ms = (time.time() - start_time) * 1000
         report.summary = (
-            f"执行 {report.scenarios_run} 个场景: "
-            f"通过 {report.passed}, 失败 {report.failed}, 错误 {report.errors}"
+            f"Ran {report.scenarios_run} scenarios: "
+            f"passed {report.passed}, failed {report.failed}, errors {report.errors}"
         )
         return report
 
     def _run_single_scenario(
         self, browser, url: str, scenario_id: str
     ) -> ChaosResult:
-        """运行单个混沌场景"""
+        """Run a single chaos scenario"""
         scenario = self.SCENARIOS[scenario_id]
         result = ChaosResult(scenario=scenario["name"])
         start = time.time()
@@ -158,7 +158,7 @@ class ChaosEngineeringService:
                 result = self._scenario_memory_pressure(browser, url)
             else:
                 result.status = "error"
-                result.details = f"未知场景: {scenario_id}"
+                result.details = f"Unknown scenario: {scenario_id}"
         except Exception as e:
             result.status = "error"
             result.details = repr(e)
@@ -168,11 +168,11 @@ class ChaosEngineeringService:
         return result
 
     def _scenario_slow_network(self, browser, url: str) -> ChaosResult:
-        """3G 网络模拟"""
+        """3G network simulation"""
         context = browser.new_context()
         page = context.new_page()
 
-        # 使用 CDP 设置网络节流 (下行 750kbps, 上行 250kbps, 延迟 100ms)
+        # Set CDP network throttling: 750 kbps down, 250 kbps up, 100 ms latency
         client = context.new_cdp_session(page)
         client.send(
             "Network.emulateNetworkConditions",
@@ -189,7 +189,7 @@ class ChaosEngineeringService:
             page.goto(url, wait_until="load", timeout=30000)
             load_time = (time.time() - start) * 1000
 
-            # 检查关键内容是否渲染
+            # Check whether key content rendered
             body_text = page.evaluate("() => document.body.innerText.length")
             has_content = body_text > 50
 
@@ -199,54 +199,54 @@ class ChaosEngineeringService:
 
             if load_time > 15000:
                 return ChaosResult(
-                    scenario="慢速网络 (3G)",
+                    scenario="Slow network (3G)",
                     status="failed",
-                    details=f"3G 下加载耗时 {load_time:.0f}ms (超过 15s 阈值)",
+                    details=f"3G load duration: {load_time:.0f} ms (exceeds the 15-second threshold)",
                     metrics=metrics,
                 )
             elif has_content:
                 return ChaosResult(
-                    scenario="慢速网络 (3G)",
+                    scenario="Slow network (3G)",
                     status="passed",
-                    details=f"3G 下加载耗时 {load_time:.0f}ms，内容正常渲染",
+                    details=f"3G load duration: {load_time:.0f} ms; content rendered correctly",
                     metrics=metrics,
                 )
             else:
                 return ChaosResult(
-                    scenario="慢速网络 (3G)",
+                    scenario="Slow network (3G)",
                     status="failed",
-                    details="3G 下页面内容未正常渲染",
+                    details="Page content did not render correctly on 3G",
                     metrics=metrics,
                 )
         except Exception as e:
             context.close()
             return ChaosResult(
-                scenario="慢速网络 (3G)",
+                scenario="Slow network (3G)",
                 status="failed",
-                details=f"3G 下加载失败: {str(e)}",
+                details=f"Page loading failed on 3G: {str(e)}",
             )
 
     def _scenario_offline_recovery(self, browser, url: str) -> ChaosResult:
-        """断网恢复测试"""
+        """Offline recovery test"""
         context = browser.new_context()
         page = context.new_page()
 
-        # 先正常加载
+        # Load normally first
         page.goto(url, wait_until="networkidle", timeout=20000)
         initial_text = page.evaluate("() => document.body.innerText.length")
 
-        # 断网
+        # Disconnect
         context.set_offline(True)
         time.sleep(2)
 
-        # 恢复
+        # Reconnect
         context.set_offline(False)
         time.sleep(2)
 
-        # 检查页面状态
+        # Check page state
         try:
             recovered_text = page.evaluate("() => document.body.innerText.length")
-            # 尝试交互
+            # Attempt interaction
             clickable = page.evaluate(
                 "() => { const btn = document.querySelector('button'); return btn ? true : false; }"
             )
@@ -255,9 +255,9 @@ class ChaosEngineeringService:
 
             if recovered_text > 0 and recovered_text >= initial_text * 0.5:
                 return ChaosResult(
-                    scenario="断网恢复",
+                    scenario="Offline recovery",
                     status="passed",
-                    details="断网恢复后页面正常显示",
+                    details="The page displays correctly after reconnecting",
                     metrics={
                         "initial_content": initial_text,
                         "recovered_content": recovered_text,
@@ -265,9 +265,9 @@ class ChaosEngineeringService:
                 )
             else:
                 return ChaosResult(
-                    scenario="断网恢复",
+                    scenario="Offline recovery",
                     status="failed",
-                    details="断网恢复后页面内容丢失",
+                    details="Page content was lost after reconnecting",
                     metrics={
                         "initial_content": initial_text,
                         "recovered_content": recovered_text,
@@ -276,13 +276,13 @@ class ChaosEngineeringService:
         except Exception as e:
             context.close()
             return ChaosResult(
-                scenario="断网恢复",
+                scenario="Offline recovery",
                 status="failed",
-                details=f"恢复后页面异常: {str(e)}",
+                details=f"Page error after recovery: {str(e)}",
             )
 
     def _scenario_api_timeout(self, browser, url: str) -> ChaosResult:
-        """API 超时测试"""
+        """API timeout test"""
         context = browser.new_context()
         page = context.new_page()
 
@@ -297,14 +297,14 @@ class ChaosEngineeringService:
             except Exception:
                 pass
 
-        # 拦截 API 请求
+        # Intercept API requests
         page.route("**/api/**", delay_handler)
 
         try:
             page.goto(url, wait_until="domcontentloaded", timeout=15000)
             time.sleep(3)
 
-            # 检查是否有错误/loading 状态的 UI
+            # Check for error or loading UI
             has_error_ui = page.evaluate(
                 """() => {
                 const text = document.body.innerText.toLowerCase();
@@ -319,21 +319,21 @@ class ChaosEngineeringService:
             context.close()
 
             return ChaosResult(
-                scenario="API 超时",
+                scenario="API timeout",
                 status="passed" if has_error_ui else "failed",
-                details="API 超时时有友好的 UI 反馈"
+                details="The UI provides appropriate feedback on API timeout"
                 if has_error_ui
-                else "API 超时时没有友好的错误/加载提示",
+                else "No helpful error or loading message appears on API timeout",
                 metrics={"intercepted_requests": timeout_count},
             )
         except Exception as e:
             context.close()
             return ChaosResult(
-                scenario="API 超时", status="error", details=str(e)
+                scenario="API timeout", status="error", details=str(e)
             )
 
     def _scenario_api_500(self, browser, url: str) -> ChaosResult:
-        """API 500 错误测试"""
+        """API 500 error test"""
         context = browser.new_context()
         page = context.new_page()
 
@@ -354,7 +354,7 @@ class ChaosEngineeringService:
             page.goto(url, wait_until="domcontentloaded", timeout=15000)
             time.sleep(3)
 
-            # 检查页面是否崩溃 (白屏)
+            # Check whether the page crashes to a blank screen
             body_text = page.evaluate("() => document.body.innerText.length")
             has_error_handling = page.evaluate(
                 """() => {
@@ -369,37 +369,37 @@ class ChaosEngineeringService:
 
             if body_text < 10:
                 return ChaosResult(
-                    scenario="API 500 错误",
+                    scenario="API 500 error",
                     status="failed",
-                    details="API 全部 500 时页面白屏崩溃",
+                    details="The page crashes to a blank screen when all APIs return 500",
                     metrics={"error_requests": error_count},
                 )
             elif has_error_handling:
                 return ChaosResult(
-                    scenario="API 500 错误",
+                    scenario="API 500 error",
                     status="passed",
-                    details="API 500 时有错误处理 UI",
+                    details="Error handling UI appears on API 500 responses",
                     metrics={"error_requests": error_count},
                 )
             else:
                 return ChaosResult(
-                    scenario="API 500 错误",
+                    scenario="API 500 error",
                     status="passed",
-                    details="API 500 时页面未崩溃，但无明确错误提示",
+                    details="The page survives API 500 responses but shows no explicit error message",
                     metrics={"error_requests": error_count},
                 )
         except Exception as e:
             context.close()
             return ChaosResult(
-                scenario="API 500 错误", status="error", details=str(e)
+                scenario="API 500 error", status="error", details=str(e)
             )
 
     def _scenario_cpu_throttle(self, browser, url: str) -> ChaosResult:
-        """CPU 节流测试"""
+        """CPU throttling test"""
         context = browser.new_context()
         page = context.new_page()
 
-        # CDP: 6x CPU 减速
+        # CDP: 6x CPU slowdown
         client = context.new_cdp_session(page)
         client.send("Emulation.setCPUThrottlingRate", {"rate": 6})
 
@@ -408,11 +408,11 @@ class ChaosEngineeringService:
             page.goto(url, wait_until="load", timeout=30000)
             load_time = (time.time() - start) * 1000
 
-            # 测量交互响应
+            # Measure interaction response
             interaction_time = page.evaluate(
                 """() => {
                 const start = performance.now();
-                // 强制重排
+                // Force layout recalculation
                 document.body.offsetHeight;
                 for (let i = 0; i < 100; i++) {
                     document.body.style.opacity = (i % 2 === 0) ? '0.99' : '1';
@@ -433,30 +433,30 @@ class ChaosEngineeringService:
 
             if interaction_time > 5000:
                 return ChaosResult(
-                    scenario="CPU 节流",
+                    scenario="CPU throttling",
                     status="failed",
-                    details=f"6x CPU 减速下交互响应 {interaction_time:.0f}ms (超过 5s)",
+                    details=f"Interaction response with 6x CPU slowdown: {interaction_time:.0f} ms (exceeds 5 seconds)",
                     metrics=metrics,
                 )
             else:
                 return ChaosResult(
-                    scenario="CPU 节流",
+                    scenario="CPU throttling",
                     status="passed",
-                    details=f"6x CPU 减速下交互响应 {interaction_time:.0f}ms",
+                    details=f"Interaction response with 6x CPU slowdown: {interaction_time:.0f}ms",
                     metrics=metrics,
                 )
         except Exception as e:
             context.close()
             return ChaosResult(
-                scenario="CPU 节流", status="error", details=str(e)
+                scenario="CPU throttling", status="error", details=str(e)
             )
 
     def _scenario_large_payload(self, browser, url: str) -> ChaosResult:
-        """大负载响应测试"""
+        """Large response payload test"""
         context = browser.new_context()
         page = context.new_page()
 
-        # 生成 5MB JSON payload
+        # Generate a 5 MB JSON payload
         large_data = [{"id": i, "value": "x" * 1000} for i in range(5000)]
         payload = json.dumps(large_data)
 
@@ -480,7 +480,7 @@ class ChaosEngineeringService:
             page.goto(url, wait_until="domcontentloaded", timeout=20000)
             time.sleep(3)
 
-            # 检查页面是否存活
+            # Check whether the page is still responsive
             is_responsive = page.evaluate(
                 "() => { try { return typeof document.body.innerText === 'string'; } catch { return false; } }"
             )
@@ -488,33 +488,33 @@ class ChaosEngineeringService:
             context.close()
 
             return ChaosResult(
-                scenario="大负载响应",
+                scenario="Large response payload",
                 status="passed" if is_responsive else "failed",
-                details="5MB JSON 注入后页面保持响应"
+                details="The page remains responsive after injecting 5 MB of JSON"
                 if is_responsive
-                else "5MB JSON 注入后页面无响应",
+                else "The page is unresponsive after injecting 5 MB of JSON",
                 metrics={"payload_size_kb": len(payload) // 1024},
             )
         except Exception as e:
             context.close()
             return ChaosResult(
-                scenario="大负载响应", status="error", details=str(e)
+                scenario="Large response payload", status="error", details=str(e)
             )
 
     def _scenario_memory_pressure(self, browser, url: str) -> ChaosResult:
-        """内存压力测试"""
+        """Memory pressure test"""
         context = browser.new_context()
         page = context.new_page()
 
         try:
             page.goto(url, wait_until="networkidle", timeout=20000)
 
-            # 注入大量 DOM 元素
+            # Inject many DOM elements
             memory_info = page.evaluate(
                 """() => {
                 const before = performance.memory ? performance.memory.usedJSHeapSize : 0;
                 
-                // 创建 10000 个 DOM 元素
+                // Create 10,000 DOM elements
                 const container = document.createElement('div');
                 container.id = 'chaos-test-container';
                 container.style.display = 'none';
@@ -528,7 +528,7 @@ class ChaosEngineeringService:
                 
                 const after = performance.memory ? performance.memory.usedJSHeapSize : 0;
                 
-                // 清理
+                // Clean up
                 container.remove();
                 
                 return {
@@ -543,21 +543,21 @@ class ChaosEngineeringService:
             context.close()
 
             return ChaosResult(
-                scenario="内存压力",
+                scenario="Memory pressure",
                 status="passed"
                 if memory_info.get("responsive")
                 else "failed",
-                details=f"注入 10000 DOM 元素后内存增长 {memory_info.get('delta_mb', 'N/A')} MB",
+                details=f"Memory growth after injecting 10,000 DOM elements: {memory_info.get('delta_mb', 'N/A')} MB",
                 metrics=memory_info,
             )
         except Exception as e:
             context.close()
             return ChaosResult(
-                scenario="内存压力", status="error", details=str(e)
+                scenario="Memory pressure", status="error", details=str(e)
             )
 
     def list_scenarios(self) -> List[Dict[str, str]]:
-        """列出所有可用混沌场景"""
+        """List all available chaos scenarios"""
         return [
             {"id": k, "name": v["name"], "description": v["description"]}
             for k, v in self.SCENARIOS.items()

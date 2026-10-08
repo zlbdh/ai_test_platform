@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-合规测试服务 — GDPR / SOC2 / PCI-DSS 自动化合规检查
-基于 HTTP 响应头分析 + Playwright 页面检测
+Compliance testing service: automated GDPR, SOC 2, and PCI DSS checks.
+Uses HTTP response header analysis and Playwright page inspection.
 """
 import asyncio
 import logging
@@ -43,14 +43,14 @@ class ComplianceReport:
         return asdict(self)
 
 
-# GDPR 页面检查 JS
+# JavaScript for GDPR page checks
 GDPR_CHECK_SCRIPT = """
 () => {
     const issues = [];
     const bodyText = (document.body.innerText || '').toLowerCase();
     const bodyHtml = (document.body.innerHTML || '').toLowerCase();
     
-    // 1. Cookie 同意横幅检查
+    // 1. Check cookie consent banners
     const cookieIndicators = ['cookie', 'consent', '同意', 'cookie policy', 'accept cookies', 'cookie设置'];
     const hasCookieBanner = cookieIndicators.some(kw => bodyText.includes(kw)) ||
         document.querySelector('[class*="cookie"], [id*="cookie"], [class*="consent"], [id*="consent"]');
@@ -58,13 +58,13 @@ GDPR_CHECK_SCRIPT = """
         issues.push({
             rule_id: 'gdpr-cookie-consent',
             standard: 'GDPR',
-            description: '未检测到 Cookie 同意横幅',
+            description: 'No cookie consent banner detected',
             severity: 'critical',
-            suggestion: '添加 Cookie 同意管理组件，在用户同意前不设置非必要 Cookie'
+            suggestion: 'Add cookie consent management and do not set nonessential cookies before consent'
         });
     }
     
-    // 2. 隐私政策链接检查
+    // 2. Check privacy policy links
     const privacyLinks = document.querySelectorAll('a[href*="privacy"], a[href*="隐私"]');
     const privacyTextLinks = Array.from(document.querySelectorAll('a')).filter(a => {
         const text = (a.textContent || '').toLowerCase();
@@ -74,26 +74,26 @@ GDPR_CHECK_SCRIPT = """
         issues.push({
             rule_id: 'gdpr-privacy-policy',
             standard: 'GDPR',
-            description: '未检测到隐私政策链接',
+            description: 'No privacy policy link detected',
             severity: 'major',
-            suggestion: '在页脚或明显位置添加隐私政策页面链接'
+            suggestion: 'Add a privacy policy link in the footer or another visible location'
         });
     }
     
-    // 3. 数据删除/导出入口检查
+    // 3. Check data deletion and export access
     const dataRightsKeywords = ['delete account', 'export data', '删除账号', '导出数据', 'data request', '注销'];
     const hasDataRights = dataRightsKeywords.some(kw => bodyText.includes(kw));
     if (!hasDataRights) {
         issues.push({
             rule_id: 'gdpr-data-rights',
             standard: 'GDPR',
-            description: '未检测到数据删除/导出入口',
+            description: 'No data deletion or export entry point detected',
             severity: 'minor',
-            suggestion: '提供用户数据导出和账号删除功能的入口'
+            suggestion: 'Provide access to data export and account deletion'
         });
     }
     
-    // 4. 表单数据收集声明检查
+    // 4. Check form data collection notices
     const forms = document.querySelectorAll('form');
     forms.forEach((form, i) => {
         const formText = (form.textContent || '').toLowerCase();
@@ -104,9 +104,9 @@ GDPR_CHECK_SCRIPT = """
             issues.push({
                 rule_id: 'gdpr-form-consent',
                 standard: 'GDPR',
-                description: `表单 ${i + 1} 收集个人数据但未包含隐私声明`,
+                description: `Form ${i + 1} collects personal data without a privacy notice`,
                 severity: 'major',
-                suggestion: '在收集个人数据的表单中添加隐私声明和同意复选框'
+                suggestion: 'Add a privacy notice and consent checkbox to forms that collect personal data'
             });
         }
     });
@@ -115,35 +115,35 @@ GDPR_CHECK_SCRIPT = """
 }
 """
 
-# PCI-DSS 页面检查 JS
+# JavaScript for PCI DSS page checks
 PCIDSS_CHECK_SCRIPT = """
 () => {
     const issues = [];
     
-    // 1. 信用卡字段 autocomplete 检查
+    // 1. Check credit card field autocomplete
     const ccFields = document.querySelectorAll('input[type="text"][name*="card"], input[type="text"][name*="credit"], input[name*="cc-number"], input[autocomplete*="cc-"]');
     ccFields.forEach(field => {
         if (field.getAttribute('autocomplete') !== 'off') {
             issues.push({
                 rule_id: 'pci-autocomplete',
                 standard: 'PCI-DSS',
-                description: '信用卡字段未禁用 autocomplete',
+                description: 'Autocomplete is not disabled for a credit card field',
                 severity: 'critical',
-                suggestion: '设置 autocomplete="off" 防止浏览器保存敏感卡号信息'
+                suggestion: 'Set autocomplete="off" to prevent browser storage of sensitive card numbers'
             });
         }
     });
     
-    // 2. 密码字段安全检查
+    // 2. Check password field security
     const passwordFields = document.querySelectorAll('input[type="password"]');
     passwordFields.forEach(field => {
         if (field.getAttribute('autocomplete') === 'on') {
             issues.push({
                 rule_id: 'pci-password-autocomplete',
                 standard: 'PCI-DSS',
-                description: '密码字段启用了 autocomplete',
+                description: 'Autocomplete is enabled for a password field',
                 severity: 'major',
-                suggestion: '设置 autocomplete="new-password" 或 "current-password"'
+                suggestion: 'Set autocomplete="new-password" or "current-password"'
             });
         }
     });
@@ -154,10 +154,10 @@ PCIDSS_CHECK_SCRIPT = """
 
 
 class ComplianceTestService:
-    """合规测试服务"""
+    """Compliance testing service"""
     
     async def audit(self, url: str, standards: Optional[List[str]] = None) -> ComplianceReport:
-        """执行合规审计"""
+        """Run a compliance audit"""
         if standards is None:
             standards = ["GDPR", "SOC2", "PCI-DSS"]
         
@@ -165,19 +165,19 @@ class ComplianceTestService:
         all_issues = []
         total_checks = 0
         
-        # 1. HTTP 响应头安全检查 (SOC2 / PCI-DSS)
+        # 1. HTTP response security header checks for SOC 2 and PCI DSS
         if "SOC2" in standards or "PCI-DSS" in standards:
             header_issues, header_checks = await self._check_security_headers(url)
             all_issues.extend(header_issues)
             total_checks += header_checks
         
-        # 2. 页面内容检查 (GDPR + PCI-DSS) — 使用线程运行 Playwright
+        # 2. Page content checks for GDPR and PCI DSS; run Playwright in a worker thread
         if "GDPR" in standards or "PCI-DSS" in standards:
             page_issues, page_checks = await asyncio.to_thread(self._check_page_compliance_sync, url, standards)
             all_issues.extend(page_issues)
             total_checks += page_checks
         
-        # 统计
+        # Summarize statistics
         report.issues = [i if isinstance(i, dict) else i.to_dict() for i in all_issues]
         report.total_issues = len(report.issues)
         report.critical = sum(1 for i in report.issues if i.get("severity") == "critical")
@@ -188,12 +188,12 @@ class ComplianceTestService:
         
         deduction = report.critical * 15 + report.major * 8 + report.minor * 3
         report.score = max(0, min(100, 100 - deduction))
-        report.summary = f"合规审计完成 ({', '.join(standards)}): {report.total_issues} 个问题, 评分 {report.score}/100"
+        report.summary = f"Compliance audit completed ({', '.join(standards)}): {report.total_issues} issues, score {report.score}/100"
         
         return report
     
     async def _check_security_headers(self, url: str) -> tuple:
-        """检查安全响应头"""
+        """Check security response headers"""
         import aiohttp
         
         issues = []
@@ -204,15 +204,15 @@ class ComplianceTestService:
                 async with session.get(url, timeout=aiohttp.ClientTimeout(total=15), allow_redirects=True) as resp:
                     headers = dict(resp.headers)
             
-            # HTTPS 检查
+            # Check HTTPS
             checks += 1
             if not url.startswith("https://"):
                 issues.append({
                     "rule_id": "sec-https",
                     "standard": "SOC2",
-                    "description": "页面未使用 HTTPS",
+                    "description": "The page does not use HTTPS",
                     "severity": "critical",
-                    "suggestion": "强制使用 HTTPS 并配置 HSTS"
+                    "suggestion": "Require HTTPS and configure HSTS"
                 })
             
             # HSTS
@@ -221,9 +221,9 @@ class ComplianceTestService:
                 issues.append({
                     "rule_id": "sec-hsts",
                     "standard": "SOC2",
-                    "description": "缺少 Strict-Transport-Security 头",
+                    "description": "Missing Strict-Transport-Security header",
                     "severity": "major",
-                    "suggestion": "添加 Strict-Transport-Security: max-age=31536000; includeSubDomains"
+                    "suggestion": "Add Strict-Transport-Security: max-age=31536000; includeSubDomains"
                 })
             
             headers_lower = {k.lower(): v for k, v in headers.items()}
@@ -234,9 +234,9 @@ class ComplianceTestService:
                 issues.append({
                     "rule_id": "sec-csp",
                     "standard": "SOC2",
-                    "description": "缺少 Content-Security-Policy 头",
+                    "description": "Missing Content-Security-Policy header",
                     "severity": "major",
-                    "suggestion": "配置 CSP 以防止 XSS 和注入攻击"
+                    "suggestion": "Configure CSP to prevent XSS and injection attacks"
                 })
             
             # X-Frame-Options
@@ -245,9 +245,9 @@ class ComplianceTestService:
                 issues.append({
                     "rule_id": "sec-xfo",
                     "standard": "SOC2",
-                    "description": "缺少 X-Frame-Options 头",
+                    "description": "Missing X-Frame-Options header",
                     "severity": "major",
-                    "suggestion": "添加 X-Frame-Options: DENY 或 SAMEORIGIN"
+                    "suggestion": "Add X-Frame-Options: DENY or SAMEORIGIN"
                 })
             
             # X-Content-Type-Options
@@ -256,9 +256,9 @@ class ComplianceTestService:
                 issues.append({
                     "rule_id": "sec-xcto",
                     "standard": "SOC2",
-                    "description": "缺少 X-Content-Type-Options 头",
+                    "description": "Missing X-Content-Type-Options header",
                     "severity": "minor",
-                    "suggestion": "添加 X-Content-Type-Options: nosniff"
+                    "suggestion": "Add X-Content-Type-Options: nosniff"
                 })
             
             # Referrer-Policy
@@ -267,12 +267,12 @@ class ComplianceTestService:
                 issues.append({
                     "rule_id": "sec-referrer",
                     "standard": "SOC2",
-                    "description": "缺少 Referrer-Policy 头",
+                    "description": "Missing Referrer-Policy header",
                     "severity": "minor",
-                    "suggestion": "添加 Referrer-Policy: strict-origin-when-cross-origin"
+                    "suggestion": "Add Referrer-Policy: strict-origin-when-cross-origin"
                 })
             
-            # Cookie 安全标志
+            # Cookie security flags
             checks += 1
             set_cookie_headers = [v for k, v in headers.items() if k.lower() == "set-cookie"]
             for cookie in set_cookie_headers:
@@ -281,31 +281,31 @@ class ComplianceTestService:
                     issues.append({
                         "rule_id": "sec-cookie-secure",
                         "standard": "PCI-DSS",
-                        "description": f"Cookie 缺少 Secure 标志",
+                        "description": f"Cookie is missing the Secure flag",
                         "severity": "major",
-                        "suggestion": "为所有 Cookie 设置 Secure 标志"
+                        "suggestion": "Set the Secure flag on all cookies"
                     })
                 if "httponly" not in cookie_lower:
                     issues.append({
                         "rule_id": "sec-cookie-httponly",
                         "standard": "PCI-DSS",
-                        "description": f"Cookie 缺少 HttpOnly 标志",
+                        "description": f"Cookie is missing the HttpOnly flag",
                         "severity": "major",
-                        "suggestion": "为敏感 Cookie 设置 HttpOnly 标志"
+                        "suggestion": "Set the HttpOnly flag on sensitive cookies"
                     })
         
         except Exception as e:
             issues.append({
                 "rule_id": "sec-error",
                 "standard": "GENERAL",
-                "description": f"安全头检查失败: {str(e)}",
+                "description": f"Security header check failed: {str(e)}",
                 "severity": "major"
             })
         
         return issues, checks
     
     def _check_page_compliance_sync(self, url: str, standards: List[str]) -> tuple:
-        """同步版本：使用 Playwright 检查页面合规性"""
+        """Synchronous implementation of Playwright page compliance checks"""
         import time
         issues = []
         checks = 0
@@ -335,7 +335,7 @@ class ComplianceTestService:
             issues.append({
                 "rule_id": "playwright-missing",
                 "standard": "GENERAL",
-                "description": "Playwright 未安装，页面合规检查跳过",
+                "description": "Playwright is not installed; skipping page compliance checks",
                 "severity": "minor",
                 "suggestion": "pip install playwright && playwright install chromium"
             })
@@ -343,7 +343,7 @@ class ComplianceTestService:
             issues.append({
                 "rule_id": "page-check-error",
                 "standard": "GENERAL",
-                "description": f"页面合规检查失败: {repr(e)}",
+                "description": f"Page compliance check failed: {repr(e)}",
                 "severity": "major"
             })
         

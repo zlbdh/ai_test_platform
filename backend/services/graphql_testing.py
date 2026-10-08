@@ -1,11 +1,11 @@
 """
-GraphQL Testing Service - GraphQL API 测试服务
+GraphQL API testing service.
 
-支持 GraphQL API 的完整测试能力：
-- Query/Mutation/Subscription 测试
-- 变量和片段支持
-- 自省查询 (Introspection)
-- 断言验证
+Supports:
+- Query, mutation, and subscription testing
+- Variables and fragments
+- Introspection queries
+- Assertion verification
 """
 
 from typing import Dict, Any, List, Optional
@@ -17,7 +17,7 @@ import asyncio
 
 @dataclass
 class GraphQLRequest:
-    """GraphQL 请求"""
+    """GraphQL request"""
     query: str
     variables: Optional[Dict[str, Any]] = None
     operation_name: Optional[str] = None
@@ -25,7 +25,7 @@ class GraphQLRequest:
 
 @dataclass
 class GraphQLResponse:
-    """GraphQL 响应"""
+    """GraphQL response"""
     data: Optional[Dict[str, Any]]
     errors: Optional[List[Dict]]
     extensions: Optional[Dict[str, Any]]
@@ -35,14 +35,14 @@ class GraphQLResponse:
 
 @dataclass
 class GraphQLAssertion:
-    """GraphQL 断言"""
+    """GraphQL assertion"""
     path: str  # e.g., "data.user.name"
     operator: str  # eq, ne, contains, exists, type
     expected: Any
 
 
 class GraphQLTestService:
-    """GraphQL 测试服务"""
+    """GraphQL testing service"""
     
     def __init__(self, endpoint: str, headers: Optional[Dict[str, str]] = None):
         self.endpoint = endpoint
@@ -55,7 +55,7 @@ class GraphQLTestService:
         request: GraphQLRequest,
         timeout: float = 30.0
     ) -> GraphQLResponse:
-        """执行 GraphQL 请求"""
+        """Execute a GraphQL request"""
         import time
         
         payload = {
@@ -91,7 +91,7 @@ class GraphQLTestService:
         )
     
     async def introspect(self) -> Dict[str, Any]:
-        """获取 GraphQL Schema (自省查询)"""
+        """Get the GraphQL schema using introspection"""
         introspection_query = """
         query IntrospectionQuery {
             __schema {
@@ -173,7 +173,7 @@ class GraphQLTestService:
         return self.schema or {}
     
     def _get_value_by_path(self, data: Dict, path: str) -> Any:
-        """根据路径获取值"""
+        """Get a value by path"""
         keys = path.split(".")
         value = data
         
@@ -192,7 +192,7 @@ class GraphQLTestService:
         response: GraphQLResponse,
         assertions: List[GraphQLAssertion]
     ) -> List[Dict[str, Any]]:
-        """验证响应"""
+        """Verify the response"""
         results = []
         
         for assertion in assertions:
@@ -243,7 +243,7 @@ class GraphQLTestService:
         self,
         tests: List[Dict[str, Any]]
     ) -> Dict[str, Any]:
-        """运行测试套件"""
+        """Run a test suite"""
         results = []
         total_passed = 0
         total_failed = 0
@@ -291,11 +291,11 @@ class GraphQLTestService:
         type_name: str,
         depth: int = 2
     ) -> str:
-        """根据 Schema 自动生成查询"""
+        """Generate a query from the schema"""
         if not self.schema:
             return ""
         
-        # 查找类型
+        # Find the type
         type_def = None
         for t in self.schema.get("types", []):
             if t.get("name") == type_name:
@@ -305,9 +305,9 @@ class GraphQLTestService:
         if not type_def or not type_def.get("fields"):
             return f"{{ {type_name.lower()} {{ id }} }}"
         
-        # 生成字段
+        # Generate fields
         fields = []
-        for field in type_def.get("fields", [])[:10]:  # 限制字段数
+        for field in type_def.get("fields", [])[:10]:  # Limit the number of fields
             field_name = field.get("name")
             if not field_name.startswith("_"):
                 fields.append(field_name)
@@ -315,10 +315,10 @@ class GraphQLTestService:
         return f"{{ {type_name.lower()} {{ {' '.join(fields)} }} }}"
 
 
-# 工厂函数
+# Factory function
 def create_graphql_service(
     endpoint: str,
     headers: Optional[Dict[str, str]] = None
 ) -> GraphQLTestService:
-    """创建 GraphQL 测试服务"""
+    """Create a GraphQL testing service"""
     return GraphQLTestService(endpoint, headers)

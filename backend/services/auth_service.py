@@ -1,11 +1,11 @@
 """
-Authentication Service - 企业级认证系统
+Authentication service: enterprise authentication.
 
-提供用户认证和授权功能：
-- JWT Token 管理
-- 用户/项目隔离
-- API Key 认证
-- 审计日志
+Provides authentication and authorization:
+- JWT token management
+- User and project isolation
+- API key authentication
+- Audit logs
 """
 
 from typing import Dict, Any, List, Optional
@@ -39,7 +39,7 @@ class Permission(Enum):
     ADMIN = "admin"
 
 
-# 角色权限映射
+# Role-to-permission mapping
 ROLE_PERMISSIONS = {
     UserRole.ADMIN: [p for p in Permission],
     UserRole.DEVELOPER: [
@@ -61,7 +61,7 @@ ROLE_PERMISSIONS = {
 
 @dataclass
 class User:
-    """用户"""
+    """User"""
     user_id: str
     username: str
     email: str
@@ -76,7 +76,7 @@ class User:
 
 @dataclass
 class Project:
-    """项目"""
+    """Project"""
     project_id: str
     name: str
     description: str
@@ -88,7 +88,7 @@ class Project:
 
 @dataclass
 class Session:
-    """会话"""
+    """Session"""
     session_id: str
     user_id: str
     token: str
@@ -99,7 +99,7 @@ class Session:
 
 @dataclass
 class AuditLog:
-    """审计日志"""
+    """Audit log"""
     log_id: str
     user_id: str
     action: str
@@ -111,7 +111,7 @@ class AuditLog:
 
 
 class AuthenticationService:
-    """认证服务"""
+    """Authentication service"""
     
     def __init__(self, storage_path: Optional[str] = None):
         self.storage_path = Path(storage_path or "data/auth")
@@ -131,7 +131,7 @@ class AuthenticationService:
         self._ensure_admin()
     
     def _load(self):
-        """加载数据"""
+        """Load data"""
         users_file = self.storage_path / "users.json"
         projects_file = self.storage_path / "projects.json"
         
@@ -155,7 +155,7 @@ class AuthenticationService:
                 pass
     
     def _save(self):
-        """保存数据"""
+        """Save data"""
         users_file = self.storage_path / "users.json"
         projects_file = self.storage_path / "projects.json"
         
@@ -171,13 +171,13 @@ class AuthenticationService:
             json.dump([asdict(p) for p in self.projects.values()], f, ensure_ascii=False, indent=2)
 
     def _connect_audit_db(self) -> sqlite3.Connection:
-        """连接审计日志数据库。"""
+        """Connect to the audit log database."""
         conn = sqlite3.connect(self.audit_db_path, timeout=10)
         conn.row_factory = sqlite3.Row
         return conn
 
     def _init_audit_storage(self):
-        """初始化认证运行态存储。"""
+        """Initialize persistent authentication state."""
         try:
             with self._connect_audit_db() as conn:
                 conn.execute(
@@ -222,11 +222,11 @@ class AuthenticationService:
                     "CREATE INDEX IF NOT EXISTS idx_sessions_expires_at ON sessions(expires_at)"
                 )
         except sqlite3.Error:
-            # 退回内存缓存，避免初始化直接中断服务。
+            # Fall back to the in-memory cache so initialization does not interrupt the service.
             pass
 
     def _row_to_audit_log(self, row: sqlite3.Row) -> AuditLog:
-        """将 SQLite 记录转换为 AuditLog。"""
+        """Convert a SQLite record to an AuditLog."""
         details_raw = row["details_json"] or "{}"
         try:
             details = json.loads(details_raw)
@@ -245,7 +245,7 @@ class AuthenticationService:
         )
 
     def _load_recent_audit_logs(self):
-        """从持久化存储加载最近审计日志到内存缓存。"""
+        """Load recent persistent audit logs into the in-memory cache."""
         try:
             with self._connect_audit_db() as conn:
                 rows = conn.execute(
@@ -262,7 +262,7 @@ class AuthenticationService:
             self.audit_logs = []
 
     def _load_active_sessions(self):
-        """加载未过期会话，支持服务重启后继续校验 token。"""
+        """Load unexpired sessions so tokens remain valid after a service restart."""
         try:
             now = datetime.now().isoformat()
             with self._connect_audit_db() as conn:
@@ -288,7 +288,7 @@ class AuthenticationService:
             self.sessions = {}
 
     def _persist_audit_log(self, log: AuditLog):
-        """持久化审计日志到 SQLite。"""
+        """Persist an audit log to SQLite."""
         try:
             with self._connect_audit_db() as conn:
                 conn.execute(
@@ -309,11 +309,11 @@ class AuthenticationService:
                     ),
                 )
         except sqlite3.Error:
-            # 写入失败时仍保留内存日志，避免影响主流程。
+            # Keep the in-memory log if persistence fails, avoiding disruption of the main workflow.
             pass
 
     def _persist_session(self, session: Session):
-        """持久化会话到 SQLite。"""
+        """Persist a session to SQLite."""
         try:
             with self._connect_audit_db() as conn:
                 conn.execute(
@@ -335,7 +335,7 @@ class AuthenticationService:
             pass
 
     def _delete_session(self, token: str):
-        """删除持久化会话。"""
+        """Delete a persistent session."""
         try:
             with self._connect_audit_db() as conn:
                 conn.execute("DELETE FROM sessions WHERE token = ?", (token,))
@@ -343,16 +343,16 @@ class AuthenticationService:
             pass
     
     def _ensure_admin(self):
-        """确保存在默认管理员（密码从环境变量读取，未设置时随机生成）"""
+        """Ensure a default administrator exists; read the password from the environment or generate one randomly"""
         if not any(u.role == UserRole.ADMIN for u in self.users.values()):
             import os, logging as _log
             admin_password = os.environ.get("ADMIN_DEFAULT_PASSWORD", "")
             if not admin_password:
                 admin_password = secrets.token_urlsafe(16)
                 _log.getLogger(__name__).warning(
-                    f"[AuthService] 首次启动，已自动创建管理员账户。"
-                    f"用户名: admin | 密码: {admin_password}"
-                    f" | 请尽快修改密码或设置环境变量 ADMIN_DEFAULT_PASSWORD"
+                    f"[AuthService] Initial startup: an administrator account was created automatically. "
+                    f"Username: admin | Password: {admin_password}"
+                    f" | Change the password promptly or set ADMIN_DEFAULT_PASSWORD"
                 )
             self.create_user(
                 username="admin",
@@ -362,18 +362,18 @@ class AuthenticationService:
             )
     
     def _hash_password(self, password: str, salt: str = "") -> str:
-        """密码哈希（使用 PBKDF2 + 随机盐）"""
+        """Hash a password using PBKDF2 and a random salt"""
         if not salt:
             salt = secrets.token_hex(16)
         hashed = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 100_000)
         return f"{salt}${hashed.hex()}"
     
     def _generate_token(self) -> str:
-        """生成令牌"""
+        """Generate a token"""
         return secrets.token_urlsafe(32)
     
     def _generate_api_key(self) -> str:
-        """生成 API Key"""
+        """Generate an API key"""
         return f"atp_{secrets.token_urlsafe(24)}"
     
     def create_user(
@@ -383,7 +383,7 @@ class AuthenticationService:
         password: str,
         role: UserRole = UserRole.TESTER
     ) -> User:
-        """创建用户"""
+        """Create a user"""
         user_id = f"user_{secrets.token_hex(8)}"
         
         user = User(
@@ -410,21 +410,21 @@ class AuthenticationService:
         password: str,
         ip_address: Optional[str] = None
     ) -> Optional[Session]:
-        """用户认证"""
+        """Authenticate a user"""
         user = None
         for u in self.users.values():
             if u.username == username:
-                # 从存储的hash中提取盐值重新计算
+                # Extract the salt from the stored hash and recompute
                 if "$" in u.password_hash:
                     stored_salt = u.password_hash.split("$")[0]
                     if self._hash_password(password, stored_salt) == u.password_hash:
                         user = u
                         break
                 else:
-                    # 兼容旧版 SHA256 hash（迁移期）
+                    # Support legacy SHA256 hashes during migration
                     old_hash = hashlib.sha256(f"{password}ai_test_platform_salt".encode()).hexdigest()
                     if u.password_hash == old_hash:
-                        # 自动迁移到新格式
+                        # Automatically migrate to the new format
                         u.password_hash = self._hash_password(password)
                         self._save()
                         user = u
@@ -434,7 +434,7 @@ class AuthenticationService:
             self._audit("login_failed", "session", None, {"username": username}, ip=ip_address)
             return None
         
-        # 创建会话
+        # Create a session
         session = Session(
             session_id=f"sess_{secrets.token_hex(16)}",
             user_id=user.user_id,
@@ -447,7 +447,7 @@ class AuthenticationService:
         self.sessions[session.token] = session
         self._persist_session(session)
         
-        # 更新最后登录
+        # Update the last login
         user.last_login = datetime.now().isoformat()
         self._save()
         
@@ -456,20 +456,20 @@ class AuthenticationService:
         return session
     
     def authenticate_api_key(self, api_key: str) -> Optional[User]:
-        """API Key 认证"""
+        """API key authentication"""
         for user in self.users.values():
             if user.api_key == api_key and user.is_active:
                 return user
         return None
     
     def validate_token(self, token: str) -> Optional[User]:
-        """验证令牌"""
+        """Validate a token"""
         session = self.sessions.get(token)
         
         if not session:
             return None
         
-        # 检查过期
+        # Check expiration
         if datetime.fromisoformat(session.expires_at) < datetime.now():
             del self.sessions[token]
             self._delete_session(token)
@@ -478,7 +478,7 @@ class AuthenticationService:
         return self.users.get(session.user_id)
 
     def get_dev_bypass_user(self) -> Optional[User]:
-        """开发态免登录时返回默认本地用户，优先管理员。"""
+        """Return a default local user, preferring an administrator, when development authentication bypass is enabled."""
         for user in self.users.values():
             if user.is_active and user.role == UserRole.ADMIN:
                 return user
@@ -490,7 +490,7 @@ class AuthenticationService:
         return None
     
     def check_permission(self, user: User, permission: Permission) -> bool:
-        """检查权限"""
+        """Check permissions"""
         user_permissions = ROLE_PERMISSIONS.get(user.role, [])
         return permission in user_permissions or Permission.ADMIN in user_permissions
     
@@ -500,7 +500,7 @@ class AuthenticationService:
         description: str,
         owner_id: str
     ) -> Project:
-        """创建项目"""
+        """Create a project"""
         project_id = f"proj_{secrets.token_hex(8)}"
         
         project = Project(
@@ -515,7 +515,7 @@ class AuthenticationService:
         
         self.projects[project_id] = project
         
-        # 更新用户项目列表
+        # Update the project list for the user
         if owner_id in self.users:
             self.users[owner_id].project_ids.append(project_id)
         
@@ -530,7 +530,7 @@ class AuthenticationService:
         user_id: str,
         added_by: str
     ) -> bool:
-        """添加项目成员"""
+        """Add a project member"""
         if project_id not in self.projects or user_id not in self.users:
             return False
         
@@ -544,7 +544,7 @@ class AuthenticationService:
         return True
     
     def check_project_access(self, user: User, project_id: str) -> bool:
-        """检查项目访问权限"""
+        """Check project access"""
         if user.role == UserRole.ADMIN:
             return True
         return project_id in user.project_ids
@@ -558,7 +558,7 @@ class AuthenticationService:
         user_id: Optional[str] = None,
         ip: Optional[str] = None
     ):
-        """记录审计日志"""
+        """Record an audit log"""
         log = AuditLog(
             log_id=f"audit_{secrets.token_hex(8)}",
             user_id=user_id or "system",
@@ -572,7 +572,7 @@ class AuthenticationService:
         self.audit_logs.append(log)
         self._persist_audit_log(log)
         
-        # 限制日志数量
+        # Limit the number of logs
         if len(self.audit_logs) > self._audit_cache_limit * 2:
             self.audit_logs = self.audit_logs[-self._audit_cache_limit:]
 
@@ -585,7 +585,7 @@ class AuthenticationService:
         user_id: Optional[str] = None,
         ip: Optional[str] = None,
     ):
-        """公开的审计记录入口，供路由和服务层复用。"""
+        """Public audit recording entry point shared by routers and services."""
         self._audit(
             action=action,
             resource_type=resource_type,
@@ -603,7 +603,7 @@ class AuthenticationService:
         action_prefix: Optional[str] = None,
         limit: int = 100
     ) -> List[AuditLog]:
-        """获取审计日志"""
+        """Get audit logs"""
         try:
             sql = [
                 "SELECT log_id, user_id, action, resource_type, resource_id, details_json, timestamp, ip_address",
@@ -649,7 +649,7 @@ class AuthenticationService:
             return logs[-limit:]
     
     def logout(self, token: str):
-        """登出"""
+        """Sign out"""
         if token in self.sessions:
             session = self.sessions[token]
             self._audit("logout", "session", session.session_id, {}, user_id=session.user_id)
@@ -657,11 +657,11 @@ class AuthenticationService:
             self._delete_session(token)
 
 
-# 单例
+# Singleton
 _auth_service: Optional[AuthenticationService] = None
 
 def get_auth_service() -> AuthenticationService:
-    """获取认证服务单例"""
+    """Get the authentication service singleton"""
     global _auth_service
     if _auth_service is None:
         _auth_service = AuthenticationService()

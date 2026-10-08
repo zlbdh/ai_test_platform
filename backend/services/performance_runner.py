@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-性能测试服务 - 基于 Locust 的压力测试模块
-提供 API 接口进行性能测试配置和执行
+Performance testing service based on Locust load testing.
+Provides APIs for configuring and executing performance tests.
 """
 import os
 import json
@@ -28,11 +28,11 @@ class LoadTestStatus(str, Enum):
 
 @dataclass
 class LoadTestConfig:
-    """负载测试配置"""
+    """Load test configuration"""
     target_url: str
     users: int = 10
     spawn_rate: int = 1
-    duration: int = 60  # 秒
+    duration: int = 60  # seconds
     endpoints: List[Dict[str, Any]] = field(default_factory=list)
     headers: Dict[str, str] = field(default_factory=dict)
     session_id: str = "default_session"
@@ -42,7 +42,7 @@ class LoadTestConfig:
 
 @dataclass
 class LoadTestResult:
-    """负载测试结果"""
+    """Load test result"""
     test_id: str
     status: LoadTestStatus
     config: LoadTestConfig
@@ -59,7 +59,7 @@ class LoadTestResult:
 
 
 class PerformanceRunner:
-    """性能测试运行器"""
+    """Performance test runner"""
 
     def __init__(self, results_dir: str = "data/performance"):
         self.results_dir = Path(results_dir)
@@ -73,7 +73,7 @@ class PerformanceRunner:
         return self._status
 
     def generate_locustfile(self, config: LoadTestConfig) -> str:
-        """生成 Locust 测试脚本"""
+        """Generate a Locust test script"""
         endpoints_code = ""
         
         if config.endpoints:
@@ -97,7 +97,7 @@ class PerformanceRunner:
         self.client.post("{path}", json={body_str}, headers=self.headers)
 '''
         else:
-            # 默认测试根路径
+            # Test the root path by default
             endpoints_code = '''
     @task
     def default_endpoint(self):
@@ -117,7 +117,7 @@ class LoadTestUser(HttpUser):
 '''
 
     async def run_test(self, config: LoadTestConfig) -> LoadTestResult:
-        """运行负载测试"""
+        """Run a load test"""
         import uuid
         
         test_id = str(uuid.uuid4())[:8]
@@ -131,18 +131,18 @@ class LoadTestUser(HttpUser):
         )
         self._current_result = result
         
-        # 生成 Locust 文件
+        # Generate the Locust file
         locustfile_content = self.generate_locustfile(config)
         locustfile_path = self.results_dir / f"locustfile_{test_id}.py"
         
         with open(locustfile_path, 'w', encoding='utf-8') as f:
             f.write(locustfile_content)
         
-        # 结果文件路径
+        # Result file path
         stats_file = self.results_dir / f"stats_{test_id}.json"
         
         try:
-            # 运行 Locust (headless mode)
+            # Run Locust in headless mode
             cmd = [
                 "locust",
                 "-f", str(locustfile_path),
@@ -154,7 +154,7 @@ class LoadTestUser(HttpUser):
                 "--json"
             ]
             
-            # 在后台运行
+            # Run in the background
             process = await asyncio.create_subprocess_exec(
                 *cmd,
                 stdout=asyncio.subprocess.PIPE,
@@ -165,16 +165,16 @@ class LoadTestUser(HttpUser):
             
             stdout, stderr = await asyncio.wait_for(
                 process.communicate(),
-                timeout=config.duration + 30  # 额外超时
+                timeout=config.duration + 30  # Additional timeout allowance
             )
             
             result.finished_at = datetime.now()
             
-            # 解析输出
+            # Parse output
             if stdout:
                 try:
                     output = stdout.decode('utf-8')
-                    # Locust JSON 输出格式
+                    # Locust JSON output format
                     if output.strip().startswith('['):
                         stats = json.loads(output)
                         result.stats = self._parse_locust_stats(stats)
@@ -182,7 +182,7 @@ class LoadTestUser(HttpUser):
                     result.stats = {"raw_output": stdout.decode('utf-8', errors='ignore')}
             
             if process.returncode == 0:
-                # Locust 成功但如果 stats 为空，fallback 到简单测试
+                # If Locust succeeds but stats are empty, fall back to a basic test
                 if not result.stats or not result.stats.get('total_requests', 0):
                     try:
                         fallback_result = await self._run_simple_load_test(config, test_id)
@@ -194,12 +194,12 @@ class LoadTestUser(HttpUser):
                 self._status = LoadTestStatus.COMPLETED
             else:
                 stderr_output = stderr.decode('utf-8', errors='ignore')
-                # Locust 在有请求失败时也返回非0，但如果有 stats 数据就不算失败
+                # Locust also returns nonzero for failed requests; valid stats still count as a completed run
                 if result.stats and result.stats.get('total_requests', 0) > 0:
                     result.status = LoadTestStatus.COMPLETED
                     self._status = LoadTestStatus.COMPLETED
                 else:
-                    # Locust 无有效数据，fallback 到简单测试
+                    # No valid Locust data; fall back to a basic test
                     try:
                         fallback_result = await self._run_simple_load_test(config, test_id)
                         result.stats = fallback_result.stats
@@ -220,7 +220,7 @@ class LoadTestUser(HttpUser):
                 self._current_process.terminate()
                 
         except FileNotFoundError:
-            # Locust 未安装，使用模拟测试
+            # Locust is not installed; use the simulated test
             result = await self._run_simple_load_test(config, test_id)
             
         except Exception as e:
@@ -231,13 +231,13 @@ class LoadTestUser(HttpUser):
         finally:
             self._current_process = None
             
-            # 保存结果
+            # Save results
             self._save_result(result)
             
         return result
 
     async def _run_simple_load_test(self, config: LoadTestConfig, test_id: str) -> LoadTestResult:
-        """简单的负载测试（不依赖 Locust）"""
+        """Basic load test without Locust"""
         import aiohttp
         
         result = LoadTestResult(
@@ -308,12 +308,12 @@ class LoadTestUser(HttpUser):
                 stats["errors"].append(str(e)[:100])
         
         async with aiohttp.ClientSession() as session:
-            # 并发请求
+            # Concurrent requests
             end_time = datetime.now().timestamp() + config.duration
             
             while datetime.now().timestamp() < end_time:
                 tasks = []
-                for _ in range(min(config.users, 10)):  # 限制并发
+                for _ in range(min(config.users, 10)):  # Limit concurrency
                     endpoint = config.endpoints[(stats["total_requests"] + len(tasks)) % len(config.endpoints)] if config.endpoints else None
                     tasks.append(make_request(session, endpoint))
                 
@@ -322,7 +322,7 @@ class LoadTestUser(HttpUser):
         
         result.finished_at = datetime.now()
         
-        # 计算统计
+        # Calculate statistics
         response_times = stats["response_times"]
         if response_times:
             result.stats = {
@@ -350,7 +350,7 @@ class LoadTestUser(HttpUser):
         return result
 
     def _parse_locust_stats(self, stats: List[Dict]) -> Dict[str, Any]:
-        """解析 Locust 统计数据"""
+        """Parse Locust statistics"""
         aggregated = {}
         
         for entry in stats:
@@ -374,7 +374,7 @@ class LoadTestUser(HttpUser):
         return aggregated or {"entries": stats}
 
     def _save_result(self, result: LoadTestResult):
-        """保存测试结果"""
+        """Save test results"""
         result_file = self.results_dir / f"result_{result.test_id}.json"
         
         data = {
@@ -396,7 +396,7 @@ class LoadTestUser(HttpUser):
             result.errors.append(f"execution center sync failed: {exc}")
 
     def stop_test(self):
-        """停止当前测试"""
+        """Stop the current test"""
         if self._current_process:
             self._current_process.terminate()
             self._status = LoadTestStatus.STOPPED
@@ -406,7 +406,7 @@ class LoadTestUser(HttpUser):
                 self._save_result(self._current_result)
 
     def get_history(self, limit: int = 10) -> List[Dict]:
-        """获取测试历史"""
+        """Get test history"""
         results = []
         
         for f in sorted(self.results_dir.glob("result_*.json"), reverse=True)[:limit]:
@@ -416,11 +416,11 @@ class LoadTestUser(HttpUser):
         return results
 
     def delete_history(self, test_id: str) -> bool:
-        """删除单条测试历史"""
+        """Delete one test history record"""
         result_file = self.results_dir / f"result_{test_id}.json"
         if result_file.exists():
             result_file.unlink()
-            # 同时清理关联文件
+            # Also remove associated files
             for pattern in [f"locustfile_{test_id}.py", f"stats_{test_id}.json"]:
                 f = self.results_dir / pattern
                 if f.exists():
@@ -429,12 +429,12 @@ class LoadTestUser(HttpUser):
         return False
 
     def clear_history(self) -> int:
-        """清空全部测试历史，返回删除数量"""
+        """Clear all test history and return the deletion count"""
         count = 0
         for f in self.results_dir.glob("result_*.json"):
             f.unlink()
             count += 1
-        # 清理关联文件
+        # Remove associated files
         for f in self.results_dir.glob("locustfile_*.py"):
             f.unlink()
         for f in self.results_dir.glob("stats_*.json"):
@@ -442,12 +442,12 @@ class LoadTestUser(HttpUser):
         return count
 
 
-# 全局实例
+# Global instance
 _runner: Optional[PerformanceRunner] = None
 
 
 def get_performance_runner() -> PerformanceRunner:
-    """获取性能测试运行器单例"""
+    """Get the performance test runner singleton"""
     global _runner
     if _runner is None:
         from core.config import Config

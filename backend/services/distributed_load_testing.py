@@ -1,11 +1,11 @@
 """
-Distributed Load Testing - 分布式压测服务
+Distributed load testing service.
 
-支持：
-- Locust 集成
-- 多节点分布式执行
-- 实时指标收集
-- 报告聚合
+Supports:
+- Locust integration
+- Distributed execution across multiple nodes
+- Live metrics collection
+- Report aggregation
 """
 
 from typing import Dict, Any, List, Optional
@@ -29,7 +29,7 @@ class LoadTestStatus(Enum):
 
 @dataclass
 class LoadTestConfig:
-    """压测配置"""
+    """Load test configuration"""
     target_url: str
     users: int
     spawn_rate: float
@@ -39,7 +39,7 @@ class LoadTestConfig:
 
 @dataclass
 class LoadTestMetrics:
-    """压测指标"""
+    """Load test metrics"""
     total_requests: int
     failures: int
     avg_response_time: float
@@ -53,7 +53,7 @@ class LoadTestMetrics:
 
 @dataclass
 class WorkerNode:
-    """工作节点"""
+    """Worker node"""
     node_id: str
     host: str
     port: int
@@ -61,7 +61,7 @@ class WorkerNode:
 
 
 class DistributedLoadTester:
-    """分布式压测器"""
+    """Distributed load tester"""
     
     def __init__(self):
         self.status = LoadTestStatus.IDLE
@@ -72,7 +72,7 @@ class DistributedLoadTester:
         self._locust_available = shutil.which("locust") is not None
     
     def generate_locustfile(self, config: LoadTestConfig) -> str:
-        """生成 Locust 测试文件"""
+        """Generate a Locust test file"""
         content = f'''
 from locust import HttpUser, task, between
 
@@ -106,9 +106,9 @@ class LoadTestUser(HttpUser):
         distributed: bool = False,
         worker_count: int = 1
     ) -> Dict[str, Any]:
-        """启动压测"""
+        """Start load testing"""
         if not self._locust_available:
-            # 回退到内置简单压测
+            # Fall back to the built-in basic load tester
             return await self._run_simple_load_test(config)
         
         self.current_config = config
@@ -129,7 +129,7 @@ class LoadTestUser(HttpUser):
         ]
         
         if distributed and worker_count > 1:
-            # Master 模式
+            # Master mode
             cmd.extend(["--master", f"--expect-workers={worker_count}"])
         
         try:
@@ -140,7 +140,7 @@ class LoadTestUser(HttpUser):
                 text=True
             )
             
-            # 等待完成
+            # Wait for completion
             stdout, stderr = self._process.communicate(timeout=config.duration_seconds + 30)
             
             self.status = LoadTestStatus.COMPLETED
@@ -161,7 +161,7 @@ class LoadTestUser(HttpUser):
             return {"status": "error", "message": str(e)}
     
     async def _run_simple_load_test(self, config: LoadTestConfig) -> Dict[str, Any]:
-        """内置简单压测（无需 Locust）"""
+        """Built-in basic load test without Locust"""
         import aiohttp
         
         start_time = time.time()
@@ -188,19 +188,19 @@ class LoadTestUser(HttpUser):
             tasks = []
             
             while time.time() < end_time:
-                # 控制并发
+                # Control concurrency
                 while len(tasks) < config.users:
                     task = asyncio.create_task(make_request(session, config.target_url))
                     tasks.append(task)
                 
-                # 等待一批完成
+                # Wait for a batch to finish
                 if tasks:
                     done, tasks = await asyncio.wait(tasks, timeout=1)
                     tasks = list(tasks)
                 
                 await asyncio.sleep(1 / config.spawn_rate)
         
-        # 计算指标
+        # Calculate metrics
         response_times = sorted(results["response_times"]) if results["response_times"] else [0]
         total_time = time.time() - start_time
         
@@ -238,13 +238,13 @@ class LoadTestUser(HttpUser):
         }
     
     def stop_test(self):
-        """停止压测"""
+        """Stop load testing"""
         if self._process:
             self._process.terminate()
         self.status = LoadTestStatus.STOPPED
     
     def add_worker(self, host: str, port: int = 5557) -> WorkerNode:
-        """添加工作节点"""
+        """Add a worker node"""
         worker = WorkerNode(
             node_id=f"worker-{len(self.workers)+1}",
             host=host,
@@ -255,7 +255,7 @@ class LoadTestUser(HttpUser):
         return worker
     
     def get_status(self) -> Dict[str, Any]:
-        """获取状态"""
+        """Get status"""
         return {
             "status": self.status.value,
             "config": {
@@ -271,11 +271,11 @@ class LoadTestUser(HttpUser):
         }
 
 
-# 单例
+# Singleton
 _load_tester: Optional[DistributedLoadTester] = None
 
 def get_load_tester() -> DistributedLoadTester:
-    """获取压测器"""
+    """Get the load tester"""
     global _load_tester
     if _load_tester is None:
         _load_tester = DistributedLoadTester()
