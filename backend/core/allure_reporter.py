@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-测试报告生成器 v3 — Playwright 风格
-从 test_runs 数据库生成含截图、步骤时间线、错误高亮的专业 HTML 报告
+Test report generator v3 — Playwright style
+Generate HTML reports from test_runs with screenshots, step timelines, and highlighted errors
 """
 import os
 import json
@@ -59,14 +59,14 @@ class TestSuite:
 
 
 def _esc(text) -> str:
-    """HTML 转义 — 防 XSS"""
+    """Escape HTML to prevent XSS"""
     if text is None:
         return ""
     return html_mod.escape(str(text))
 
 
 def _fmt_ms(ms) -> str:
-    """格式化毫秒"""
+    """Format milliseconds"""
     try:
         ms = int(ms)
     except (TypeError, ValueError):
@@ -79,7 +79,7 @@ def _fmt_ms(ms) -> str:
 
 
 def _fmt_sec(sec) -> str:
-    """格式化秒"""
+    """Format seconds"""
     try:
         sec = float(sec)
     except (TypeError, ValueError):
@@ -125,28 +125,28 @@ def _build_report_title(
     record_count: int = 0,
 ) -> str:
     target_label = _compact_target_label(target_url)
-    fallback_label = _short_text(base_name or task_id or "测试记录", 32)
+    fallback_label = _short_text(base_name or task_id or "Test Record", 32)
     if scope == "batch":
-        label = target_label or fallback_label or "测试批次"
-        return f"专项测试 · {label} · 批次报告"
+        label = target_label or fallback_label or "Test Batch"
+        return f"Specialized Test · {label} · Batch Report"
     if scope == "summary":
         if record_count > 0:
-            return f"最近 {record_count} 条测试记录汇总"
-        return "最近测试记录汇总"
-    label = target_label or fallback_label or "测试记录"
-    return f"测试记录 · {label} · 专属报告"
+            return f"Recent {record_count} Test Records Summary"
+        return "Recent Test Records Summary"
+    label = target_label or fallback_label or "Test Record"
+    return f"Test Record · {label} · Record Report"
 
 
 _ACTION_LABELS = {
-    "assert": "断言",
-    "check": "校验",
-    "click": "点击",
-    "fill": "填写",
-    "goto": "访问",
-    "hover": "悬停",
-    "press": "按键",
-    "select": "选择",
-    "wait": "等待",
+    "assert": "Assert",
+    "check": "Check",
+    "click": "Click",
+    "fill": "Fill",
+    "goto": "Visit",
+    "hover": "Hover",
+    "press": "Press key",
+    "select": "Select",
+    "wait": "Wait",
 }
 
 _INTERNAL_ISSUE_KEYWORDS = (
@@ -160,6 +160,9 @@ _INTERNAL_ISSUE_KEYWORDS = (
     "浏览器已就绪",
     "browser",
     "model",
+    "reasoning failed",
+    "preauthentication failed",
+    "pre-authentication failed",
 )
 
 _PRECONDITION_TARGET_KEYWORDS = (
@@ -170,6 +173,14 @@ _PRECONDITION_TARGET_KEYWORDS = (
     "城市",
     "北京市",
     "朝阳区",
+    "sign in",
+    "sign-in",
+    "login",
+    "switch site",
+    "select city",
+    "city selector",
+    "Beijing",
+    "Chaoyang",
 )
 
 
@@ -206,10 +217,10 @@ def _humanize_step(action: Any, target: Any, step: Any, fallback: Any = "") -> s
 
     if action_text == "assert":
         label = target_text or step_text.replace("assert(", "").rstrip(")")
-        return f"断言：{label}" if label else "断言"
+        return f"Assertion: {label}" if label else "Assert"
 
     if target_text and action_text:
-        return f"{_ACTION_LABELS.get(action_text, action_text)}：{target_text}"
+        return f"{_ACTION_LABELS.get(action_text, action_text)}: {target_text}"
 
     if step_text:
         return step_text
@@ -217,7 +228,7 @@ def _humanize_step(action: Any, target: Any, step: Any, fallback: Any = "") -> s
     if target_text:
         return target_text
 
-    return fallback_text or "未命名用例"
+    return fallback_text or "Untitled Test Case"
 
 
 def _extract_missing_target(content: str) -> str:
@@ -336,28 +347,28 @@ def _build_issue_from_log(log: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     source = _classify_issue_source(log, content)
 
     if log_type == "assertion":
-        category = "断言失败"
-        target_text = missing_target or _clean_text(log.get("target")) or step_title.replace("断言：", "", 1)
-        summary = f"断言未通过：{target_text}"
+        category = "Assertion Failed"
+        target_text = missing_target or _clean_text(log.get("target")) or step_title.replace("Assertion: ", "", 1)
+        summary = f"Assertion failed: {target_text}"
     elif "could not find element" in content.lower() or "未找到元素" in content or "找不到元素" in content:
-        category = "页面元素缺失"
+        category = "Missing Page Element"
         target_text = missing_target or _clean_text(log.get("target")) or step_title
-        summary = f"页面缺少预期元素：{target_text}"
+        summary = f"Expected page element is missing: {target_text}"
     elif "timeout" in content.lower():
-        category = "页面交互超时"
-        summary = f"页面交互超时：{step_title}"
+        category = "Page Interaction Timeout"
+        summary = f"Page interaction timed out: {step_title}"
     elif source == "execution":
-        category = "执行链路异常"
-        summary = f"执行链路异常：{_short_text(content, 28) or step_title}"
+        category = "Execution Infrastructure Error"
+        summary = f"Execution infrastructure error: {_short_text(content, 28) or step_title}"
     else:
-        category = "执行异常"
-        summary = f"执行异常：{step_title}"
+        category = "Execution Error"
+        summary = f"Execution error: {step_title}"
 
     return {
         "summary": summary,
         "category": category,
         "source": source,
-        "source_label": "待测平台" if source == "platform" else "执行链路",
+        "source_label": "Tested Platform" if source == "platform" else "Execution Infrastructure",
         "evidence": content or step_title,
         "related_step": step_title,
         "count": 1,
@@ -405,11 +416,11 @@ def analyze_test_run(run: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-# ─────────────── 步骤解析 ───────────────
+# ─────────────── Step parsing ───────────────
 def _parse_execution_steps(logs: List[Dict]) -> List[Dict]:
     """
-    从原始执行日志中提取结构化步骤。
-    将 thought→action→result→observation→assertion 链整理为可读步骤。
+    Extract structured steps from raw execution logs.
+    Organize thought→action→result→observation→assertion chains into readable steps.
     """
     steps = []
     step_num = 0
@@ -419,14 +430,14 @@ def _parse_execution_steps(logs: List[Dict]) -> List[Dict]:
         content = log.get("content", "")
 
         if log_type == "thought":
-            # AI 思考过程 — 仅保留关键推理（过滤掉状态消息）
-            if content.startswith("\U0001f4ad") or "正在推理" in content:
+            # AI reasoning: retain only key reasoning and filter out status messages
+            if content.startswith("\U0001f4ad") or "正在推理" in content or "Reasoning..." in content:
                 step_num += 1
                 steps.append({
                     "num": step_num,
                     "type": "thought",
                     "icon": '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>',
-                    "label": "AI 推理",
+                    "label": "AI Reasoning",
                     "content": content,
                     "status": "info",
                     "screenshot": None,
@@ -439,7 +450,7 @@ def _parse_execution_steps(logs: List[Dict]) -> List[Dict]:
                 "num": step_num,
                 "type": "action",
                 "icon": '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>',
-                "label": "执行动作",
+                "label": "Action",
                 "content": log.get("step", content),
                 "status": "running",
                 "screenshot": None,
@@ -457,7 +468,7 @@ def _parse_execution_steps(logs: List[Dict]) -> List[Dict]:
                 "num": step_num,
                 "type": "result",
                 "icon": _icon_pass if status == "success" else _icon_fail,
-                "label": "执行结果",
+                "label": "Result",
                 "content": log.get("step", content),
                 "status": "pass" if status == "success" else "fail",
                 "screenshot": screenshot,
@@ -473,7 +484,7 @@ def _parse_execution_steps(logs: List[Dict]) -> List[Dict]:
                 "num": step_num,
                 "type": "assertion",
                 "icon": _icon_pass if status == "pass" else _icon_fail,
-                "label": "断言验证",
+                "label": "Assertion Check",
                 "content": content,
                 "status": status,
                 "screenshot": None,
@@ -486,7 +497,7 @@ def _parse_execution_steps(logs: List[Dict]) -> List[Dict]:
                 "num": step_num,
                 "type": "observation",
                 "icon": '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
-                "label": "观察",
+                "label": "Observation",
                 "content": content,
                 "status": "info",
                 "screenshot": None,
@@ -499,7 +510,7 @@ def _parse_execution_steps(logs: List[Dict]) -> List[Dict]:
                 "num": step_num,
                 "type": "error",
                 "icon": '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
-                "label": "错误",
+                "label": "Error",
                 "content": content,
                 "status": "fail",
                 "screenshot": log.get("screenshot"),
@@ -512,7 +523,7 @@ def _parse_execution_steps(logs: List[Dict]) -> List[Dict]:
                 "num": step_num,
                 "type": "system",
                 "icon": '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/></svg>',
-                "label": "系统",
+                "label": "System",
                 "content": content,
                 "status": "info",
                 "screenshot": None,
@@ -525,7 +536,7 @@ def _parse_execution_steps(logs: List[Dict]) -> List[Dict]:
                 "num": step_num,
                 "type": "heal",
                 "icon": '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>',
-                "label": "自愈",
+                "label": "Healing",
                 "content": content,
                 "status": "warn",
                 "screenshot": None,
@@ -535,7 +546,7 @@ def _parse_execution_steps(logs: List[Dict]) -> List[Dict]:
     return steps
 
 
-# ─────────────── HTML 模板 ───────────────
+# ─────────────── HTML template ───────────────
 
 _CSS = """
 :root {
@@ -1301,14 +1312,14 @@ if (downloadBtn) {
     });
 }
 
-// 默认展开第一个
+// Expand the first item by default
 const first = document.querySelector('.test-card');
 if (first) first.classList.add('open');
 """
 
 
 class AllureReporter:
-    """Playwright 风格测试报告生成器"""
+    """Playwright-style test report generator"""
 
     def __init__(self, results_dir: str = "allure-results", report_dir: str = "allure-report"):
         self.results_dir = Path(results_dir)
@@ -1318,7 +1329,7 @@ class AllureReporter:
         self.results_dir.mkdir(parents=True, exist_ok=True)
         self.report_dir.mkdir(parents=True, exist_ok=True)
 
-    # ── Allure 兼容接口（orchestrator 调用） ──
+    # ── Allure-compatible interface used by the orchestrator ──
 
     def start_suite(self, name: str):
         self._current_suite = TestSuite(name=name, started_at=datetime.now())
@@ -1351,23 +1362,23 @@ class AllureReporter:
         if self._current_suite:
             self._current_suite.finished_at = datetime.now()
 
-    # ── 报告生成（核心） ──
+    # ── Report generation (core) ──
 
     def generate_report(self, open_browser: bool = False, task_id: Optional[str] = None) -> Dict[str, Any]:
-        """从 test_runs 数据库生成 Playwright 风格 HTML 报告"""
+        """Generate Playwright-style HTML reports from test_runs"""
         start_time = datetime.now()
         try:
             runs = [self._decorate_run(run) for run in self._load_test_runs(task_id=task_id)]
-            # 提前生成 rid 以便作为文件标识
+            # Generate rid early to use as the file identifier
             rid = str(uuid.uuid4())[:8]
             html = self._build_full_report(runs, rid)
             
-            # 写入最新报告 (index.html, 供快捷查看)
+            # Write the latest report to index.html for quick access
             report_file = self.report_dir / "index.html"
             with open(report_file, 'w', encoding='utf-8') as f:
                 f.write(html)
                 
-            # 写入历史快照 (${rid}.html)
+            # Write the historical snapshot to ${rid}.html
             snapshot_file = self.report_dir / f"{rid}.html"
             with open(snapshot_file, 'w', encoding='utf-8') as f:
                 f.write(html)
@@ -1381,7 +1392,7 @@ class AllureReporter:
             return {"status": "error", "message": str(e)}
 
     def _load_test_runs(self, limit: int = 20, task_id: Optional[str] = None) -> List[Dict]:
-        """从 business.db 加载 test_runs，指定 task_id 时支持单条记录或整组记录。"""
+        """Load test_runs from business.db; task_id can identify one record or an entire group."""
         from core.db_helper import get_connection
         runs = []
         try:
@@ -1588,7 +1599,7 @@ class AllureReporter:
             "message": "Report generated successfully",
         }
 
-    # ── HTML 构建 ──
+    # ── HTML generation ──
 
     def _build_full_report(self, runs: List[Dict], rid: str) -> str:
         stats = self._calc_stats(runs)
@@ -1603,7 +1614,7 @@ class AllureReporter:
         platform_issue_groups = self._aggregate_issue_groups(runs, "platform_issues")
         execution_issue_groups = self._aggregate_issue_groups(runs, "execution_issues")
 
-        # 构建测试记录卡片
+        # Build test record cards
         cards_html = ""
         for run in runs:
             cards_html += self._build_test_card(run)
@@ -1612,105 +1623,105 @@ class AllureReporter:
             cards_html = '''
             <div class="empty-state">
                 <div class="empty-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.3"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
-                <p>暂无测试记录</p>
-                <p style="font-size:0.75rem;margin-top:6px;">执行测试后会在这里生成报告</p>
+                <p>No test records yet</p>
+                <p style="font-size:0.75rem;margin-top:6px;">Reports will appear here after tests run</p>
             </div>'''
 
         now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
         return f'''<!DOCTYPE html>
-<html lang="zh" data-theme="dark">
+<html lang="en-US" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI Test Platform - 测试报告</title>
+<title>AI Test Platform - Test Report</title>
 <style>{_CSS}</style>
 </head>
 <body>
 <div class="container">
     <div class="report-header">
         <div class="header-left">
-            <h1><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="url(#grad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px;"><defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#6366f1"/><stop offset="100%" stop-color="#a855f7"/></linearGradient></defs><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>AI Test Platform 测试报告</h1>
-            <div class="subtitle">编号: #{rid} · 生成时间: {now} · 共 {record_total} 条测试记录 / {case_total} 个测试用例</div>
+            <h1><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="url(#grad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px;"><defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#6366f1"/><stop offset="100%" stop-color="#a855f7"/></linearGradient></defs><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>AI Test Platform Test Report</h1>
+            <div class="subtitle">ID: #{rid} · Generated: {now} · {record_total} test records / {case_total} test cases</div>
         </div>
         <div class="header-right">
-            <button class="icon-btn" id="toggle-theme" title="切换主题"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button>
+            <button class="icon-btn" id="toggle-theme" title="Toggle theme"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button>
             <button class="btn-primary" id="download-btn">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-                下载离线报告
+                Download offline report
             </button>
         </div>
     </div>
 
     <div class="scope-note">
-        口径说明：<strong>测试记录</strong> 表示一次完整执行；<strong>测试用例</strong> 表示该记录中的断言或验证点；
-        <strong>待测平台问题</strong> 仅统计与业务页面/功能直接相关的异常；模型、预认证、浏览器等问题会单独归入执行链路问题。
+        Definitions: a <strong>test record</strong> represents one complete execution; a <strong>test case</strong> represents an assertion or check in that record.
+        <strong>Tested platform issues</strong> cover errors directly related to business pages or features; model, preauthentication, browser, and other infrastructure issues are counted separately.
     </div>
 
     <div class="control-bar">
         <div class="search-box">
             <svg viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <input type="text" id="search-input" placeholder="搜索测试记录或测试用例名称..." />
+            <input type="text" id="search-input" placeholder="Search test records or test case names..." />
         </div>
         <div style="display: flex; gap: 12px; align-items: center;">
             <div class="filter-group">
-                <button class="filter-btn active" data-filter="all">全部记录 ({record_total})</button>
-                <button class="filter-btn" data-filter="pass" style="color:var(--pass)">通过记录 ({record_passed})</button>
-                <button class="filter-btn" data-filter="fail" style="color:var(--fail)">失败记录 ({record_failed})</button>
+                <button class="filter-btn active" data-filter="all">All Records ({record_total})</button>
+                <button class="filter-btn" data-filter="pass" style="color:var(--pass)">Passed Records ({record_passed})</button>
+                <button class="filter-btn" data-filter="fail" style="color:var(--fail)">Failed Records ({record_failed})</button>
             </div>
-            <button class="icon-btn" id="toggle-all" title="展开/折叠全部" style="width:auto;padding:0 12px;font-size:0.8rem;">折叠/展开</button>
+            <button class="icon-btn" id="toggle-all" title="Expand/collapse all" style="width:auto;padding:0 12px;font-size:0.8rem;">Collapse/expand</button>
         </div>
     </div>
 
     <div class="stats-row">
-        <div class="stat-card stat-total" data-filter-trigger="all" style="cursor: pointer;" title="点击查看全部测试记录">
+        <div class="stat-card stat-total" data-filter-trigger="all" style="cursor: pointer;" title="Click to view all test records">
             <div class="stat-value">{record_total}</div>
-            <div class="stat-label">测试记录</div>
+            <div class="stat-label">Test Record</div>
         </div>
         <div class="stat-card stat-cases">
             <div class="stat-value">{case_total}</div>
-            <div class="stat-label">测试用例</div>
+            <div class="stat-label">Test Case</div>
         </div>
         <div class="stat-card stat-platform">
             <div class="stat-value">{platform_issue_total}</div>
-            <div class="stat-label">待测平台问题</div>
+            <div class="stat-label">Tested Platform Issues</div>
         </div>
         <div class="stat-card stat-execution">
             <div class="stat-value">{execution_issue_total}</div>
-            <div class="stat-label">执行链路问题</div>
+            <div class="stat-label">Execution Infrastructure Issues</div>
         </div>
         <div class="stat-card stat-rate">
             <div class="stat-value">{rate:.0f}%</div>
-            <div class="stat-label">记录通过率</div>
+            <div class="stat-label">Record Pass Rate</div>
         </div>
         <div class="stat-card stat-time">
             <div class="stat-value">{_fmt_ms(total_ms)}</div>
-            <div class="stat-label">总耗时</div>
+            <div class="stat-label">Total Duration</div>
         </div>
     </div>
 
     <div class="insight-grid">
         {self._build_global_issue_panel(
-            "待测平台问题",
-            "直接反映待测页面、交互或业务结果异常的问题摘要。",
+            "Tested Platform Issues",
+            "Summaries of issues directly affecting tested pages, interactions, or business outcomes.",
             platform_issue_groups,
-            "本次报告未发现明确的待测平台问题。"
+            "This report found no clear issues in the tested platform."
         )}
         {self._build_global_issue_panel(
-            "执行链路问题",
-            "用于区分模型、预认证、浏览器或自动化链路自身的问题，避免与业务问题混淆。",
+            "Execution Infrastructure Issues",
+            "Separates model, preauthentication, browser, and automation infrastructure issues from business issues.",
             execution_issue_groups,
-            "本次报告未发现执行链路问题。"
+            "This report found no execution infrastructure issues."
         )}
     </div>
 
-    <div class="records-label">测试记录详情</div>
+    <div class="records-label">Test Record Details</div>
     <div class="test-cases">
         {cards_html}
         <div id="filter-empty" class="empty-state" style="display:none;">
             <div class="empty-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.3"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
-            <p>没有匹配的测试记录</p>
-            <p style="font-size:0.75rem;margin-top:6px;">请尝试调整搜索条件或切换过滤器</p>
+            <p>No matching test records</p>
+            <p style="font-size:0.75rem;margin-top:6px;">Adjust the search or choose a different filter</p>
         </div>
     </div>
 
@@ -1729,7 +1740,7 @@ class AllureReporter:
 </html>'''
 
     def _build_test_card(self, run: Dict) -> str:
-        """构建单条测试记录卡片，并在卡片内展示测试用例与问题摘要"""
+        """Build a test record card containing test cases and issue summaries"""
         name = _esc(run["requirement"])
         status = run["status"]
         duration_ms = run.get("duration_ms", 0) or 0
@@ -1749,36 +1760,36 @@ class AllureReporter:
         _svg_heal = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>'
         _svg_fail = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'
         status_icon = _svg_pass if status == "success" else (_svg_heal if status in ("healed", "recovered") else _svg_fail)
-        status_label = {"success": "通过", "failed": "失败", "healed": "已自愈", "recovered": "已恢复"}.get(status, status)
+        status_label = {"success": "Passed", "failed": "Failed", "healed": "Healed", "recovered": "Recovered"}.get(status, status)
 
-        # 描述行
+        # Description line
         desc_parts = []
         if target_url:
-            desc_parts.append(f"目标: {target_url}")
+            desc_parts.append(f"Target: {target_url}")
         if mode:
-            desc_parts.append(f"模式: {mode}")
-        desc_parts.append(f"测试用例: {case_count}")
-        desc_parts.append(f"平台问题: {platform_issue_count}")
+            desc_parts.append(f"Mode: {mode}")
+        desc_parts.append(f"Test cases: {case_count}")
+        desc_parts.append(f"Platform issues: {platform_issue_count}")
         if execution_issue_count:
-            desc_parts.append(f"链路问题: {execution_issue_count}")
+            desc_parts.append(f"Infrastructure issues: {execution_issue_count}")
         if created_at:
             desc_parts.append(created_at)
         desc_text = " · ".join(desc_parts)
 
-        # 解析步骤
+        # Parse steps
         steps = _parse_execution_steps(logs)
         case_summary_html = self._build_case_summary(test_cases)
         platform_issue_html = self._build_issue_block(
-            "待测平台问题",
+            "Tested Platform Issues",
             platform_issues,
-            "本记录未发现明确的待测平台问题。"
+            "This record found no clear issues in the tested platform."
         )
         execution_issue_html = ""
         if execution_issues:
             execution_issue_html = self._build_issue_block(
-                "执行链路问题",
+                "Execution Infrastructure Issues",
                 execution_issues,
-                "本记录未发现执行链路问题。"
+                "This record found no execution infrastructure issues."
             )
         steps_html = self._build_timeline(steps)
         search_blob = _esc(" ".join(
@@ -1816,7 +1827,7 @@ class AllureReporter:
         groups: Dict[tuple[str, str], Dict[str, Any]] = {}
 
         for run in runs:
-            record_label = _short_text(run.get("requirement") or run.get("task_id") or "未命名记录", 28)
+            record_label = _short_text(run.get("requirement") or run.get("task_id") or "Untitled Record", 28)
             for issue in run.get(issue_field, []) or []:
                 key = (issue.get("source", ""), issue.get("summary", ""))
                 if key not in groups:
@@ -1855,7 +1866,7 @@ class AllureReporter:
                     <h2>{_esc(title)}</h2>
                     <p>{_esc(description)}</p>
                 </div>
-                <div class="section-meta">{len(issues)} 类问题</div>
+                <div class="section-meta">{len(issues)} issue categories</div>
             </div>
             <div class="issue-list">{items_html}</div>
         </section>'''
@@ -1868,30 +1879,30 @@ class AllureReporter:
             items = ""
             for case in test_cases:
                 status = case.get("status", "unknown")
-                status_label = {"pass": "通过", "fail": "失败", "unknown": "未知"}.get(status, "未知")
+                status_label = {"pass": "Passed", "fail": "Failed", "unknown": "Unknown"}.get(status, "Unknown")
                 meta_parts = []
                 step_index = case.get("step_index")
                 if isinstance(step_index, int):
-                    meta_parts.append(f"关联步骤 #{step_index + 1}")
+                    meta_parts.append(f"Related step #{step_index + 1}")
                 if status != "pass" and case.get("evidence"):
-                    meta_parts.append(f"证据: {_short_text(case['evidence'], 120)}")
+                    meta_parts.append(f"Evidence: {_short_text(case['evidence'], 120)}")
                 meta_html = f'<div class="case-meta">{_esc(" · ".join(meta_parts))}</div>' if meta_parts else ""
                 items += f'''
                 <div class="case-item">
                     <span class="case-status {status}">{_esc(status_label)}</span>
                     <div class="case-body">
-                        <div class="case-title">{_esc(case.get("title", "未命名用例"))}</div>
+                        <div class="case-title">{_esc(case.get("title", "Untitled Test Case"))}</div>
                         {meta_html}
                     </div>
                 </div>'''
         else:
-            items = '<div class="section-empty" style="padding: 14px 12px;">本记录未产出可识别的测试用例，通常表示在规划或前置阶段提前终止。</div>'
+            items = '<div class="section-empty" style="padding: 14px 12px;">This record produced no identifiable test cases, usually because execution ended during planning or preconditions.</div>'
 
         return f'''
         <div class="detail-block">
             <div class="detail-block-header">
-                <span>测试用例</span>
-                <span class="meta">共 {len(test_cases)} 个，{passed} 通过 / {failed} 失败</span>
+                <span>Test Case</span>
+                <span class="meta">{len(test_cases)} total; {passed} passed / {failed} failed</span>
             </div>
             <div class="case-list">{items}</div>
         </div>'''
@@ -1903,7 +1914,7 @@ class AllureReporter:
             occurrence = int(issue.get("occurrences", issue.get("count", 1)) or 1)
             tags = [
                 f'<span class="issue-tag {source}">{_esc(issue.get("source_label", ""))}</span>',
-                f'<span class="issue-tag neutral">{_esc(issue.get("category", "异常"))}</span>',
+                f'<span class="issue-tag neutral">{_esc(issue.get("category", "Error"))}</span>',
             ]
             if occurrence > 1:
                 tags.append(f'<span class="issue-tag neutral">x{occurrence}</span>')
@@ -1911,15 +1922,15 @@ class AllureReporter:
             records_html = ""
             if show_records and issue.get("records"):
                 records = issue["records"]
-                record_text = "、".join(records[:3])
+                record_text = ", ".join(records[:3])
                 if len(records) > 3:
-                    record_text += f" 等 {len(records)} 条记录"
-                records_html = f'<div class="issue-records">涉及记录：{_esc(record_text)}</div>'
+                    record_text += f" and others ({len(records)} records total)"
+                records_html = f'<div class="issue-records">Affected records: {_esc(record_text)}</div>'
 
             items += f'''
             <div class="issue-item {source}">
                 <div class="issue-header">
-                    <div class="issue-title">{_esc(issue.get("summary", "未命名问题"))}</div>
+                    <div class="issue-title">{_esc(issue.get("summary", "Untitled Issue"))}</div>
                     <div class="issue-tags">{"".join(tags)}</div>
                 </div>
                 <div class="issue-evidence">{_esc(issue.get("evidence", ""))}</div>
@@ -1938,17 +1949,17 @@ class AllureReporter:
         <div class="detail-block">
             <div class="detail-block-header">
                 <span>{_esc(title)}</span>
-                <span class="meta">共 {len(issues)} 个</span>
+                <span class="meta">{len(issues)} total</span>
             </div>
             <div class="issue-list" style="padding: 12px;">{items_html}</div>
         </div>'''
 
     def _build_timeline(self, steps: List[Dict]) -> str:
-        """构建步骤时间线"""
+        """Build the step timeline"""
         if not steps:
-            return '<div class="timeline" style="color:var(--text-3);font-size:0.78rem;padding:20px;">无详细步骤</div>'
+            return '<div class="timeline" style="color:var(--text-3);font-size:0.78rem;padding:20px;">No detailed steps</div>'
 
-        # 统计
+        # Statistics
         pass_count = sum(1 for s in steps if s["status"] == "pass")
         fail_count = sum(1 for s in steps if s["status"] == "fail")
         screenshot_count = sum(1 for s in steps if s.get("screenshot"))
@@ -1957,7 +1968,7 @@ class AllureReporter:
         for s in steps:
             status_class = {"pass": "pass", "fail": "fail", "warn": "warn"}.get(s["status"], "info")
             content = _esc(s["content"])
-            # 截断过长内容
+            # Truncate overly long content
             if len(content) > 200:
                 content = content[:200] + "..."
 
@@ -1968,13 +1979,13 @@ class AllureReporter:
             screenshot_html = ""
             if s.get("screenshot"):
                 sc = s["screenshot"]
-                # 确保是纯 base64，过长的截取前 100K
+                # Ensure plain base64 and truncate oversized data to the first 100K
                 if len(sc) > 100000:
                     sc = sc[:100000]
                 screenshot_html = f'''
                 <div class="step-screenshot">
                     <img src="data:image/jpeg;base64,{sc}" alt="Screenshot" loading="lazy">
-                    <span class="zoom-hint"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:2px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>点击放大</span>
+                    <span class="zoom-hint"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:2px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Click to enlarge</span>
                 </div>'''
 
             items += f'''
@@ -1994,7 +2005,7 @@ class AllureReporter:
         header = f'''
         <div style="padding:10px 20px;display:flex;justify-content:space-between;align-items:center;
                     border-bottom:1px solid var(--border);font-size:0.75rem;color:var(--text-2);">
-            <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px;"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>执行步骤 ({len(steps)} 步)</span>
+            <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px;"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Execution Steps ({len(steps)} steps)</span>
             <span>
                 <span style="color:var(--pass);"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:1px;"><polyline points="20 6 9 17 4 12"/></svg>{pass_count}</span>
                 <span style="color:var(--fail);margin-left:8px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:1px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>{fail_count}</span>
@@ -2004,7 +2015,7 @@ class AllureReporter:
 
         return f'{header}<div class="timeline">{items}</div>'
 
-    # ── 历史管理 ──
+    # ── History management ──
 
     def _save_to_history(self, record: Dict):
         history = self._load_history_file()
@@ -2073,11 +2084,11 @@ class AllureReporter:
         record_count = int(entry.get("record_count") or 0)
         base_name = str(entry.get("title") or "")
         if scope == "batch":
-            suffix = "批次报告"
+            suffix = "Batch Report"
         elif scope == "summary":
-            suffix = "汇总报告"
+            suffix = "Summary Report"
         else:
-            suffix = "专属报告"
+            suffix = "Record Report"
         expected_title = _build_report_title(
             scope,
             target_url=target_url,
@@ -2085,23 +2096,23 @@ class AllureReporter:
             task_id=str(entry.get("task_id") or ""),
             record_count=record_count,
         )
-        has_known_prefix = title.startswith(("专项测试 ·", "测试记录 ·", "测试报告 ·"))
+        has_known_prefix = title.startswith(("Specialized Test ·", "Test Record ·", "Test Report ·", "专项测试 ·", "测试记录 ·", "测试报告 ·"))
         if scope == "summary":
             should_rebuild = (
                 _looks_broken_text(title)
-                or "汇总" not in title
-                or title.startswith("测试报告 ·")
+                or "Summary" not in title
+                or title.startswith("Test Report ·")
             )
         else:
             should_rebuild = (
                 _looks_broken_text(title)
                 or not title.endswith(suffix)
-                or (scope == "batch" and not title.startswith("专项测试 ·"))
+                or (scope == "batch" and not title.startswith("Specialized Test ·"))
                 or (
                     scope == "record"
                     and (
                         target_url
-                        or (has_known_prefix and not title.startswith("测试记录 ·"))
+                        or (has_known_prefix and not title.startswith("Test Record ·"))
                     )
                     and title != expected_title
                 )
@@ -2125,7 +2136,7 @@ class AllureReporter:
         if len(history) == len(new_history):
             return False
         try:
-            # 清理快照文件
+            # Clean up snapshot files
             snapshot_file = self.report_dir / f"{report_id}.html"
             if snapshot_file.exists():
                 snapshot_file.unlink()
@@ -2158,7 +2169,7 @@ class AllureReporter:
             shutil.copytree(src, dst)
 
 
-# ── 全局实例 ──
+# ── Global instance ──
 _reporter: Optional[AllureReporter] = None
 
 def get_reporter() -> AllureReporter:

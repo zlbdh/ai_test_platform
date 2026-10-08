@@ -1,9 +1,12 @@
 import json
+import re
 from datetime import datetime
 from pathlib import Path
 from unittest.mock import patch
 
-from core.allure_reporter import AllureReporter
+import pytest
+
+from core.allure_reporter import AllureReporter, _classify_issue_source, _parse_execution_steps
 
 
 class TestAllureReporter:
@@ -113,8 +116,8 @@ class TestAllureReporter:
         snapshot_file = Path(tmp_path / "reports") / f"{record['id']}.html"
         assert snapshot_file.exists()
         html = snapshot_file.read_text(encoding="utf-8")
-        assert "测试记录" in html
-        assert "待测平台问题" in html
+        assert "Test Record" in html
+        assert "Tested Platform Issues" in html
 
     def test_build_report_record_treats_group_target_as_targeted_report(self, tmp_path):
         reporter = AllureReporter(
@@ -153,7 +156,7 @@ class TestAllureReporter:
         assert record["report_scope"] == "batch"
         assert record["task_id"] == "batch_task_1"
         assert record["record_count"] == 2
-        assert "批次报告" in record["title"]
+        assert "Batch Report" in record["title"]
 
     def test_get_history_repairs_broken_titles(self, tmp_path):
         reporter = AllureReporter(
@@ -182,7 +185,7 @@ class TestAllureReporter:
 
         history = reporter.get_history(limit=5)
 
-        assert history[0]["title"] == "专项测试 · ry_cloud · 批次报告"
+        assert history[0]["title"] == "Specialized Test · ry_cloud · Batch Report"
 
     def test_get_history_repairs_batch_suffix_mismatch(self, tmp_path):
         reporter = AllureReporter(
@@ -219,8 +222,8 @@ class TestAllureReporter:
 
         history = reporter.get_history(limit=5)
 
-        assert history[0]["title"] == "专项测试 · ry_cloud · 批次报告"
-        assert history[1]["title"] == "测试记录 · ry_cloud · 专属报告"
+        assert history[0]["title"] == "Specialized Test · ry_cloud · Batch Report"
+        assert history[1]["title"] == "Test Record · ry_cloud · Record Report"
 
     def test_get_history_keeps_natural_summary_title(self, tmp_path):
         reporter = AllureReporter(
@@ -248,7 +251,7 @@ class TestAllureReporter:
 
         history = reporter.get_history(limit=5)
 
-        assert history[0]["title"] == "最近 20 条测试记录汇总"
+        assert history[0]["title"] == "Recent 20 Test Records Summary"
 
     def test_get_history_repairs_mechanical_summary_title(self, tmp_path):
         reporter = AllureReporter(
@@ -276,4 +279,34 @@ class TestAllureReporter:
 
         history = reporter.get_history(limit=5)
 
-        assert history[0]["title"] == "最近 8 条测试记录汇总"
+        assert history[0]["title"] == "Recent 8 Test Records Summary"
+
+
+@pytest.mark.parametrize('content', [
+    'Reasoning failed: no plan',
+    '推理失败: no plan',
+    'Session preauthentication failed',
+    '会话预认证失败',
+    'Could not find element: sign-in button',
+    'Could not find element: 登录按钮',
+])
+def test_issue_classifier_preserves_english_and_legacy_execution_diagnostics(content):
+    assert _classify_issue_source({'type': 'error'}, content) == 'execution'
+
+
+@pytest.mark.parametrize('content', ['Step 1: Reasoning...', 'Step 1: 正在推理'])
+def test_reasoning_steps_accept_english_and_legacy_logs(content):
+    steps = _parse_execution_steps([{'type': 'thought', 'content': content}])
+    assert len(steps) == 1
+    assert steps[0]['label'] == 'AI Reasoning'
+    assert steps[0]['content'] == content
+
+
+def test_empty_report_uses_american_english(tmp_path):
+    reporter = AllureReporter(results_dir=str(tmp_path / 'results'), report_dir=str(tmp_path / 'reports'))
+    with patch.object(reporter, '_load_test_runs', return_value=[]):
+        result = reporter.generate_report()
+    html = (tmp_path / 'reports' / (result['id'] + '.html')).read_text()
+    assert '<html lang="en-US"' in html
+    assert 'No test records yet' in html
+    assert not re.search(r'[\u3400-\u9fff]', html)
