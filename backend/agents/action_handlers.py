@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-Action Handlers — 从 ExecutorAgent._execute_action 中拆分的动作处理函数
+Action handlers extracted from ExecutorAgent._execute_action
 
-每个 handler 接收 (page, target, value, dom_indexer, session, logger) 并返回结果字符串。
-ExecutorAgent 通过 ACTION_REGISTRY 查表调用。
+Each handler accepts (page, target, value, dom_indexer, session, logger) and returns a result string.
+ExecutorAgent dispatches calls through ACTION_REGISTRY.
 """
 import time
 import datetime
@@ -12,7 +12,7 @@ from typing import Any, Callable, Dict, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
-# ── 类型别名 ─────────────────────────────────────────────────────────────────
+# ── Type aliases ─────────────────────────────────────────────────────────────────
 ActionResult = Optional[Any]
 
 
@@ -35,7 +35,7 @@ def _looks_like_agreement_target(target: str) -> bool:
 
 
 def _click_agreement_checkbox_if_present(page, target: str) -> bool:
-    """优先点击协议复选框，避免误点《用户协议》链接导致登录死循环。"""
+    """Prefer the agreement checkbox to avoid clicking the User Agreement link and looping through sign-in."""
     if not _looks_like_agreement_target(target):
         return False
 
@@ -156,16 +156,16 @@ def _dismiss_blocking_dialog_if_present(page) -> Optional[str]:
     return None
 
 
-# ── 导航动作 ─────────────────────────────────────────────────────────────────
+# ── Navigation actions ─────────────────────────────────────────────────────────────────
 def handle_goto(page, target: str, value: str, dom_indexer, session, **_) -> ActionResult:
-    """导航到指定 URL"""
+    """Navigate to the specified URL"""
     url = target
     if not url.startswith('http'):
         url = 'https://' + url
     page.goto(url, wait_until='domcontentloaded', timeout=60000)
     page.wait_for_load_state('networkidle', timeout=15000)
 
-    # DomIndexer: 导航后扫描元素
+    # DomIndexer: Scan elements after navigation
     try:
         dom_indexer.scan(page)
         count = len(dom_indexer._index_map)
@@ -176,14 +176,14 @@ def handle_goto(page, target: str, value: str, dom_indexer, session, **_) -> Act
     return f"Navigated to {url}"
 
 
-# ── 点击动作 ─────────────────────────────────────────────────────────────────
+# ── Click actions ─────────────────────────────────────────────────────────────────
 def handle_click(page, target: str, value: str, dom_indexer, session, **_) -> ActionResult:
-    """4层容错点击，并在登录前尝试自动填写验证码。"""
+    """Click with four fallback levels and attempt to fill the verification code before signing in."""
     from core.browser import sync_analyze_with_som
 
     dismissed_dialog = _dismiss_blocking_dialog_if_present(page)
     if dismissed_dialog:
-        logger.info(f"[ActionHandler] 点击前已处理阻塞对话框: {dismissed_dialog[:80]}")
+        logger.info(f"[ActionHandler] Dismissed a blocking dialog before clicking: {dismissed_dialog[:80]}")
         try:
             dom_indexer.scan(page)
         except Exception:
@@ -194,16 +194,16 @@ def handle_click(page, target: str, value: str, dom_indexer, session, **_) -> Ac
             from core.auth_interceptor import fill_captcha_if_present
             captcha_code = fill_captcha_if_present(page)
             if captcha_code:
-                logger.info(f"[ActionHandler] 登录前已自动填写验证码: {captcha_code}")
+                logger.info(f"[ActionHandler] Automatically filled the verification code before signing in: {captcha_code}")
                 try:
                     dom_indexer.scan(page)
                 except Exception:
                     pass
         except Exception as captcha_err:
-            logger.warning(f"[ActionHandler] 登录前验证码自动处理失败: {captcha_err}")
+            logger.warning(f"[ActionHandler] Automatic verification-code handling before sign-in failed: {captcha_err}")
 
     if _click_agreement_checkbox_if_present(page, target):
-        logger.info(f"[ActionHandler] 已识别并勾选协议复选框: {target}")
+        logger.info(f"[ActionHandler] Identified and checked the agreement checkbox: {target}")
         try:
             dom_indexer.scan(page)
         except Exception:
@@ -258,37 +258,37 @@ def handle_click(page, target: str, value: str, dom_indexer, session, **_) -> Ac
     return f"Clicked {target}"
 
 
-# ── 填充动作 ─────────────────────────────────────────────────────────────────
+# ── Fill actions ─────────────────────────────────────────────────────────────────
 def handle_fill(page, target: str, value: str, dom_indexer, session, **_) -> ActionResult:
-    """多层降级的表单填充（含 OTP/TOTP/CAPTCHA 自动生成）"""
+    """Fill forms with multiple fallbacks, including automatic OTP/TOTP/CAPTCHA generation"""
     if value == "$CAPTCHA" or (_looks_like_captcha_target(target) and value in ("", "1234")):
         from core.auth_interceptor import fill_captcha_if_present
         extracted = fill_captcha_if_present(page)
         if extracted:
-            logger.info(f"[ActionHandler] CAPTCHA 自动识别: {extracted}")
+            logger.info(f"[ActionHandler] Automatic CAPTCHA recognition: {extracted}")
             return f"Filled '{target}' with '{extracted}'"
         if value == "$CAPTCHA":
-            logger.warning("[ActionHandler] CAPTCHA 自动识别失败，回退为空值")
+            logger.warning("[ActionHandler] Automatic CAPTCHA recognition failed; falling back to an empty value")
             value = ""
 
-    # OTP/TOTP 自动填充：当 value 以 $TOTP{ 开头时，自动生成验证码
+    # OTP/TOTP autofill: generate a verification code when value starts with $TOTP{
     if value and value.startswith("$TOTP{") and value.endswith("}"):
         totp_secret = value[6:-1]
         from core.auth_interceptor import totp_generator
         generated = totp_generator.generate(totp_secret)
         if generated:
             value = generated
-            logger.info(f"[ActionHandler] TOTP 自动生成: {value}")
+            logger.info(f"[ActionHandler] Automatically generated TOTP: {value}")
 
-    # OTP 自动提取：当 value 为 $OTP 时，从页面提取验证码
+    # OTP extraction: extract the verification code from the page when value is $OTP
     if value == "$OTP":
         from core.auth_interceptor import otp_interceptor
         extracted = otp_interceptor.extract_from_page(page)
         if extracted:
             value = extracted
-            logger.info(f"[ActionHandler] OTP 自动提取: {value}")
+            logger.info(f"[ActionHandler] Automatically extracted OTP: {value}")
         else:
-            logger.warning("[ActionHandler] OTP 自动提取失败，使用空值")
+            logger.warning("[ActionHandler] Automatic OTP extraction failed; using an empty value")
             value = ""
 
     selector, method = dom_indexer.resolve_target(target)
@@ -326,9 +326,9 @@ def handle_fill(page, target: str, value: str, dom_indexer, session, **_) -> Act
     return f"Filled '{target}' with '{value}'"
 
 
-# ── 下拉选择 ─────────────────────────────────────────────────────────────────
+# ── Dropdown selection ─────────────────────────────────────────────────────────────────
 def handle_select(page, target: str, value: str, dom_indexer, session, **_) -> ActionResult:
-    """多层降级的下拉选择"""
+    """Dropdown selection with multiple fallbacks"""
     selector, method = dom_indexer.resolve_target(target)
     logger.debug(f"[ActionHandler] Resolved select target: '{target}' → '{selector}' (via {method})")
 
@@ -364,9 +364,9 @@ def handle_select(page, target: str, value: str, dom_indexer, session, **_) -> A
             raise Exception(f"Select failed for '{target}' with value '{value}': {e}")
 
 
-# ── 等待 ─────────────────────────────────────────────────────────────────────
+# ── Wait ─────────────────────────────────────────────────────────────────────
 def handle_wait(page, target: str, value: str, check_signal, **_) -> ActionResult:
-    """信号感知的等待"""
+    """Wait while monitoring control signals"""
     try:
         sleep_time = float(target) if target else 1.0
     except (ValueError, TypeError):
@@ -378,9 +378,9 @@ def handle_wait(page, target: str, value: str, check_signal, **_) -> ActionResul
     return "OK"
 
 
-# ── 按键 ─────────────────────────────────────────────────────────────────────
+# ── Key presses ─────────────────────────────────────────────────────────────────────
 def handle_key(page, target: str, value: str, **_) -> ActionResult:
-    """键盘按键（含中文别名映射）"""
+    """Keyboard input, including Chinese key aliases"""
     key_name = target.strip() if target else 'Enter'
     key_aliases = {
         '回车': 'Enter', '确认': 'Enter', '换行': 'Enter',
@@ -393,9 +393,9 @@ def handle_key(page, target: str, value: str, **_) -> ActionResult:
     return "OK"
 
 
-# ── 断言 ─────────────────────────────────────────────────────────────────────
+# ── Assertions ─────────────────────────────────────────────────────────────────────
 def handle_assert(page, target: str, value: str, **_) -> ActionResult:
-    """文本匹配 + 语义验证的双层断言"""
+    """Two-level assertions using text matching and semantic validation"""
     time.sleep(0.5)
     content = page.content()
 
@@ -446,7 +446,7 @@ def handle_assert(page, target: str, value: str, **_) -> ActionResult:
         raise Exception(f"Assertion Failed: '{target}' — semantic verify error: {e}")
 
 
-# ── 数据库操作 ────────────────────────────────────────────────────────────────
+# ── Database operations ────────────────────────────────────────────────────────────────
 def handle_db_query(page, target: str, value: str, **_) -> ActionResult:
     from core.db_tools import execute_sql
     res = execute_sql(target)
@@ -471,12 +471,12 @@ def handle_backup_db(page, target: str, value: str, **_) -> ActionResult:
     return res.get('message', 'Backup completed')
 
 
-# ── 数据提取 ─────────────────────────────────────────────────────────────────
+# ── Data extraction ─────────────────────────────────────────────────────────────────
 def handle_extract(page, target: str, value: str, dom_indexer, session, **_) -> ActionResult:
-    """多层降级的数据提取"""
+    """Extract data with multiple fallbacks"""
     extracted_text = None
 
-    # Tier 1: DomIndexer 智能定位
+    # Tier 1: DomIndexer Intelligent element targeting
     try:
         selector, method = dom_indexer.resolve_target(target)
         logger.debug(f"[ActionHandler] Resolved extract target: '{target}' → '{selector}' (via {method})")
@@ -485,7 +485,7 @@ def handle_extract(page, target: str, value: str, dom_indexer, session, **_) -> 
     except Exception:
         pass
 
-    # Tier 2: 直接 CSS 选择器
+    # Tier 2: Direct CSS selector
     if extracted_text is None:
         try:
             extracted_text = page.locator(target).first.text_content(timeout=3000)
@@ -509,14 +509,14 @@ def handle_extract(page, target: str, value: str, dom_indexer, session, **_) -> 
         raise Exception(f"Failed to extract from '{target}': element not found")
 
 
-# ── 变量设置 ─────────────────────────────────────────────────────────────────
+# ── Variable assignment ─────────────────────────────────────────────────────────────────
 def handle_set_var(page, target: str, value: str, session, **_) -> ActionResult:
     session.set_context(target, value)
     logger.info(f"[ActionHandler] Set Variable: ${{ {target} }} = '{value}'")
     return value
 
 
-# ── 视觉检查 ─────────────────────────────────────────────────────────────────
+# ── Visual inspection ─────────────────────────────────────────────────────────────────
 def handle_visual_check(page, target: str, value: str, bus, **_) -> ActionResult:
     from core.visual_tools import assert_visual_snapshot
     res = assert_visual_snapshot(page, target)
@@ -536,7 +536,7 @@ def handle_visual_check(page, target: str, value: str, bus, **_) -> ActionResult
     return "Visual Check Passed"
 
 
-# ── Mock 路由 ────────────────────────────────────────────────────────────────
+# ── Mock routes ────────────────────────────────────────────────────────────────
 def handle_mock(page, target: str, value: str, **_) -> ActionResult:
     import json
     try:
@@ -551,7 +551,7 @@ def handle_mock(page, target: str, value: str, **_) -> ActionResult:
         raise Exception(f"Mock failed: {e}")
 
 
-# ── API 调用 ─────────────────────────────────────────────────────────────────
+# ── API calls ─────────────────────────────────────────────────────────────────
 def handle_api_call(page, target: str, value: str, **_) -> ActionResult:
     import json
     from core.api_tools import http_request
@@ -573,7 +573,7 @@ def handle_api_call(page, target: str, value: str, **_) -> ActionResult:
         raise Exception(f"API Call failed: {e}")
 
 
-# ── 滚动 ────────────────────────────────────────────────────────────────────
+# ── Scroll ────────────────────────────────────────────────────────────────────
 def handle_scroll(page, target: str, value: str, **_) -> ActionResult:
     raw_dir = (value or target or 'down').lower().strip()
     direction_map = {
@@ -594,7 +594,7 @@ def handle_scroll(page, target: str, value: str, **_) -> ActionResult:
     return f"Scrolled {direction}"
 
 
-# ── 截图 ────────────────────────────────────────────────────────────────────
+# ── Screenshot ────────────────────────────────────────────────────────────────────
 def handle_screenshot(page, target: str, value: str, bus, **_) -> ActionResult:
     import os
     screenshot_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'artifacts', 'screenshots')
@@ -604,11 +604,11 @@ def handle_screenshot(page, target: str, value: str, bus, **_) -> ActionResult:
     filepath = os.path.join(screenshot_dir, filename)
     page.screenshot(path=filepath, full_page=True, timeout=10000)
     logger.info(f"[ActionHandler] Screenshot saved: {filepath}")
-    bus.publish_log_sync({"type": "screenshot", "content": f"📸 截图已保存: {filename}", "path": filepath})
+    bus.publish_log_sync({"type": "screenshot", "content": f"📸 Screenshot saved: {filename}", "path": filepath})
     return f"Screenshot saved: {filename}"
 
 
-# ── 悬停 ────────────────────────────────────────────────────────────────────
+# ── Hover ────────────────────────────────────────────────────────────────────
 def handle_hover(page, target: str, value: str, dom_indexer, **_) -> ActionResult:
     selector, method = dom_indexer.resolve_target(target)
     logger.debug(f"[ActionHandler] Resolved hover target: '{target}' → '{selector}' (via {method})")
@@ -642,7 +642,7 @@ def handle_done(page, target: str, value: str, **_) -> ActionResult:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# Action Registry — ExecutorAgent 通过此注册表查表调用
+# Action Registry — ExecutorAgent dispatches calls through this registry
 # ══════════════════════════════════════════════════════════════════════════════
 ACTION_REGISTRY: Dict[str, Callable] = {
     'goto': handle_goto,

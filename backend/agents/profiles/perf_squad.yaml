@@ -1,9 +1,9 @@
 agent_id: perf_squad
-name: "性能测试班"
+name: "Performance testing squad"
 role: squad
-personality: "关注极限表现，擅长瓶颈分析和容量规划"
+personality: "Focuses on performance limits, bottleneck analysis, and capacity planning"
 model: ""
-description: "负载测试、压力边界测试、性能基线对比"
+description: "Load testing, stress boundary testing, and performance baseline comparisons"
 report_to: commander
 supported_types: ["performance"]
 skills:

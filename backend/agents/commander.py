@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 """
-Commander — 总指挥编排引擎
+Commander — Commander orchestration engine
 
-核心职责：
-    用户一句话 → 自动解析需求 → 选择策略 → 分发任务 → 并行执行 → 汇总报告
+Core responsibility:
+    One user request → parse requirements → choose a strategy → dispatch tasks → execute in parallel → summarize results
 
-设计原则：
-    1. Commander 本身 **不执行测试**，只做编排调度
-    2. 串联 5 个已有模块（RequirementParser / StrategySelector / TestScheduler / AgentBus / MasterAgent）
-    3. 所有旧路由不动，Commander 加旁路（/api/commander/...），零迁移风险
+Design principles:
+    1. Commander **does not execute tests**; it only orchestrates and schedules
+    2. Connect five existing modules (RequirementParser / StrategySelector / TestScheduler / AgentBus / MasterAgent)
+    3. Keep all existing routes and add Commander alongside them at /api/commander/... without migration risk
 
-支持的测试线：
+Supported test tracks:
     - UI E2E:       Orchestrator → PlannerAgent + ExecutorAgent
     - API REST:     APIAgent / api_workbench
     - Security:     SecurityScanner / EnhancedSecurity
@@ -33,22 +33,22 @@ from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
-# 持久化目录
+# Persistence directory
 _MISSIONS_DIR = Path(__file__).resolve().parent.parent / "data"
 _MISSIONS_FILE = _MISSIONS_DIR / "commander_missions.json"
 
 
-# ── 数据结构 ──────────────────────────────────────────────────────────────────
+# ── Data structures ──────────────────────────────────────────────────────────────────
 
 
 class MissionStatus(Enum):
-    """任务状态"""
+    """Mission status"""
     PENDING = "pending"
-    PARSING = "parsing"       # 解析需求中
-    PLANNING = "planning"     # 选择策略中
-    DISPATCHING = "dispatching"  # 分发任务中
-    EXECUTING = "executing"   # 执行测试中
-    REPORTING = "reporting"   # 生成报告中
+    PARSING = "parsing"       # Parsing requirements
+    PLANNING = "planning"     # Choosing a strategy
+    DISPATCHING = "dispatching"  # Dispatching tasks
+    EXECUTING = "executing"   # Running tests
+    REPORTING = "reporting"   # Generating a report
     COMPLETED = "completed"
     FAILED = "failed"
     CANCELLED = "cancelled"
@@ -56,7 +56,7 @@ class MissionStatus(Enum):
 
 @dataclass
 class MissionLog:
-    """任务日志条目"""
+    """Mission log entry"""
     timestamp: str = field(default_factory=lambda: datetime.now().isoformat())
     level: str = "info"       # info / warn / error / progress
     message: str = ""
@@ -65,7 +65,7 @@ class MissionLog:
 
 @dataclass
 class Mission:
-    """一次 Commander 任务"""
+    """A Commander mission"""
     mission_id: str = field(default_factory=lambda: str(uuid.uuid4())[:8])
     mission_kind: str = "commander"
     task_kind: str = "general"
@@ -77,7 +77,7 @@ class Mission:
     started_at: Optional[str] = None
     completed_at: Optional[str] = None
 
-    # 中间产物
+    # Intermediate outputs
     parsed_requirement: Optional[Dict] = None
     strategy: Optional[Dict] = None
     source_context: Dict[str, Any] = field(default_factory=dict)
@@ -86,10 +86,10 @@ class Mission:
     test_results: List[Dict] = field(default_factory=list)
     report: Optional[Dict] = None
 
-    # 日志
+    # Logs
     logs: List[MissionLog] = field(default_factory=list)
 
-    # 追踪
+    # Tracing
     trace_id: Optional[str] = None
     execution_group_id: str = ""
 
@@ -102,7 +102,7 @@ class Mission:
         self.logs.append(entry)
         logger.info(f"[Commander][{self.mission_id}] {message}")
 
-        # SSE 推送：发布到 EventBus，供前端 NotificationCenter 消费
+        # SSE delivery: publish to EventBus for the frontend NotificationCenter
         try:
             from core.event_bus import EventBus
             EventBus.instance().put({
@@ -114,7 +114,7 @@ class Mission:
                 "timestamp": entry.timestamp,
             })
         except Exception:
-            pass  # EventBus 未初始化时静默
+            pass  # Ignore when EventBus has not been initialized
 
     def to_dict(self) -> dict:
         bug_summary = []
@@ -137,7 +137,7 @@ class Mission:
             "test_tasks_count": len(self.test_tasks),
             "test_results_count": len(self.test_results),
             "report": self.report,
-            "logs": [asdict(l) for l in self.logs[-20:]],  # 最近 20 条
+            "logs": [asdict(l) for l in self.logs[-20:]],  # Most recent 20 entries
             "trace_id": self.trace_id,
             "execution_group_id": self.execution_group_id or self.mission_id,
             "execution_center_path": f"/history?group={self.execution_group_id or self.mission_id}",
@@ -145,9 +145,9 @@ class Mission:
         }
 
 
-# ── 测试线映射 ────────────────────────────────────────────────────────────────
+# ── Test-track mapping ────────────────────────────────────────────────────────────────
 
-# StrategySelector 返回的 TestType.value → 具体执行方法名
+# TestType.value returned by StrategySelector → execution method name
 _TEST_LINE_MAP = {
     "ui_e2e": "_run_ui_test",
     "api_rest": "_run_api_test",
@@ -160,40 +160,40 @@ _TEST_LINE_MAP = {
 }
 
 _TEST_TYPE_LABELS = {
-    "ui_e2e": "UI 自动化",
-    "api_rest": "API 测试",
-    "api_graphql": "GraphQL 测试",
-    "security": "安全扫描",
-    "performance": "性能测试",
-    "database": "数据库测试",
-    "accessibility": "无障碍测试",
-    "visual_regression": "视觉回归",
+    "ui_e2e": "UI automation",
+    "api_rest": "API tests",
+    "api_graphql": "GraphQL tests",
+    "security": "Security scanning",
+    "performance": "Performance tests",
+    "database": "Database tests",
+    "accessibility": "Accessibility tests",
+    "visual_regression": "Visual regression",
 }
 
 _SUCCESS_RESULT_STATUSES = {"completed", "success", "healed", "recovered"}
 _FAILED_RESULT_STATUSES = {"error", "failed", "timeout", "cancelled"}
 
 
-# ── Commander 核心 ───────────────────────────────────────────────────────────
+# ── Commander core ───────────────────────────────────────────────────────────
 
 
 class Commander:
     """
-    总指挥编排引擎
+    Commander orchestration engine
 
-    一句话输入 → 自动多线执行 → 汇总报告
+    One request → automatic execution across test tracks → summary report
     """
 
     def __init__(self):
-        # 延迟导入，避免循环依赖
+        # Import lazily to avoid circular dependencies
         self._missions: Dict[str, Mission] = {}
         _MISSIONS_DIR.mkdir(parents=True, exist_ok=True)
         self._load_missions()
         self._register_profiles()
-        logger.info(f"[Commander] 初始化完成，已加载 {len(self._missions)} 条历史任务")
+        logger.info(f"[Commander] Initialized; loaded {len(self._missions)} previous missions")
 
     def _register_profiles(self):
-        """启动时自动将所有 Agent Profile 注册到 AgentBus"""
+        """Register all agent profiles with AgentBus automatically at startup"""
         try:
             from core.agent_profile import get_profile_manager
             from core.agent_bus import get_agent_bus
@@ -209,46 +209,46 @@ class Commander:
                     description=profile.description,
                     profile_id=profile.agent_id,
                 )
-            logger.info(f"[Commander] 注册 {len(pm.list_all())} 个 Agent Profile 到 AgentBus")
+            logger.info(f"[Commander] Registered {len(pm.list_all())} agent profiles with AgentBus")
         except Exception as e:
-            logger.warning(f"[Commander] Profile 注册失败（非阻塞）: {e}")
+            logger.warning(f"[Commander] Profile registration failed (nonblocking): {e}")
 
     def _save_missions(self):
-        """持久化 missions 到磁盘 JSON"""
+        """Persist missions as JSON on disk"""
         try:
             data = {}
             for mid, m in self._missions.items():
                 if isinstance(m, Mission):
                     d = m.to_dict()
-                    # to_dict 已处理了 logs 截断，这里保留全部
+                    # to_dict truncates logs; keep all entries here
                     d["logs"] = [asdict(l) for l in m.logs]
                     data[mid] = d
                 elif isinstance(m, dict):
                     data[mid] = m
-            # 只保留最近 100 条任务
+            # Keep only the most recent 100 missions
             if len(data) > 100:
                 sorted_items = sorted(data.items(), key=lambda x: x[1].get("created_at", ""), reverse=True)
                 data = dict(sorted_items[:100])
             _MISSIONS_FILE.write_text(_json.dumps(data, ensure_ascii=False, indent=2, default=str), encoding="utf-8")
         except Exception as e:
-            logger.warning(f"[Commander] 持久化失败: {e}")
+            logger.warning(f"[Commander] Persistence failed: {e}")
 
     def _load_missions(self):
-        """从磁盘 JSON 加载历史 missions"""
+        """Load previous missions from JSON on disk"""
         if not _MISSIONS_FILE.exists():
             return
         try:
             raw = _json.loads(_MISSIONS_FILE.read_text(encoding="utf-8"))
             for mid, data in raw.items():
-                self._missions[mid] = data  # 以 dict 形式保留历史
-            logger.info(f"[Commander] 从磁盘加载 {len(raw)} 条任务")
+                self._missions[mid] = data  # Keep history as dictionaries
+            logger.info(f"[Commander] Loaded from disk: {len(raw)} missions")
         except Exception as e:
-            logger.warning(f"[Commander] 加载历史失败: {e}")
+            logger.warning(f"[Commander] Failed to load history: {e}")
 
     @staticmethod
     def _build_group_title(user_input: str, target_url: str = "") -> str:
-        label = (user_input or "").strip() or (target_url or "").strip() or "未命名军团任务"
-        return f"军团测试 · {label[:48]}"
+        label = (user_input or "").strip() or (target_url or "").strip() or "Untitled legion mission"
+        return f"Legion test · {label[:48]}"
 
     @staticmethod
     def _build_system_log(content: str) -> Dict[str, Any]:
@@ -283,7 +283,7 @@ class Commander:
 
     @staticmethod
     def _label_for_test_type(test_type: str) -> str:
-        return _TEST_TYPE_LABELS.get(test_type, str(test_type or "未命名测试").replace("_", " ").strip() or "未命名测试")
+        return _TEST_TYPE_LABELS.get(test_type, str(test_type or "Untitled test").replace("_", " ").strip() or "Untitled test")
 
     def _sync_execution_group(self, mission: Mission, status: Optional[str] = None) -> None:
         try:
@@ -302,7 +302,7 @@ class Commander:
                 status=status or mission.status.value,
             )
         except Exception as exc:
-            logger.warning("[Commander] 同步执行中心批次失败: %s", exc)
+            logger.warning("[Commander] Failed to synchronize the execution-center batch: %s", exc)
 
     def _decorate_tasks(self, mission: Mission, tasks: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         group_id = mission.execution_group_id or mission.mission_id
@@ -341,34 +341,34 @@ class Commander:
             errors = payload.get("errors") or []
             if errors:
                 return str(errors[0])
-            return f"执行 {payload.get('total_steps', 0)} 步，发现 {payload.get('error_count', 0)} 个错误"
+            return f"Executed {payload.get('total_steps', 0)} steps; found {payload.get('error_count', 0)} errors"
 
         if test_type == "security":
             alerts = payload.get("alerts") or []
             if alerts:
                 first = alerts[0]
-                return f"[{first.get('risk', '风险未知')}] {first.get('name') or first.get('description') or '发现安全问题'}"
-            return f"安全扫描完成，告警 {len(alerts)} 个"
+                return f"[{first.get('risk', 'Unknown risk')}] {first.get('name') or first.get('description') or 'Security issue found'}"
+            return f"Security scan completed; alerts: {len(alerts)}"
 
         if test_type == "performance":
             stats = payload.get("stats") or {}
             failures = int(stats.get("failures", 0) or 0)
             http_5xx = int(stats.get("http_5xx", 0) or 0)
             if failures or http_5xx:
-                return f"性能测试失败：失败请求 {failures} 个，HTTP 5xx {http_5xx} 个"
-            return f"业务成功率 {float(stats.get('business_success_rate', stats.get('success_rate', 0)) or 0):.2f}%"
+                return f"Performance test failed: failed requests: {failures}; HTTP 5xx: {http_5xx}"
+            return f"Business success rate {float(stats.get('business_success_rate', stats.get('success_rate', 0)) or 0):.2f}%"
 
         if test_type == "accessibility":
             issues = payload.get("issues") or []
             if issues:
                 first = issues[0]
                 if isinstance(first, dict):
-                    return str(first.get("description") or first.get("rule_id") or "发现无障碍问题")
+                    return str(first.get("description") or first.get("rule_id") or "Accessibility issue found")
                 return str(first)
-            return str(payload.get("summary") or "无障碍检查通过")
+            return str(payload.get("summary") or "Accessibility checks passed")
 
         if test_type == "visual_regression":
-            return str(payload.get("note") or f"已发现 {payload.get('baselines_count', 0)} 个视觉基线")
+            return str(payload.get("note") or f"Found {payload.get('baselines_count', 0)} visual baselines")
 
         for key in ("summary", "message", "detail", "note"):
             value = payload.get(key)
@@ -378,7 +378,7 @@ class Commander:
         errors = payload.get("errors") or []
         if errors:
             return str(errors[0])
-        return f"{self._label_for_test_type(test_type)}执行完成"
+        return f"{self._label_for_test_type(test_type)} execution completed"
 
     def _build_task_detail_items(self, task: Dict[str, Any], result: Dict[str, Any]) -> List[Dict[str, Any]]:
         test_type = str(task.get("test_type") or "")
@@ -411,7 +411,7 @@ class Commander:
                     items.append({"target": "a11y-issue", "passed": False, "content": str(issue)})
         elif test_type == "visual_regression":
             for baseline in payload.get("baselines") or []:
-                items.append({"target": str(baseline), "passed": True, "content": "已存在视觉基线"})
+                items.append({"target": str(baseline), "passed": True, "content": "Visual baseline exists"})
 
         if not items:
             items.append({
@@ -434,7 +434,7 @@ class Commander:
             success = self._is_result_success(result.get("status", ""))
             title = f"{self._label_for_test_type(test_type)} · {task.get('target_url') or mission.target_url or task.get('user_input') or '-'}"
             logs: List[Dict[str, Any]] = [
-                self._build_system_log(f"{self._label_for_test_type(test_type)}完成：{task.get('target_url') or mission.target_url or '-'}"),
+                self._build_system_log(f"{self._label_for_test_type(test_type)} completed: {task.get('target_url') or mission.target_url or '-'}"),
                 self._build_assertion_log(self._label_for_test_type(test_type), success, summary),
             ]
             for item in detail_items:
@@ -464,7 +464,7 @@ class Commander:
             )
             return record_id
         except Exception as exc:
-            logger.warning("[Commander] 持久化子任务结果失败: %s", exc)
+            logger.warning("[Commander] Failed to persist subtask results: %s", exc)
             return None
 
     def _infer_existing_execution_record_id(self, result: Dict[str, Any]) -> Optional[str]:
@@ -512,16 +512,16 @@ class Commander:
             summary = (mission.report or {}).get("summary", {}) if isinstance(mission.report, dict) else {}
             success = len(bug_summary) == 0 and mission.status not in {MissionStatus.FAILED, MissionStatus.CANCELLED}
             content = (
-                f"总测试线 {summary.get('total_tests', len(mission.test_results))}，"
-                f"通过 {summary.get('completed', 0)}，失败 {summary.get('failed', 0)}，"
-                f"跳过 {summary.get('skipped', 0)}，成功率 {summary.get('success_rate', 0)}%"
+                f"Total test tracks: {summary.get('total_tests', len(mission.test_results))}, "
+                f"passed: {summary.get('completed', 0)}; failed: {summary.get('failed', 0)}, "
+                f"skipped: {summary.get('skipped', 0)}; success rate: {summary.get('success_rate', 0)}%"
             )
             logs: List[Dict[str, Any]] = [
-                self._build_system_log(f"Commander 任务完成：{mission.user_input}"),
-                self._build_assertion_log("军团任务总览", success, content),
+                self._build_system_log(f"Commander mission completed: {mission.user_input}"),
+                self._build_assertion_log("Legion mission overview", success, content),
             ]
             for bug in bug_summary:
-                logs.append(self._build_assertion_log(str(bug.get("title") or "问题"), False, str(bug.get("summary") or "发现失败项")))
+                logs.append(self._build_assertion_log(str(bug.get("title") or "Issue"), False, str(bug.get("summary") or "Failed item found")))
             for mission_log in mission.logs[-10:]:
                 logs.append(
                     self._build_error_log(mission_log.message)
@@ -531,7 +531,7 @@ class Commander:
 
             get_execution_center_service().upsert_run(
                 task_id=mission.mission_id,
-                requirement=f"军团任务 · {mission.user_input}",
+                requirement=f"Legion mission · {mission.user_input}",
                 status="success" if success else "failed",
                 target_url=mission.target_url or "",
                 mode="commander",
@@ -543,9 +543,9 @@ class Commander:
                 record_kind="child",
             )
         except Exception as exc:
-            logger.warning("[Commander] 持久化军团任务摘要失败: %s", exc)
+            logger.warning("[Commander] Failed to persist the legion mission summary: %s", exc)
 
-    # ── 对外接口 ──────────────────────────────────────────────────────────
+    # ── Public interface ──────────────────────────────────────────────────────────
 
     async def run(
         self,
@@ -560,16 +560,16 @@ class Commander:
         unified_task: bool = False,
     ) -> Dict[str, Any]:
         """
-        一句话启动全面测试。
+        Start comprehensive testing from a single request.
 
         Args:
-            user_input: 用户的自然语言测试需求
-            target_url: 目标 URL（可选）
-            parallel: 是否并行执行多条测试线
-            timeout_seconds: 全局超时（秒），默认 15 分钟
+            user_input: The user's natural-language test requirements
+            target_url: Target URL (optional)
+            parallel: Whether to execute test tracks in parallel
+            timeout_seconds: Overall timeout in seconds; defaults to 15 minutes
 
         Returns:
-            任务结果 dict
+            Mission result dictionary
         """
         mission = Mission(
             mission_id=mission_id or str(uuid.uuid4())[:8],
@@ -585,12 +585,12 @@ class Commander:
         mission.started_at = datetime.now().isoformat()
         self._sync_execution_group(mission, status=MissionStatus.PENDING.value)
 
-        # 启动追踪
+        # Start tracing
         from core.tracing import get_tracer
         tracer = get_tracer()
         mission.trace_id = tracer.start_trace()
 
-        mission.log("🚀 Commander 任务启动", data={
+        mission.log("🚀 Commander mission started", data={
             "user_input": user_input,
             "target_url": target_url,
         })
@@ -603,77 +603,77 @@ class Commander:
         except asyncio.TimeoutError:
             mission.status = MissionStatus.FAILED
             mission.completed_at = datetime.now().isoformat()
-            mission.log(f"⏰ 任务超时 ({timeout_seconds}s)", level="error")
+            mission.log(f"⏰ Mission timed out ({timeout_seconds}s)", level="error")
             logger.error(f"[Commander] Mission {mission.mission_id} timed out after {timeout_seconds}s")
         except asyncio.CancelledError:
             mission.status = MissionStatus.CANCELLED
             mission.completed_at = datetime.now().isoformat()
-            mission.log("⚠️ 任务已取消", level="warn")
+            mission.log("⚠️ Mission canceled", level="warn")
         except Exception as e:
             mission.status = MissionStatus.FAILED
             mission.completed_at = datetime.now().isoformat()
-            mission.log(f"❌ 任务失败: {e}", level="error")
+            mission.log(f"❌ Mission failed: {e}", level="error")
             logger.error(f"[Commander] Mission failed: {e}", exc_info=True)
         finally:
             self._sync_execution_group(mission)
             self._persist_commander_summary_record(mission)
             tracer.end_trace()
-            self._save_missions()  # 持久化到磁盘
+            self._save_missions()  # Persist to disk
 
         return mission.to_dict()
 
     async def _run_pipeline(self, mission: "Mission", parallel: bool):
-        """内部执行管道 — 被 run() 包在 wait_for 超时中"""
-        # ① 解析需求
+        """Internal execution pipeline wrapped by run() in a wait_for timeout"""
+        # ① Parse requirements
         mission.status = MissionStatus.PARSING
         self._sync_execution_group(mission)
-        mission.log("📋 解析需求...")
+        mission.log("📋 Parse requirements...")
         parsed = await self._parse_requirement(mission)
         mission.parsed_requirement = parsed
 
-        # ② 选择策略
+        # ② Choose a strategy
         mission.status = MissionStatus.PLANNING
         self._sync_execution_group(mission)
-        mission.log("🧠 选择测试策略...")
+        mission.log("🧠 Choose a test strategy...")
         strategy = await self._select_strategy(mission)
         mission.strategy = strategy
 
-        # ③ 构建测试任务
+        # ③ Build test tasks
         mission.status = MissionStatus.DISPATCHING
         self._sync_execution_group(mission)
-        mission.log("📦 构建测试任务...")
+        mission.log("📦 Build test tasks...")
         tasks = self._decorate_tasks(mission, self._build_tasks(mission, strategy))
         mission.test_tasks = tasks
-        mission.log(f"📊 共 {len(tasks)} 条测试线待执行", data={
+        mission.log(f"📊 Total: {len(tasks)} test tracks to run", data={
             "test_types": [t.get("test_type") for t in tasks],
         })
 
-        # ④ 分发执行
+        # ④ Dispatch execution
         mission.status = MissionStatus.EXECUTING
         self._sync_execution_group(mission)
-        mission.log(f"⚡ {'并行' if parallel else '串行'}执行测试...")
+        mission.log(f"⚡ {'Parallel' if parallel else 'Sequential'} test execution...")
         results = await self._execute_tasks(mission, tasks, parallel)
         mission.test_results = results
 
-        # ⑤ 生成报告
+        # ⑤ Generate a report
         mission.status = MissionStatus.REPORTING
         self._sync_execution_group(mission)
-        mission.log("📝 生成测试报告...")
+        mission.log("📝 Generate the test report...")
         report = await self._generate_report(mission)
         mission.report = report
 
-        # ⑥ 发送通知
+        # ⑥ Send notifications
         await self._notify(mission)
 
-        # 完成
+        # Completed
         mission.status = MissionStatus.COMPLETED
         mission.completed_at = datetime.now().isoformat()
         self._sync_execution_group(mission)
-        mission.log("✅ Commander 任务完成", data={
+        mission.log("✅ Commander mission completed", data={
             "duration_s": self._calc_duration(mission),
         })
 
-    # ── 蜂群模式 ──────────────────────────────────────────────────────────
+    # ── Swarm mode ──────────────────────────────────────────────────────────
 
     async def run_swarm(
         self,
@@ -685,18 +685,18 @@ class Commander:
         mission_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
-        蜂群模式：战略层分析 → 智能任务分解 → 并行执行。
+        Swarm mode: Strategic analysis → intelligent task decomposition → parallel execution.
 
-        与 run() 的区别：
-        - run()  用 RequirementParser + StrategySelector（战术层直达）
-        - run_swarm() 先经过 TestArchitect（战略层 5 种发现模式）
+        Differences from run():
+        - run() uses RequirementParser + StrategySelector directly at the tactical layer
+        - run_swarm() first uses TestArchitect and its five strategic discovery modes
 
         Args:
-            user_input: 用户需求
-            target_url: 目标 URL
-            diff_text: Git diff（变更驱动模式）
-            alert_data: 告警数据（故障驱动模式）
-            mode: 强制指定发现模式（留空则自动推断）
+            user_input: User requirements
+            target_url: Target URL
+            diff_text: Git diff (change-driven mode)
+            alert_data: Alert data (fault-driven mode)
+            mode: Explicit discovery mode; infer automatically when omitted
         """
         mission = Mission(
             mission_id=mission_id or str(uuid.uuid4())[:8],
@@ -712,16 +712,16 @@ class Commander:
         tracer = get_tracer()
         mission.trace_id = tracer.start_trace()
 
-        mission.log("🐝 蜂群模式启动", data={
+        mission.log("🐝 Swarm mode started", data={
             "user_input": user_input,
             "target_url": target_url,
             "mode": mode or "auto",
         })
 
         try:
-            # ① 战略层：TestArchitect 分析
+            # ① Strategic layer: TestArchitect analysis
             mission.status = MissionStatus.PARSING
-            mission.log("🎯 TestArchitect 战略分析...")
+            mission.log("🎯 TestArchitect strategic analysis...")
 
             from agents.test_architect import get_test_architect
             architect = get_test_architect()
@@ -735,11 +735,11 @@ class Commander:
 
             mission.parsed_requirement = plan.to_dict()
             mission.log(
-                f"📋 发现 {len(plan.test_needs)} 条测试需求 ({plan.discovery_mode.value} 模式)",
+                f"📋 Discovered {len(plan.test_needs)} test needs ({plan.discovery_mode.value} mode)",
                 data={"test_needs": [n.title for n in plan.test_needs]},
             )
 
-            # ② 将 TestNeed 转为可执行任务
+            # ② Convert TestNeed objects into executable tasks
             mission.status = MissionStatus.DISPATCHING
             tasks = []
             for need in plan.test_needs:
@@ -757,24 +757,24 @@ class Commander:
                     })
 
             mission.test_tasks = self._decorate_tasks(mission, tasks)
-            mission.log(f"📦 共 {len(tasks)} 条测试线待执行")
+            mission.log(f"📦 Total: {len(tasks)} test tracks to run")
 
-            # ③ 并行执行（复用已有逻辑）
+            # ③ Execute in parallel using the existing logic
             mission.status = MissionStatus.EXECUTING
-            mission.log("⚡ 蜂群并行执行...")
+            mission.log("⚡ Executing the swarm in parallel...")
             results = await self._execute_tasks(mission, mission.test_tasks, parallel=True)
             mission.test_results = results
 
-            # ④ 报告 + 通知（复用已有逻辑）
+            # ④ Report and notification using the existing logic
             mission.status = MissionStatus.REPORTING
-            mission.log("📝 生成蜂群报告...")
+            mission.log("📝 Generate the swarm report...")
             report = await self._generate_report(mission)
             mission.report = report
             await self._notify(mission)
 
             mission.status = MissionStatus.COMPLETED
             mission.completed_at = datetime.now().isoformat()
-            mission.log("✅ 蜂群任务完成", data={
+            mission.log("✅ Swarm mission completed", data={
                 "duration_s": self._calc_duration(mission),
                 "discovery_mode": plan.discovery_mode.value,
             })
@@ -782,11 +782,11 @@ class Commander:
         except asyncio.CancelledError:
             mission.status = MissionStatus.CANCELLED
             mission.completed_at = datetime.now().isoformat()
-            mission.log("⚠️ 蜂群任务已取消", level="warn")
+            mission.log("⚠️ Swarm mission canceled", level="warn")
         except Exception as e:
             mission.status = MissionStatus.FAILED
             mission.completed_at = datetime.now().isoformat()
-            mission.log(f"❌ 蜂群任务失败: {e}", level="error")
+            mission.log(f"❌ Swarm mission failed: {e}", level="error")
             logger.error(f"[Commander] Swarm mission failed: {e}", exc_info=True)
         finally:
             self._sync_execution_group(mission)
@@ -797,12 +797,12 @@ class Commander:
         return mission.to_dict()
 
     def get_mission(self, mission_id: str) -> Optional[Dict]:
-        """获取任务状态"""
+        """Get mission status"""
         mission = self._missions.get(mission_id)
         return mission.to_dict() if mission else None
 
     def cancel_mission(self, mission_id: str) -> bool:
-        """取消任务"""
+        """Cancel a mission"""
         mission = self._missions.get(mission_id)
         if mission and mission.status in (
             MissionStatus.PENDING, MissionStatus.PARSING,
@@ -811,12 +811,12 @@ class Commander:
         ):
             mission.status = MissionStatus.CANCELLED
             mission.completed_at = datetime.now().isoformat()
-            mission.log("⚠️ 任务被用户取消", level="warn")
+            mission.log("⚠️ Mission canceled by the user", level="warn")
             return True
         return False
 
     def list_missions(self, limit: int = 20) -> List[Dict]:
-        """获取最近的任务列表"""
+        """Get recent missions"""
         missions = sorted(
             self._missions.values(),
             key=lambda m: m.created_at,
@@ -825,16 +825,16 @@ class Commander:
         return [m.to_dict() for m in missions]
 
     def get_mission_logs(self, mission_id: str, since_index: int = 0) -> List[Dict]:
-        """获取任务日志（支持增量获取，用于 SSE）"""
+        """Get mission logs, with incremental retrieval for SSE"""
         mission = self._missions.get(mission_id)
         if not mission:
             return []
         return [asdict(l) for l in mission.logs[since_index:]]
 
-    # ── 内部流程 ──────────────────────────────────────────────────────────
+    # ── Internal workflow ──────────────────────────────────────────────────────────
 
     async def _parse_requirement(self, mission: Mission) -> Dict:
-        """步骤①：调用已有的 RequirementParser"""
+        """Step 1: call the existing RequirementParser"""
         from core.requirement_parser import get_requirement_parser
         from core.tracing import get_tracer
         import json
@@ -848,7 +848,7 @@ class Commander:
         return json.loads(parsed_str) if isinstance(parsed_str, str) else parsed_str
 
     async def _select_strategy(self, mission: Mission) -> Dict:
-        """步骤②：调用已有的 StrategySelector"""
+        """Step 2: call the existing StrategySelector"""
         from core.strategy_selector import get_strategy_selector
         from core.tracing import get_tracer
 
@@ -873,7 +873,7 @@ class Commander:
         }
 
     def _build_tasks(self, mission: Mission, strategy: Dict) -> List[Dict]:
-        """步骤③：根据策略构建具体测试任务"""
+        """Step 3: build concrete test tasks from the strategy"""
         tasks = []
         for test_type in strategy.get("test_types", []):
             task = {
@@ -894,7 +894,7 @@ class Commander:
         tasks: List[Dict],
         parallel: bool,
     ) -> List[Dict]:
-        """步骤④：分发并执行测试任务"""
+        """Step 4: dispatch and execute test tasks"""
         results = []
 
         if parallel:
@@ -924,11 +924,11 @@ class Commander:
         return results
 
     async def _execute_single_task(self, mission: Mission, task: Dict) -> Dict:
-        """执行单条测试线"""
+        """Execute one test track"""
         test_type = task.get("test_type", "")
         method_name = _TEST_LINE_MAP.get(test_type)
 
-        mission.log(f"🔄 执行测试线: {test_type}")
+        mission.log(f"🔄 Execute test track: {test_type}")
 
         from core.tracing import get_tracer
 
@@ -937,7 +937,7 @@ class Commander:
                 method = getattr(self, method_name)
                 result = await method(task)
             else:
-                # 通用执行方式 — 通过 AgentBus 分发
+                # General execution: dispatch through AgentBus
                 result = await self._run_via_agent_bus(task)
 
         record_id = self._infer_existing_execution_record_id(result)
@@ -946,7 +946,7 @@ class Commander:
         if record_id:
             result["execution_record_id"] = record_id
 
-        mission.log(f"✅ 测试线完成: {test_type}", data={
+        mission.log(f"✅ Test track completed: {test_type}", data={
             "status": result.get("status", "unknown"),
             "execution_record_id": result.get("execution_record_id"),
         })
@@ -954,15 +954,15 @@ class Commander:
 
         return result
 
-    # ── 各测试线实现 ──────────────────────────────────────────────────────
+    # ── Test-track implementations ──────────────────────────────────────────────────────
 
     async def _run_ui_test(self, task: Dict) -> Dict:
-        """UI E2E 测试线 — 启动 Orchestrator → 轮询等待完成 → 收集结果"""
+        """UI E2E track: start Orchestrator → poll until completion → collect results"""
         try:
             import uuid
             from agents.orchestrator import Orchestrator
 
-            # 为 Commander 分配独立 session，避免干扰用户手动会话
+            # Give Commander a separate session to avoid interfering with the user's manual session
             session_id = f"commander_{uuid.uuid4().hex[:8]}"
             orchestrator = Orchestrator(session_id=session_id)
 
@@ -977,7 +977,7 @@ class Commander:
             if task_id == "Busy":
                 return {"test_type": "ui_e2e", "status": "skipped", "error": "Orchestrator busy"}
 
-            # 轮询等待完成（最长 timeout 秒）
+            # Poll until completion, for up to timeout seconds
             timeout = task.get("timeout", 300)
             start_time = time.time()
             while orchestrator.is_running:
@@ -986,7 +986,7 @@ class Commander:
                     return {"test_type": "ui_e2e", "status": "timeout", "error": f"UI test timed out after {timeout}s"}
                 await asyncio.sleep(2)
 
-            # 收集结果
+            # Collect results
             logs = orchestrator.session.get_logs()
             error_count = sum(1 for l in logs if l.get("type") == "error")
             step_count = sum(1 for l in logs if l.get("type") in ("step", "action", "plan"))
@@ -1007,7 +1007,7 @@ class Commander:
                     "errors": [
                         l.get("content", "") for l in logs
                         if l.get("type") == "error"
-                    ][:5],  # 最多 5 条错误
+                    ][:5],  # Up to five errors
                 },
             }
         except Exception as e:
@@ -1018,7 +1018,7 @@ class Commander:
             }
 
     async def _run_api_test(self, task: Dict) -> Dict:
-        """API 测试线 — 调用现有 APIAgent.execute_test()"""
+        """API track: call the existing APIAgent.execute_test()"""
         try:
             from agents.api_agent import APIAgent
 
@@ -1040,7 +1040,7 @@ class Commander:
             }
 
     async def _run_security_test(self, task: Dict) -> Dict:
-        """安全测试线 — 调用现有 SecurityScanner.scan()"""
+        """Security track: call the existing SecurityScanner.scan()"""
         try:
             from services.security_scanner import SecurityScanner, ScanConfig, ScanType
 
@@ -1068,7 +1068,7 @@ class Commander:
             }
 
     async def _run_performance_test(self, task: Dict) -> Dict:
-        """性能测试线 — 调用现有 PerformanceRunner.run_test()"""
+        """Performance track: call the existing PerformanceRunner.run_test()"""
         try:
             from services.performance_runner import PerformanceRunner, LoadTestConfig
 
@@ -1100,7 +1100,7 @@ class Commander:
             }
 
     async def _run_database_test(self, task: Dict) -> Dict:
-        """数据库测试线 — 调用 DataAgent.execute_test()"""
+        """Database track: call DataAgent.execute_test()"""
         try:
             from agents.data_agent import DataAgent
 
@@ -1119,7 +1119,7 @@ class Commander:
             }
 
     async def _run_accessibility_test(self, task: Dict) -> Dict:
-        """无障碍测试线 — 调用 AccessibilityTestService.audit()"""
+        """Accessibility track: call AccessibilityTestService.audit()"""
         try:
             from services.accessibility_testing import AccessibilityTestService
 
@@ -1141,7 +1141,7 @@ class Commander:
             }
 
     async def _run_visual_test(self, task: Dict) -> Dict:
-        """视觉回归测试线 — 调用 VisualRegressionTester.list_baselines()"""
+        """Visual regression track: call VisualRegressionTester.list_baselines()"""
         try:
             from services.visual_regression import get_visual_tester
 
@@ -1153,7 +1153,7 @@ class Commander:
                 "result": {
                     "baselines_count": len(baselines),
                     "baselines": baselines[:10],
-                    "note": "视觉回归需要先建立基线截图才能对比",
+                    "note": "Visual regression requires baseline screenshots before comparisons can run",
                 },
             }
         except Exception as e:
@@ -1164,7 +1164,7 @@ class Commander:
             }
 
     async def _run_via_agent_bus(self, task: Dict) -> Dict:
-        """通过 AgentBus 分发到注册的 Agent"""
+        """Dispatch to registered agents through AgentBus"""
         from core.agent_bus import get_agent_bus
 
         bus = get_agent_bus()
@@ -1183,17 +1183,17 @@ class Commander:
             "error": "AgentBus request timed out",
         }
 
-    # ── 报告与通知 ────────────────────────────────────────────────────────
+    # ── Reports and notifications ────────────────────────────────────────────────────────
 
     async def _generate_report(self, mission: Mission) -> Dict:
-        """步骤⑤：生成汇总报告"""
+        """Step 5: generate a summary report"""
         total = len(mission.test_results)
         completed = sum(1 for r in mission.test_results if self._is_result_success(r.get("status", "")))
         failed = sum(1 for r in mission.test_results if self._is_result_failure(r.get("status", "")))
         skipped = sum(1 for r in mission.test_results if str(r.get("status") or "").lower() == "skipped")
         bug_summary = self._collect_bug_summary(mission)
 
-        # 获取追踪成本摘要
+        # Get the tracing cost summary
         from core.tracing import get_tracer
         cost_summary = get_tracer().get_trace_summary(mission.trace_id)
 
@@ -1219,7 +1219,7 @@ class Commander:
         return report
 
     async def _notify(self, mission: Mission) -> None:
-        """步骤⑥：发送通知"""
+        """Step 6: send notifications"""
         try:
             from core.notify_gateway import get_notify_gateway
 
@@ -1229,34 +1229,34 @@ class Commander:
 
             await gateway.send(
                 level="info",
-                title=f"🧪 测试完成: {mission.user_input[:50]}",
+                title=f"🧪 Testing completed: {mission.user_input[:50]}",
                 body=(
-                    f"任务 {mission.mission_id} 已完成\n"
-                    f"成功率: {summary.get('success_rate', 0)}%\n"
-                    f"通过 {summary.get('completed', 0)}/{summary.get('total_tests', 0)}"
+                    f"Mission {mission.mission_id} completed\n"
+                    f"Success rate: {summary.get('success_rate', 0)}%\n"
+                    f"passed: {summary.get('completed', 0)}/{summary.get('total_tests', 0)}"
                 ),
                 data={"mission_id": mission.mission_id},
             )
         except ImportError:
-            mission.log("⚠️ NotifyGateway 未就绪，跳过通知", level="warn")
+            mission.log("⚠️ NotifyGateway is not ready; skipping notifications", level="warn")
         except Exception as e:
-            mission.log(f"⚠️ 通知发送失败: {e}", level="warn")
+            mission.log(f"⚠️ Failed to send notification: {e}", level="warn")
 
-    # ── 工具方法 ──────────────────────────────────────────────────────────
+    # ── Utility methods ──────────────────────────────────────────────────────────
 
     @staticmethod
     def _calc_duration(mission: Mission) -> float:
-        """计算任务耗时（秒）"""
+        """Calculate mission duration in seconds"""
         if mission.started_at and mission.completed_at:
             start = datetime.fromisoformat(mission.started_at)
             end = datetime.fromisoformat(mission.completed_at)
             return round((end - start).total_seconds(), 2)
         return 0.0
 
-    # ── 查询/管理方法 ──────────────────────────────────────────────────────
+    # ── Query and management methods ──────────────────────────────────────────────────────
 
     def get_mission(self, mission_id: str) -> Optional[Dict]:
-        """获取任务详情"""
+        """Get mission details"""
         mission = self._missions.get(mission_id)
         if mission is None:
             return None
@@ -1265,7 +1265,7 @@ class Commander:
         return mission.to_dict()
 
     def list_missions(self, limit: int = 20) -> List[Dict]:
-        """列出最近的任务（按创建时间倒序）"""
+        """List recent missions in reverse creation order"""
         missions = []
         for m in self._missions.values():
             if isinstance(m, dict):
@@ -1276,7 +1276,7 @@ class Commander:
         return missions[:limit]
 
     def cancel_mission(self, mission_id: str) -> bool:
-        """取消任务"""
+        """Cancel a mission"""
         mission = self._missions.get(mission_id)
         if mission is None:
             return False
@@ -1285,11 +1285,11 @@ class Commander:
         else:
             mission.status = MissionStatus.CANCELLED
             mission.completed_at = datetime.now().isoformat()
-            mission.log("⚠️ 任务已取消", level="warn")
+            mission.log("⚠️ Mission canceled", level="warn")
         return True
 
     def get_mission_logs(self, mission_id: str, since_index: int = 0) -> List[Dict]:
-        """获取任务日志（支持增量查询）"""
+        """Get mission logs with incremental queries"""
         mission = self._missions.get(mission_id)
         if mission is None:
             return []
@@ -1300,13 +1300,13 @@ class Commander:
         return logs[since_index:]
 
 
-# ── 单例 ─────────────────────────────────────────────────────────────────────
+# ── Singleton ─────────────────────────────────────────────────────────────────────
 
 _commander: Optional[Commander] = None
 
 
 def get_commander() -> Commander:
-    """获取 Commander 单例"""
+    """Get the Commander singleton"""
     global _commander
     if _commander is None:
         _commander = Commander()

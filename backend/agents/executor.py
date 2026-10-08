@@ -13,41 +13,41 @@ logger = logging.getLogger(__name__)
 
 class ExecutorNode:
     """
-    执行 Agent (Executor)
-    负责：
-    1. 接收单个 Step
-    2. 执行动作 (Playwright / API / SQL)
-    3. 自愈逻辑 (Self-Correction)
-    4. 结果验证 (Judge)
+    Execution agent (Executor)
+    Responsibilities:
+    1. Receive one Step
+    2. Execute actions (Playwright / API / SQL)
+    3. Healing logic (self-correction)
+    4. Result verification (Judge)
     """
 
     async def execute_step(self, state: EngineState) -> EngineState:
         idx = state["current_step_index"]
         if idx >= len(state["plan"]):
             return state
-            
+
         step: TestStep = state["plan"][idx]
         logger.info(f"[Executor] Executing Step {idx+1}: {step['action']} -> {step['target']}")
-        
+
         try:
-            # 执行逻辑
+            # Execution logic
             result = await self._perform_action(step, state)
-            
-            # 记录成功日志
+
+            # Log success
             state["logs"].append({
                 "type": "success",
                 "action": step['action'],
                 "content": result
             })
-            
-            # 步进
+
+            # Advance to the next step
             state["current_step_index"] += 1
             state["retry_count"] = 0
-            
+
         except Exception as e:
             logger.warning(f"[Executor] Execution Failed: {e}")
-            
-            # 自愈尝试
+
+            # Attempt healing
             if state["retry_count"] < 2:
                 logger.info("[Executor] Triggering Self-Heal...")
                 healed_step = self_heal(step, str(e), get_clean_html())
@@ -57,10 +57,10 @@ class ExecutorNode:
                     state["retry_count"] += 1
                     # Stay on same index to retry
                     return state
-            
-            # 最终失败
+
+            # Final failure
             state["error"] = str(e)
-            
+
         return state
 
     async def _perform_action(self, step: TestStep, state: EngineState) -> str:
@@ -73,7 +73,7 @@ class ExecutorNode:
             tool_api_call, tool_db_query, tool_visual_check
         )
 
-        # 获取当前页面对象
+        # Get the current page object
         page = None
         try:
             from core.shared import SharedBrowserState
@@ -86,7 +86,7 @@ class ExecutorNode:
         if action == "goto":
             return await tool_goto(page, target, context)
         elif action == "click":
-            # 尝试自动定位 selector
+            # Try to locate the selector automatically
             if not step['selector']:
                 step['selector'] = await find_selector(target) if target else ""
             return await tool_click(page, step['selector'] or target)
@@ -95,7 +95,7 @@ class ExecutorNode:
                 step['selector'] = await find_selector(target) if target else ""
             return await tool_fill(page, step['selector'] or target, val, context)
         elif action == "assert":
-            # 使用语义裁判
+            # Use the semantic judge
             page_content = get_clean_html()
             passed = semantic_judge(target, page_content)
             if not passed:

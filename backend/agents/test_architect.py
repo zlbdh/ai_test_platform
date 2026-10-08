@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
 """
-TestArchitect — 测试架构师（战略层）
+TestArchitect — strategic test architect
 
-职责：决定"测什么"，是 Commander 的上游。
+Responsibility: decide what to test, upstream of Commander.
 
-五种测试发现模式：
-    1. 需求驱动：PRD 文档 → RequirementParser → 测试需求列表
-    2. 变更驱动：Git diff → AcceptanceEngine → 影响评估
-    3. 探索驱动：ExploratoryAgent + ScoutAgent → 自主发现
-    4. 覆盖驱动：分析现有测试报告 → 找盲区
-    5. 故障驱动：告警 → RCAAgent → 回归用例
+Five test-discovery modes:
+    1. Requirement-driven: PRD document → RequirementParser → test needs
+    2. Change-driven: Git diff → AcceptanceEngine → impact assessment
+    3. Exploration-driven: ExploratoryAgent + ScoutAgent → autonomous discovery
+    4. Coverage-driven: analyze existing test reports → find gaps
+    5. Fault-driven: alert → RCAAgent → regression cases
 
-关键：激活 AcceptanceEngine（295行，零引用）和 ExploratoryAgent（561行，缺路由）。
+Key objective: activate AcceptanceEngine (295 lines, no references) and ExploratoryAgent (561 lines, no route).
 """
 
 import logging
@@ -23,21 +23,21 @@ from typing import Any, Dict, List, Optional
 logger = logging.getLogger(__name__)
 
 
-# ── 数据结构 ──────────────────────────────────────────────────────────────────
+# ── Data structures ──────────────────────────────────────────────────────────────────
 
 
 class DiscoveryMode(Enum):
-    """测试发现模式"""
-    REQUIREMENT = "requirement"   # 需求驱动
-    CHANGE = "change"             # 变更驱动
-    EXPLORATION = "exploration"   # 探索驱动
-    COVERAGE = "coverage"         # 覆盖驱动
-    FAULT = "fault"               # 故障驱动
+    """Test-discovery modes"""
+    REQUIREMENT = "requirement"   # Requirement-driven
+    CHANGE = "change"             # Change-driven
+    EXPLORATION = "exploration"   # Exploration-driven
+    COVERAGE = "coverage"         # Coverage-driven
+    FAULT = "fault"               # Fault-driven
 
 
 @dataclass
 class TestNeed:
-    """一条测试需求"""
+    """A test need"""
     title: str
     description: str
     source: DiscoveryMode
@@ -49,7 +49,7 @@ class TestNeed:
 
 @dataclass
 class ArchitectPlan:
-    """架构师输出的测试计划"""
+    """Test plan produced by the architect"""
     plan_id: str = ""
     discovery_mode: DiscoveryMode = DiscoveryMode.REQUIREMENT
     test_needs: List[TestNeed] = field(default_factory=list)
@@ -76,22 +76,22 @@ class ArchitectPlan:
         }
 
 
-# ── TestArchitect 核心 ───────────────────────────────────────────────────────
+# ── TestArchitect core ───────────────────────────────────────────────────────
 
 
 class TestArchitect:
     """
-    测试架构师 — 战略层
+    Test architect — strategic layer
 
-    回答"测什么？"：
-    - 分析输入 → 确定发现模式 → 生成测试需求列表
-    - 输出交给 Commander 执行
+    Answers the question of what to test:
+    - Analyze input → choose a discovery mode → generate test needs
+    - Pass the output to Commander for execution
     """
 
     def __init__(self):
-        logger.info("[TestArchitect] 初始化完成")
+        logger.info("[TestArchitect] Initialization complete")
 
-    # ── 统一入口 ──────────────────────────────────────────────────────────
+    # ── Unified entry point ──────────────────────────────────────────────────────────
 
     async def analyze(
         self,
@@ -102,22 +102,22 @@ class TestArchitect:
         alert_data: Optional[Dict] = None,
     ) -> ArchitectPlan:
         """
-        分析输入并生成测试需求列表。
+        Analyze the input and generate test needs.
 
         Args:
-            input_text: 用户输入的需求描述/PRD
-            target_url: 目标 URL
-            mode: 指定发现模式（留空则自动推断）
-            diff_text: Git diff 文本（变更驱动时使用）
-            alert_data: 告警数据（故障驱动时使用）
+            input_text: User-provided requirement description or PRD
+            target_url: Target URL
+            mode: Discovery mode; infer automatically when omitted
+            diff_text: Git diff text for change-driven discovery
+            alert_data: Alert data for fault-driven discovery
 
         Returns:
-            ArchitectPlan: 测试计划
+            ArchitectPlan: Test plan
         """
         import uuid
         plan = ArchitectPlan(plan_id=str(uuid.uuid4())[:8])
 
-        # 自动推断模式
+        # Infer the mode automatically
         if mode:
             plan.discovery_mode = DiscoveryMode(mode)
         else:
@@ -125,9 +125,9 @@ class TestArchitect:
                 input_text, diff_text, alert_data, target_url,
             )
 
-        logger.info(f"[TestArchitect] 发现模式: {plan.discovery_mode.value}")
+        logger.info(f"[TestArchitect] Discovery mode: {plan.discovery_mode.value}")
 
-        # 根据模式分发
+        # Dispatch according to the mode
         if plan.discovery_mode == DiscoveryMode.REQUIREMENT:
             plan.test_needs = await self._discover_from_requirement(input_text)
         elif plan.discovery_mode == DiscoveryMode.CHANGE:
@@ -139,12 +139,12 @@ class TestArchitect:
         elif plan.discovery_mode == DiscoveryMode.FAULT:
             plan.test_needs = await self._discover_from_fault(alert_data or {})
 
-        plan.summary = f"共发现 {len(plan.test_needs)} 条测试需求（{plan.discovery_mode.value} 模式）"
+        plan.summary = f"Discovered {len(plan.test_needs)} test needs ({plan.discovery_mode.value} mode)"
         logger.info(f"[TestArchitect] {plan.summary}")
 
         return plan
 
-    # ── 模式推断 ──────────────────────────────────────────────────────────
+    # ── Mode inference ──────────────────────────────────────────────────────────
 
     def _infer_mode(
         self,
@@ -153,7 +153,7 @@ class TestArchitect:
         alert_data: Optional[Dict],
         target_url: str,
     ) -> DiscoveryMode:
-        """自动推断发现模式"""
+        """Infer the discovery mode automatically"""
         if diff_text:
             return DiscoveryMode.CHANGE
         if alert_data:
@@ -164,10 +164,10 @@ class TestArchitect:
             return DiscoveryMode.COVERAGE
         return DiscoveryMode.REQUIREMENT
 
-    # ── 各发现模式实现 ────────────────────────────────────────────────────
+    # ── Discovery-mode implementations ────────────────────────────────────────────────────
 
     async def _discover_from_requirement(self, input_text: str) -> List[TestNeed]:
-        """需求驱动：PRD → RequirementParser → TestNeeds"""
+        """Requirement-driven: PRD → RequirementParser → TestNeeds"""
         from core.requirement_parser import get_requirement_parser
         import json
 
@@ -186,7 +186,7 @@ class TestArchitect:
                 test_types=[case.get("test_type", "ui_e2e")],
             ))
 
-        # 如果解析器没提取出用例，至少生成一条基于输入的需求
+        # Generate at least one input-based need if the parser extracts no cases
         if not needs:
             needs.append(TestNeed(
                 title=input_text[:80],
@@ -199,7 +199,7 @@ class TestArchitect:
         return needs
 
     async def _discover_from_change(self, diff_text: str, input_text: str = "") -> List[TestNeed]:
-        """变更驱动：Git diff → AcceptanceEngine → 影响评估 → TestNeeds"""
+        """Change-driven: Git diff → AcceptanceEngine → impact assessment → TestNeeds"""
         from core.acceptance_engine import get_acceptance_engine
 
         engine = get_acceptance_engine()
@@ -207,42 +207,42 @@ class TestArchitect:
 
         needs = []
 
-        # 如果有 API 变更，添加 API 测试需求
+        # Add an API test need when APIs change
         if impact.has_api_change:
             needs.append(TestNeed(
-                title="API 变更回归测试",
-                description=f"检测到 API 变更，影响模块: {', '.join(impact.modules_affected[:5])}",
+                title="API change regression test",
+                description=f"API changes detected; affected modules: {', '.join(impact.modules_affected[:5])}",
                 source=DiscoveryMode.CHANGE,
                 priority="high",
                 test_types=["api_rest"],
                 metadata={"impact_score": impact.impact_score},
             ))
 
-        # 如果有 Schema 变更，添加数据库测试
+        # Add database tests when the schema changes
         if impact.has_schema_change:
             needs.append(TestNeed(
-                title="数据库 Schema 变更验证",
-                description="检测到数据库 Schema 变更，需要验证数据完整性",
+                title="Database schema change validation",
+                description="Database schema changes detected; data integrity must be validated",
                 source=DiscoveryMode.CHANGE,
                 priority="critical",
                 test_types=["database"],
             ))
 
-        # 如果有配置变更，添加配置验证
+        # Add configuration validation when configuration changes
         if impact.has_config_change:
             needs.append(TestNeed(
-                title="配置变更验证",
-                description="检测到配置变更，需要验证系统行为",
+                title="Configuration change validation",
+                description="Configuration changes detected; system behavior must be validated",
                 source=DiscoveryMode.CHANGE,
                 priority="high",
                 test_types=["ui_e2e", "api_rest"],
             ))
 
-        # 通用回归：基于变更文件
+        # General regression based on changed files
         if impact.files_changed:
             needs.append(TestNeed(
-                title=f"变更回归测试 ({len(impact.files_changed)} 文件)",
-                description=f"变更文件: {', '.join(impact.files_changed[:5])}",
+                title=f"Change regression test ({len(impact.files_changed)} files)",
+                description=f"Changed files: {', '.join(impact.files_changed[:5])}",
                 source=DiscoveryMode.CHANGE,
                 priority="medium",
                 test_types=["ui_e2e"],
@@ -252,10 +252,10 @@ class TestArchitect:
         return needs
 
     async def _discover_from_exploration(self, target_url: str) -> List[TestNeed]:
-        """探索驱动：Scout + Exploratory → 自主发现"""
+        """Exploration-driven: Scout + Exploratory → autonomous discovery"""
         needs = []
 
-        # 先用 ScoutAgent 侦察
+        # Run ScoutAgent reconnaissance first
         try:
             from agents.scout_agent import ScoutAgent
 
@@ -263,10 +263,10 @@ class TestArchitect:
 
             if scout_result.get("status") == "success":
                 needs.append(TestNeed(
-                    title=f"探索测试: {scout_result.get('title', target_url)}",
+                    title=f"Exploratory test: {scout_result.get('title', target_url)}",
                     description=(
-                        f"页面侦察结果: {scout_result.get('visible_text', '')[:200]}\n"
-                        f"交互元素: {scout_result.get('interactive_summary', '')[:200]}"
+                        f"Page reconnaissance results: {scout_result.get('visible_text', '')[:200]}\n"
+                        f"Interactive elements: {scout_result.get('interactive_summary', '')[:200]}"
                     ),
                     source=DiscoveryMode.EXPLORATION,
                     priority="medium",
@@ -275,10 +275,10 @@ class TestArchitect:
                     metadata={"scout_result": scout_result},
                 ))
         except Exception as e:
-            logger.warning(f"[TestArchitect] Scout 侦察失败: {e}")
+            logger.warning(f"[TestArchitect] Scout reconnaissance failed: {e}")
             needs.append(TestNeed(
-                title=f"基础测试: {target_url}",
-                description=f"Scout 侦察失败 ({e})，执行基础 UI 测试",
+                title=f"Basic test: {target_url}",
+                description=f"Scout reconnaissance failed ({e}); run a basic UI test",
                 source=DiscoveryMode.EXPLORATION,
                 priority="medium",
                 target_url=target_url,
@@ -288,20 +288,20 @@ class TestArchitect:
         return needs
 
     async def _discover_from_coverage(self, input_text: str) -> List[TestNeed]:
-        """覆盖驱动：分析现有测试报告 → 找盲区"""
+        """Coverage-driven: analyze existing test reports → find gaps"""
         needs = []
 
-        # 查询历史测试结果，找出从未测过或频繁失败的区域
+        # Query prior test results to find untested or frequently failing areas
         from core.tracing import get_tracer
         recent = get_tracer().get_recent_spans(limit=50)
 
-        # 统计各 Agent 的调用频率
+        # Count how often each agent is called
         agent_counts: Dict[str, int] = {}
         for span in recent:
             agent = span.get("agent_name", "")
             agent_counts[agent] = agent_counts.get(agent, 0) + 1
 
-        # 找出未覆盖的测试类型
+        # Find test types without coverage
         all_types = {"ui_e2e", "api_rest", "security", "performance", "database", "accessibility"}
         covered = set()
         for span in recent:
@@ -313,8 +313,8 @@ class TestArchitect:
         uncovered = all_types - covered
         if uncovered:
             needs.append(TestNeed(
-                title=f"覆盖盲区: {', '.join(uncovered)}",
-                description=f"以下测试类型近期未运行过: {', '.join(uncovered)}",
+                title=f"Coverage gaps: {', '.join(uncovered)}",
+                description=f"These test types have not run recently: {', '.join(uncovered)}",
                 source=DiscoveryMode.COVERAGE,
                 priority="medium",
                 test_types=list(uncovered),
@@ -322,8 +322,8 @@ class TestArchitect:
 
         if not needs:
             needs.append(TestNeed(
-                title="覆盖率良好",
-                description="所有测试类型近期均有执行记录",
+                title="Good coverage",
+                description="All test types have run recently",
                 source=DiscoveryMode.COVERAGE,
                 priority="low",
                 test_types=[],
@@ -332,7 +332,7 @@ class TestArchitect:
         return needs
 
     async def _discover_from_fault(self, alert_data: Dict) -> List[TestNeed]:
-        """故障驱动：告警 → 生成针对性回归用例"""
+        """Fault-driven: alert → generate targeted regression cases"""
         needs = []
 
         error_msg = alert_data.get("error", "")
@@ -340,8 +340,8 @@ class TestArchitect:
         component = alert_data.get("component", "")
 
         needs.append(TestNeed(
-            title=f"故障回归: {component or error_msg[:50]}",
-            description=f"告警信息: {error_msg}\n组件: {component}\nURL: {url}",
+            title=f"Fault regression: {component or error_msg[:50]}",
+            description=f"Alert: {error_msg}\nComponent: {component}\nURL: {url}",
             source=DiscoveryMode.FAULT,
             priority="critical",
             target_url=url,
@@ -352,13 +352,13 @@ class TestArchitect:
         return needs
 
 
-# ── 单例 ─────────────────────────────────────────────────────────────────────
+# ── Singleton ─────────────────────────────────────────────────────────────────────
 
 _architect: Optional[TestArchitect] = None
 
 
 def get_test_architect() -> TestArchitect:
-    """获取 TestArchitect 单例"""
+    """Get the TestArchitect singleton"""
     global _architect
     if _architect is None:
         _architect = TestArchitect()

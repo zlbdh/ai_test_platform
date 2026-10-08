@@ -81,7 +81,7 @@ async def test_commander_run_archives_group_and_bug_summary(tmp_path):
 
         grouped = ExecutionCenterService().list_grouped_runs(limit=10)
         group = next(item for item in grouped["items"] if item["group_id"] == "mission_demo")
-        assert group["title"].startswith("军团测试 · 测试登录模块")
+        assert group["title"].startswith("Legion test · 测试登录模块")
         assert group["status"] == "failed"
 
         record_map = {record["task_id"]: record for record in group["records"]}

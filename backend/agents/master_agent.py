@@ -1,6 +1,6 @@
 """
-Master Agent - 主脑规划器
-负责任务分解、Agent 协调、结果汇总
+Master Agent - primary planner
+Handles task decomposition, agent coordination, and result aggregation
 """
 from typing import Dict, Any, List, Optional
 from langchain_core.prompts import ChatPromptTemplate
@@ -19,29 +19,29 @@ import logging
 logger = logging.getLogger(__name__)
 
 class MasterAgent:
-    """主脑规划器 Agent"""
-    
+    """Primary planning agent"""
+
     def __init__(self):
-        """初始化 Master Agent"""
+        """Initialize Master Agent"""
         self.llm = get_llm_for_role("executor")
-        
+
         self.prompt_template = ChatPromptTemplate.from_messages([
             ("system", PLAN_TEST_SYSTEM),
             ("human", PLAN_TEST_USER_TEMPLATE)
         ])
-    
+
     def plan_test(self, scenario: str, prd_context: Optional[str] = None) -> Dict[str, Any]:
         """
-        规划测试任务（增强版：集成 Vector DB）
-        
+        Plan test tasks (enhanced: integrates the vector database)
+
         Args:
-            scenario: 测试场景描述
-            prd_context: 可选，PRD 上下文
-            
+            scenario: Test scenario description
+            prd_context: Optional PRD context
+
         Returns:
-            测试计划
+            Test plan
         """
-        # 从 Vector DB 检索相似的测试计划
+        # Retrieve similar test plans from the vector database
         similar_plans = []
         try:
             similar_plans = get_similar_test_plans.invoke({
@@ -49,9 +49,9 @@ class MasterAgent:
                 "n_results": 3
             })
         except Exception as e:
-            logger.warning(f"  [Master Agent] Vector DB 检索失败: {str(e)}")
-        
-        # 获取 PRD 上下文
+            logger.warning(f"  [Master Agent] Vector database retrieval failed: {str(e)}")
+
+        # Get PRD context
         prd_info = []
         if prd_context:
             try:
@@ -61,30 +61,30 @@ class MasterAgent:
                 })
             except Exception as e:
                 pass
-        
-        # 构建增强的提示（包含历史计划参考）
-        enhanced_prompt = f"测试场景：{scenario}\n\n"
-        
+
+        # Build an enhanced prompt with references to previous plans
+        enhanced_prompt = f"Test scenario: {scenario}\n\n"
+
         if similar_plans:
-            enhanced_prompt += "参考历史相似测试计划：\n"
+            enhanced_prompt += "Reference similar historical test plans:\n"
             for plan in similar_plans[:2]:
                 plan_content = plan.get("content", "")[:200]
                 enhanced_prompt += f"- {plan_content}\n"
             enhanced_prompt += "\n"
-        
+
         if prd_info:
-            enhanced_prompt += "PRD 上下文：\n"
+            enhanced_prompt += "PRD context:\n"
             for info in prd_info[:1]:
                 info_content = info.get("content", "")[:200]
                 enhanced_prompt += f"- {info_content}\n"
             enhanced_prompt += "\n"
-        
-        enhanced_prompt += "请分解任务并规划执行步骤。"
-        
+
+        enhanced_prompt += "Decompose the task and plan the execution steps."
+
         chain = self.prompt_template | self.llm | StrOutputParser()
         plan_text = chain.invoke({"scenario": enhanced_prompt})
-        
-        # 解析计划
+
+        # Parse the plan
         plan = {
             "scenario": scenario,
             "plan_text": plan_text,
@@ -93,12 +93,12 @@ class MasterAgent:
             "similar_plans_referenced": len(similar_plans),
             "prd_context_used": len(prd_info) > 0
         }
-        
+
         return plan
-    
+
     def _extract_agents(self, plan_text: str) -> List[str]:
-        """从计划文本中提取需要的 Agent（LLM 推理 + 关键词降级）"""
-        # 优先使用 LLM 推理
+        """Extract required agents from the plan (LLM reasoning with keyword fallback)"""
+        # Prefer LLM reasoning
         try:
             prompt = ChatPromptTemplate.from_template(AGENT_EXTRACTION_PROMPT)
             chain = prompt | get_llm_for_role("executor") | JsonOutputParser()
@@ -107,15 +107,15 @@ class MasterAgent:
             valid_agents = {"ui_agent", "api_agent", "data_agent", "ops_agent"}
             llm_agents = [a for a in agents if a in valid_agents]
             if llm_agents:
-                logger.info(f"[MasterAgent] LLM 提取 agents: {llm_agents} | {result.get('reasoning', '')}")
+                logger.info(f"[MasterAgent] LLM-extracted agents: {llm_agents} | {result.get('reasoning', '')}")
                 return llm_agents
         except Exception as e:
-            logger.warning(f"[MasterAgent] LLM 提取 agents 失败, 降级到关键词: {e}")
+            logger.warning(f"[MasterAgent] LLM agent extraction failed; falling back to keywords: {e}")
 
-        # Fallback: 关键词匹配
+        # Fallback: Keyword matching
         agents = []
         plan_lower = plan_text.lower()
-        
+
         if "ui" in plan_lower or "前端" in plan_lower or "界面" in plan_lower:
             agents.append("ui_agent")
         if "api" in plan_lower or "接口" in plan_lower or "后端" in plan_lower:
@@ -124,43 +124,43 @@ class MasterAgent:
             agents.append("data_agent")
         if "ops" in plan_lower or "日志" in plan_lower or "运维" in plan_lower:
             agents.append("ops_agent")
-        
-        # 默认至少需要 UI 和 API
+
+        # Require at least UI and API by default
         if not agents:
             agents = ["ui_agent", "api_agent"]
-        
+
         return agents
-    
+
     def _extract_steps(self, plan_text: str) -> List[str]:
-        """从计划文本中提取步骤"""
-        # 简化处理：根据关键词提取步骤
+        """Extract steps from the plan text"""
+        # Simplified approach: extract steps by keyword
         steps = []
         lines = plan_text.split('\n')
-        
+
         for i, line in enumerate(lines):
             if any(keyword in line for keyword in ['1.', '2.', '3.', '步骤', 'step']):
                 steps.append(line.strip())
-        
-        # 如果没有找到步骤，创建默认步骤
+
+        # Create default steps if none are found
         if not steps:
             steps = [
-                "1. UI Agent 执行前端测试",
-                "2. API Agent 执行接口测试",
-                "3. Data Agent 验证数据一致性",
-                "4. 汇总结果生成报告"
+                "1. UI Agent runs frontend tests",
+                "2. API Agent runs API tests",
+                "3. Data Agent verifies data consistency",
+                "4. Aggregate results and generate a report"
             ]
-        
+
         return steps
-    
+
     def generate_report(self, state: QAState) -> Dict[str, Any]:
         """
-        生成最终测试报告
-        
+        Generate the final test report
+
         Args:
-            state: QA 状态
-            
+            state: QA state
+
         Returns:
-            测试报告
+            Test report
         """
         report = {
             "test_scenario": state.get("test_scenario", ""),
@@ -182,40 +182,40 @@ class MasterAgent:
             "warnings": state.get("warnings", []),
             "recommendations": self._generate_recommendations(state)
         }
-        
+
         return report
-    
+
     def _calculate_success_rate(self, state: QAState) -> float:
-        """计算成功率"""
+        """Calculate the success rate"""
         completed = len(state.get("completed_steps", []))
         failed = len(state.get("failed_steps", []))
         total = completed + failed
-        
+
         if total == 0:
             return 0.0
-        
+
         return (completed / total) * 100
-    
+
     def _generate_recommendations(self, state: QAState) -> List[str]:
-        """生成建议"""
+        """Generate recommendations"""
         recommendations = []
 
         errors = state.get("errors", [])
         if errors:
-            recommendations.append(f"发现 {len(errors)} 个错误，建议优先修复")
+            recommendations.append(f"Found {len(errors)} errors; prioritize fixing them")
 
         failed_steps = state.get("failed_steps", [])
         if failed_steps:
-            recommendations.append(f"以下步骤失败：{', '.join(failed_steps)}")
+            recommendations.append(f"The following steps failed: {', '.join(failed_steps)}")
 
-        # Inspector 驳回建议
+        # Recommendations for Inspector rejections
         rejected = [r for r in state.get("inspection_results", []) if not r.get("passed")]
         if rejected:
-            recommendations.append(f"Inspector 视觉质检驳回 {len(rejected)} 项，请检查相关截图和异常描述")
+            recommendations.append(f"Inspector rejected {len(rejected)} items during visual review; check the related screenshots and anomaly descriptions")
             for r in rejected[:3]:
-                recommendations.append(f"  - {r.get('step', '?')}: {r.get('reason', '未知原因')}")
+                recommendations.append(f"  - {r.get('step', '?')}: {r.get('reason', 'Unknown reason')}")
 
         if not errors and not failed_steps and not rejected:
-            recommendations.append("所有测试通过，可以发布")
+            recommendations.append("All tests passed; ready for release")
 
         return recommendations

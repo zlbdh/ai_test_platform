@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-Inspector Agent — 视觉质检员
-每步执行完成后主动审查截图，判定业务是否正确。
-与 Healer（修 DOM 定位）和 Judge（文本语义断言）互补：
-Inspector 关注的是"操作没报错但业务出错"的场景。
+Inspector Agent — visual quality reviewer
+Review screenshots after each step to check whether the business outcome is correct.
+Complements Healer (DOM locator repair) and Judge (semantic text assertions):
+Inspector focuses on actions that succeed technically but produce an incorrect business outcome.
 
-Phase 3 增强：
-- store_finding(): 驳回结果写入 ChromaDB bugs 集合
-- RAG 召回: 审查前从 bugs 集合检索同页面/同操作的历史记录
-- 置信度阈值: confidence < threshold 时自动放行
+Phase 3 enhancements:
+- store_finding(): Write rejected results to the ChromaDB bugs collection
+- RAG retrieval: fetch prior findings for the same page/action from the bugs collection before review
+- Confidence threshold: automatically pass results when confidence < threshold
 """
 import json
 import logging
@@ -22,21 +22,21 @@ from core.config import Config
 
 logger = logging.getLogger(__name__)
 
-# 无需审查的动作白名单（这些动作不产生业务结果）
+# Actions exempt from review because they do not produce business outcomes
 SKIP_ACTIONS = frozenset({"goto", "wait", "scroll", "screenshot", "set_var", "done"})
 
 
 class InspectorAgent:
-    """视觉质检员 — 每步执行后审查截图，判定业务正确性"""
+    """Visual quality reviewer: inspect screenshots after each step to assess business correctness"""
 
     def __init__(self, vlm=None, vector_store=None, confidence_threshold: float = None):
         """
         Args:
-            vlm: 可选的 VLM 实例（测试时注入 fake）。
-                 如果为 None，运行时通过 get_vision_llm() 懒加载。
-            vector_store: 可选的 VectorStore 实例（测试时注入 mock）。
-            confidence_threshold: 置信度阈值，低于此值自动放行。
-                                  默认读取 Config.INSPECTOR_CONFIDENCE_THRESHOLD。
+            vlm: Optional VLM instance; inject a fake in tests.
+                 If None, load lazily through get_vision_llm() at runtime.
+            vector_store: Optional VectorStore instance; inject a mock in tests.
+            confidence_threshold: Confidence threshold; automatically pass results below this value.
+                                  Defaults to Config.INSPECTOR_CONFIDENCE_THRESHOLD.
         """
         self._vlm = vlm
         self._vector_store = vector_store
@@ -64,7 +64,7 @@ class InspectorAgent:
 
     @staticmethod
     def should_inspect(action: str) -> bool:
-        """判断该动作是否需要 Inspector 审查"""
+        """Determine whether the action requires Inspector review"""
         return action not in SKIP_ACTIONS
 
     def inspect(
@@ -75,13 +75,13 @@ class InspectorAgent:
         page_state: dict,
     ) -> InspectionResult:
         """
-        审查一张截图，返回通过/驳回判定。
+        Review a screenshot and return a pass/reject decision.
 
         Args:
-            screenshot_b64: 执行后的页面截图 (base64 JPEG)
-            step_desc: 刚执行的动作描述 (如 "click(提交按钮)")
-            expected_outcome: 期望的业务结果 (如 "应显示提交成功")
-            page_state: 当前页面状态 dict (url, title, visible_text 等)
+            screenshot_b64: Page screenshot after execution (base64 JPEG)
+            step_desc: Description of the action just executed (such as "click(Submit button)")
+            expected_outcome: Expected business outcome (such as "A success message should appear")
+            page_state: Current page-state dictionary (url, title, visible_text, etc.)
 
         Returns:
             InspectionResult(passed, confidence, reason, anomalies)
@@ -102,19 +102,19 @@ class InspectorAgent:
         # Truncate to avoid token overflow
         visible_text = visible_text[:2000]
 
-        # Phase 3: RAG 召回历史审查记录
+        # Phase 3: Retrieve prior review findings through RAG
         history_context = self._recall_history(url, step_desc)
 
         prompt_text = INSPECTOR_VISION_PROMPT.format(
             step_desc=step_desc,
-            expected_outcome=expected_outcome or "操作应正常完成，无异常",
+            expected_outcome=expected_outcome or "The action should complete normally without errors",
             url=url,
             visible_text=visible_text,
         )
 
-        # 如果有历史记录，追加到 prompt
+        # Append prior findings to the prompt when available
         if history_context:
-            prompt_text += f"\n\n历史审查参考（同页面/同操作的过往发现）:\n{history_context}"
+            prompt_text += f"\n\nPrior review findings for the same page/action:\n{history_context}"
 
         # Build multimodal message with screenshot
         from langchain_core.messages import HumanMessage
@@ -137,7 +137,7 @@ class InspectorAgent:
             result_text = response.content if hasattr(response, "content") else str(response)
             result = self._parse_result(result_text)
 
-            # Phase 3: 置信度阈值校准 — 低置信度自动放行
+            # Phase 3: Confidence-threshold calibration: automatically pass low-confidence results
             if not result.passed and result.confidence < self.confidence_threshold:
                 logger.info(
                     f"[Inspector] Confidence {result.confidence:.0%} < threshold "
@@ -150,7 +150,7 @@ class InspectorAgent:
                     anomalies=result.anomalies,
                 )
 
-            # Phase 3: 驳回结果写入 ChromaDB
+            # Phase 3: Write rejected results to ChromaDB
             if not result.passed:
                 self.store_finding(
                     url=url,
@@ -174,15 +174,15 @@ class InspectorAgent:
         result: InspectionResult,
     ) -> Optional[str]:
         """
-        将驳回的审查结果写入 ChromaDB bugs 集合（Phase 3: 记忆闭环）。
+        Write rejected review results to the ChromaDB bugs collection (Phase 3: memory feedback loop).
 
         Args:
-            url: 页面 URL
-            step_desc: 操作描述
-            result: 审查结果
+            url: Page URL
+            step_desc: Action description
+            result: Review result
 
         Returns:
-            存储的文档 ID，失败返回 None
+            Stored document ID, or None on failure
         """
         vs = self.vector_store
         if vs is None:
@@ -190,9 +190,9 @@ class InspectorAgent:
             return None
 
         content = (
-            f"Inspector 驳回 | URL: {url} | 操作: {step_desc} | "
-            f"理由: {result.reason} | 异常: {', '.join(result.anomalies)} | "
-            f"置信度: {result.confidence:.0%}"
+            f"Inspector rejected | URL: {url} | Action: {step_desc} | "
+            f"Reason: {result.reason} | Anomalies: {', '.join(result.anomalies)} | "
+            f"Confidence: {result.confidence:.0%}"
         )
         metadata = {
             "source": "inspector",
@@ -213,14 +213,14 @@ class InspectorAgent:
 
     def _recall_history(self, url: str, step_desc: str) -> str:
         """
-        从 ChromaDB bugs 集合 RAG 召回同页面/同操作的历史审查记录（Phase 3: 记忆闭环）。
+        Retrieve prior review findings for the same page/action from the ChromaDB bugs collection using RAG (Phase 3: memory feedback loop).
 
         Args:
-            url: 当前页面 URL
-            step_desc: 当前操作描述
+            url: Current page URL
+            step_desc: Current action description
 
         Returns:
-            历史记录文本（空字符串表示无记录或功能禁用）
+            Prior findings as text; empty when no records exist or the feature is disabled
         """
         if not Config.INSPECTOR_ENABLE_RAG:
             return ""
@@ -235,7 +235,7 @@ class InspectorAgent:
             if not results:
                 return ""
 
-            # 只保留 inspector 来源的记录
+            # Keep only records from the inspector
             inspector_results = [
                 r for r in results
                 if r.get("metadata", {}).get("source") == "inspector"
@@ -255,7 +255,7 @@ class InspectorAgent:
 
     @staticmethod
     def _parse_result(raw: str) -> InspectionResult:
-        """解析 VLM 返回的 JSON 文本为 InspectionResult"""
+        """Parse the VLM's JSON response into an InspectionResult"""
         # Strip markdown code fences if present
         text = raw.strip()
         if text.startswith("```"):

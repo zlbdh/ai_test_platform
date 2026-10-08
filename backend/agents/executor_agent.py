@@ -21,13 +21,13 @@ from agents.inspector_agent import InspectorAgent
 
 class ExecutorAgent:
     """
-    手眼 (The Hands): 负责执行具体的浏览器操作。
-    Phase 5 混合架构：sync Playwright 在独立线程运行，通过 EventBus sync 方法通信。
-    
-    集成:
-    - Phase 1: DomIndexer 智能元素索引 + 4 层 fallback
-    - Phase 2: 每步执行后保存 page_state 到 SharedBrowserState
-    - Phase 4: assert 语义验证（精确文本匹配 → LLM 语义 fallback）
+    The Hands: executes individual browser actions.
+    Phase 5 hybrid architecture: synchronous Playwright runs in a separate thread and communicates through synchronous EventBus methods.
+
+    Integrations:
+    - Phase 1: DomIndexer intelligent element indexing with four fallback levels
+    - Phase 2: Save page_state to SharedBrowserState after each step
+    - Phase 4: Semantic assertions (exact text match → LLM semantic fallback)
     """
     def __init__(
         self,
@@ -44,7 +44,7 @@ class ExecutorAgent:
         self.bus = bus
         self.running = True
         self.inspector = InspectorAgent()
-        self.target_url = target_url  # ★ 初始导航目标
+        self.target_url = target_url  # ★ Initial navigation target
         self._step_sequence = 0
         self.execution_profile = execution_profile or {}
 
@@ -112,7 +112,7 @@ class ExecutorAgent:
                 return None
 
             logger.info(f"[Executor] CAPTCHA auto-resolved with code: {code}")
-            self.bus.publish_log_sync({"type": "heal", "content": f"🔐 自动识别并填写验证码: {code}"})
+            self.bus.publish_log_sync({"type": "heal", "content": f"🔐 Automatically recognized and filled the verification code: {code}"})
             self.session.set_intervention_screenshot(None)
             try:
                 self.session.set_page_state(get_page_state(page))
@@ -143,22 +143,22 @@ class ExecutorAgent:
         self.session.set_context("auth_bootstrap_applied", True)
         self.session.set_context("auth_bootstrap_result", result)
         target_url = result.get("target_url") or result.get("bootstrap_url") or payload.get("base_url")
-        self.bus.publish_log_sync({"type": "system", "content": f"🔐 已应用会话预认证并进入: {target_url}"})
+        self.bus.publish_log_sync({"type": "system", "content": f"🔐 Applied session preauthentication and navigated to: {target_url}"})
         logger.info(f"[Executor] Session bootstrap applied: {target_url}")
         return result
 
     def run(self):
-        """Main loop: 在独立线程中运行，使用 sync Playwright。"""
+        """Main loop: Run in a separate thread using synchronous Playwright."""
         playwright = None
         browser = None
         page = None
-        
+
         try:
             playwright = sync_playwright().start()
             logger.info(f"[Executor] Browser launching... Mode: {self.browser_mode}")
-            
+
             if self.browser_mode == "real":
-                # 连接到用户运行在 9222 端口的实机 Chrome
+                # Connect to the user's local Chrome instance on port 9222
                 try:
                     browser = playwright.chromium.connect_over_cdp("http://localhost:9222")
                     context = browser.contexts[0] if browser.contexts else browser.new_context()
@@ -167,7 +167,7 @@ class ExecutorAgent:
                     logger.error(f"[Executor] CDP Connection failed (Is Chrome running with --remote-debugging-port=9222?): {cdp_err}")
                     raise
             else:
-                # 默认 Chromium 沙盒隔离环境
+                # Default isolated Chromium sandbox
                 launch_args = [
                     '--disable-blink-features=AutomationControlled',
                     '--disable-features=IsolateOrigins,site-per-process',
@@ -175,14 +175,14 @@ class ExecutorAgent:
                     '--disable-infobars',
                 ]
                 browser = playwright.chromium.launch(
-                    headless=True,  # 无头模式：不弹出窗口，通过 Live View 沙箱展示
+                    headless=True,  # Headless mode: display the sandbox through Live View without opening a window
                     args=launch_args,
                 )
                 context = browser.new_context(
                     viewport={'width': 1280, 'height': 720},
                     user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
                 )
-                
+
                 # Stealth anti-detection scripts
                 stealth_js = """
                 Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
@@ -190,9 +190,9 @@ class ExecutorAgent:
                 window.chrome = { runtime: {} };
                 """
                 context.add_init_script(stealth_js)
-                
+
                 page = context.new_page()
-                
+
             self.session.set_page(page)
             logger.info("[Executor] Browser ready.")
 
@@ -201,7 +201,7 @@ class ExecutorAgent:
                 bootstrap_result = self._apply_session_bootstrap(page)
             except Exception as bootstrap_err:
                 logger.error(f"[Executor] Session bootstrap failed: {bootstrap_err}")
-                self.bus.publish_log_sync({"type": "error", "content": f"会话预认证失败: {bootstrap_err}"})
+                self.bus.publish_log_sync({"type": "error", "content": f"Session preauthentication failed: {bootstrap_err}"})
                 raise
 
             bootstrap_target = ""
@@ -214,7 +214,7 @@ class ExecutorAgent:
 
             navigation_target = "" if bootstrap_target else str(self.target_url or "").strip()
 
-            # ★ 自动导航到 target_url（避免 AI 浪费步骤猜测地址）
+            # ★ Navigate to target_url automatically to avoid wasting AI steps guessing the address
             if navigation_target:
                 try:
                     logger.info(f"[Executor] Auto-navigating to target: {navigation_target}")
@@ -228,7 +228,7 @@ class ExecutorAgent:
                             log_type="action",
                             event="bootstrap_navigation",
                             step_desc=f"goto({navigation_target})",
-                            content=f"▶ 自动导航到目标: {navigation_target}",
+                            content=f"▶ Navigating automatically to the target: {navigation_target}",
                             action="goto",
                             target=navigation_target,
                             ui_track=False,
@@ -243,7 +243,7 @@ class ExecutorAgent:
                     logger.info(f"[Executor] Target URL loaded: {page.url}")
                 except Exception as nav_err:
                     logger.warning(f"[Executor] Auto-navigation failed: {nav_err}")
-                    self.bus.publish_log_sync({"type": "error", "content": f"自动导航失败: {nav_err}"})
+                    self.bus.publish_log_sync({"type": "error", "content": f"Automatic navigation failed: {nav_err}"})
             elif bootstrap_target:
                 try:
                     page_state = get_page_state(page)
@@ -254,21 +254,21 @@ class ExecutorAgent:
             while self.running:
                 self._drain_browser_commands(page, max_commands=5)
                 task = self.bus.get_task_sync(timeout=0.1)
-                
+
                 if task is None:
                     self._drain_browser_commands(page, max_commands=5)
-                    # 空闲时也截图，保持 Live View 更新
+                    # Capture screenshots while idle to keep Live View current
                     try:
                         raw = page.screenshot(type='jpeg', quality=50, timeout=3000)
                         self.session.set_frame(raw)
                     except Exception:
                         pass
                     continue
-                
+
                 if isinstance(task, type(SENTINEL)):
                     logger.info("[Executor] Received Sentinel. Shutting down.")
                     break
-                
+
                 task_id = task['id']
                 action = task.get('action', '')
                 target = task.get('target', '')
@@ -324,7 +324,7 @@ class ExecutorAgent:
                             )
                         )
                         continue
-                
+
                 start_time = time.time()
                 step_desc = f"{action}({target})"
                 logger.info(f"[Executor] Executing: {step_desc}")
@@ -341,13 +341,13 @@ class ExecutorAgent:
                         step_index=step_index,
                     )
                 )
-                
+
                 # Execute
                 result_status, output_data, error_msg = "success", None, None
                 screenshot_b64 = None
                 try:
                     output_data = self._execute_action(page, task)
-                    
+
                     # Log assertions specially
                     if action == 'assert' and output_data:
                         self.bus.publish_log_sync(
@@ -364,10 +364,10 @@ class ExecutorAgent:
                                 status="pass",
                             )
                         )
-                    
+
                     # Take screenshot on success
                     screenshot_b64 = self._take_screenshot(page)
-                    
+
                 except Exception as e:
                     result_status = "error"
                     error_msg = str(e)
@@ -386,57 +386,57 @@ class ExecutorAgent:
                             status="error",
                         )
                     )
-                    
-                    # === Self-Healing: 尝试自动修复 ===
+
+                    # === Self-Healing: Attempt automatic repair ===
                     try:
                         from agents.healer import self_heal
-                        
+
                         elements_text = ""
                         try:
                             elements_text = dom_indexer.format_for_llm(max_items=40)
                         except Exception:
                             pass
-                        
+
                         page_text = ""
                         try:
                             page_text = page.evaluate("() => document.body?.innerText?.substring(0, 800) || ''")
                         except Exception:
                             pass
-                        
-                        self.bus.publish_log_sync({"type": "heal", "content": "🔧 启动自愈机制..."})
+
+                        self.bus.publish_log_sync({"type": "heal", "content": "🔧 Starting automatic healing..."})
                         healed = self_heal(
                             failed_step=task,
                             error_msg=error_msg,
                             page_content=page_text,
                             interactive_elements=elements_text
                         )
-                        
+
                         if healed and healed.get('action'):
                             healed_desc = f"{healed['action']}({healed.get('target', '')})"
-                            self.bus.publish_log_sync({"type": "heal", "content": f"🩹 自愈: {step_desc} → {healed_desc}"})
+                            self.bus.publish_log_sync({"type": "heal", "content": f"🩹 Healing: {step_desc} → {healed_desc}"})
                             logger.info(f"[Executor] Heal attempt: {healed_desc}")
-                            
+
                             try:
                                 output_data = self._execute_action(page, healed)
                                 result_status = "success"
                                 error_msg = None
-                                self.bus.publish_log_sync({"type": "heal", "content": f"✅ 自愈成功: {healed_desc}"})
+                                self.bus.publish_log_sync({"type": "heal", "content": f"✅ Healing succeeded: {healed_desc}"})
                             except Exception as heal_err:
                                 logger.warning(f"[Executor] Heal execution failed: {heal_err}")
-                                self.bus.publish_log_sync({"type": "heal", "content": f"❌ 自愈失败: {heal_err}"})
+                                self.bus.publish_log_sync({"type": "heal", "content": f"❌ Healing failed: {heal_err}"})
                         else:
                             logger.info("[Executor] Healer returned no fix.")
                     except Exception as heal_ex:
                         logger.warning(f"[Executor] Self-healing error: {heal_ex}")
-                    
+
                     if result_status == "error":
                         try:
                             screenshot_b64 = self._take_screenshot(page)
                         except Exception:
                             screenshot_b64 = None
 
-                # === Inspector 视觉质检：执行成功后主动审查截图 ===
-                # L2: 智能触发 — 关键操作必检 + 间隔抽检（替代原来的全局跳过）
+                # === Inspector visual quality review: Proactively review the screenshot after successful execution ===
+                # L2: Intelligent triggers: always inspect key actions and sample at intervals instead of skipping globally
                 _is_critical = self._is_captcha_blocking_step(action, target)
                 if not hasattr(self, '_inspector_step_counter'):
                     self._inspector_step_counter = 0
@@ -453,7 +453,7 @@ class ExecutorAgent:
                             page_state=page_state,
                         )
                         if not inspection.passed:
-                            # === HIL: CAPTCHA 检测触发人工介入（增强版） ===
+                            # === HIL: CAPTCHA detection triggers human intervention (enhanced) ===
                             if inspection.anomalies and "CAPTCHA_DETECTED" in inspection.anomalies:
                                 screenshot_after_fill = self._try_auto_resolve_captcha(page)
                                 if screenshot_after_fill:
@@ -462,7 +462,7 @@ class ExecutorAgent:
                                     error_msg = None
                                 elif not self._is_captcha_blocking_step(action, target):
                                     logger.info("[Executor] CAPTCHA detected on non-blocking step; deferring intervention.")
-                                    self.bus.publish_log_sync({"type": "heal", "content": "ℹ️ 检测到验证码，但当前步骤不是提交场景，继续执行。"})
+                                    self.bus.publish_log_sync({"type": "heal", "content": "ℹ️ A CAPTCHA was detected, but the current step does not submit a form; continuing."})
                                     result_status = "success"
                                     error_msg = None
                                 else:
@@ -477,25 +477,25 @@ class ExecutorAgent:
                                     sig = self.session.get_signal()
                                     if not resolved or sig == "STOPPED":
                                         result_status = "error"
-                                        error_msg = "用户终止了任务（验证码场景）" if sig == "STOPPED" else "CAPTCHA 等待超时"
+                                        error_msg = "The user stopped the task during CAPTCHA verification" if sig == "STOPPED" else "CAPTCHA wait timed out"
                                     elif sig == "INTERVENTION":
-                                        # 超时未响应，自动恢复执行（可能是误判）
-                                        logger.warning("[Executor] INTERVENTION 超时，自动恢复执行（可能是误判）")
-                                        self.bus.publish_log_sync({"type": "heal", "content": "⚠️ 人工介入超时(30s)，自动恢复执行"})
+                                        # No response before the timeout; resume automatically because detection may have been a false positive
+                                        logger.warning("[Executor] INTERVENTION timed out; resuming automatically because detection may have been a false positive")
+                                        self.bus.publish_log_sync({"type": "heal", "content": "⚠️ Human intervention timed out after 30s; resuming automatically"})
                                         self.session.set_signal("RUNNING")
                                         result_status = "success"
                                         error_msg = None
                                     else:
-                                        # 人工已完成验证码，重新截图继续
-                                        self.bus.publish_log_sync({"type": "heal", "content": "✅ 人工介入完成，继续执行..."})
+                                        # The user completed the CAPTCHA; capture a new screenshot and continue
+                                        self.bus.publish_log_sync({"type": "heal", "content": "✅ Human intervention completed; continuing..."})
                                         screenshot_b64 = self._take_screenshot(page)
                                         result_status = "success"
                                         error_msg = None
                             else:
                                 result_status = "error"
-                                error_msg = f"Inspector 驳回 (confidence={inspection.confidence:.0%}): {inspection.reason}"
+                                error_msg = f"Inspector rejected (confidence={inspection.confidence:.0%}): {inspection.reason}"
                                 if inspection.anomalies:
-                                    error_msg += f" | 异常: {', '.join(inspection.anomalies)}"
+                                    error_msg += f" | Anomalies: {', '.join(inspection.anomalies)}"
                                 logger.warning(f"[Executor] {error_msg}")
                                 self.bus.publish_log_sync({"type": "error", "step": step_desc, "content": error_msg})
                         else:
@@ -504,14 +504,14 @@ class ExecutorAgent:
                         logger.warning(f"[Executor] Inspector error (auto-passing): {insp_err}")
 
                 duration = round(time.time() - start_time, 2)
-                
-                # Phase 2: 保存页面状态到 SharedBrowserState（供 Smart Mode Planner 读取）
+
+                # Phase 2: Save page state to SharedBrowserState for the smart-mode Planner
                 try:
                     page_state = get_page_state(page)
                     self.session.set_page_state(page_state)
                 except Exception as ps_err:
                     logger.warning(f"[Executor] Page state save failed: {ps_err}")
-                
+
                 result: ResultEvent = {
                     "task_id": task_id,
                     "status": result_status,
@@ -525,9 +525,9 @@ class ExecutorAgent:
                     "value": value,
                     "step_index": step_index,
                 }
-                
+
                 self.bus.publish_result_sync(result)
-                
+
                 log_entry = self._build_step_log(
                     log_type="result",
                     event="step_result",
@@ -543,7 +543,7 @@ class ExecutorAgent:
                     screenshot=screenshot_b64,
                 )
                 self.bus.publish_log_sync(log_entry)
-                
+
         except Exception as e:
             logger.critical(f"[Executor] FATAL Error: {e}")
             import traceback
@@ -562,7 +562,7 @@ class ExecutorAgent:
             self.session.set_page(None)
             self.session.set_status("IDLE")
             logger.info("[Executor] Browser closed.")
-    
+
     def _check_signal(self):
         signal = self.session.get_signal()
         while signal == "PAUSED" and self.running:
@@ -583,11 +583,11 @@ class ExecutorAgent:
         if handler is None:
             raise Exception(f"Unknown action: {action}")
 
-        # 除 wait 以外，动作执行前检查信号
+        # Check control signals before every action except wait
         if action != 'wait':
             self._check_signal()
 
-        # 构建统一的上下文参数
+        # Build a shared set of context arguments
         return handler(
             page=page,
             target=target,
@@ -600,7 +600,7 @@ class ExecutorAgent:
     def _take_screenshot(self, page):
         try:
             raw = page.screenshot(type='jpeg', quality=50, timeout=5000)
-            self.session.set_frame(raw)  # 同步更新 Live View 帧
+            self.session.set_frame(raw)  # Update the Live View frame synchronously
             return base64.b64encode(raw).decode('utf-8')
         except Exception:
             return None

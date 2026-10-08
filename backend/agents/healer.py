@@ -1,7 +1,7 @@
 """
-Self-Healing Agent (自愈代理)
-当 Executor 执行失败时，分析错误原因并生成修正后的步骤。
-支持全部 18 种动作类型。
+Self-Healing Agent
+When Executor fails, analyze the cause and generate a corrected step.
+Supports all 18 action types.
 """
 import logging
 from typing import Optional, Dict, List
@@ -22,21 +22,21 @@ def self_heal(
     history: List[Dict] = None
 ) -> Optional[Dict]:
     """
-    自愈机制 (Self-Healing)
-    当 Executor 执行失败时，Healer 分析错误原因并生成修正后的步骤。
-    
+    Self-healing mechanism
+    When Executor fails, Healer analyzes the cause and generates a corrected step.
+
     Args:
-        failed_step: 失败的步骤 (包含 action, target, value)
-        error_msg: 错误消息
-        page_content: 页面内容摘要
-        interactive_elements: 当前页面可交互元素列表
-        history: 最近的操作历史
-    
+        failed_step: Failed step (including action, target, and value)
+        error_msg: Error message
+        page_content: Page content summary
+        interactive_elements: List of interactive elements on the current page
+        history: Recent action history
+
     Returns:
-        修正后的步骤 Dict，或 None（无法修复）
+        Corrected step dictionary, or None if recovery is impossible
     """
-    
-    # 构建历史摘要
+
+    # Build a history summary
     history_text = ""
     if history:
         recent = history[-5:]
@@ -46,10 +46,10 @@ def self_heal(
             lines.append(f"  {i}. {status_icon} {h.get('action', '?')}({h.get('target', '')}) → {h.get('message', '')[:40]}")
         history_text = "\n".join(lines)
     else:
-        history_text = "  （无历史记录）"
-    
+        history_text = "  (No history)"
+
     prompt = ChatPromptTemplate.from_template(HEALER_PROMPT)
-    
+
     try:
         chain = prompt | get_llm_for_role("executor") | JsonOutputParser()
         corrected_step = chain.invoke({
@@ -57,15 +57,15 @@ def self_heal(
             "target": failed_step.get('target', ''),
             "value": failed_step.get('value', ''),
             "error": error_msg[:500],
-            "elements": interactive_elements[:1500] if interactive_elements else "（无元素信息）",
-            "page_content": page_content[:1000] if page_content else "（无页面内容）",
+            "elements": interactive_elements[:1500] if interactive_elements else "(No element information)",
+            "page_content": page_content[:1000] if page_content else "(No page content)",
             "history": history_text,
         })
-        
+
         if corrected_step.get('action') == 'skip':
             logger.warning(f"[Healer] Cannot heal: {corrected_step.get('value', 'unknown reason')}")
             return None
-        
+
         logger.info(f"[Healer] Healed: {failed_step.get('action')}({failed_step.get('target')}) → {corrected_step.get('action')}({corrected_step.get('target')})")
         return corrected_step
     except Exception as e:

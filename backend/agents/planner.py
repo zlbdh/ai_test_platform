@@ -13,17 +13,17 @@ logger = logging.getLogger(__name__)
 
 class PlannerNode:
     """
-    规划 Agent (Planner)
-    负责：
-    1. 理解用户自然语言需求
-    2. 如果启用了 RAG，检索 PRD/API文档
-    3. 生成结构化测试步骤 (TestPlan)
+    Planning Agent (Planner)
+    Responsibilities:
+    1. Understand the user's natural-language requirements
+    2. Retrieve PRD/API documents when RAG is enabled
+    3. Generate structured test steps (TestPlan)
     """
-    
+
     def plan(self, state: EngineState) -> EngineState:
         requirement = state["task"]
         logger.info(f"[Planner] Planning for: {requirement}")
-        
+
         # 1. RAG Retrieve (Optional)
         context = ""
         if getattr(settings, 'ENABLE_RAG', True) and kb.get_status()['enabled']:
@@ -32,25 +32,25 @@ class PlannerNode:
             if docs:
                 context = "\n---\n".join(docs)
                 logger.info(f"[Planner] RAG Context Loaded ({len(docs)} chunks)")
-        
+
         # 2. LLM Generate
         steps = self._generate_plan_llm(requirement, context)
-        
+
         if not steps:
             state["error"] = "Failed to generate plan"
             return state
-            
+
         state["plan"] = steps
         state["current_step_index"] = 0
-        
+
         return state
 
     def _generate_plan_llm(self, requirement: str, context: str) -> List[TestStep]:
-        
+
         prompt = ChatPromptTemplate.from_template(PLANNER_NODE_PROMPT)
-        
+
         chain = prompt | get_llm_for_role("planner") | JsonOutputParser()
-        
+
         try:
             res = chain.invoke({"requirement": requirement, "context": context})
             # Validate format (Simple check)

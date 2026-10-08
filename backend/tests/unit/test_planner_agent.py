@@ -352,7 +352,7 @@ class TestLoopRecoveryPolicy:
         )
 
         assert recovery["action"] == "done"
-        assert "验证码" in recovery["target"]
+        assert "CAPTCHA" in recovery["target"]
         assert recovery["value"] == ""
 
     def test_prefers_submit_click_when_login_controls_exist(self):

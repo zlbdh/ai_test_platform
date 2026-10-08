@@ -21,67 +21,67 @@ logger = logging.getLogger(__name__)
 
 class ReActAgent:
     """
-    单步 ReAct Agent (Reasoning + Acting)
-    负责：
-    1. 接收当前状态 (State)
-    2. 观察页面 (Observation)
-    3. 思考 (Thought)
-    4. 选择工具 (Action)，支持 SQL/API/Browser/ServerLog 工具
-    5. 返回执行结果
-    
+    Single-step ReAct Agent (Reasoning + Acting)
+    Responsibilities:
+    1. Receive the current state
+    2. Observe the page
+    3. Reason about the next action
+    4. Select a tool (Action), supporting SQL/API/Browser/ServerLog tools
+    5. Return execution results
+
     Ref: https://react-lm.github.io/
     """
-    
+
     def __init__(self):
-        # 显势定义工具列表，方便 LLM 绑定
+        # Explicitly define the tool list for LLM binding
         self.tools = [
-            tool_goto, tool_click, tool_fill, tool_assert, 
+            tool_goto, tool_click, tool_fill, tool_assert,
             tool_extract, tool_api_call, tool_db_query,
             tool_snapshot_db, tool_backup_db, tool_assert_db
         ]
-        
-        # 绑定工具到 LLM
-        # 使用配置中的 PROVIDER 和 MODEL，支持 temperature=0 以保证精准
+
+        # Bind tools to the LLM
+        # Use the configured PROVIDER and MODEL; support temperature=0 for precision
         self.llm = get_llm_for_role("executor", temperature=0).bind_tools(self.tools)
 
     def route(self, state: EngineState) -> EngineState:
         """
-        Agent 主逻辑入口
+        Main entry point for agent logic
         """
-        # 1. 构造 Prompt
+        # 1. Build the prompt
         messages = self._construct_messages(state)
-        
-        # 2. 调用 LLM
+
+        # 2. Call the LLM
         try:
             response = invoke_with_fallback(self.llm, messages)
-            
-            # 更新状态
+
+            # Update state
             state["logs"].append({
-                "role": "ai", 
+                "role": "ai",
                 "content": str(response.content),
                 "timestamp": time.time()
             })
-            
-            # 3. 处理工具调用
+
+            # 3. Process tool calls
             if response.tool_calls:
                 for tool_call in response.tool_calls:
                     tool_name = tool_call["name"]
                     tool_args = tool_call["args"]
-                    
-                    # 记录 Thought
+
+                    # Record the thought
                     log_entry = LogEntry(
-                        step=f"Step-{state['current_step_index']}", 
+                        step=f"Step-{state['current_step_index']}",
                         type=LogType.THOUGHT,
                         content=f"Decided to call {tool_name} with {tool_args}",
                         timestamp=time.time()
                     )
                     state["logs"].append(log_entry.dict())
 
-                    # 执行工具
+                    # Execute the tool
                     try:
                         result = self._execute_tool(tool_name, tool_args, state)
-                        
-                        # 记录 Observation
+
+                        # Record the observation
                         obs_entry = LogEntry(
                             step=f"Step-{state['current_step_index']}",
                             type=LogType.OBSERVATION,
@@ -90,13 +90,13 @@ class ReActAgent:
                             timestamp=time.time()
                         )
                         state["logs"].append(obs_entry.dict())
-                        
+
                     except Exception as e:
-                        # 智能运维 (Ops Agent) 介入 - 读取服务端日志进行分析
+                        # Ops Agent intervention - read and analyze server logs
                         server_logs = read_server_logs(lines=50)
-                        
+
                         err_msg = f"Tool Execution Failed: {str(e)}\n\n[Server Logs Context]\n{server_logs}"
-                        
+
                         state["error"] = err_msg
                         state["logs"].append({
                             "type": "error",
@@ -104,9 +104,9 @@ class ReActAgent:
                             "timestamp": time.time()
                         })
                         logger.error(f"[ReAct] Error with Ops Context: {err_msg}")
-            
+
             else:
-                # 纯聊天或结束
+                # Plain chat or completion
                 state["scratchpad"] += f"\nAI: {response.content}"
 
         except Exception as e:
@@ -116,17 +116,17 @@ class ReActAgent:
         return state
 
     def _construct_messages(self, state: EngineState) -> List[Any]:
-        """构造上下文感知的 Prompt"""
-        
-        # 获取当前任务
+        """Build a context-aware prompt"""
+
+        # Get the current task
         current_step = state["plan"][state["current_step_index"]] if state["current_step_index"] < len(state["plan"]) else None
         task_desc = f"Execute Step: {current_step['action']} -> {current_step['target']}" if current_step else "Task Completed"
-        
-        # 获取页面上下文 (简化版 HTML)
+
+        # Get page context (simplified HTML)
         page_context = "No Browser Page"
         if state["current_url"] and state["current_url"] != "about:blank":
-             # 这里假设 browser 模块有获取当前页面简化的方法，或者通过 context 传递
-             # 暂时用 URL 代替
+             # Assume the browser module provides a simplified page representation or receives one through context
+             # Use the URL for now
              page_context = f"Current URL: {state['current_url']}"
 
         system_prompt = REACT_AGENT_PROMPT.format(
@@ -134,20 +134,20 @@ class ReActAgent:
             page_context=page_context,
             context=str(state['context'])
         )
-        
+
         messages = [
             SystemMessage(content=system_prompt),
             HumanMessage(content=f"Please execute: {task_desc}")
         ]
-        
+
         return messages
 
     def _execute_tool(self, name: str, args: Dict, state: EngineState) -> str:
-        """工具分发器 — 统一处理 async/sync 工具调用"""
+        """Tool dispatcher — handle async and sync tool calls consistently"""
         context = state.get("context", {})
 
         def _run_async(coro):
-            """在同步上下文中安全运行 async 工具"""
+            """Run async tools safely in a synchronous context"""
             try:
                 loop = asyncio.get_event_loop()
                 if loop.is_running():
@@ -160,7 +160,7 @@ class ReActAgent:
 
         page = _run_async(get_bridged_page())
 
-        # Browser Tools (async, 需要 page)
+        # Browser Tools (async, requires page)
         if name == "tool_goto":
             return _run_async(tool_goto(page, args.get("url", args.get("target", "")), context))
         elif name == "tool_click":
@@ -196,5 +196,5 @@ class ReActAgent:
         else:
             raise ValueError(f"Unknown Tool: {name}")
 
-# 单例模式
+# Singleton pattern
 react_agent = ReActAgent()

@@ -218,7 +218,7 @@ class TestInspect:
         # Check the prompt contains the default text
         call_args = fake_vlm.invoke.call_args[0][0]  # first positional arg: messages list
         prompt_content = call_args[0].content[0]["text"]  # HumanMessage -> content[0] -> text
-        assert "操作应正常完成" in prompt_content
+        assert "The action should complete normally" in prompt_content
 
 
 # ============================================================================
