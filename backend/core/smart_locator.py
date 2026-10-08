@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-Smart Locator — 预防型智能定位器
+Smart Locator — preventive element locator
 
-对比传统自愈（失败后修复），实现预测型定位：
-- ElementFingerprint: 多特征指纹（CSS+文本+位置+视觉hash）
-- FingerprintMatcher: 指纹匹配引擎
-- LocatorHistory: 选择器演变历史库
-- FlakyDetector: 反复自愈检测+标记
+Predictive location, compared with conventional healing after a failure:
+- ElementFingerprint: Multifeature fingerprint (CSS + text + position + visual hash)
+- FingerprintMatcher: Fingerprint matching engine
+- LocatorHistory: Selector evolution history
+- FlakyDetector: Repeated healing detection and tagging
 """
 
 from typing import Dict, Any, List, Optional, Tuple
@@ -24,38 +24,38 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ElementFingerprint:
     """
-    元素多特征指纹
+    Multifeature element fingerprint
 
-    通过多维度特征识别元素，即使单个特征变化也能匹配。
+    Identify elements using multiple features, retaining matches even when one feature changes.
     """
     element_id: str = ""
-    # 文本特征
+    # Text features
     text: str = ""
     placeholder: str = ""
     aria_label: str = ""
-    # 结构特征
+    # Structural features
     tag: str = ""
     css_selector: str = ""
     xpath: str = ""
-    # 位置特征
-    relative_x: float = 0.0       # 相对于视口的归一化坐标
+    # Position features
+    relative_x: float = 0.0       # Normalized viewport-relative coordinates
     relative_y: float = 0.0
-    # 视觉特征
-    visual_hash: str = ""         # 元素截图的哈希
-    # 上下文特征
+    # Visual features
+    visual_hash: str = ""         # Hash of the element screenshot
+    # Context features
     parent_text: str = ""
-    nearby_text: str = ""         # 周围的文本内容
-    # 页面标识
-    page_url_pattern: str = ""    # URL 模式（忽略动态参数）
+    nearby_text: str = ""         # Surrounding text
+    # Page identity
+    page_url_pattern: str = ""    # URL pattern (ignoring dynamic parameters)
     page_title: str = ""
 
-    # 元数据
+    # Metadata
     last_success_time: float = 0
     success_count: int = 0
     fail_count: int = 0
 
     def compute_hash(self) -> str:
-        """计算指纹哈希"""
+        """Calculate the fingerprint hash"""
         key = f"{self.tag}|{self.text}|{self.placeholder}|{self.aria_label}|{self.css_selector}"
         return hashlib.md5(key.encode()).hexdigest()[:12]
 
@@ -74,15 +74,15 @@ class ElementFingerprint:
 
 class FingerprintMatcher:
     """
-    指纹匹配引擎
+    Fingerprint matching engine
 
-    通过加权多特征匹配在页面中找到最可能匹配的元素。
-    权重配置：
-    - 文本: 0.35
-    - 结构（tag + selector）: 0.25
-    - 位置: 0.15
-    - 上下文: 0.15
-    - 视觉: 0.10
+    Find the most likely matching page element using weighted feature matching.
+    Weight configuration:
+    - Text: 0.35
+    - Structure (tag + selector): 0.25
+    - Position: 0.15
+    - Context: 0.15
+    - Visual: 0.10
     """
 
     WEIGHTS = {
@@ -100,10 +100,10 @@ class FingerprintMatcher:
         threshold: float = 0.6,
     ) -> Optional[Tuple[ElementFingerprint, float]]:
         """
-        在候选元素中找到最匹配指纹的元素。
+        Find the candidate that best matches the fingerprint.
 
         Returns:
-            (最佳匹配, 相似度) 或 None
+            (best match, similarity) or None
         """
         best_match = None
         best_score = 0.0
@@ -119,10 +119,10 @@ class FingerprintMatcher:
         return None
 
     def _compute_similarity(self, a: ElementFingerprint, b: ElementFingerprint) -> float:
-        """计算两个指纹的相似度"""
+        """Calculate similarity between two fingerprints"""
         scores = {}
 
-        # 文本相似度
+        # Text similarity
         text_score = 0.0
         text_pairs = [
             (a.text, b.text),
@@ -134,48 +134,48 @@ class FingerprintMatcher:
         text_score = text_matches / text_total if text_total > 0 else 0.5
         scores["text"] = text_score
 
-        # 结构相似度
+        # Structural similarity
         struct_score = 0.0
         if a.tag == b.tag:
             struct_score += 0.5
         if a.css_selector and b.css_selector and a.css_selector == b.css_selector:
             struct_score += 0.5
         elif a.tag == b.tag:
-            struct_score += 0.2  # 同类标签部分匹配
+            struct_score += 0.2  # Partial match for similar tags
         scores["structure"] = min(1.0, struct_score)
 
-        # 位置相似度（归一化坐标距离）
+        # Position similarity (normalized coordinate distance)
         dx = abs(a.relative_x - b.relative_x)
         dy = abs(a.relative_y - b.relative_y)
         distance = (dx ** 2 + dy ** 2) ** 0.5
-        scores["position"] = max(0.0, 1.0 - distance * 5)  # 距离 > 0.2 → 0分
+        scores["position"] = max(0.0, 1.0 - distance * 5)  # Distance > 0.2 → score 0
 
-        # 上下文相似度
+        # Context similarity
         ctx_score = 0.0
         if a.parent_text and b.parent_text:
-            # 简单字符串包含关系
+            # Simple substring matching
             if a.parent_text in b.parent_text or b.parent_text in a.parent_text:
                 ctx_score = 0.8
             elif any(w in b.parent_text for w in a.parent_text.split()[:3] if len(w) > 1):
                 ctx_score = 0.4
         scores["context"] = ctx_score
 
-        # 视觉相似度
+        # Visual similarity
         if a.visual_hash and b.visual_hash:
             scores["visual"] = 1.0 if a.visual_hash == b.visual_hash else 0.0
         else:
-            scores["visual"] = 0.5  # 无视觉数据时中性
+            scores["visual"] = 0.5  # Neutral when visual data is unavailable
 
-        # 加权求和
+        # Weighted sum
         total = sum(scores[k] * self.WEIGHTS[k] for k in self.WEIGHTS)
         return total
 
 
 class LocatorHistory:
     """
-    选择器历史库
+    Selector history
 
-    记录每次成功定位的选择器演变，用于预测最优选择器。
+    Record successful selector evolution to predict the best selector.
     """
 
     def __init__(self):
@@ -209,7 +209,7 @@ class LocatorHistory:
             """)
 
     def record(self, fingerprint: ElementFingerprint, selector: str, success: bool, method: str = ""):
-        """记录一次定位尝试"""
+        """Record a location attempt"""
         fp_hash = fingerprint.compute_hash()
         with sqlite3.connect(self._db_path) as conn:
             conn.execute("""
@@ -217,14 +217,14 @@ class LocatorHistory:
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             """, (fp_hash, fingerprint.page_url_pattern, fingerprint.text, selector, int(success), method, time.time()))
 
-            # 更新指纹存储
+            # Update the fingerprint store
             conn.execute("""
                 INSERT OR REPLACE INTO fingerprint_store (hash, fingerprint, updated_at)
                 VALUES (?, ?, ?)
             """, (fp_hash, json.dumps(fingerprint.to_dict(), ensure_ascii=False), time.time()))
 
     def get_best_selector(self, fingerprint_hash: str) -> Optional[str]:
-        """获取历史上最成功的选择器"""
+        """Get the most successful historical selector"""
         with sqlite3.connect(self._db_path) as conn:
             row = conn.execute("""
                 SELECT selector_used, COUNT(*) as cnt
@@ -237,7 +237,7 @@ class LocatorHistory:
             return row[0] if row else None
 
     def get_statistics(self) -> Dict:
-        """获取统计信息"""
+        """Get statistics"""
         with sqlite3.connect(self._db_path) as conn:
             total = conn.execute("SELECT COUNT(*) FROM locator_records").fetchone()[0]
             success = conn.execute("SELECT COUNT(*) FROM locator_records WHERE success = 1").fetchone()[0]
@@ -252,9 +252,9 @@ class LocatorHistory:
 
 class FlakyDetector:
     """
-    Flaky 元素检测器
+    Flaky element detector
 
-    标记反复触发自愈的元素，提前优化或发出告警。
+    Flag elements that repeatedly trigger healing for early optimization or alerts.
     """
 
     def __init__(self, flaky_threshold: int = 3, window_seconds: float = 3600):
@@ -266,7 +266,7 @@ class FlakyDetector:
         )
 
     def check(self, fingerprint_hash: str) -> Dict[str, Any]:
-        """检查元素是否为 flaky"""
+        """Check whether the element is flaky"""
         try:
             cutoff = time.time() - self._window
             with sqlite3.connect(self._db_path) as conn:
@@ -286,13 +286,13 @@ class FlakyDetector:
                 "failures_in_window": failures,
                 "total_in_window": total,
                 "failure_rate": round(failures / total, 3) if total > 0 else 0,
-                "recommendation": "建议使用语义定位替代此选择器" if is_flaky else "正常",
+                "recommendation": "Consider semantic location instead of this selector" if is_flaky else "Normal",
             }
         except Exception:
-            return {"is_flaky": False, "error": "检查失败"}
+            return {"is_flaky": False, "error": "Check failed"}
 
     def list_flaky_elements(self) -> List[Dict]:
-        """列出所有 flaky 元素"""
+        """List all flaky elements"""
         try:
             cutoff = time.time() - self._window
             with sqlite3.connect(self._db_path) as conn:
@@ -319,7 +319,7 @@ class FlakyDetector:
             return []
 
 
-# ── 单例 ──────────────────────────────────────────────────────────────────────
+# ── Singleton ──────────────────────────────────────────────────────────────────────
 
 _matcher: Optional[FingerprintMatcher] = None
 _history: Optional[LocatorHistory] = None

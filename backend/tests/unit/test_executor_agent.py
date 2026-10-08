@@ -207,7 +207,7 @@ class TestProbePolicy:
         )
 
         reason = executor._probe_block_reason("fill", "用户名", "admin")
-        assert "只读探针禁止执行 fill" in reason
+        assert "Read-only probe prohibits fill" in reason
 
     def test_probe_block_reason_allows_assert_action(self, _patch_deps):
         from agents.executor_agent import ExecutorAgent

@@ -54,7 +54,7 @@ class TestExecuteTask:
             (
                 "http://localhost:8020/api/start",
                 {
-                    "requirement": "探索性测试 https://example.com/app",
+                    "requirement": "Exploratory testing https://example.com/app",
                     "target_url": "https://example.com/app",
                     "planner_mode": "quick",
                     "session_id": "scheduled_sched_1234",

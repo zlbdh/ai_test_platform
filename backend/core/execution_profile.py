@@ -101,14 +101,14 @@ def resolve_execution_profile(
 
 
 def build_probe_goal_hint(target_url: str = "") -> str:
-    target_hint = f"目标页面限定为 {target_url}。" if target_url else "若未提供目标地址，则只做当前页只读检查。"
+    target_hint = f"Limit the target page to {target_url}. " if target_url else "If no target URL is provided, perform only read-only checks on the current page. "
     return (
-        "【只读探针模式】"
-        "本任务是低风险只读验证，不是完整业务回归。"
+        "[Read-only probe mode] "
+        "This task is low-risk, read-only verification, not a full business regression. "
         f"{target_hint}"
-        "严格遵守：最多 1 个场景、最多 8 步；"
-        "不要登录、不要输入、不要提交、不要发布、不要删除、不要导出、不要上传、不要退出；"
-        "只允许验证页面是否可访问、页面标题/文本/元素是否正常可见，并在确认后尽快结束。"
+        "Strict limits: at most 1 scenario and 8 steps; "
+        "do not log in, type, submit, publish, delete, export, upload, or log out; "
+        "only verify page accessibility and visibility of its title, text, and elements, then finish promptly after confirmation."
     )
 
 
@@ -116,7 +116,7 @@ def describe_probe_block(action: str, target: str = "", value: str = "") -> str:
     action_name = str(action or "").strip() or "unknown"
     target_name = str(target or "").strip()
     suffix = f" ({target_name})" if target_name else ""
-    return f"只读探针禁止执行 {action_name}{suffix}"
+    return f"Read-only probe prohibits {action_name}{suffix}"
 
 
 def should_block_probe_action(action: str, target: str = "", value: str = "") -> Tuple[bool, str]:
@@ -133,6 +133,6 @@ def should_block_probe_action(action: str, target: str = "", value: str = "") ->
     if normalized_action == "goto":
         target_text = str(target or "").strip().lower()
         if not target_text:
-            return True, "只读探针不允许无目标地址的跳转"
+            return True, "Read-only probe does not allow navigation without a target URL"
 
     return False, ""

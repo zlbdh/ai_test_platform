@@ -1,11 +1,11 @@
 """
-Test Scheduler - 测试调度器
+Test Scheduler
 
-支持：
-- 定时执行测试
-- 测试队列管理
-- 并发控制
-- 结果通知
+Supports:
+- Scheduled test execution
+- Test queue management
+- Concurrency control
+- Result notifications
 """
 
 from typing import Dict, Any, List, Optional, Callable
@@ -34,7 +34,7 @@ class TaskPriority(Enum):
 
 @dataclass
 class ScheduledTask:
-    """调度任务"""
+    """Scheduled task"""
     task_id: str
     name: str
     test_config: Dict[str, Any]
@@ -49,8 +49,8 @@ class ScheduledTask:
 
 
 class TestScheduler:
-    """测试调度器"""
-    
+    """Test scheduler"""
+
     def __init__(self, max_concurrent: int = 3):
         self.max_concurrent = max_concurrent
         self.queue: List[ScheduledTask] = []
@@ -69,14 +69,14 @@ class TestScheduler:
         priority: TaskPriority = TaskPriority.NORMAL,
     ) -> str:
         """
-        注册定时调度任务（cron 触发器）。
-        
+        Register a scheduled task with a cron trigger.
+
         Args:
-            name: 任务名称
-            test_config: 测试配置
-            interval_seconds: 执行间隔（秒），默认 1 小时
-            priority: 优先级
-            
+            name: Task name
+            test_config: Test configuration
+            interval_seconds: Execution interval in seconds; defaults to one hour
+            priority: Priority
+
         Returns:
             cron job ID
         """
@@ -91,12 +91,12 @@ class TestScheduler:
             "enabled": True,
         })
         logging.getLogger(__name__).info(
-            f"[Scheduler] 定时任务注册: {name} (每 {interval_seconds}s)"
+            f"[Scheduler] Registered scheduled task: {name} (every {interval_seconds}s)"
         )
         return job_id
 
     def cancel_cron(self, job_id: str) -> bool:
-        """取消定时任务"""
+        """Cancel a scheduled task"""
         for job in self._cron_jobs:
             if job["job_id"] == job_id:
                 job["enabled"] = False
@@ -104,7 +104,7 @@ class TestScheduler:
         return False
 
     def get_cron_jobs(self) -> List[Dict[str, Any]]:
-        """获取所有定时任务"""
+        """Get all scheduled tasks"""
         return [
             {
                 "job_id": j["job_id"],
@@ -117,7 +117,7 @@ class TestScheduler:
         ]
 
     async def _cron_loop(self):
-        """定时任务轮询循环"""
+        """Scheduled-task polling loop"""
         while self._running:
             now = datetime.now()
             for job in self._cron_jobs:
@@ -131,8 +131,8 @@ class TestScheduler:
                         test_config=job["test_config"],
                         priority=job["priority"],
                     )
-            await asyncio.sleep(10)  # 每 10 秒检查一次
-    
+            await asyncio.sleep(10)  # Check every 10 seconds
+
     def schedule(
         self,
         name: str,
@@ -140,7 +140,7 @@ class TestScheduler:
         priority: TaskPriority = TaskPriority.NORMAL,
         scheduled_at: Optional[str] = None
     ) -> ScheduledTask:
-        """调度测试任务"""
+        """Schedule a test task"""
         task = ScheduledTask(
             task_id=str(uuid.uuid4())[:8],
             name=name,
@@ -152,22 +152,22 @@ class TestScheduler:
             started_at=None,
             completed_at=None
         )
-        
-        # 按优先级插入队列
+
+        # Insert into the queue by priority
         inserted = False
         for i, existing in enumerate(self.queue):
             if task.priority.value > existing.priority.value:
                 self.queue.insert(i, task)
                 inserted = True
                 break
-        
+
         if not inserted:
             self.queue.append(task)
-        
+
         return task
-    
+
     def cancel(self, task_id: str) -> bool:
-        """取消任务"""
+        """Cancel a task"""
         for task in self.queue:
             if task.task_id == task_id:
                 task.status = TaskStatus.CANCELLED
@@ -175,62 +175,62 @@ class TestScheduler:
                 self.completed.append(task)
                 return True
         return False
-    
+
     def get_status(self, task_id: str) -> Optional[ScheduledTask]:
-        """获取任务状态"""
+        """Get task status"""
         for task in self.queue:
             if task.task_id == task_id:
                 return task
-        
+
         if task_id in self.running:
             return self.running[task_id]
-        
+
         for task in self.completed:
             if task.task_id == task_id:
                 return task
-        
+
         return None
-    
+
     async def start(self, executor: Callable):
-        """启动调度器（含定时任务循环）"""
+        """Start the scheduler and scheduled-task loop"""
         self._running = True
 
-        # 启动 cron 定时任务循环
+        # Start the cron task loop
         if self._cron_jobs:
             self._cron_task = asyncio.create_task(self._cron_loop())
-        
+
         while self._running:
-            # 检查是否可以启动新任务
+            # Check whether a new task can start
             while len(self.running) < self.max_concurrent and self.queue:
                 task = self._get_next_task()
                 if task:
                     asyncio.create_task(self._run_task(task, executor))
-            
+
             await asyncio.sleep(1)
-    
+
     def stop(self):
-        """停止调度器"""
+        """Stop the scheduler"""
         self._running = False
-    
+
     def _get_next_task(self) -> Optional[ScheduledTask]:
-        """获取下一个任务"""
+        """Get the next task"""
         now = datetime.now().isoformat()
-        
+
         for task in self.queue:
             if task.scheduled_at and task.scheduled_at > now:
                 continue
-            
+
             self.queue.remove(task)
             return task
-        
+
         return None
-    
+
     async def _run_task(self, task: ScheduledTask, executor: Callable):
-        """执行任务"""
+        """Execute a task"""
         task.status = TaskStatus.RUNNING
         task.started_at = datetime.now().isoformat()
         self.running[task.task_id] = task
-        
+
         try:
             result = await executor(task.test_config)
             task.status = TaskStatus.COMPLETED
@@ -242,20 +242,20 @@ class TestScheduler:
             task.completed_at = datetime.now().isoformat()
             del self.running[task.task_id]
             self.completed.append(task)
-            
-            # 触发回调
+
+            # Trigger callbacks
             for callback in self.callbacks:
                 try:
                     callback(task)
                 except Exception as e:
                     logger.warning(f"Scheduler callback failed: {e}")
-    
+
     def on_complete(self, callback: Callable):
-        """注册完成回调"""
+        """Register a completion callback"""
         self.callbacks.append(callback)
-    
+
     def get_statistics(self) -> Dict[str, Any]:
-        """获取统计信息"""
+        """Get statistics"""
         return {
             "queue_length": len(self.queue),
             "running": len(self.running),
@@ -264,9 +264,9 @@ class TestScheduler:
             "failed": sum(1 for t in self.completed if t.status == TaskStatus.FAILED),
             "cancelled": sum(1 for t in self.completed if t.status == TaskStatus.CANCELLED)
         }
-    
+
     def get_queue(self) -> List[Dict[str, Any]]:
-        """获取队列状态"""
+        """Get queue status"""
         return [
             {
                 "task_id": t.task_id,
@@ -277,9 +277,9 @@ class TestScheduler:
             }
             for t in self.queue
         ]
-    
+
     def get_running(self) -> List[Dict[str, Any]]:
-        """获取运行中任务"""
+        """Get running tasks"""
         return [
             {
                 "task_id": t.task_id,
@@ -291,35 +291,35 @@ class TestScheduler:
 
     def register_swarm_crons(self, target_url: str = "") -> List[str]:
         """
-        注册军团定时巡检任务。
+        Register scheduled legion health checks.
 
-        - 晨检：每天 9:00（间隔 24h = 86400s）
-        - 日报：每天 18:00（间隔 24h = 86400s）
+        - Morning check: daily at 9:00 (24h interval = 86400s)
+        - Daily report: daily at 18:00 (24h interval = 86400s)
 
         Returns:
-            注册的 cron job ID 列表
+            List of registered cron job IDs
         """
         job_ids = []
 
-        # 晨检 — 全面回归
+        # Morning check: comprehensive regression
         job_ids.append(self.schedule_cron(
-            name="🌅 军团晨检",
+            name="🌅 Legion morning check",
             test_config={
                 "swarm_mode": True,
-                "user_input": "全面回归测试：检查所有核心功能",
+                "user_input": "Comprehensive regression test: check all core features",
                 "target_url": target_url,
                 "notify_level": "info",
             },
-            interval_seconds=86400,  # 24 小时
+            interval_seconds=86400,  # 24 hours
             priority=TaskPriority.HIGH,
         ))
 
-        # 日报 — 覆盖盲区扫描
+        # Daily report: coverage-gap scan
         job_ids.append(self.schedule_cron(
-            name="📊 军团日报",
+            name="📊 Legion daily report",
             test_config={
                 "swarm_mode": True,
-                "user_input": "查覆盖盲区，生成日报",
+                "user_input": "Find coverage gaps and generate a daily report",
                 "target_url": target_url,
                 "mode": "coverage",
                 "notify_level": "report",
@@ -329,16 +329,16 @@ class TestScheduler:
         ))
 
         logging.getLogger(__name__).info(
-            f"[Scheduler] 军团巡检注册完成: {len(job_ids)} 个 cron job"
+            f"[Scheduler] Registered legion health checks: {len(job_ids)} cron jobs"
         )
         return job_ids
 
 
-# 单例
+# Singleton
 _scheduler: Optional[TestScheduler] = None
 
 def get_scheduler() -> TestScheduler:
-    """获取调度器单例"""
+    """Get the scheduler singleton"""
     global _scheduler
     if _scheduler is None:
         _scheduler = TestScheduler()

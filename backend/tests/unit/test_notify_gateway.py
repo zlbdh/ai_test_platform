@@ -200,7 +200,7 @@ class TestEmailChannel:
         assert smtp_server.sent[1] == ["a@example.com", "b@example.com"]
         parsed = message_from_string(smtp_server.sent[2])
         subject = str(make_header(decode_header(parsed["Subject"])))
-        assert subject == "[AI测试平台] 日报"
+        assert subject == "[AI Test Platform] 日报"
 
     @pytest.mark.asyncio
     async def test_send_failure_returns_false(self):

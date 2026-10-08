@@ -122,10 +122,10 @@ class TestOrchestratorLifecycle:
 
         assert task_id.startswith("task_")
         planner_goal = mock_planner_cls.call_args.kwargs["task_goal"]
-        assert "会话预认证已完成" in planner_goal
-        assert "已切换到北京市-528" in planner_goal
-        assert "不要再执行登录、点击城市/站点或切换站点动作" in planner_goal
-        assert "必须首先访问目标地址 http://127.0.0.1:81/unifiedGoodService/uniProductService" in planner_goal
+        assert "Session preauthentication is complete" in planner_goal
+        assert "switched to 北京市-528" in planner_goal
+        assert "Do not sign in again, click a city/site, or switch sites" in planner_goal
+        assert "first navigate to the target URL http://127.0.0.1:81/unifiedGoodService/uniProductService" in planner_goal
 
     def test_start_task_uses_fallback_display_requirement_but_keeps_raw_goal(self):
         orch = Orchestrator(session_id="broken_requirement_test")
@@ -158,7 +158,7 @@ class TestOrchestratorLifecycle:
         assert orch._task_text_state == "broken_fallback"
         planner_goal = mock_planner_cls.call_args.kwargs["task_goal"]
         assert "??????? API ??????? UI ??" in planner_goal
-        assert "必须首先访问目标地址 http://127.0.0.1:8020/api/health" in planner_goal
+        assert "first navigate to the target URL http://127.0.0.1:8020/api/health" in planner_goal
         mock_bus.return_value.publish_log_sync.assert_called_once()
 
     def test_start_task_auto_enables_probe_profile_for_readonly_requirement(self):
@@ -191,6 +191,6 @@ class TestOrchestratorLifecycle:
         assert orch._step_budget == 8
         assert orch.session.get_context("execution_mode") == "probe"
         assert orch.session.get_context("interaction_policy") == "read_only"
-        assert "只读探针模式" in mock_planner_cls.call_args.kwargs["task_goal"]
+        assert "Read-only probe mode" in mock_planner_cls.call_args.kwargs["task_goal"]
         assert mock_planner_cls.call_args.kwargs["execution_profile"]["execution_mode"] == "probe"
         assert mock_executor_cls.call_args.kwargs["execution_profile"]["interaction_policy"] == "read_only"

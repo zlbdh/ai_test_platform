@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
 """
-NotifyGateway — A2P 通知推送网关
+NotifyGateway — A2P notification gateway
 
-多通道插件架构：
-- ConsoleChannel:  控制台输出（默认, 零配置）
-- WebhookChannel:  企微/钉钉 Webhook
-- EmailChannel:    SMTP 邮件
+Multichannel plugin architecture:
+- ConsoleChannel:  Console output (default, no configuration)
+- WebhookChannel:  WeCom/DingTalk webhook
+- EmailChannel:    SMTP email
 
-通知等级：
-- CRITICAL: 核心接口崩溃 → 全渠道推送
-- INFO:     测试完成     → IM 群通知
-- REPORT:   每日汇总     → 邮件
-- LOG:      内部日志     → 本地存储
+Notification levels:
+- CRITICAL: Critical API failure → all channels
+- INFO:     Test completion → group-chat notification
+- REPORT:   Daily summary → email
+- LOG:      Internal logs → local storage
 """
 
 import asyncio
@@ -27,20 +27,20 @@ from typing import Any, Dict, List, Optional
 logger = logging.getLogger(__name__)
 
 
-# ── 数据结构 ──────────────────────────────────────────────────────────────────
+# ── Data structures ──────────────────────────────────────────────────────────────────
 
 
 class NotifyLevel(Enum):
-    """通知等级"""
-    CRITICAL = "critical"   # 🔴 核心故障
-    INFO = "info"           # 🟡 测试完成
-    REPORT = "report"       # ⚪ 日报/汇总
-    LOG = "log"             # 📝 内部日志
+    """Notification level"""
+    CRITICAL = "critical"   # 🔴 Critical failure
+    INFO = "info"           # 🟡 Test completed
+    REPORT = "report"       # ⚪ Daily report/summary
+    LOG = "log"             # 📝 Internal logs
 
 
 @dataclass
 class Notification:
-    """通知消息"""
+    """Notification message"""
     notification_id: str = field(default_factory=lambda: f"n-{int(time.time()*1000)}")
     level: NotifyLevel = NotifyLevel.INFO
     title: str = ""
@@ -50,21 +50,21 @@ class Notification:
     channels_sent: List[str] = field(default_factory=list)
 
 
-# ── 通道接口 ─────────────────────────────────────────────────────────────────
+# ── Channel interface ─────────────────────────────────────────────────────────────────
 
 
 class NotifyChannel(ABC):
-    """通知通道基类"""
+    """Notification channel base class"""
     name: str = "base"
 
     @abstractmethod
     async def send(self, notification: Notification) -> bool:
-        """发送通知，返回是否成功"""
+        """Send a notification and return whether it succeeded"""
         ...
 
 
 class ConsoleChannel(NotifyChannel):
-    """控制台通道（默认, 零配置）"""
+    """Console channel (default, no configuration)"""
     name = "console"
 
     async def send(self, notification: Notification) -> bool:
@@ -83,7 +83,7 @@ class ConsoleChannel(NotifyChannel):
 
 
 class WebhookChannel(NotifyChannel):
-    """企微/钉钉 Webhook 通道"""
+    """WeCom/DingTalk webhook channel"""
     name = "webhook"
 
     def __init__(self, webhook_url: str = "", webhook_type: str = "wecom"):
@@ -98,7 +98,7 @@ class WebhookChannel(NotifyChannel):
             import aiohttp
 
             if self.webhook_type == "wecom":
-                # 企业微信群机器人
+                # WeCom group bot
                 payload = {
                     "msgtype": "markdown",
                     "markdown": {
@@ -110,7 +110,7 @@ class WebhookChannel(NotifyChannel):
                     },
                 }
             elif self.webhook_type == "dingtalk":
-                # 钉钉群机器人
+                # DingTalk group bot
                 payload = {
                     "msgtype": "markdown",
                     "markdown": {
@@ -123,7 +123,7 @@ class WebhookChannel(NotifyChannel):
                     },
                 }
             else:
-                # 通用 Webhook
+                # Generic webhook
                 payload = asdict(notification)
                 payload["level"] = notification.level.value
 
@@ -134,23 +134,23 @@ class WebhookChannel(NotifyChannel):
                     timeout=aiohttp.ClientTimeout(total=10),
                 ) as resp:
                     if resp.status == 200:
-                        logger.info(f"[Notify] Webhook 发送成功: {notification.title}")
+                        logger.info(f"[Notify] Webhook sent successfully: {notification.title}")
                         return True
                     else:
                         text = await resp.text()
-                        logger.warning(f"[Notify] Webhook 响应异常: {resp.status} {text}")
+                        logger.warning(f"[Notify] Unexpected webhook response: {resp.status} {text}")
                         return False
 
         except ImportError:
-            logger.warning("[Notify] aiohttp 未安装，跳过 Webhook 通知")
+            logger.warning("[Notify] aiohttp is not installed; skipping webhook notifications")
             return False
         except Exception as e:
-            logger.error(f"[Notify] Webhook 发送失败: {e}")
+            logger.error(f"[Notify] Failed to send webhook: {e}")
             return False
 
 
 class EmailChannel(NotifyChannel):
-    """SMTP 邮件通道"""
+    """SMTP email channel"""
     name = "email"
 
     def __init__(
@@ -178,7 +178,7 @@ class EmailChannel(NotifyChannel):
 
             def _send():
                 msg = MIMEMultipart("alternative")
-                msg["Subject"] = f"[AI测试平台] {notification.title}"
+                msg["Subject"] = f"[AI Test Platform] {notification.title}"
                 msg["From"] = self.smtp_user
                 msg["To"] = ", ".join(self.to_addrs)
 
@@ -195,23 +195,23 @@ class EmailChannel(NotifyChannel):
                     server.sendmail(self.smtp_user, self.to_addrs, msg.as_string())
 
             await asyncio.to_thread(_send)
-            logger.info(f"[Notify] 邮件发送成功: {notification.title}")
+            logger.info(f"[Notify] Email sent successfully: {notification.title}")
             return True
 
         except Exception as e:
-            logger.error(f"[Notify] 邮件发送失败: {e}")
+            logger.error(f"[Notify] Failed to send email: {e}")
             return False
 
 
-# ── NotifyGateway 核心 ───────────────────────────────────────────────────────
+# ── NotifyGateway core ───────────────────────────────────────────────────────
 
 
 class NotifyGateway:
     """
-    A2P 通知推送网关
+    A2P notification gateway
 
-    自动根据 .env 配置启用通道。
-    默认始终启用 ConsoleChannel。
+    Enable channels automatically from .env configuration.
+    ConsoleChannel is always enabled by default.
     """
 
     def __init__(self):
@@ -219,26 +219,26 @@ class NotifyGateway:
         self._history: List[Notification] = []
         self._max_history = 200
 
-        # 始终启用控制台
+        # Always enable the console
         self._channels.append(ConsoleChannel())
 
-        # 从环境变量配置其他通道
+        # Configure other channels from environment variables
         self._init_from_env()
 
         logger.info(
-            f"[NotifyGateway] 初始化完成，活跃通道: "
+            f"[NotifyGateway] Initialized; active channels: "
             f"{[c.name for c in self._channels]}"
         )
 
     def _init_from_env(self) -> None:
-        """从环境变量初始化通道"""
-        # 企微/钉钉 Webhook
+        """Initialize channels from environment variables"""
+        # WeCom/DingTalk webhook
         webhook_url = os.environ.get("NOTIFY_WEBHOOK_URL", "")
         webhook_type = os.environ.get("NOTIFY_WEBHOOK_TYPE", "wecom")
         if webhook_url:
             self._channels.append(WebhookChannel(webhook_url, webhook_type))
 
-        # 邮件
+        # Email
         smtp_host = os.environ.get("NOTIFY_SMTP_HOST", "")
         if smtp_host:
             self._channels.append(EmailChannel(
@@ -250,7 +250,7 @@ class NotifyGateway:
             ))
 
     def add_channel(self, channel: NotifyChannel) -> None:
-        """动态添加通知通道"""
+        """Add a notification channel dynamically"""
         self._channels.append(channel)
 
     async def send(
@@ -261,16 +261,16 @@ class NotifyGateway:
         data: Optional[Dict] = None,
     ) -> Notification:
         """
-        发送通知。
+        Send a notification.
 
         Args:
-            level: 通知等级 (critical/info/report/log)
-            title: 标题
-            body: 正文
-            data: 附加数据
+            level: Notification level (critical/info/report/log)
+            title: Title
+            body: Body
+            data: Additional data
 
         Returns:
-            Notification 对象
+            Notification object
         """
         notification = Notification(
             level=NotifyLevel(level),
@@ -279,13 +279,13 @@ class NotifyGateway:
             data=data or {},
         )
 
-        # 根据等级决定发送到哪些通道
+        # Choose channels according to the notification level
         for channel in self._channels:
             try:
-                # CRITICAL 发送到所有通道
-                # INFO 发送到 console + webhook
-                # REPORT 发送到 console + email
-                # LOG 只发送到 console
+                # Send CRITICAL notifications to every channel
+                # Send INFO notifications to console and webhook
+                # Send REPORT notifications to console and email
+                # Send LOG notifications only to console
                 should_send = False
                 if notification.level == NotifyLevel.CRITICAL:
                     should_send = True
@@ -302,9 +302,9 @@ class NotifyGateway:
                         notification.channels_sent.append(channel.name)
 
             except Exception as e:
-                logger.error(f"[NotifyGateway] 通道 {channel.name} 发送失败: {e}")
+                logger.error(f"[NotifyGateway] Channel {channel.name} failed to send: {e}")
 
-        # 记录历史
+        # Record history
         self._history.append(notification)
         if len(self._history) > self._max_history:
             self._history = self._history[-self._max_history:]
@@ -312,7 +312,7 @@ class NotifyGateway:
         return notification
 
     def get_history(self, limit: int = 20) -> List[Dict]:
-        """获取通知历史"""
+        """Get notification history"""
         return [
             {
                 "id": n.notification_id,
@@ -326,13 +326,13 @@ class NotifyGateway:
         ]
 
 
-# ── 单例 ─────────────────────────────────────────────────────────────────────
+# ── Singleton ─────────────────────────────────────────────────────────────────────
 
 _gateway: Optional[NotifyGateway] = None
 
 
 def get_notify_gateway() -> NotifyGateway:
-    """获取 NotifyGateway 单例"""
+    """Get the NotifyGateway singleton"""
     global _gateway
     if _gateway is None:
         _gateway = NotifyGateway()

@@ -1,11 +1,11 @@
 """
-Environment Validator - 环境验证器
+Environment Validator
 
-在测试执行前验证环境配置：
-- 依赖检查
-- 服务健康检查
-- 配置验证
-- 资源可用性
+Validate the environment before running tests:
+- Dependency checks
+- Service health checks
+- Configuration validation
+- Resource availability
 """
 
 from typing import Dict, Any, List, Optional, Sequence, Tuple
@@ -25,7 +25,7 @@ class CheckStatus(Enum):
 
 @dataclass
 class CheckResult:
-    """检查结果"""
+    """Check result"""
     name: str
     status: CheckStatus
     message: str
@@ -33,7 +33,7 @@ class CheckResult:
 
 
 class EnvironmentValidator:
-    """环境验证器"""
+    """Environment validator"""
 
     DEFAULT_DIRECTORIES = ("./reports", "./data", "./logs")
     DEFAULT_SERVICES = (("Backend API", "http://localhost:8020/api/status"),)
@@ -46,31 +46,31 @@ class EnvironmentValidator:
         self.checks: List[CheckResult] = []
         self.directories = list(directories or self.DEFAULT_DIRECTORIES)
         self.services = list(services or self.DEFAULT_SERVICES)
-    
+
     async def validate_all(self) -> Dict[str, Any]:
-        """执行所有验证"""
+        """Run all validation checks"""
         self.checks = []
-        
-        # 1. Python 依赖检查
+
+        # 1. Python dependency checks
         self._check_python_deps()
-        
-        # 2. 外部工具检查
+
+        # 2. External-tool checks
         self._check_external_tools()
-        
-        # 3. 环境变量检查
+
+        # 3. Environment-variable checks
         self._check_env_vars()
-        
-        # 4. 目录权限检查
+
+        # 4. Directory-permission checks
         self._check_directories()
-        
-        # 5. 服务健康检查
+
+        # 5. Service health checks
         await self._check_services()
-        
-        # 汇总结果
+
+        # Summarize results
         passed = sum(1 for c in self.checks if c.status == CheckStatus.PASSED)
         warnings = sum(1 for c in self.checks if c.status == CheckStatus.WARNING)
         failed = sum(1 for c in self.checks if c.status == CheckStatus.FAILED)
-        
+
         return {
             "status": "ready" if failed == 0 else "not_ready",
             "summary": {
@@ -92,12 +92,12 @@ class EnvironmentValidator:
 
     @staticmethod
     def _is_env_configured(var_name: str) -> bool:
-        """环境变量是否有效配置"""
+        """Whether an environment variable is configured correctly"""
         value = os.getenv(var_name)
         return bool(value and value.strip())
-    
+
     def _check_python_deps(self):
-        """检查 Python 依赖"""
+        """Check Python dependencies"""
         required_packages = [
             "fastapi",
             "uvicorn",
@@ -106,94 +106,94 @@ class EnvironmentValidator:
             "aiohttp",
             "pydantic"
         ]
-        
+
         for package in required_packages:
             try:
                 __import__(package)
                 self.checks.append(CheckResult(
                     name=f"Python: {package}",
                     status=CheckStatus.PASSED,
-                    message="已安装"
+                    message="installed"
                 ))
             except ImportError:
                 self.checks.append(CheckResult(
                     name=f"Python: {package}",
                     status=CheckStatus.FAILED,
-                    message=f"未安装，请运行: pip install {package}"
+                    message=f"not installed; run: pip install {package}"
                 ))
-    
+
     def _check_external_tools(self):
-        """检查外部工具"""
+        """Check external tools"""
         tools = {
-            "grpcurl": "gRPC 测试工具",
-            "allure": "Allure 报告工具"
+            "grpcurl": "gRPC testing tool",
+            "allure": "Allure reporting tool"
         }
-        
+
         for tool, desc in tools.items():
             if shutil.which(tool):
                 self.checks.append(CheckResult(
                     name=f"Tool: {tool}",
                     status=CheckStatus.PASSED,
-                    message=f"{desc} 已安装"
+                    message=f"{desc} installed"
                 ))
             else:
                 self.checks.append(CheckResult(
                     name=f"Tool: {tool}",
                     status=CheckStatus.WARNING,
-                    message=f"{desc} 未安装（可选）"
+                    message=f"{desc} not installed (optional)"
                 ))
-    
+
     def _check_env_vars(self):
-        """检查环境变量"""
+        """Check environment variables"""
         required_vars = {
-            "OPENAI_API_KEY": "OpenAI API 密钥（或其他 LLM Provider Key）"
+            "OPENAI_API_KEY": "OpenAI API key or another LLM provider key"
         }
-        
+
         optional_vars = {
-            "LLM_PROVIDER": "LLM 提供商 (openai/gemini/deepseek)",
-            "OPENAI_BASE_URL": "OpenAI 兼容网关地址",
-            "GEMINI_API_KEY": "Gemini API 密钥",
-            "DEEPSEEK_API_KEY": "DeepSeek API 密钥"
+            "LLM_PROVIDER": "LLM provider (openai/gemini/deepseek)",
+            "OPENAI_BASE_URL": "OpenAI-compatible gateway URL",
+            "GEMINI_API_KEY": "Gemini API key",
+            "DEEPSEEK_API_KEY": "DeepSeek API key"
         }
-        
+
         for var, desc in required_vars.items():
             if self._is_env_configured(var):
                 self.checks.append(CheckResult(
                     name=f"Env: {var}",
                     status=CheckStatus.PASSED,
-                    message=f"{desc} 已配置"
+                    message=f"{desc} configured"
                 ))
             else:
                 self.checks.append(CheckResult(
                     name=f"Env: {var}",
                     status=CheckStatus.WARNING,
-                    message=f"{desc} 未配置（使用默认值）"
+                    message=f"{desc} not configured (using the default)"
                 ))
-        
+
         for var, desc in optional_vars.items():
             configured = self._is_env_configured(var)
             status = CheckStatus.PASSED if configured else CheckStatus.WARNING
             self.checks.append(CheckResult(
                 name=f"Env: {var}",
                 status=status,
-                message=f"{desc} {'已' if configured else '未'}配置"
+                message=f"{desc} {'configured' if configured else 'not configured'}"
             ))
-    
+
     def _check_directories(self):
-        """检查目录权限"""
+        """Check directory permissions"""
         for dir_path in self.directories:
             if os.path.exists(dir_path):
                 if os.access(dir_path, os.W_OK):
                     self.checks.append(CheckResult(
                         name=f"Dir: {dir_path}",
                         status=CheckStatus.PASSED,
-                        message="可写"
+                        message="Writable"
                     ))
                 else:
                     self.checks.append(CheckResult(
                         name=f"Dir: {dir_path}",
                         status=CheckStatus.WARNING,
-                        message="无写入权限"
+                        message="No write permission"
                     ))
             else:
                 try:
@@ -201,17 +201,17 @@ class EnvironmentValidator:
                     self.checks.append(CheckResult(
                         name=f"Dir: {dir_path}",
                         status=CheckStatus.PASSED,
-                        message="已创建"
+                        message="Created"
                     ))
                 except Exception as e:
                     self.checks.append(CheckResult(
                         name=f"Dir: {dir_path}",
                         status=CheckStatus.FAILED,
-                        message=f"创建失败: {e}"
+                        message=f"Creation failed: {e}"
                     ))
-    
+
     async def _check_services(self):
-        """检查服务健康"""
+        """Check service health"""
         async with aiohttp.ClientSession() as session:
             for name, url in self.services:
                 try:
@@ -220,25 +220,25 @@ class EnvironmentValidator:
                             self.checks.append(CheckResult(
                                 name=f"Service: {name}",
                                 status=CheckStatus.PASSED,
-                                message="运行中",
+                                message="Running",
                                 details={"url": url, "status_code": resp.status}
                             ))
                         else:
                             self.checks.append(CheckResult(
                                 name=f"Service: {name}",
                                 status=CheckStatus.WARNING,
-                                message=f"响应异常: {resp.status}",
+                                message=f"Unexpected response: {resp.status}",
                                 details={"url": url, "status_code": resp.status}
                             ))
                 except (aiohttp.ClientError, asyncio.TimeoutError, OSError):
                     self.checks.append(CheckResult(
                         name=f"Service: {name}",
                         status=CheckStatus.WARNING,
-                        message="无法连接（服务可能未启动）",
+                        message="Cannot connect; the service may not be running",
                         details={"url": url}
                     ))
 
 
 def get_validator() -> EnvironmentValidator:
-    """获取验证器"""
+    """Get the validator"""
     return EnvironmentValidator()

@@ -126,4 +126,4 @@ async def test_execute_scenario_resets_old_runtime_and_skips_failed_dependency(t
     assert saved["steps"][0]["duration_ms"] >= 0
     assert saved["steps"][0]["result"]["status"] == "failed"
     assert saved["steps"][1]["status"] == "skipped"
-    assert saved["steps"][1]["result"]["reason"] == "依赖步骤 step_login 失败"
+    assert saved["steps"][1]["result"]["reason"] == "Prerequisite step step_login failed"

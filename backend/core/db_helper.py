@@ -1,6 +1,6 @@
 """
-SQLite 数据库连接辅助工具
-提供上下文管理器和便捷查询方法，消除 main.py 中重复的连接/关闭模式
+SQLite connection helpers
+Provide context managers and query helpers to remove repeated connection/close patterns from main.py
 """
 from __future__ import annotations
 
@@ -35,7 +35,7 @@ SHADOW_DB_ARCHIVE_DIR = str((_WORKSPACE_ROOT / "data" / "shadow_db_archive").res
 
 
 def resolve_db_path(raw_path: Optional[str] = None) -> str:
-    """将数据库路径收敛成稳定的绝对路径，避免受当前工作目录影响。"""
+    """Resolve the database to a stable absolute path independent of the working directory."""
     candidate = raw_path or DB_PATH or DEFAULT_DB_PATH
     if candidate == ":memory:":
         return candidate
@@ -47,7 +47,7 @@ def resolve_db_path(raw_path: Optional[str] = None) -> str:
 
 
 def get_db_path() -> str:
-    """返回当前生效的业务数据库路径。"""
+    """Return the active business database path."""
     return resolve_db_path()
 
 
@@ -63,7 +63,7 @@ def _file_metadata(path: str) -> Dict[str, Any]:
 
 
 def get_db_observability() -> Dict[str, Any]:
-    """返回数据库路径与潜在影子库信息，便于运行态诊断。"""
+    """Return the database path and potential shadow-database details for runtime diagnostics."""
     current_path = get_db_path()
     shadow_paths = []
     shadow_dbs = []
@@ -97,7 +97,7 @@ def get_db_observability() -> Dict[str, Any]:
 
 
 def quarantine_shadow_databases(reason: str = "ops_quarantine") -> Dict[str, Any]:
-    """非破坏性隔离影子业务库，移动到归档目录并保留时间戳。"""
+    """Isolate a shadow business database without deleting it: move it to an archive directory with a timestamp."""
     observability = get_db_observability()
     current_path = observability.get("path") or ""
     archive_dir = Path(SHADOW_DB_ARCHIVE_DIR)
@@ -151,7 +151,7 @@ def quarantine_shadow_databases(reason: str = "ops_quarantine") -> Dict[str, Any
 
 
 def init_db():
-    """初始化数据库及必要表"""
+    """Initialize the database and required tables"""
     db_path = get_db_path()
     if db_path != ":memory:":
         Path(db_path).parent.mkdir(parents=True, exist_ok=True)
@@ -162,7 +162,7 @@ def init_db():
 
 @contextmanager
 def get_connection():
-    """SQLite 连接上下文管理器，自动提交和关闭"""
+    """SQLite connection context manager that commits and closes automatically"""
     db_path = get_db_path()
     if db_path != ":memory:":
         Path(db_path).parent.mkdir(parents=True, exist_ok=True)
@@ -179,28 +179,28 @@ def get_connection():
 
 
 def query_one(sql: str, params: tuple = ()) -> Optional[dict]:
-    """执行查询并返回单行结果（字典），无结果返回 None"""
+    """Run a query and return one row as a dictionary, or None if there is no result"""
     with get_connection() as conn:
         row = conn.execute(sql, params).fetchone()
         return dict(row) if row else None
 
 
 def query_all(sql: str, params: tuple = ()) -> List[dict]:
-    """执行查询并返回所有结果（字典列表）"""
+    """Run a query and return all rows as a list of dictionaries"""
     with get_connection() as conn:
         rows = conn.execute(sql, params).fetchall()
         return [dict(r) for r in rows]
 
 
 def execute(sql: str, params: tuple = ()) -> int:
-    """执行写操作并返回受影响行数"""
+    """Execute a write and return the affected row count"""
     with get_connection() as conn:
         cursor = conn.execute(sql, params)
         return cursor.rowcount
 
 
 def execute_safe(sql: str, params: tuple = ()) -> int:
-    """执行写操作，忽略表不存在等操作错误，返回受影响行数"""
+    """Execute a write, ignore operational errors such as missing tables, and return the affected row count"""
     try:
         return execute(sql, params)
     except sqlite3.OperationalError:

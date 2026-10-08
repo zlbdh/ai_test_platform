@@ -33,7 +33,7 @@ class TestLLMManager:
         """测试不支持的提供商"""
         from core.llm_manager import LLMManager
         
-        with pytest.raises(ValueError, match="不支持的 LLM 提供商"):
+        with pytest.raises(ValueError, match="Unsupported LLM provider"):
             LLMManager._create_llm_instance('unsupported', 'model', 0, 1, 4096, None)
 
     def test_get_vision_llm_gemini(self):

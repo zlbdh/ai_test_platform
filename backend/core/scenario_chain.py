@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-E2E 场景链引擎 — 多步骤测试场景的串接执行
+E2E scenario chain engine — sequential execution of multistep test scenarios
 
-功能：
-1. 定义场景链（多个测试步骤串接）
-2. 步骤间共享状态（Cookie、变量、数据传递）
-3. 条件分支（前置步骤失败则跳过后续步骤）
-4. 场景链模板管理（保存、加载、执行）
+Features:
+1. Define scenario chains consisting of multiple test steps
+2. Share state across steps (cookies, variables, and data)
+3. Conditional branches (skip later steps if a prerequisite fails)
+4. Scenario chain template management (save, load, and execute)
 """
 import json
 import uuid
@@ -28,7 +28,7 @@ SCENARIOS_DIR.mkdir(parents=True, exist_ok=True)
 
 @dataclass
 class ScenarioStep:
-    """场景链中的一个步骤"""
+    """A step in a scenario chain"""
     id: str = field(default_factory=lambda: str(uuid.uuid4())[:8])
     name: str = ""
     url: str = ""
@@ -36,7 +36,7 @@ class ScenarioStep:
     mode: str = "smart"
     timeout: int = 60
     on_failure: str = "stop"  # stop / skip / continue
-    depends_on: Optional[str] = None  # 依赖的前置步骤 ID
+    depends_on: Optional[str] = None  # Prerequisite step ID
     status: str = "pending"
     result: Optional[Dict] = None
     duration_ms: int = 0
@@ -44,7 +44,7 @@ class ScenarioStep:
 
 @dataclass
 class Scenario:
-    """E2E 测试场景链"""
+    """E2E test scenario chain"""
     id: str = field(default_factory=lambda: str(uuid.uuid4())[:12])
     name: str = ""
     description: str = ""
@@ -56,7 +56,7 @@ class Scenario:
 
 
 class ScenarioChainEngine:
-    """场景链管理引擎"""
+    """Scenario chain management engine"""
 
     def __init__(self):
         self.scenarios: Dict[str, Scenario] = {}
@@ -95,23 +95,23 @@ class ScenarioChainEngine:
         return row.get("status")
 
     def _load_all(self):
-        """加载所有场景"""
+        """Load all scenarios"""
         for f in SCENARIOS_DIR.glob("*.json"):
             try:
                 data = json.loads(f.read_text(encoding="utf-8"))
                 sc = Scenario(**{k: v for k, v in data.items() if k in Scenario.__dataclass_fields__})
                 self.scenarios[sc.id] = sc
             except Exception as e:
-                logger.warning(f"加载场景 {f} 失败: {e}")
+                logger.warning(f"Failed to load scenario {f}: {e}")
 
     def _save(self, scenario: Scenario):
-        """保存场景到磁盘"""
+        """Save a scenario to disk"""
         scenario.updated_at = datetime.now().isoformat()
         path = SCENARIOS_DIR / f"{scenario.id}.json"
         path.write_text(json.dumps(asdict(scenario), ensure_ascii=False, indent=2), encoding="utf-8")
 
     def list_scenarios(self) -> List[Dict]:
-        """列出所有场景"""
+        """List all scenarios"""
         return [
             {
                 "id": s.id,
@@ -127,14 +127,14 @@ class ScenarioChainEngine:
         ]
 
     def get_scenario(self, scenario_id: str) -> Optional[Dict]:
-        """获取场景详情"""
+        """Get scenario details"""
         sc = self.scenarios.get(scenario_id)
         if not sc:
             return None
         return asdict(sc)
 
     def create_scenario(self, name: str, description: str = "", steps: List[Dict] = None, tags: List[str] = None) -> Dict:
-        """创建新场景"""
+        """Create a scenario"""
         sc = Scenario(
             name=name,
             description=description,
@@ -152,7 +152,7 @@ class ScenarioChainEngine:
         steps: List[Dict] = None,
         tags: List[str] = None,
     ) -> Dict:
-        """按名称更新或创建场景，便于导入项目级场景包。"""
+        """Update or create a scenario by name to support importing project scenario packages."""
         existing = next((scenario for scenario in self.scenarios.values() if scenario.name == name), None)
         if existing:
             existing.description = description
@@ -163,7 +163,7 @@ class ScenarioChainEngine:
         return self.create_scenario(name=name, description=description, steps=steps, tags=tags)
 
     def update_scenario(self, scenario_id: str, data: Dict) -> Optional[Dict]:
-        """更新场景"""
+        """Update the scenario"""
         sc = self.scenarios.get(scenario_id)
         if not sc:
             return None
@@ -174,7 +174,7 @@ class ScenarioChainEngine:
         return asdict(sc)
 
     def delete_scenario(self, scenario_id: str) -> bool:
-        """删除场景"""
+        """Delete the scenario"""
         if scenario_id not in self.scenarios:
             return False
         del self.scenarios[scenario_id]
@@ -184,10 +184,10 @@ class ScenarioChainEngine:
         return True
 
     async def execute_scenario(self, scenario_id: str) -> Dict:
-        """执行场景链"""
+        """Execute a scenario chain"""
         sc = self.scenarios.get(scenario_id)
         if not sc:
-            return {"error": "场景不存在"}
+            return {"error": "Scenario not found"}
 
         self._reset_step_runtime(sc)
         sc.status = "running"
@@ -200,10 +200,10 @@ class ScenarioChainEngine:
         for i, step_data in enumerate(sc.steps):
             step = ScenarioStep(**{k: v for k, v in step_data.items() if k in ScenarioStep.__dataclass_fields__})
 
-            # 检查依赖
+            # Check dependencies
             if step.depends_on and step.depends_on in failed_steps:
                 step.status = "skipped"
-                step.result = {"reason": f"依赖步骤 {step.depends_on} 失败"}
+                step.result = {"reason": f"Prerequisite step {step.depends_on} failed"}
                 self._persist_step_runtime(sc, i, step_data, step)
                 results.append({"step": step.name, "status": "skipped", "reason": step.result["reason"]})
                 continue
@@ -213,7 +213,7 @@ class ScenarioChainEngine:
             self._persist_step_runtime(sc, i, step_data, step)
 
             try:
-                # 获取独立的 Orchestrator 用于当前步骤独立执行
+                # Create a separate Orchestrator to execute the current step independently
                 session_id = f"scen_{scenario_id}_{step.id}"
                 orch = self._get_orchestrator(session_id)
                 
@@ -228,7 +228,7 @@ class ScenarioChainEngine:
                     task_id = f"task_{int(time.time())}"
                     raise Exception("Orchestrator is Busy! System may be overloaded or locked.")
 
-                # 等待执行完成：直接轮询内存状态与 DB 结果
+                # Wait for completion by polling in-memory state and database results
                 final_status = "running"
                 waited = 0
                 while waited < step.timeout:
@@ -236,7 +236,7 @@ class ScenarioChainEngine:
                     waited += 2
                     
                     if not orch.is_running:
-                        # 执行停止，校验 SQLite 记录的最终结果 (healed, success, completed)
+                        # Execution stopped; check the final SQLite result (healed, success, completed)
                         status_val = self._query_task_status(task_id)
                         if status_val:
                             final_status = "success" if status_val in ("success", "completed", "healed") else "failed"
@@ -245,7 +245,7 @@ class ScenarioChainEngine:
                         break
 
                 if final_status == "running":
-                    # 超时未跑完，强行杀死并记为失败
+                    # Stop unfinished execution at timeout and record failure
                     orch.stop_task()
                     final_status = "failed"
                     
@@ -281,7 +281,7 @@ class ScenarioChainEngine:
                 "task_id": step.result.get("task_id", "") if step.result else "",
             })
 
-        # 更新场景状态
+        # Update scenario status
         all_passed = all(r["status"] in ("passed", "skipped") for r in results)
         sc.status = "completed" if all_passed else "failed"
         self._save(sc)

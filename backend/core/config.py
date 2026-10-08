@@ -1,84 +1,84 @@
 ﻿"""
-平台配置
+Platform configuration
 """
 import os
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-# 加载 .env 文件（如果存在）
+# Load the .env file if present
 try:
     from dotenv import load_dotenv
     # Browser Debug Port
     CHROME_DEBUG_PORT: int = int(os.getenv("CHROME_DEBUG_PORT", "8030"))
-    # 获取项目根目录（从 core/ 向上两级到项目根目录）
+    # Get the project root, two levels above core/
     _CORE_DIR = Path(__file__).resolve().parent
     _BACKEND_DIR = _CORE_DIR.parent
     _ROOT_DIR = _BACKEND_DIR.parent
     env_path = _ROOT_DIR / '.env'
-    # 尝试加载根目录的 .env 文件
+    # Try loading the root .env file
     load_dotenv(env_path, override=True) if env_path.exists() else load_dotenv(override=True)
 except ImportError:
-    # 如果 python-dotenv 未安装，跳过
+    # Skip if python-dotenv is not installed
     pass
 
 
 class Config:
-    """平台配置类"""
+    """Platform configuration class"""
     
-    # 项目根目录（复用顶部 Path 常量）
+    # Project root (reuse the Path constant above)
     PROJECT_ROOT: str = str(_BACKEND_DIR)
     _root_str: str = str(_ROOT_DIR)
 
-    # 资源包锁定配置
+    # Resource pack locking configuration
     RESOURCE_PACK_PROVIDER: str = "openai"
     RESOURCE_PACK_MODEL: str = os.getenv("RESOURCE_PACK_MODEL", "claude-haiku-4-5-20251001")
     RESOURCE_PACK_BASE_URL: str = os.getenv("RESOURCE_PACK_BASE_URL", "https://api.openai.com/v1")
     LOCK_RESOURCE_PACK: bool = os.getenv("LOCK_RESOURCE_PACK", "true").lower() == "true"
     
-    # LLM 配置
+    # LLM configuration
     USE_FAKE_LLM: bool = os.getenv("USE_FAKE_LLM", "false").lower() == "true"
     
-    # LLM 提供商配置
+    # LLM provider configuration
     LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", RESOURCE_PACK_PROVIDER)  # openai, gemini, deepseek, chatglm, claude
     LLM_MODEL: str = os.getenv("LLM_MODEL", RESOURCE_PACK_MODEL)
     
-    # 多智能体协同模型配置（默认继承 LLM_MODEL）
+    # Multi-agent model configuration (inherits LLM_MODEL by default)
     PLANNER_MODEL: str = os.getenv("PLANNER_MODEL", "")
     EXECUTOR_MODEL: str = os.getenv("EXECUTOR_MODEL", "")
     
-    # OpenAI 配置 (Gateway Override)
-    OPENAI_API_KEY: Optional[str] = os.getenv("OPENAI_API_KEY")  # 必须通过环境变量或 .env 配置
-    OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", RESOURCE_PACK_MODEL)  # 向后兼容
+    # OpenAI configuration (Gateway Override)
+    OPENAI_API_KEY: Optional[str] = os.getenv("OPENAI_API_KEY")  # Must be configured through environment variables or .env
+    OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", RESOURCE_PACK_MODEL)  # Backward compatibility
     OPENAI_BASE_URL: Optional[str] = os.getenv("OPENAI_BASE_URL", RESOURCE_PACK_BASE_URL)
     
-    # Google Gemini 配置
+    # Google Gemini configuration
     GEMINI_API_KEY: Optional[str] = os.getenv("GEMINI_API_KEY")
     GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-1.5-pro")
 
     # Browser-Use (Fallback)
     BROWSER_USE_API_KEY: Optional[str] = os.getenv("BROWSER_USE_API_KEY")
     
-    # DeepSeek 配置
+    # DeepSeek configuration
     DEEPSEEK_API_KEY: Optional[str] = os.getenv("DEEPSEEK_API_KEY")
     DEEPSEEK_MODEL: str = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
     
-    # ChatGLM (智谱AI) 配置
+    # ChatGLM (Zhipu AI) configuration
     CHATGLM_API_KEY: Optional[str] = os.getenv("CHATGLM_API_KEY")
     CHATGLM_MODEL: str = os.getenv("CHATGLM_MODEL", "glm-4")
     CHATGLM_BASE_URL: Optional[str] = os.getenv("CHATGLM_BASE_URL")
     
-    # Anthropic Claude 配置
+    # Anthropic Claude configuration
     ANTHROPIC_API_KEY: Optional[str] = os.getenv("ANTHROPIC_API_KEY")
     ANTHROPIC_MODEL: str = os.getenv("ANTHROPIC_MODEL", "claude-3-sonnet-20240229")
     
 
-    # LangSmith / LangChain 可观测性配置
+    # LangSmith / LangChain observability configuration
     LANGCHAIN_TRACING_V2: bool = os.getenv("LANGCHAIN_TRACING_V2", "false").lower() == "true"
     LANGCHAIN_API_KEY: Optional[str] = os.getenv("LANGCHAIN_API_KEY")
     LANGCHAIN_PROJECT: str = os.getenv("LANGCHAIN_PROJECT", "ai-test-platform")
     
-    # 测试目标配置
+    # Test target configuration
     TARGET_URL: str = os.getenv("TARGET_URL", "http://localhost:3000")
     API_BASE_URL: str = os.getenv("API_BASE_URL", "http://localhost:8020")
     PUBLIC_API_BASE_URL: str = os.getenv("PUBLIC_API_BASE_URL", os.getenv("API_BASE_URL", "http://localhost:8020"))
@@ -89,7 +89,7 @@ class Config:
     NOTIFICATION_PLATFORM_APP_SECRET: str = os.getenv("NOTIFICATION_PLATFORM_APP_SECRET", "").strip()
     NOTIFICATION_PLATFORM_APP_BOT_UPDATED_AT: str = os.getenv("NOTIFICATION_PLATFORM_APP_BOT_UPDATED_AT", "").strip()
     
-    # 数据库配置
+    # Database configuration
     DB_HOST: str = os.getenv("DB_HOST", "localhost")
     DB_PORT: int = int(os.getenv("DB_PORT", "3306"))
     DB_NAME: str = os.getenv("DB_NAME", "test_db")
@@ -97,17 +97,17 @@ class Config:
     DB_PASSWORD: str = os.getenv("DB_PASSWORD", "")
     DB_CONNECTION_STRING: str = os.getenv("DB_CONNECTION_STRING", "")
 
-    # UI 测试配置
+    # UI test configuration
     BROWSER_TYPE: str = os.getenv("BROWSER_TYPE", "chromium")  # chromium, firefox, webkit
-    # HEADLESS: 从环境变量读取，默认 false 以便调试
+    # HEADLESS: read from the environment; default to false for debugging
     HEADLESS: bool = os.getenv("HEADLESS", "false").lower() == "true"
-    # 截图目录：如果配置为相对路径，相对于项目根目录
+    # Screenshot directory: relative paths resolve from the project root
     _screenshot_dir = os.getenv("SCREENSHOT_DIR", "./screenshots")
     SCREENSHOT_DIR: str = _screenshot_dir if os.path.isabs(_screenshot_dir) else os.path.join(
         str(_ROOT_DIR), _screenshot_dir.lstrip('./')
     )
 
-    # 日志配置
+    # Logging configuration
     _log_dir = os.getenv("LOG_DIR", "./logs")
     LOG_DIR: str = _log_dir if os.path.isabs(_log_dir) else os.path.join(
         str(_ROOT_DIR), _log_dir.lstrip('./')
@@ -117,26 +117,26 @@ class Config:
     # Vision Config
     ENABLE_VISION: bool = os.getenv("ENABLE_VISION", "true").lower() == "true"
     VISION_MODEL: str = os.getenv("VISION_MODEL", RESOURCE_PACK_MODEL)
-    # Inspector 视觉质检配置
+    # Inspector visual quality configuration
     INSPECTOR_CONFIDENCE_THRESHOLD: float = float(os.getenv("INSPECTOR_CONFIDENCE_THRESHOLD", "0.7"))
     INSPECTOR_ENABLE_RAG: bool = os.getenv("INSPECTOR_ENABLE_RAG", "true").lower() == "true"
 
-    # 超时配置
-    UI_TIMEOUT: int = int(os.getenv("UI_TIMEOUT", "30000"))  # 毫秒
-    API_TIMEOUT: int = int(os.getenv("API_TIMEOUT", "120"))  # 秒
-    LLM_TIMEOUT: int = int(os.getenv("LLM_TIMEOUT", "600"))  # LLM 调用超时(秒)，Thinking 模型需更长
+    # Timeout configuration
+    UI_TIMEOUT: int = int(os.getenv("UI_TIMEOUT", "30000"))  # Milliseconds
+    API_TIMEOUT: int = int(os.getenv("API_TIMEOUT", "120"))  # Seconds
+    LLM_TIMEOUT: int = int(os.getenv("LLM_TIMEOUT", "600"))  # LLM timeout in seconds; thinking models require more time
     LLM_TEMPERATURE: float = float(os.getenv("LLM_TEMPERATURE", "0"))
     LLM_TOP_P: float = float(os.getenv("LLM_TOP_P", "1"))
     LLM_MAX_TOKENS: int = int(os.getenv("LLM_MAX_TOKENS", "4096"))
     
-    # Vector DB 配置
+    # Vector DB configuration
     _vector_db_path = os.getenv("VECTOR_DB_PATH", "./vector_db")
     VECTOR_DB_PATH: str = _vector_db_path if os.path.isabs(_vector_db_path) else os.path.join(
         str(_ROOT_DIR), _vector_db_path.lstrip('./')
     )
-    EMBEDDING_MODEL: str = os.getenv("EMBEDDING_MODEL", "text-embedding-ada-002")  # OpenAI 默认
+    EMBEDDING_MODEL: str = os.getenv("EMBEDDING_MODEL", "text-embedding-ada-002")  # OpenAI default
     
-    # RAG 知识库配置
+    # RAG knowledge base configuration
     ENABLE_RAG: bool = os.getenv("ENABLE_RAG", "true").lower() == "true"
     _chroma_path = os.getenv("CHROMA_PATH", "./data/chroma_db")
     CHROMA_PATH: str = _chroma_path if os.path.isabs(_chroma_path) else os.path.join(
@@ -144,7 +144,7 @@ class Config:
         _chroma_path.lstrip('./')
     )
     
-    # Git 配置
+    # Git configuration
     _git_repo_path = os.getenv("GIT_REPO_PATH", ".")
     GIT_REPO_PATH: str = _git_repo_path if os.path.isabs(_git_repo_path) else os.path.join(
         str(_ROOT_DIR), _git_repo_path.lstrip('./')
@@ -232,7 +232,7 @@ class Config:
 
     @classmethod
     def normalize_runtime_config(cls):
-        """进程启动时统一收敛模型配置，避免旧值残留。"""
+        """Normalize model configuration at startup to prevent stale values."""
         cls.LLM_PROVIDER = cls._normalize_provider(cls.LLM_PROVIDER)
         cls.LLM_MODEL = cls._normalize_model_name(cls.LLM_MODEL, cls.RESOURCE_PACK_MODEL)
         cls.OPENAI_MODEL = cls._normalize_model_name(cls.OPENAI_MODEL, cls.LLM_MODEL)
@@ -251,9 +251,9 @@ class Config:
                           vision_model: str = None, temperature: float = None,
                           top_p: float = None, max_tokens: int = None):
         """
-        动态更新 LLM 配置（由前端 Settings UI 调用）。
-        资源包锁定开启时，会强制收敛到统一的 Claude Haiku 配置，
-        避免前后端配置漂移导致误扣费。
+        Update LLM configuration dynamically from the frontend Settings UI.
+        When resource pack locking is enabled, enforce the shared Claude Haiku configuration
+        to prevent unexpected charges caused by frontend/backend configuration drift.
         """
         updates = {}
         effective_provider = cls._normalize_provider(provider or cls.LLM_PROVIDER)
@@ -319,11 +319,11 @@ class Config:
                 cls.ANTHROPIC_API_KEY = api_key.strip()
                 updates["ANTHROPIC_API_KEY"] = api_key.strip()
 
-        # 将配置覆写到 .env 文件中
+        # Write configuration updates to .env
         if updates:
             cls._write_env_file(updates)
 
-        # 清除 LLM 缓存，下次调用时重新创建
+        # Clear cached LLM clients so the next call creates new instances
         try:
             from core.llm_manager import LLMManager
             LLMManager.invalidate_cache()
@@ -332,10 +332,10 @@ class Config:
 
     @classmethod
     def _write_env_file(cls, updates: dict):
-        """将更新的配置写入到项目根目录的 .env 文件中（与 load_dotenv 读取路径一致）"""
+        """Write updated configuration to the project root .env, matching the load_dotenv path"""
         import re
         
-        # 统一使用根目录的 .env（复用模块顶部常量）
+        # Use the root .env consistently, reusing the module constant
         env_path = str(_ROOT_DIR / ".env")
         
         if not os.path.exists(env_path):
@@ -344,7 +344,7 @@ class Config:
             with open(env_path, "r", encoding="utf-8") as f:
                 lines = f.readlines()
                 
-        # 覆写已有的配置，或者追加新的配置
+        # Overwrite existing values or append new ones
         for key, value in updates.items():
             if value is None:
                 continue
@@ -365,7 +365,7 @@ class Config:
 
     @classmethod
     def update_runtime_env(cls, updates: dict):
-        """更新运行时环境变量并同步持久化到根目录 .env。"""
+        """Update runtime environment variables and persist them to the root .env."""
         normalized_updates = {}
         for key, value in updates.items():
             if value is None:
@@ -380,10 +380,10 @@ class Config:
 
     @classmethod
     def set_notification_platform_event_verification_token(cls, token: str) -> dict:
-        """设置通知平台事件订阅 verification token，并记录更新时间。"""
+        """Set the notification platform event verification token and record its update time."""
         normalized_token = (token or "").strip()
-        # commander_chatops_events.created_at 由 SQLite datetime('now') 生成，使用 UTC。
-        # 这里统一落成相同时区/格式，避免自检事件与 token 更新时间比较时出现错判。
+        # commander_chatops_events.created_at uses SQLite datetime('now'), which produces UTC.
+        # Use the same timezone and format to compare self-check event and token update times correctly.
         updated_at = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
         cls.update_runtime_env({
             "NOTIFICATION_PLATFORM_EVENT_VERIFICATION_TOKEN": normalized_token,
@@ -396,7 +396,7 @@ class Config:
 
     @classmethod
     def set_notification_platform_app_bot_credentials(cls, app_id: str, app_secret: str) -> dict:
-        """设置通知平台应用机器人凭据，并记录更新时间。"""
+        """Set notification platform app-bot credentials and record the update time."""
         normalized_app_id = (app_id or "").strip()
         normalized_app_secret = (app_secret or "").strip()
         updated_at = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
@@ -412,7 +412,7 @@ class Config:
 
     @classmethod
     def get_llm_config(cls) -> dict:
-        """返回当前 LLM 配置（脱敏）"""
+        """Return current LLM configuration with secrets masked"""
         def mask(key: str) -> str:
             if not key:
                 return ""
@@ -434,7 +434,7 @@ class Config:
             "provider_locked": cls.LOCK_RESOURCE_PACK,
             "model_locked": cls.LOCK_RESOURCE_PACK,
             "allowed_models": [cls.RESOURCE_PACK_MODEL] if cls.LOCK_RESOURCE_PACK else [],
-            "profile_name": "接口AI资源包" if cls.LOCK_RESOURCE_PACK else "自定义模型配置",
+            "profile_name": "JieKou AI resource pack" if cls.LOCK_RESOURCE_PACK else "Custom model configuration",
         }
 
 

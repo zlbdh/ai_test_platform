@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-AgentProfile — Agent 身份配置管理器
+AgentProfile — agent identity configuration manager
 
-为军团中的每个 Agent 赋予身份（人格、能力、汇报链），
-加载 YAML 配置并自动生成 LLM 系统提示词。
+Assign each legion agent an identity with a personality, capabilities, and reporting relationships,
+load YAML configuration, and generate LLM system prompts automatically.
 """
 
 import logging
@@ -14,46 +14,46 @@ from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
-# Profile YAML 目录
+# Profile YAML directory
 _PROFILES_DIR = Path(__file__).resolve().parent.parent / "agents" / "profiles"
 
 
 @dataclass
 class AgentProfile:
-    """Agent 身份档案"""
+    """Agent identity profile"""
     agent_id: str                           # "ui_squad"
-    name: str                               # "UI 测试班"
+    name: str                               # "UI testing squad"
     role: str                               # "commander" | "squad" | "specialist"
-    personality: str = ""                   # 人格描述 → 注入 LLM system prompt
-    model: str = ""                         # 可按 Agent 指定模型
-    skills: List[str] = field(default_factory=list)         # 关联技能包（预留）
-    report_to: Optional[str] = None         # 汇报上级 agent_id
-    supported_types: List[str] = field(default_factory=list)  # 支持的测试类型
-    members: List[str] = field(default_factory=list)         # 蜂群成员（squad 专用）
-    description: str = ""                   # 一行描述
-    extra: Dict[str, Any] = field(default_factory=dict)      # 扩展配置
+    personality: str = ""                   # Personality description injected into the LLM system prompt
+    model: str = ""                         # Optional agent-specific model
+    skills: List[str] = field(default_factory=list)         # Associated skill packages (reserved)
+    report_to: Optional[str] = None         # Supervisor agent_id
+    supported_types: List[str] = field(default_factory=list)  # Supported test types
+    members: List[str] = field(default_factory=list)         # Swarm members (squads only)
+    description: str = ""                   # One-line description
+    extra: Dict[str, Any] = field(default_factory=dict)      # Extended configuration
 
 
 class ProfileManager:
-    """Agent Profile 管理器"""
+    """Agent profile manager"""
 
     def __init__(self, profiles_dir: Optional[str] = None):
         self._dir = Path(profiles_dir) if profiles_dir else _PROFILES_DIR
         self._profiles: Dict[str, AgentProfile] = {}
         self._load_all()
 
-    # ── 加载 ──────────────────────────────────────────────────────────────
+    # ── Loading ──────────────────────────────────────────────────────────────
 
     def _load_all(self) -> None:
-        """扫描 profiles 目录，加载所有 YAML"""
+        """Scan the profiles directory and load all YAML files"""
         if not self._dir.exists():
-            logger.warning(f"[ProfileManager] Profile 目录不存在: {self._dir}")
+            logger.warning(f"[ProfileManager] Profile directory does not exist: {self._dir}")
             return
 
         try:
             import yaml
         except ImportError:
-            logger.warning("[ProfileManager] PyYAML 未安装，跳过 Profile 加载")
+            logger.warning("[ProfileManager] PyYAML is not installed; skipping profile loading")
             return
 
         count = 0
@@ -81,58 +81,58 @@ class ProfileManager:
                 self._profiles[profile.agent_id] = profile
                 count += 1
             except Exception as e:
-                logger.warning(f"[ProfileManager] 加载 {f.name} 失败: {e}")
+                logger.warning(f"[ProfileManager] Failed to load {f.name}: {e}")
 
-        logger.info(f"[ProfileManager] 加载 {count} 个 Agent Profile")
+        logger.info(f"[ProfileManager] Loaded {count} agent profiles")
 
-    # ── 查询 ──────────────────────────────────────────────────────────────
+    # ── Queries ──────────────────────────────────────────────────────────────
 
     def get(self, agent_id: str) -> Optional[AgentProfile]:
-        """按 ID 获取 Profile"""
+        """Get a profile by ID"""
         return self._profiles.get(agent_id)
 
     def list_all(self) -> List[AgentProfile]:
-        """返回全部 Profile"""
+        """Return all profiles"""
         return list(self._profiles.values())
 
     def get_squad_members(self, squad_id: str) -> List[AgentProfile]:
-        """获取某个 squad 的所有成员 Profile"""
+        """Get all member profiles for a squad"""
         squad = self._profiles.get(squad_id)
         if not squad or not squad.members:
             return []
         return [self._profiles[m] for m in squad.members if m in self._profiles]
 
     def get_by_test_type(self, test_type: str) -> List[AgentProfile]:
-        """查找能处理指定测试类型的 Agent"""
+        """Find agents that support the specified test type"""
         return [
             p for p in self._profiles.values()
             if test_type in p.supported_types or "all" in p.supported_types
         ]
 
-    # ── 提示词生成 ────────────────────────────────────────────────────────
+    # ── Prompt generation ────────────────────────────────────────────────────────
 
     def get_system_prompt(self, agent_id: str) -> str:
-        """根据 Profile 生成 LLM 系统提示词"""
+        """Generate an LLM system prompt from a profile"""
         profile = self._profiles.get(agent_id)
         if not profile:
             return ""
 
-        parts = [f"你是 {profile.name}。"]
+        parts = [f"You are {profile.name}."]
 
         if profile.personality:
-            parts.append(f"你的性格特征：{profile.personality}")
+            parts.append(f"Your personality: {profile.personality}")
 
         if profile.role == "commander":
-            parts.append("你是测试军团的总指挥，负责全局协调和资源调配。")
+            parts.append("You command the testing legion and are responsible for overall coordination and resource allocation.")
         elif profile.role == "squad":
-            parts.append(f"你负责管理{profile.name}团队。")
+            parts.append(f"You manage the {profile.name} team.")
             if profile.members:
-                parts.append(f"你的团队成员包括：{', '.join(profile.members)}")
+                parts.append(f"Your team members are: {', '.join(profile.members)}")
         elif profile.role == "specialist":
-            parts.append(f"你是一名专业的测试执行者。")
+            parts.append(f"You are a professional test executor.")
 
         if profile.supported_types:
-            parts.append(f"你擅长的测试类型：{', '.join(profile.supported_types)}")
+            parts.append(f"Your testing specialties: {', '.join(profile.supported_types)}")
 
         if profile.description:
             parts.append(profile.description)
@@ -140,7 +140,7 @@ class ProfileManager:
         return "\n".join(parts)
 
     def to_summary(self) -> List[Dict]:
-        """导出所有 Profile 摘要（供 API 返回）"""
+        """Export all profile summaries for API responses"""
         return [
             {
                 "agent_id": p.agent_id,
@@ -154,13 +154,13 @@ class ProfileManager:
         ]
 
 
-# ── 单例 ─────────────────────────────────────────────────────────────────────
+# ── Singleton ─────────────────────────────────────────────────────────────────────
 
 _manager: Optional[ProfileManager] = None
 
 
 def get_profile_manager() -> ProfileManager:
-    """获取 ProfileManager 单例"""
+    """Get the ProfileManager singleton"""
     global _manager
     if _manager is None:
         _manager = ProfileManager()

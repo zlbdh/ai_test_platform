@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Cookie 管理器 — 浏览器认证态持久化
-支持: 导出/导入 Cookie、预置 Auth Profile、跳过登录流程
-借鉴 browser-use 的 cookie 管理能力
+Cookie manager — persist browser authentication state
+Supports cookie export/import, authentication profiles, and skipping sign-in
+Inspired by browser-use cookie management
 """
 import json
 import inspect
@@ -12,19 +12,19 @@ from typing import Optional, List, Dict, Any
 
 logger = logging.getLogger(__name__)
 
-# Cookie 存储目录
+# Cookie storage directory
 COOKIE_DIR = Path(__file__).parent.parent / "data" / "cookies"
 PRESETS_FILE = COOKIE_DIR / "_presets.json"
 
 
 class CookieManager:
-    """Cookie 持久化管理器"""
+    """Cookie persistence manager"""
 
     def __init__(self):
         COOKIE_DIR.mkdir(parents=True, exist_ok=True)
 
     # ------------------------------------------------------------------
-    # 导出 / 导入
+    # Export/import
     # ------------------------------------------------------------------
     async def _resolve_maybe_async(self, value):
         if inspect.isawaitable(value):
@@ -61,12 +61,12 @@ class CookieManager:
         domain: Optional[str] = None
     ) -> Dict[str, Any]:
         """
-        从 Playwright page 导出 Cookie 并持久化。
+        Export cookies from a Playwright page and persist them.
 
         Args:
-            page: Playwright Page 对象
-            name: 导出文件名（不含扩展名）
-            domain: 可选，仅导出指定域名的 Cookie
+            page: Playwright Page object
+            name: Export filename without an extension
+            domain: Optional domain filter for exported cookies
 
         Returns:
             {"count": N, "file": "path"}
@@ -81,11 +81,11 @@ class CookieManager:
         name: str
     ) -> Dict[str, Any]:
         """
-        从 JSON 文件导入 Cookie 到浏览器上下文。
+        Import cookies from a JSON file into the browser context.
 
         Args:
             context: Playwright BrowserContext
-            name: Cookie 文件名（不含扩展名）
+            name: Cookie filename without an extension
 
         Returns:
             {"count": N, "name": "..."}
@@ -96,14 +96,14 @@ class CookieManager:
         return {"count": len(cookies), "name": name}
 
     # ------------------------------------------------------------------
-    # 预置管理
+    # Preset management
     # ------------------------------------------------------------------
     def list_saved(self) -> List[Dict[str, Any]]:
-        """列出所有已保存的 Cookie 文件"""
+        """List all saved cookie files"""
         result = []
         for f in sorted(COOKIE_DIR.glob("*.json")):
             if f.name.startswith("_"):
-                continue  # 跳过内部文件
+                continue  # Skip internal files
             try:
                 cookies = json.loads(f.read_text(encoding="utf-8"))
                 domains = list({c.get("domain", "?") for c in cookies})
@@ -118,7 +118,7 @@ class CookieManager:
         return result
 
     def delete_saved(self, name: str) -> bool:
-        """删除已保存的 Cookie 文件"""
+        """Delete a saved cookie file"""
         filepath = COOKIE_DIR / f"{name}.json"
         if filepath.exists():
             filepath.unlink()
@@ -127,10 +127,10 @@ class CookieManager:
         return False
 
     # ------------------------------------------------------------------
-    # 预置 Auth Profile
+    # Authentication profile presets
     # ------------------------------------------------------------------
     def list_presets(self) -> List[Dict[str, str]]:
-        """列出预置 Auth Profile"""
+        """List authentication profile presets"""
         if not PRESETS_FILE.exists():
             return []
         try:
@@ -141,11 +141,11 @@ class CookieManager:
 
     def save_preset(self, preset_name: str, cookie_name: str) -> bool:
         """
-        将已保存的 Cookie 文件注册为预置 Auth Profile。
+        Register a saved cookie file as an authentication profile preset.
 
         Args:
-            preset_name: 预置名（如 "admin_login"）
-            cookie_name: Cookie 文件名（如 "baidu_admin"）
+            preset_name: Preset name, such as "admin_login")
+            cookie_name: Cookie filename, such as "baidu_admin")
         """
         cookie_path = self._cookie_path(cookie_name)
         if not cookie_path.exists():
@@ -164,7 +164,7 @@ class CookieManager:
         return True
 
     def delete_preset(self, preset_name: str) -> bool:
-        """删除预置 Auth Profile"""
+        """Delete an authentication profile preset"""
         if not PRESETS_FILE.exists():
             return False
         presets = json.loads(PRESETS_FILE.read_text(encoding="utf-8"))
@@ -176,11 +176,11 @@ class CookieManager:
 
     async def inject_preset(self, context, preset_name: str) -> Dict[str, Any]:
         """
-        注入预置 Auth Cookie 到浏览器上下文（跳过登录流程）。
+        Inject preset authentication cookies into the browser context to skip sign-in.
 
         Args:
             context: Playwright BrowserContext
-            preset_name: 预置名
+            preset_name: Preset name
 
         Returns:
             {"count": N, "preset": "..."}
@@ -198,5 +198,5 @@ class CookieManager:
         return result
 
 
-# 模块级单例
+# Module-level singleton
 cookie_manager = CookieManager()

@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-Tracing — LLM 调用链路追踪
+Tracing — LLM call tracing
 
-轻量级实现，不强依赖外部 Langfuse 服务：
-- TraceSpan 记录每次 LLM 调用的 token 用量、延迟、成本
-- 基于 SQLite 持久化（复用 data/ 目录）
-- 提供装饰器 @traced 自动记录 LLM 调用
-- 支持获取成本汇总、性能瓶颈分析
+Lightweight implementation without a required external Langfuse service:
+- TraceSpan records token usage, latency, and cost for each LLM call
+- SQLite persistence (reusing the data/ directory)
+- Provides the @traced decorator to record LLM calls automatically
+- Supports cost summaries and performance bottleneck analysis
 """
 
 import functools
@@ -23,31 +23,31 @@ from typing import Any, Dict, List, Optional
 logger = logging.getLogger(__name__)
 
 
-# ── 数据结构 ──────────────────────────────────────────────────────────────────
+# ── Data structures ──────────────────────────────────────────────────────────────────
 
 
 @dataclass
 class TraceSpan:
-    """一次 LLM 调用的追踪记录"""
+    """Trace record for one LLM call"""
     span_id: str = field(default_factory=lambda: str(uuid.uuid4())[:12])
-    trace_id: str = ""            # 所属 trace（一个 Commander 任务 = 一个 trace）
-    agent_name: str = ""          # 调用方 Agent
-    action: str = ""              # 调用动作，如 "plan_test", "select_strategy"
-    model: str = ""               # 模型名称
+    trace_id: str = ""            # Parent trace (one Commander task = one trace)
+    agent_name: str = ""          # Calling agent
+    action: str = ""              # Action, such as "plan_test", "select_strategy"
+    model: str = ""               # Model name
     input_tokens: int = 0
     output_tokens: int = 0
     total_tokens: int = 0
-    duration_ms: float = 0.0      # 耗时（毫秒）
-    cost_usd: float = 0.0        # 估算成本（美元）
+    duration_ms: float = 0.0      # Duration in milliseconds
+    cost_usd: float = 0.0        # Estimated cost in USD
     status: str = "ok"            # ok / error
     error_message: str = ""
     metadata: Dict[str, Any] = field(default_factory=dict)
     timestamp: float = field(default_factory=time.time)
 
 
-# ── 成本估算 ─────────────────────────────────────────────────────────────────
+# ── Cost estimation ─────────────────────────────────────────────────────────────────
 
-# 近似的每百万 token 价格（美元）
+# Approximate prices per million tokens in USD
 _COST_PER_M_TOKENS = {
     "claude-haiku-4-5-20251001": {"input": 0.9, "output": 4.5},
     "claude-haiku": {"input": 0.9, "output": 4.5},
@@ -60,34 +60,34 @@ _COST_PER_M_TOKENS = {
 
 
 def _estimate_cost(model: str, input_tokens: int, output_tokens: int) -> float:
-    """估算 LLM 调用成本"""
+    """Estimate LLM call cost"""
     for key, prices in _COST_PER_M_TOKENS.items():
         if key in model.lower():
             return (
                 input_tokens * prices["input"] / 1_000_000
                 + output_tokens * prices["output"] / 1_000_000
             )
-    # 默认回落到当前资源包模型的价格估算
+    # Fall back to the current resource pack model price estimate
     return (input_tokens * 0.9 + output_tokens * 4.5) / 1_000_000
 
 
-# ── Tracer 核心 ──────────────────────────────────────────────────────────────
+# ── Tracer core ──────────────────────────────────────────────────────────────
 
 
 class Tracer:
     """
-    LLM 调用链路追踪器
+    LLM call tracer
 
-    使用方式：
+    Usage:
         tracer = get_tracer()
 
-        # 方式 1：上下文管理器
+        # Method 1: context manager
         with tracer.span("commander", "plan_test") as s:
             result = llm.invoke(prompt)
             s.input_tokens = result.usage.prompt_tokens
             s.output_tokens = result.usage.completion_tokens
 
-        # 方式 2：直接记录
+        # Method 2: direct recording
         tracer.record(TraceSpan(agent_name="planner", action="generate_plan", ...))
     """
 
@@ -95,9 +95,9 @@ class Tracer:
         self._db_path = self._get_db_path()
         self._init_db()
         self._current_trace_id: Optional[str] = None
-        logger.info(f"[Tracer] 初始化完成，DB: {self._db_path}")
+        logger.info(f"[Tracer] Initialized, DB: {self._db_path}")
         
-        # LangSmith 集成：当环境变量启用时自动附加 LangChain 回调
+        # LangSmith integration: attach LangChain callbacks when enabled by the environment
         self._langsmith_handler = None
         try:
             from core.config import Config
@@ -109,21 +109,21 @@ class Tracer:
                 try:
                     from langchain_core.tracers import LangChainTracer
                     self._langsmith_handler = LangChainTracer(project_name=Config.LANGCHAIN_PROJECT)
-                    logger.info(f"[Tracer] ✅ LangSmith 集成已启用，项目: {Config.LANGCHAIN_PROJECT}")
+                    logger.info(f"[Tracer] ✅ LangSmith integration enabled, project: {Config.LANGCHAIN_PROJECT}")
                 except ImportError:
-                    logger.info("[Tracer] langchain_core 未安装，LangSmith 回调跳过")
+                    logger.info("[Tracer] langchain_core is not installed; skipping the LangSmith callback")
         except Exception as e:
-            logger.debug(f"[Tracer] LangSmith 初始化跳过: {e}")
+            logger.debug(f"[Tracer] LangSmith initialization skipped: {e}")
 
     def _get_db_path(self) -> str:
-        """获取 SQLite 数据库路径"""
+        """Get the SQLite database path"""
         base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         data_dir = os.path.join(base, "data")
         os.makedirs(data_dir, exist_ok=True)
         return os.path.join(data_dir, "tracing.db")
 
     def _init_db(self) -> None:
-        """初始化表结构"""
+        """Initialize the database schema"""
         try:
             conn = sqlite3.connect(self._db_path)
             conn.execute("""
@@ -153,17 +153,17 @@ class Tracer:
             conn.commit()
             conn.close()
         except Exception as e:
-            logger.error(f"[Tracer] DB 初始化失败: {e}")
+            logger.error(f"[Tracer] DB initialization failed: {e}")
 
-    # ── Trace 生命周期 ────────────────────────────────────────────────────
+    # ── Trace lifecycle ────────────────────────────────────────────────────
 
     def start_trace(self, trace_id: Optional[str] = None) -> str:
-        """开始一个新的 trace（对应一个 Commander 任务）"""
+        """Start a new trace for one Commander task"""
         self._current_trace_id = trace_id or str(uuid.uuid4())[:12]
         return self._current_trace_id
 
     def end_trace(self) -> Optional[str]:
-        """结束当前 trace"""
+        """End the current trace"""
         tid = self._current_trace_id
         self._current_trace_id = None
         return tid
@@ -172,10 +172,10 @@ class Tracer:
     def current_trace_id(self) -> Optional[str]:
         return self._current_trace_id
 
-    # ── 记录 Span ─────────────────────────────────────────────────────────
+    # ── Record spans ─────────────────────────────────────────────────────────
 
     def get_langsmith_callbacks(self) -> list:
-        """获取 LangSmith 回调列表，供 LLM 调用时注入"""
+        """Get LangSmith callbacks to attach to LLM calls"""
         if self._langsmith_handler:
             return [self._langsmith_handler]
         return []
@@ -183,7 +183,7 @@ class Tracer:
     @contextmanager
     def span(self, agent_name: str, action: str, model: str = ""):
         """
-        上下文管理器：自动记录 LLM 调用的耗时。
+        Context manager that automatically records LLM call duration.
 
         Examples:
             with tracer.span("planner", "generate_plan", "deepseek-chat") as s:
@@ -212,7 +212,7 @@ class Tracer:
             self.record(s)
 
     def record(self, span: TraceSpan) -> None:
-        """持久化一条 Span 记录"""
+        """Persist a span record"""
         try:
             import json
             conn = sqlite3.connect(self._db_path)
@@ -235,12 +235,12 @@ class Tracer:
             conn.commit()
             conn.close()
         except Exception as e:
-            logger.error(f"[Tracer] 写入失败: {e}")
+            logger.error(f"[Tracer] Write failed: {e}")
 
-    # ── 查询与统计 ────────────────────────────────────────────────────────
+    # ── Queries and statistics ────────────────────────────────────────────────────────
 
     def get_trace_spans(self, trace_id: str) -> List[Dict]:
-        """获取指定 trace 的所有 span"""
+        """Get all spans for a trace"""
         try:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
@@ -251,14 +251,14 @@ class Tracer:
             conn.close()
             return [dict(r) for r in rows]
         except Exception as e:
-            logger.error(f"[Tracer] 查询失败: {e}")
+            logger.error(f"[Tracer] Query failed: {e}")
             return []
 
     def get_trace_summary(self, trace_id: Optional[str] = None) -> Dict[str, Any]:
         """
-        获取 trace 成本摘要。
+        Get a trace cost summary.
 
-        如果不指定 trace_id，返回全局统计。
+        Return global statistics if trace_id is omitted.
         """
         try:
             conn = sqlite3.connect(self._db_path)
@@ -280,7 +280,7 @@ class Tracer:
                 FROM trace_spans {where}
             """, params).fetchone()
 
-            # 按 Agent 分组统计
+            # Group statistics by agent
             agent_rows = conn.execute(f"""
                 SELECT
                     agent_name,
@@ -313,11 +313,11 @@ class Tracer:
                 ],
             }
         except Exception as e:
-            logger.error(f"[Tracer] 统计失败: {e}")
+            logger.error(f"[Tracer] Statistics failed: {e}")
             return {"error": str(e)}
 
     def get_recent_spans(self, limit: int = 20) -> List[Dict]:
-        """获取最近的 span 记录"""
+        """Get recent span records"""
         try:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
@@ -328,17 +328,17 @@ class Tracer:
             conn.close()
             return [dict(r) for r in rows]
         except Exception as e:
-            logger.error(f"[Tracer] 查询失败: {e}")
+            logger.error(f"[Tracer] Query failed: {e}")
             return []
 
 
-# ── 单例 ─────────────────────────────────────────────────────────────────────
+# ── Singleton ─────────────────────────────────────────────────────────────────────
 
 _tracer: Optional[Tracer] = None
 
 
 def get_tracer() -> Tracer:
-    """获取 Tracer 单例"""
+    """Get the Tracer singleton"""
     global _tracer
     if _tracer is None:
         _tracer = Tracer()
