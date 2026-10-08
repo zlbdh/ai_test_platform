@@ -34,7 +34,7 @@ describe('requirementService', () => {
     it('analyzeRequirementDocument should POST to analyze endpoint', async () => {
         mockFetch.mockResolvedValue(mockResponse({
             status: 'success',
-            title: '登录需求',
+            title: "Login requirements",
             summary: 'summary',
             confidence: 0.88,
             rules_count: 1,
@@ -43,22 +43,22 @@ describe('requirementService', () => {
             test_cases: [],
             analysis: {
                 document_type: 'requirement_prd',
-                document_label: '需求文档',
+                document_label: "Requirements document",
                 quality_score: 0.82,
                 completeness_score: 0.81,
                 testability_score: 0.84,
                 recommended_test_types: ['ui_e2e'],
                 issues: [],
                 extracted: {
-                    actors: ['用户'],
-                    flows: ['用户登录'],
-                    business_rules: ['支持验证码登录'],
-                    data_constraints: ['验证码有效期 5 分钟'],
+                    actors: ["User"],
+                    flows: ["User login"],
+                    business_rules: ["Support verification code login"],
+                    data_constraints: ["Verification codes expire after 5 minutes"],
                     api_endpoints: [],
                     error_codes: [],
                     database_objects: [],
                 },
-                next_actions: ['建立追溯关系'],
+                next_actions: ["Establish traceability"],
             },
             bundle_analysis: {
                 coverage_score: 0.81,
@@ -67,12 +67,12 @@ describe('requirementService', () => {
                 aligned_signals: { data_constraints: 1 },
                 uncovered_signals: { data_constraints: 0 },
                 findings: [],
-                recommended_actions: ['建立联合追溯'],
+                recommended_actions: ["Establish combined traceability"],
             },
         }));
 
         const result = await analyzeRequirementDocument('content', 'title', [
-            { title: '开发文档', content: '金额必须大于 0' },
+            { title: "Development document", content: "Amount must be greater than 0" },
         ]);
 
         expect(result.analysis.document_type).toBe('requirement_prd');
@@ -83,14 +83,14 @@ describe('requirementService', () => {
         expect(JSON.parse(options.body)).toEqual({
             content: 'content',
             title: 'title',
-            references: [{ title: '开发文档', content: '金额必须大于 0' }],
+            references: [{ title: "Development document", content: "Amount must be greater than 0" }],
         });
     });
 
     it('parseRequirement should reuse analyze endpoint', async () => {
         mockFetch.mockResolvedValue(mockResponse({
             status: 'success',
-            title: '需求',
+            title: "Requirement",
             summary: '',
             confidence: 0.9,
             rules_count: 0,
@@ -99,7 +99,7 @@ describe('requirementService', () => {
             test_cases: [],
             analysis: {
                 document_type: 'general_text',
-                document_label: '通用文本',
+                document_label: "General text",
                 quality_score: 0.5,
                 completeness_score: 0.5,
                 testability_score: 0.5,
@@ -126,42 +126,42 @@ describe('requirementService', () => {
     it('parseRequirementUpload should POST form data to upload endpoint', async () => {
         mockFetch.mockResolvedValue(mockResponse({
             status: 'success',
-            title: '登录需求',
+            title: "Login requirements",
             summary: 'summary',
             confidence: 0.91,
             rules_count: 1,
             test_cases_count: 1,
             rules: [],
             test_cases: [],
-            extracted_text: '文档正文',
+            extracted_text: "Document body",
             uploaded_filename: 'login.docx',
             analysis: {
                 document_type: 'requirement_prd',
-                document_label: '需求文档',
+                document_label: "Requirements document",
                 quality_score: 0.82,
                 completeness_score: 0.81,
                 testability_score: 0.84,
                 recommended_test_types: ['ui_e2e'],
                 issues: [],
                 extracted: {
-                    actors: ['用户'],
-                    flows: ['用户登录'],
-                    business_rules: ['支持验证码登录'],
-                    data_constraints: ['验证码有效期 5 分钟'],
+                    actors: ["User"],
+                    flows: ["User login"],
+                    business_rules: ["Support verification code login"],
+                    data_constraints: ["Verification codes expire after 5 minutes"],
                     api_endpoints: [],
                     error_codes: [],
                     database_objects: [],
                 },
-                next_actions: ['建立追溯关系'],
+                next_actions: ["Establish traceability"],
             },
         }));
 
         const file = new File(['docx-bytes'], 'login.docx', {
             type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         });
-        const result = await parseRequirementUpload(file, '登录需求');
+        const result = await parseRequirementUpload(file, "Login requirements");
 
-        expect(result.extracted_text).toBe('文档正文');
+        expect(result.extracted_text).toBe("Document body");
         const [url, options] = mockFetch.mock.calls[0];
         expect(url).toContain('/api/requirement/parse-upload');
         expect(options.method).toBe('POST');
@@ -176,44 +176,44 @@ describe('requirementService', () => {
             tests: [
                 {
                     id: 'TC-001',
-                    name: '登录成功',
+                    name: "Login succeeded",
                     type: 'ui_e2e',
                     priority: 'high',
                     instruction: '...',
                     tags: ['login'],
-                    document_title: '开发文档',
-                    document_label: '开发文档',
+                    document_title: "Development document",
+                    document_label: "Development document",
                     document_type: 'development_design',
                     document_role: 'primary',
                 },
                 {
                     id: 'API-HAPPY-001',
-                    name: '接口主流程: POST /orders',
+                    name: "Primary API workflow: POST /orders",
                     type: 'api_rest',
                     priority: 'high',
                     instruction: '...',
                     tags: ['api'],
-                    document_title: '参考文档',
-                    document_label: '接口文档',
+                    document_title: "Reference document",
+                    document_label: "API document",
                     document_type: 'api_spec',
                     document_role: 'reference',
                 },
                 {
                     id: 'BUNDLE-001',
-                    name: '跨文档consistency验证 1',
+                    name: "Cross-document consistency check 1",
                     type: 'contract',
                     priority: 'high',
                     instruction: '...',
                     tags: ['bundle'],
-                    document_title: '多文档交叉检测',
-                    document_label: '交叉检测',
+                    document_title: "Cross-document review",
+                    document_label: "Cross-check",
                     document_type: 'document_bundle',
                     document_role: 'bundle',
                 },
             ],
             analysis: {
                 document_type: 'development_design',
-                document_label: '开发文档',
+                document_label: "Development document",
                 quality_score: 0.71,
                 completeness_score: 0.69,
                 testability_score: 0.74,
@@ -228,13 +228,13 @@ describe('requirementService', () => {
                     error_codes: ['400'],
                     database_objects: [],
                 },
-                next_actions: ['补充异常响应断言'],
+                next_actions: ["Add exception response assertions"],
             },
             generation_summary: {
-                title: '开发文档',
+                title: "Development document",
                 document_type: 'development_design',
-                strategy_label: '多文档联合设计',
-                rationale: '以主文档为主，并吸收参考文档与交叉检测结果。',
+                strategy_label: "Combined document design",
+                rationale: "Use the primary document as the basis and incorporate reference documents and cross-check results.",
                 generated_count: 3,
                 counts_by_type: { ui_e2e: 1, api_rest: 1, contract: 1 },
                 counts_by_origin: { primary: 1, reference: 1, bundle: 1 },
@@ -248,23 +248,23 @@ describe('requirementService', () => {
                 },
                 document_sources: [
                     {
-                        title: '开发文档',
+                        title: "Development document",
                         document_type: 'development_design',
-                        document_label: '开发文档',
+                        document_label: "Development document",
                         document_role: 'primary',
                         generated_count: 1,
                     },
                     {
-                        title: '参考文档',
+                        title: "Reference document",
                         document_type: 'api_spec',
-                        document_label: '接口文档',
+                        document_label: "API document",
                         document_role: 'reference',
                         generated_count: 1,
                     },
                     {
-                        title: '多文档交叉检测',
+                        title: "Cross-document review",
                         document_type: 'document_bundle',
-                        document_label: '交叉检测',
+                        document_label: "Cross-check",
                         document_role: 'bundle',
                         generated_count: 1,
                     },
@@ -278,17 +278,17 @@ describe('requirementService', () => {
                 aligned_signals: { api_endpoints: 1 },
                 uncovered_signals: { api_endpoints: 0 },
                 findings: [],
-                recommended_actions: ['统一接口定义'],
+                recommended_actions: ["Unify API definitions"],
             },
         }));
 
-        const result = await generateTestsFromRequirement('content', '开发文档', [
-            { title: '参考文档', content: 'GET /api/orders' },
+        const result = await generateTestsFromRequirement('content', "Development document", [
+            { title: "Reference document", content: 'GET /api/orders' },
         ]);
 
         expect(result.tests).toHaveLength(3);
         expect(result.analysis?.document_type).toBe('development_design');
-        expect(result.generation_summary?.strategy_label).toBe('多文档联合设计');
+        expect(result.generation_summary?.strategy_label).toBe("Combined document design");
         expect(result.generation_summary?.counts_by_origin?.reference).toBe(1);
         expect(result.tests[1].document_role).toBe('reference');
         expect(result.tests[2].document_role).toBe('bundle');
@@ -299,49 +299,49 @@ describe('requirementService', () => {
     it('fetchRequirementPlaybook should load project preset', async () => {
         mockFetch.mockResolvedValue(mockResponse({
             playbook_id: 'sample-first-regression',
-            project_name: '示例项目企业平台端',
-            title: '示例项目企业平台端首轮真实回归',
-            content: '# 回归',
+            project_name: "Sample business platform",
+            title: "Sample enterprise platform initial live regression",
+            content: "# Regression",
             references: [
-                { title: '企业平台端-登录与认证模块', content: '登录文档正文' },
+                { title: "Business platform - Login and authentication", content: "Login document body" },
             ],
             document_sources: [
                 {
-                    title: '企业平台端-登录与认证模块',
+                    title: "Business platform - Login and authentication",
                     role: 'reference',
-                    relative_path: 'docx/XQ/Second/企业平台端需求/01-登录与认证模块.md',
-                    local_path: 'D:/workspace/ai_test_platform/data/deploy/sample_platform/docx/XQ/Second/企业平台端需求/01-登录与认证模块.md',
+                    relative_path: "docx/XQ/Second/business-platform-requirements/01-login-and-authentication.md",
+                    local_path: "D:/workspace/ai_test_platform/data/deploy/sample_platform/docx/XQ/Second/business-platform-requirements/01-login-and-authentication.md",
                     exists: true,
                 },
             ],
             target_url: 'https://example.com/login',
             repositories: [],
-            waves: [{ id: 'wave0', name: 'Wave 0', focus: ['登录'] }],
+            waves: [{ id: 'wave0', name: 'Wave 0', focus: ["Login"] }],
             recommended_test_types: ['ui_e2e', 'business_flow'],
         }));
 
         const result = await fetchRequirementPlaybook('sample-first-regression');
 
-        expect(result.project_name).toBe('示例项目企业平台端');
-        expect(result.references[0].title).toBe('企业平台端-登录与认证模块');
+        expect(result.project_name).toBe("Sample business platform");
+        expect(result.references[0].title).toBe("Business platform - Login and authentication");
         expect(mockFetch.mock.calls[0][0]).toContain('/api/requirement/playbooks/sample-first-regression');
     });
 
     it('fetchRequirementPlaybook should keep platform prototype asset metadata', async () => {
         mockFetch.mockResolvedValue(mockResponse({
             playbook_id: 'sample-platform-prototype',
-            project_name: '示例项目大平台',
-            title: '示例项目大平台原型测试包',
-            content: '# 原型测试',
+            project_name: "Sample platform",
+            title: "Sample project platform prototype test package",
+            content: "# Prototype testing",
             references: [],
             document_sources: [],
             prototype_assets: [
                 {
                     asset_id: 'sample-platform-prototype-docs',
-                    title: '示例项目大平台 HTML 原型目录（部署文档仓）',
+                    title: "Sample platform HTML prototype directory (deployment documentation repository)",
                     role: 'prototype',
-                    relative_path: 'docx/XQ/Second/html/示例项目大平台htmlV1.0',
-                    local_path: 'D:/workspace/ai_test_platform/data/deploy/sample_platform/docx/XQ/Second/html/示例项目大平台htmlV1.0',
+                    relative_path: "docx/XQ/Second/html/sample-platform-html-v1.0",
+                    local_path: "D:/workspace/ai_test_platform/data/deploy/sample_platform/docx/XQ/Second/html/sample-platform-html-v1.0",
                     exists: false,
                     file_count: 0,
                 },
@@ -349,25 +349,25 @@ describe('requirementService', () => {
             asset_checks: [
                 {
                     check_id: 'platform_docs_ready',
-                    label: '需求文档同步',
+                    label: "Requirements document synchronization",
                     status: 'success',
-                    message: '已同步 18/18 份大平台需求文档。',
+                    message: "Synchronized 18/18 platform requirements documents.",
                     value: '18/18',
                 },
             ],
             page_mappings: [
                 {
                     mapping_id: 'mp-1',
-                    module_name: '登录与认证',
-                    page_name: '平台管理员登录',
+                    module_name: "Login and authentication",
+                    page_name: "Platform administrator login",
                     route: '/ptLogin',
-                    page_type: '登录页',
-                    description: '登录入口',
+                    page_type: "Login page",
+                    description: "Login entry",
                     requirement_source: {
-                        title: '示例项目大平台-登录与认证',
+                        title: "Sample platform - Login and authentication",
                         role: 'primary',
-                        relative_path: 'docx/XQ/Second/示例项目大平台需求/01-登录与认证模块.md',
-                        local_path: 'D:/workspace/ai_test_platform/data/deploy/sample_platform/docx/XQ/Second/示例项目大平台需求/01-登录与认证模块.md',
+                        relative_path: "docx/XQ/Second/sample-platform-requirements/01-login-and-authentication.md",
+                        local_path: "D:/workspace/ai_test_platform/data/deploy/sample_platform/docx/XQ/Second/sample-platform-requirements/01-login-and-authentication.md",
                         exists: true,
                     },
                     prototype_source: {
@@ -378,7 +378,7 @@ describe('requirementService', () => {
                     },
                     mapping_status: 'pending_prototype',
                     recommended_test_types: ['ui_e2e'],
-                    key_assertions: ['登录表单完整'],
+                    key_assertions: ["Complete login form"],
                     baseline_candidate: true,
                     critical: true,
                 },
@@ -392,7 +392,7 @@ describe('requirementService', () => {
                 critical_missing_pages: 32,
                 baseline_candidates: 48,
             },
-            target_url: '待同步原型目录：docx/XQ/Second/html/示例项目大平台htmlV1.0',
+            target_url: "Prototype directory awaiting synchronization: docx/XQ/Second/html/sample-platform-html-v1.0",
             repositories: [],
             waves: [],
             recommended_test_types: ['ui_e2e', 'visual_regression'],
@@ -400,8 +400,8 @@ describe('requirementService', () => {
 
         const result = await fetchRequirementPlaybook('sample-platform-prototype');
 
-        expect(result.project_name).toBe('示例项目大平台');
-        expect(result.prototype_assets?.[0].relative_path).toContain('示例项目大平台htmlV1.0');
+        expect(result.project_name).toBe("Sample platform");
+        expect(result.prototype_assets?.[0].relative_path).toContain("sample-platform-html-v1.0");
         expect(result.mapping_summary?.module_count).toBe(16);
         expect(result.page_mappings?.[0].mapping_status).toBe('pending_prototype');
         expect(mockFetch.mock.calls[0][0]).toContain('/api/requirement/playbooks/sample-platform-prototype');

@@ -1,5 +1,5 @@
 /**
- * CI/CD Integration Service — 对接后端 /api/ci/* 接口
+ * CI/CD integration service for backend /api/ci/* endpoints
  */
 import { API_ENDPOINTS } from '../config';
 

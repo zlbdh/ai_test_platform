@@ -1,6 +1,6 @@
 /**
- * 待测项目部署服务 — 对接后端 /api/deploy/* 接口
- * 数据模型: Project → Repos (二级结构)
+ * Test project deployment service for backend /api/deploy/* endpoints
+ * Data model: Project → Repos (two levels)
  */
 import { API_ENDPOINTS } from '../config';
 import { getDeployAuthHeaders, getStoredDeployAuthToken } from './deployAuthService';
@@ -135,7 +135,7 @@ const deployFetch = async (url: string, options: RequestInit = {}) => {
     const headers = getDeployAuthHeaders(options.headers);
     const response = await fetch(url, { ...options, headers });
     if (!response.ok) {
-        let detail = response.statusText || '请求失败';
+        let detail = response.statusText || "Request failed";
         try {
             const payload = await response.json();
             if (payload && typeof payload === 'object') {
@@ -189,7 +189,7 @@ export const deleteProject = async (key: string): Promise<void> => {
     await deployFetch(API.project(key), { method: 'DELETE' });
 };
 
-// ── Git Token (项目级) ──
+// Git token (project level)
 export const setProjectToken = async (projectKey: string, git_token: string): Promise<void> => {
     await deployFetch(API.project(projectKey) + '/token', {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
@@ -324,7 +324,7 @@ export const cancelDeployJob = async (jobId: string): Promise<DeployJob> => {
     return getField<DeployJob>(await r.json(), 'job', {} as DeployJob);
 };
 
-// ── SSE 实时部署流 ──
+// Live deployment stream over SSE
 export interface DeployEvent {
     type: 'deploy_start' | 'step_start' | 'step_done' | 'deploy_done';
     step?: string;
@@ -335,7 +335,7 @@ export interface DeployEvent {
     record_id?: string;
     repo_label?: string;
     steps?: string[];
-    logs?: string[];           // 步骤完成时的构建日志
+    logs?: string[];           // Build logs when a step completes
 }
 
 export const subscribeDeployStream = (
@@ -358,7 +358,7 @@ export const subscribeDeployStream = (
     return () => es.close();
 };
 
-// ── 单条记录详情 ──
+// Single record details
 export const getRecordDetail = async (recordId: string): Promise<DeployRecord> => {
     const r = await deployFetch(`${DEPLOY_BASE.replace('/repo', '')}/record/${recordId}`);
     return getField<DeployRecord>(await r.json(), 'record', {} as DeployRecord);
@@ -383,7 +383,7 @@ export const clearHistory = async (): Promise<void> => {
     await deployFetch(API.history, { method: 'DELETE' });
 };
 
-// ── AI 智能分析 ──
+// AI analysis
 export interface AIAnalysis {
     tech_stack: string;
     install_cmd: string;
@@ -434,11 +434,11 @@ export const applyAIConfig = async (pk: string, rid: string, config: Partial<AIA
     return getField<RepoStatus>(await r.json(), 'repo', {} as RepoStatus);
 };
 
-// ── 部署上下文 & AI 二次确认 ──
+// Deployment context and AI confirmation
 export interface DeployContext {
     server_address: string;
     db_connection: string;
-    env_vars: string;          // KEY=VALUE 格式，每行一个
+    env_vars: string;          // KEY=VALUE format, one entry per line
     user_notes: string;
 }
 

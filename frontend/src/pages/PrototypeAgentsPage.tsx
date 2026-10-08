@@ -71,37 +71,37 @@ type PrototypeAgentId = typeof PROTOTYPE_AGENT_ORDER[number];
 const AGENT_META: Record<PrototypeAgentId, { title: string; role: string; icon: React.ReactNode }> = {
     orchestrator: {
         title: 'Orchestrator',
-        role: '任务拆分、状态协调、广播 Worker',
+        role: "Task decomposition, state coordination, and worker broadcasts",
         icon: <FlaskConical className="w-4 h-4" />,
     },
     visual: {
         title: 'Visual',
-        role: '截图、基线与像素差异',
+        role: "Screenshots, baselines, and pixel differences",
         icon: <Eye className="w-4 h-4" />,
     },
     flow: {
         title: 'Flow',
-        role: '流程连通性与页面跳转',
+        role: "Flow connectivity and page navigation",
         icon: <Layers className="w-4 h-4" />,
     },
     ab: {
         title: 'A/B',
-        role: '版本结构差异与组件变更',
+        role: "Version structure differences and component changes",
         icon: <GitCompareArrows className="w-4 h-4" />,
     },
     a11y: {
         title: 'A11y',
-        role: 'WCAG 无障碍扫描',
+        role: "WCAG accessibility scan",
         icon: <Accessibility className="w-4 h-4" />,
     },
     perf: {
         title: 'Perf',
-        role: 'Mock Lighthouse 性能预警',
+        role: "Mock Lighthouse performance warnings",
         icon: <Gauge className="w-4 h-4" />,
     },
     reporter: {
         title: 'Reporter',
-        role: '严重度排序、建议与门禁指标',
+        role: "Severity ranking, recommendations, and gate metrics",
         icon: <FileText className="w-4 h-4" />,
     },
 };
@@ -125,19 +125,19 @@ const FINDING_TONE_CLASS: Record<string, string> = {
 function formatStatusLabel(status: string): string {
     const normalized = String(status || 'idle').toLowerCase();
     return {
-        pending: '等待中',
-        parsing: '解析中',
-        dispatching: '派发中',
-        executing: '执行中',
-        reporting: '汇总中',
-        completed: '已完成',
-        failed: '失败',
-        cancelled: '已取消',
-        idle: '空闲',
-        running: '运行中',
-        success: '完成',
-        error: '异常',
-        skipped: '跳过',
+        pending: "Waiting",
+        parsing: "Parsing",
+        dispatching: "Dispatching",
+        executing: "Running",
+        reporting: "Summarizing",
+        completed: "Completed",
+        failed: "Failed",
+        cancelled: "Canceled",
+        idle: "Idle",
+        running: "Running",
+        success: "Complete",
+        error: "Error",
+        skipped: "Skipped",
     }[normalized] || normalized;
 }
 
@@ -184,7 +184,7 @@ function summarizeWorkerPayload(worker: PrototypeWorkerResult): string {
 }
 
 export function buildSeveritySummary(findings: PrototypeFinding[]): string {
-    if (!findings.length) return '未发现问题';
+    if (!findings.length) return "No issues found";
     const counts = findings.reduce<Record<string, number>>((acc, item) => {
         const key = item.severity || 'info';
         acc[key] = (acc[key] || 0) + 1;
@@ -197,7 +197,7 @@ function formatDateTime(value?: string | null): string {
     if (!value) return '—';
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return value;
-    return date.toLocaleString('zh-CN');
+    return date.toLocaleString('en-US');
 }
 
 function isRunningMission(status?: string | null): boolean {
@@ -205,13 +205,13 @@ function isRunningMission(status?: string | null): boolean {
 }
 
 const SOURCE_TYPE_OPTIONS: Array<{ value: PrototypeRunRequest['source_type']; label: string; helper: string }> = [
-    { value: 'url', label: 'URL', helper: '在线原型地址' },
-    { value: 'file', label: '文件', helper: '本地 HTML 文件路径' },
-    { value: 'directory', label: '目录', helper: '本地原型目录' },
+    { value: 'url', label: 'URL', helper: "Online prototype URL" },
+    { value: 'file', label: "File", helper: "Local HTML file path" },
+    { value: 'directory', label: "Directory", helper: "Local prototype directory" },
 ];
 
 const PLAYBOOK_OPTIONS = [
-    { value: '', label: '不注入项目包' },
+    { value: '', label: "Do not inject a project package" },
     { value: 'sample-platform-prototype', label: 'sample-platform-prototype' },
 ];
 
@@ -245,25 +245,25 @@ const PrototypeAgentsPage: React.FC = () => {
     const missionStatusLabel = formatStatusLabel(activeMission?.status || 'idle');
     const highlightStats = [
         {
-            label: '发现问题',
+            label: "Issues found",
             value: String(missionSummary.finding_count ?? findings.length ?? 0),
             helper: severitySummary,
             icon: <AlertTriangle className="w-4 h-4" />,
         },
         {
-            label: '成功 Worker',
+            label: "Successful workers",
             value: `${String(missionSummary.success_workers ?? workerResults.filter(item => item.status === 'success').length)}/${String(missionSummary.total_workers ?? workerResults.length)}`,
-            helper: `跳过 ${String(missionSummary.skipped_workers ?? workerResults.filter(item => item.status === 'skipped').length)}`,
+            helper: `Skipped ${String(missionSummary.skipped_workers ?? workerResults.filter(item => item.status === 'skipped').length)}`,
             icon: <CheckCircle2 className="w-4 h-4" />,
         },
         {
-            label: '已发现页面',
+            label: "Discovered pages",
             value: String(discoveredPages.length || 0),
-            helper: activeMission?.source_type === 'directory' ? '目录归一完成' : '入口页已解析',
+            helper: activeMission?.source_type === 'directory' ? "Directory normalization complete" : "Entry page parsed",
             icon: <Layers className="w-4 h-4" />,
         },
         {
-            label: '门禁覆盖',
+            label: "Gate coverage",
             value: `${Math.round(Number(qualityMetrics.module_coverage_rate || 0) * 100)}%`,
             helper: `page mapping ${Math.round(Number(qualityMetrics.page_mapping_rate || 0) * 100)}%`,
             icon: <Gauge className="w-4 h-4" />,
@@ -375,10 +375,9 @@ const PrototypeAgentsPage: React.FC = () => {
                             Prototype Agents
                         </div>
                         <div>
-                            <h1 className="text-2xl font-semibold text-slate-900">原型测试 7 Agent 编排台</h1>
+                            <h1 className="text-2xl font-semibold text-slate-900">Seven-agent prototype testing workspace</h1>
                             <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-                                输入原型 URL、本地 HTML 文件或目录后，Orchestrator 会并行派发 Visual、Flow、A/B、A11y、Perf 五条专项测试线，
-                                最后由 Reporter 汇总为按严重度排序的结构化报告。
+                                Enter a prototype URL, local HTML file, or directory. The orchestrator runs Visual, Flow, A/B, A11y, and Perf test workers in parallel, then Reporter combines their results into a structured report ordered by severity.
                             </p>
                         </div>
                     </div>
@@ -401,8 +400,8 @@ const PrototypeAgentsPage: React.FC = () => {
                 <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
                     <div className="flex items-start justify-between gap-3">
                         <div>
-                            <h2 className="text-lg font-semibold text-slate-900">运行配置</h2>
-                            <p className="mt-1 text-sm text-slate-500">首期支持 URL / 本地文件 / 目录输入，A/B 与 Perf 保持 Provider 可替换。</p>
+                            <h2 className="text-lg font-semibold text-slate-900">Runtime configuration</h2>
+                            <p className="mt-1 text-sm text-slate-500">The first release supports URLs, local files, and directories. A/B and Perf providers remain replaceable.</p>
                         </div>
                         <div className="flex items-center gap-2">
                             <button
@@ -412,7 +411,7 @@ const PrototypeAgentsPage: React.FC = () => {
                                 className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
                             >
                                 <RefreshCw className={`w-4 h-4 ${loadingHistory ? 'animate-spin' : ''}`} />
-                                刷新历史
+                                Refresh history
                             </button>
                             <button
                                 type="button"
@@ -421,7 +420,7 @@ const PrototypeAgentsPage: React.FC = () => {
                                 className="inline-flex items-center gap-2 rounded-xl border border-rose-200 px-3 py-2 text-sm text-rose-600 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50"
                             >
                                 <Pause className="w-4 h-4" />
-                                停止
+                                Stop
                             </button>
                             <button
                                 type="button"
@@ -430,7 +429,7 @@ const PrototypeAgentsPage: React.FC = () => {
                                 className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
                             >
                                 {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <PlayCircle className="w-4 h-4" />}
-                                开始执行
+                                Start execution
                             </button>
                         </div>
                     </div>
@@ -458,7 +457,7 @@ const PrototypeAgentsPage: React.FC = () => {
 
                         <div className="grid gap-4 md:grid-cols-2">
                             <label className="space-y-2">
-                                <span className="text-sm font-medium text-slate-700">原型来源</span>
+                                <span className="text-sm font-medium text-slate-700">Prototype source</span>
                                 <input
                                     value={form.source}
                                     onChange={(event) => setForm((previous) => ({ ...previous, source: event.target.value }))}
@@ -471,16 +470,16 @@ const PrototypeAgentsPage: React.FC = () => {
                                 />
                             </label>
                             <label className="space-y-2">
-                                <span className="text-sm font-medium text-slate-700">对比版本来源</span>
+                                <span className="text-sm font-medium text-slate-700">Comparison version source</span>
                                 <input
                                     value={form.compare_source || ''}
                                     onChange={(event) => setForm((previous) => ({ ...previous, compare_source: event.target.value }))}
-                                    placeholder="可选，供 A/B Worker 做结构对比"
+                                    placeholder={"Optional; used by the A/B worker for structural comparison"}
                                     className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:bg-white"
                                 />
                             </label>
                             <label className="space-y-2">
-                                <span className="text-sm font-medium text-slate-700">项目包</span>
+                                <span className="text-sm font-medium text-slate-700">Project package</span>
                                 <select
                                     value={form.playbook_id || ''}
                                     onChange={(event) => setForm((previous) => ({ ...previous, playbook_id: event.target.value }))}
@@ -492,7 +491,7 @@ const PrototypeAgentsPage: React.FC = () => {
                                 </select>
                             </label>
                             <label className="space-y-2">
-                                <span className="text-sm font-medium text-slate-700">WCAG 目标级别</span>
+                                <span className="text-sm font-medium text-slate-700">Target WCAG level</span>
                                 <select
                                     value={form.wcag_level || 'AA'}
                                     onChange={(event) => setForm((previous) => ({ ...previous, wcag_level: event.target.value as PrototypeRunRequest['wcag_level'] }))}
@@ -509,7 +508,7 @@ const PrototypeAgentsPage: React.FC = () => {
                             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                                 <div className="flex items-center gap-2 text-sm font-semibold text-slate-800">
                                     <Activity className="w-4 h-4" />
-                                    Worker 开关
+                                    Worker toggles
                                 </div>
                                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
                                     {PROTOTYPE_AGENT_ORDER.filter((item) => item !== 'orchestrator' && item !== 'reporter').map((workerId) => (
@@ -535,7 +534,7 @@ const PrototypeAgentsPage: React.FC = () => {
                             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                                 <div className="flex items-center gap-2 text-sm font-semibold text-slate-800">
                                     <Sparkles className="w-4 h-4" />
-                                    Provider 映射
+                                    Provider mapping
                                 </div>
                                 <div className="mt-3 grid gap-3">
                                     {PROTOTYPE_AGENT_ORDER.filter((item) => item !== 'orchestrator' && item !== 'reporter').map((workerId) => (
@@ -563,8 +562,8 @@ const PrototypeAgentsPage: React.FC = () => {
                 <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
                     <div className="flex items-start justify-between gap-3">
                         <div>
-                            <h2 className="text-lg font-semibold text-slate-900">任务状态</h2>
-                            <p className="mt-1 text-sm text-slate-500">当前选中任务的运行状态、来源上下文与门禁摘要。</p>
+                            <h2 className="text-lg font-semibold text-slate-900">Task status</h2>
+                            <p className="mt-1 text-sm text-slate-500">Runtime status, source context, and gate summary for the selected task.</p>
                         </div>
                         <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600">
                             {missionStatusLabel}
@@ -578,30 +577,30 @@ const PrototypeAgentsPage: React.FC = () => {
                                 <div className="mt-2 text-sm font-semibold text-slate-900">#{activeMission.mission_id}</div>
                                 <div className="mt-1 text-sm text-slate-600">{activeMission.source || activeMission.user_input}</div>
                                 <div className="mt-3 grid gap-2 text-xs text-slate-500 sm:grid-cols-2">
-                                    <div>创建时间：{formatDateTime(activeMission.created_at)}</div>
-                                    <div>完成时间：{formatDateTime(activeMission.completed_at)}</div>
-                                    <div>来源类型：{String(activeMission.source_type || '—').toUpperCase()}</div>
-                                    <div>Playbook：{activeMission.playbook_id || '未注入'}</div>
+                                    <div>Created at: {formatDateTime(activeMission.created_at)}</div>
+                                    <div>Completed at: {formatDateTime(activeMission.completed_at)}</div>
+                                    <div>Source type: {String(activeMission.source_type || '—').toUpperCase()}</div>
+                                    <div>Playbook: {activeMission.playbook_id || "Not injected"}</div>
                                 </div>
                             </div>
 
                             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                                 <div className="flex items-center gap-2 text-sm font-semibold text-slate-800">
                                     <Layers className="w-4 h-4" />
-                                    上下文摘要
+                                    Context summary
                                 </div>
                                 <div className="mt-3 grid gap-3 text-sm text-slate-600">
                                     <div>
-                                        <span className="font-medium text-slate-800">入口页：</span>
+                                        <span className="font-medium text-slate-800">Entry page:</span>
                                         {String(sourceContext.entry_url || '—')}
                                     </div>
                                     <div>
-                                        <span className="font-medium text-slate-800">发现页面：</span>
+                                        <span className="font-medium text-slate-800">Discovered pages:</span>
                                         {discoveredPages.length ? discoveredPages.slice(0, 4).map((page) => String(page.relative_path || page.title || '')).join(' / ') : '—'}
                                     </div>
                                     <div>
-                                        <span className="font-medium text-slate-800">关键页面：</span>
-                                        {criticalPages.length ? criticalPages.slice(0, 3).map((page) => String(page.page_name || page.route || '未命名')).join(' / ') : '未注入'}
+                                        <span className="font-medium text-slate-800">Critical pages:</span>
+                                        {criticalPages.length ? criticalPages.slice(0, 3).map((page) => String(page.page_name || page.route || "Unnamed")).join(' / ') : "Not injected"}
                                     </div>
                                 </div>
                             </div>
@@ -609,7 +608,7 @@ const PrototypeAgentsPage: React.FC = () => {
                             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                                 <div className="flex items-center gap-2 text-sm font-semibold text-slate-800">
                                     <Gauge className="w-4 h-4" />
-                                    质量门禁
+                                    Quality gate
                                 </div>
                                 <div className="mt-3 grid grid-cols-2 gap-3">
                                     {[
@@ -628,7 +627,7 @@ const PrototypeAgentsPage: React.FC = () => {
                         </div>
                     ) : (
                         <div className="mt-8 rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-10 text-center text-sm text-slate-500">
-                            还没有选中任务。提交一次原型测试，或者从右下角历史列表中打开一个任务。
+                            No task selected. Submit a prototype test or open a task from the history list at the bottom right.
                         </div>
                     )}
                 </div>
@@ -637,11 +636,11 @@ const PrototypeAgentsPage: React.FC = () => {
             <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
                 <div className="flex items-start justify-between gap-3">
                     <div>
-                        <h2 className="text-lg font-semibold text-slate-900">Agent 状态图</h2>
-                        <p className="mt-1 text-sm text-slate-500">Hub-Spoke 编排链路，SSE 日志会推动节点状态实时变化。</p>
+                        <h2 className="text-lg font-semibold text-slate-900">Agent status graph</h2>
+                        <p className="mt-1 text-sm text-slate-500">Hub-and-spoke orchestration. SSE logs update node status in real time.</p>
                     </div>
                     <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-600">
-                        {activeMission ? `当前任务 ${activeMission.mission_id}` : '等待任务'}
+                        {activeMission ? `Current task ${activeMission.mission_id}` : "Waiting for task"}
                     </div>
                 </div>
 
@@ -679,8 +678,8 @@ const PrototypeAgentsPage: React.FC = () => {
                     <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
                         <div className="flex items-start justify-between gap-3">
                             <div>
-                                <h2 className="text-lg font-semibold text-slate-900">Worker 结果</h2>
-                                <p className="mt-1 text-sm text-slate-500">5 个专项 Worker 的统一输出，方便和最终报告做交叉核对。</p>
+                                <h2 className="text-lg font-semibold text-slate-900">Worker results</h2>
+                                <p className="mt-1 text-sm text-slate-500">Unified output from five specialized workers for comparison with the final report.</p>
                             </div>
                             <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-600">
                                 {workerResults.length} / 5
@@ -714,11 +713,11 @@ const PrototypeAgentsPage: React.FC = () => {
                                                     <div className="mt-2 text-sm font-medium text-slate-800">{worker.provider}</div>
                                                 </div>
                                                 <div className="rounded-xl border border-white bg-white px-3 py-3">
-                                                    <div className="text-[11px] uppercase tracking-wide text-slate-400">摘要</div>
+                                                    <div className="text-[11px] uppercase tracking-wide text-slate-400">Summary</div>
                                                     <div className="mt-2 text-sm font-medium text-slate-800">{summarizeWorkerPayload(worker)}</div>
                                                 </div>
                                                 <div className="rounded-xl border border-white bg-white px-3 py-3">
-                                                    <div className="text-[11px] uppercase tracking-wide text-slate-400">发现数</div>
+                                                    <div className="text-[11px] uppercase tracking-wide text-slate-400">Findings</div>
                                                     <div className="mt-2 text-sm font-medium text-slate-800">{findingsPreview.length}</div>
                                                 </div>
                                             </div>
@@ -734,7 +733,7 @@ const PrototypeAgentsPage: React.FC = () => {
                                                     </div>
                                                 )) : (
                                                     <div className="rounded-xl border border-dashed border-slate-200 bg-white px-3 py-5 text-center text-sm text-slate-500">
-                                                        当前 Worker 未产生标准化 finding。
+                                                        This worker did not produce a standardized finding.
                                                     </div>
                                                 )}
                                             </div>
@@ -744,7 +743,7 @@ const PrototypeAgentsPage: React.FC = () => {
                             </div>
                         ) : (
                             <div className="mt-5 rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-10 text-center text-sm text-slate-500">
-                                Worker 结果会在执行中实时回填到这里。
+                                Worker results appear here in real time during execution.
                             </div>
                         )}
                     </div>
@@ -752,8 +751,8 @@ const PrototypeAgentsPage: React.FC = () => {
                     <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
                         <div className="flex items-center justify-between gap-3">
                             <div>
-                                <h2 className="text-lg font-semibold text-slate-900">最终报告</h2>
-                                <p className="mt-1 text-sm text-slate-500">Reporter 会合并 5 份 JSON，输出严重度排序和修复建议。</p>
+                                <h2 className="text-lg font-semibold text-slate-900">Final report</h2>
+                                <p className="mt-1 text-sm text-slate-500">Reporter merges five JSON results and produces severity rankings and recommended fixes.</p>
                             </div>
                             <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 p-1 text-xs">
                                 <button
@@ -761,14 +760,14 @@ const PrototypeAgentsPage: React.FC = () => {
                                     onClick={() => setRawTab('report')}
                                     className={`rounded-full px-3 py-1.5 transition ${rawTab === 'report' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-white'}`}
                                 >
-                                    报告视图
+                                    Report view
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => setRawTab('json')}
                                     className={`rounded-full px-3 py-1.5 transition ${rawTab === 'json' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-white'}`}
                                 >
-                                    原始 JSON
+                                    Raw JSON
                                 </button>
                             </div>
                         </div>
@@ -777,7 +776,7 @@ const PrototypeAgentsPage: React.FC = () => {
                             <div className="mt-5 space-y-5">
                                 <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
                                     <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                                        <div className="text-sm font-semibold text-slate-900">严重度总览</div>
+                                        <div className="text-sm font-semibold text-slate-900">Severity overview</div>
                                         <div className="mt-3 text-sm text-slate-600">{severitySummary}</div>
                                         <div className="mt-4 space-y-2">
                                             {findings.length ? findings.slice(0, 6).map((finding) => (
@@ -793,14 +792,14 @@ const PrototypeAgentsPage: React.FC = () => {
                                                 </div>
                                             )) : (
                                                 <div className="rounded-xl border border-dashed border-slate-200 bg-white px-3 py-8 text-center text-sm text-slate-500">
-                                                    暂无标准化 finding。
+                                                    No standardized findings yet.
                                                 </div>
                                             )}
                                         </div>
                                     </div>
 
                                     <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                                        <div className="text-sm font-semibold text-slate-900">修复建议</div>
+                                        <div className="text-sm font-semibold text-slate-900">Recommended fixes</div>
                                         <div className="mt-4 space-y-3">
                                             {(activeMission?.report?.recommendations || []).length ? (activeMission?.report?.recommendations || []).map((item, index) => (
                                                 <div key={`${index}_${item}`} className="rounded-xl border border-white bg-white px-3 py-3 text-sm leading-6 text-slate-700">
@@ -809,7 +808,7 @@ const PrototypeAgentsPage: React.FC = () => {
                                                 </div>
                                             )) : (
                                                 <div className="rounded-xl border border-dashed border-slate-200 bg-white px-3 py-8 text-center text-sm text-slate-500">
-                                                    Reporter 尚未输出建议。
+                                                    Reporter has not provided recommendations yet.
                                                 </div>
                                             )}
                                         </div>
@@ -818,7 +817,7 @@ const PrototypeAgentsPage: React.FC = () => {
                             </div>
                         ) : (
                             <pre className="mt-5 max-h-[560px] overflow-auto rounded-2xl border border-slate-200 bg-slate-950 p-4 text-xs leading-6 text-slate-100">
-                                {activeMission ? JSON.stringify(activeMission, null, 2) : '{\n  "message": "暂无任务"\n}'}
+                                {activeMission ? JSON.stringify(activeMission, null, 2) : "{\n  \"message\": \"No task\"\n}"}
                             </pre>
                         )}
                     </div>
@@ -828,11 +827,11 @@ const PrototypeAgentsPage: React.FC = () => {
                     <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
                         <div className="flex items-start justify-between gap-3">
                             <div>
-                                <h2 className="text-lg font-semibold text-slate-900">时间线</h2>
-                                <p className="mt-1 text-sm text-slate-500">消费 SSE 事件流，记录 Orchestrator、Worker、Reporter 的状态变化。</p>
+                                <h2 className="text-lg font-semibold text-slate-900">Timeline</h2>
+                                <p className="mt-1 text-sm text-slate-500">Consume the SSE stream to record state changes from Orchestrator, workers, and Reporter.</p>
                             </div>
                             <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-600">
-                                {logs.length} 条
+                                {logs.length} entries
                             </div>
                         </div>
 
@@ -871,7 +870,7 @@ const PrototypeAgentsPage: React.FC = () => {
                             </div>
                         ) : (
                             <div className="mt-5 rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-10 text-center text-sm text-slate-500">
-                                任务开始后，这里会持续显示广播与回传日志。
+                                Broadcasts and response logs appear here continuously after a task starts.
                             </div>
                         )}
                     </div>
@@ -879,11 +878,11 @@ const PrototypeAgentsPage: React.FC = () => {
                     <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
                         <div className="flex items-start justify-between gap-3">
                             <div>
-                                <h2 className="text-lg font-semibold text-slate-900">最近任务</h2>
-                                <p className="mt-1 text-sm text-slate-500">支持重新打开历史任务，运行中的任务会自动继续监听 SSE。</p>
+                                <h2 className="text-lg font-semibold text-slate-900">Recent tasks</h2>
+                                <p className="mt-1 text-sm text-slate-500">Reopen historical tasks. Running tasks automatically resume listening to SSE.</p>
                             </div>
                             <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-600">
-                                {missions.length} 条
+                                {missions.length} entries
                             </div>
                         </div>
 
@@ -919,11 +918,11 @@ const PrototypeAgentsPage: React.FC = () => {
                                             </div>
                                             <div className={`mt-3 grid grid-cols-3 gap-2 text-xs ${selected ? 'text-slate-300' : 'text-slate-500'}`}>
                                                 <div>
-                                                    <div className="uppercase tracking-wide">创建</div>
+                                                    <div className="uppercase tracking-wide">Create</div>
                                                     <div className="mt-1">{formatDateTime(mission.created_at)}</div>
                                                 </div>
                                                 <div>
-                                                    <div className="uppercase tracking-wide">问题</div>
+                                                    <div className="uppercase tracking-wide">Issues</div>
                                                     <div className="mt-1">{missionFindings.length}</div>
                                                 </div>
                                                 <div>
@@ -937,7 +936,7 @@ const PrototypeAgentsPage: React.FC = () => {
                             </div>
                         ) : (
                             <div className="mt-5 rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-10 text-center text-sm text-slate-500">
-                                历史任务为空，先运行一次原型测试。
+                                No task history yet. Run a prototype test to begin.
                             </div>
                         )}
                     </div>

@@ -3,12 +3,12 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import ApprovalReviewDialog from '../components/deploy/ApprovalReviewDialog';
 
 describe('ApprovalReviewDialog', () => {
-    it('关闭时不渲染内容', () => {
+    it("renders no content while closed", () => {
         render(
             <ApprovalReviewDialog
                 open={false}
                 action="approve"
-                targetLabel="后端服务"
+                targetLabel={"Backend service"}
                 comment=""
                 onCommentChange={vi.fn()}
                 onCancel={vi.fn()}
@@ -19,7 +19,7 @@ describe('ApprovalReviewDialog', () => {
         expect(screen.queryByText("Approve deployment")).not.toBeInTheDocument();
     });
 
-    it('批准模式下支持输入备注并提交', () => {
+    it("supports entering and submitting a note in approval mode", () => {
         const onCommentChange = vi.fn();
         const onSubmit = vi.fn();
 
@@ -27,8 +27,8 @@ describe('ApprovalReviewDialog', () => {
             <ApprovalReviewDialog
                 open
                 action="approve"
-                targetLabel="支付后端"
-                comment="允许发布"
+                targetLabel={"Payments backend"}
+                comment={"Allow release"}
                 onCommentChange={onCommentChange}
                 onCancel={vi.fn()}
                 onSubmit={onSubmit}
@@ -36,25 +36,25 @@ describe('ApprovalReviewDialog', () => {
         );
 
         expect(screen.getByText("Approve deployment")).toBeInTheDocument();
-        expect(screen.getByText('支付后端')).toBeInTheDocument();
+        expect(screen.getByText("Payments backend")).toBeInTheDocument();
 
         fireEvent.change(screen.getByPlaceholderText("Example: The deployment window is confirmed. Proceed."), {
-            target: { value: '今天可以发版' },
+            target: { value: "The release can proceed today" },
         });
         fireEvent.click(screen.getByText("Confirm approval"));
 
-        expect(onCommentChange).toHaveBeenCalledWith('今天可以发版');
+        expect(onCommentChange).toHaveBeenCalledWith("The release can proceed today");
         expect(onSubmit).toHaveBeenCalledTimes(1);
     });
 
-    it('驳回模式下展示对应文案并支持取消', () => {
+    it("shows rejection copy and supports canceling", () => {
         const onCancel = vi.fn();
 
         render(
             <ApprovalReviewDialog
                 open
                 action="reject"
-                targetLabel="前端门户"
+                targetLabel={"Frontend portal"}
                 comment=""
                 onCommentChange={vi.fn()}
                 onCancel={onCancel}
@@ -69,12 +69,12 @@ describe('ApprovalReviewDialog', () => {
         expect(onCancel).toHaveBeenCalledTimes(1);
     });
 
-    it('提交中状态会禁用按钮并显示加载文案', () => {
+    it("disables buttons and shows loading text while submitting", () => {
         render(
             <ApprovalReviewDialog
                 open
                 action="approve"
-                targetLabel="结算服务"
+                targetLabel={"Settlement service"}
                 comment=""
                 submitting
                 onCommentChange={vi.fn()}

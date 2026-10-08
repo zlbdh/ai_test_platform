@@ -10,7 +10,7 @@ import {
 } from '../services/commanderService';
 import { API_BASE_URL } from '../config';
 
-// ── 类型 ────────────────────────────────────────────────────
+// Types
 
 interface SkillSummary {
     skill_id: string;
@@ -23,7 +23,7 @@ interface SkillSummary {
     examples_count: number;
 }
 
-// ── 常量 ────────────────────────────────────────────────────
+// Constants
 
 const TYPE_ICON: Record<string, React.ReactNode> = {
     ui_e2e: <Eye className="w-3.5 h-3.5" />,
@@ -33,7 +33,7 @@ const TYPE_ICON: Record<string, React.ReactNode> = {
     api_rest: <Zap className="w-3.5 h-3.5" />,
 };
 
-// ── 主页面 ──────────────────────────────────────────────────
+// Main page
 
 const WarRoomPage: React.FC = () => {
     const [agents, setAgents] = useState<AgentHealth[]>([]);
@@ -81,23 +81,23 @@ const WarRoomPage: React.FC = () => {
                             <Swords className="w-6 h-6" />
                         </div>
                         <div>
-                            <h1 className="text-xl font-bold">军团作战室</h1>
-                            <p className="text-sm text-indigo-200">实时监控 · 全局掌控 · 智能调度</p>
+                            <h1 className="text-xl font-bold">Agent war room</h1>
+                            <p className="text-sm text-indigo-200">Live monitoring · Global overview · Intelligent scheduling</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-4">
                         <div className="flex items-center gap-6 text-sm">
                             <div className="text-center">
                                 <div className="text-2xl font-bold text-emerald-400">{onlineCount}</div>
-                                <div className="text-xs text-slate-400">在线</div>
+                                <div className="text-xs text-slate-400">Online</div>
                             </div>
                             <div className="text-center">
                                 <div className="text-2xl font-bold text-indigo-400">{agents.length}</div>
-                                <div className="text-xs text-slate-400">总 Agent</div>
+                                <div className="text-xs text-slate-400">Total agents</div>
                             </div>
                             <div className="text-center">
                                 <div className="text-2xl font-bold text-purple-400">{skills.length}</div>
-                                <div className="text-xs text-slate-400">技能包</div>
+                                <div className="text-xs text-slate-400">Skill packages</div>
                             </div>
                         </div>
                         <button
@@ -121,14 +121,14 @@ const WarRoomPage: React.FC = () => {
                             </div>
                             <div>
                                 <h3 className="font-bold text-slate-800 dark:text-slate-100">{commanderProfile.name}</h3>
-                                <p className="text-xs text-slate-500">总指挥 · 全局协调</p>
+                                <p className="text-xs text-slate-500">Commander · Global coordination</p>
                             </div>
                             <div className="ml-auto w-3 h-3 rounded-full bg-emerald-500 animate-pulse" />
                         </div>
                         <div className="text-xs text-slate-500 dark:text-slate-400 space-y-1">
-                            <p>• 下辖 {squadProfiles.length} 个测试班</p>
-                            <p>• 管理 {agents.length} 个 Agent</p>
-                            <p>• 已装备 {skills.length} 个技能包</p>
+                            <p>• Oversees {squadProfiles.length} testing squads</p>
+                            <p>• Manages {agents.length} agents</p>
+                            <p>• Equipped with {skills.length} skill packages</p>
                         </div>
                     </div>
                 )}
@@ -163,14 +163,14 @@ const WarRoomPage: React.FC = () => {
                                 {/* Members */}
                                 {squad.members.length > 0 && (
                                     <div className="text-[10px] text-slate-400 dark:text-slate-500">
-                                        👥 {squad.members.length} 个成员
+                                        👥 {squad.members.length} members
                                     </div>
                                 )}
 
                                 {/* Skills */}
                                 {squadSkills.length > 0 && (
                                     <div className="text-[10px] text-purple-500 dark:text-purple-400 mt-1">
-                                        🧰 {squadSkills.length} 个技能包
+                                        🧰 {squadSkills.length} skill packages
                                     </div>
                                 )}
                             </div>
@@ -185,7 +185,7 @@ const WarRoomPage: React.FC = () => {
                 <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
                     <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center gap-2">
                         <Sparkles className="w-4 h-4 text-purple-500" />
-                        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">技能武器库</h3>
+                        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Skill library</h3>
                         <span className="ml-auto px-2 py-0.5 text-xs bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-full">{skills.length}</span>
                     </div>
                     <div className="divide-y divide-slate-100 dark:divide-slate-700/50">
@@ -200,7 +200,7 @@ const WarRoomPage: React.FC = () => {
                                 </div>
                                 <div className="flex items-center gap-1.5 shrink-0">
                                     {skill.has_strategy && (
-                                        <span className="px-1.5 py-0.5 text-[10px] bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded">策略 ✓</span>
+                                        <span className="px-1.5 py-0.5 text-[10px] bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded">Strategy ✓</span>
                                     )}
                                     <span className="px-1.5 py-0.5 text-[10px] bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded">
                                         {skill.test_type.replace('_', ' ')}
@@ -209,7 +209,7 @@ const WarRoomPage: React.FC = () => {
                             </div>
                         ))}
                         {skills.length === 0 && (
-                            <div className="px-5 py-8 text-center text-sm text-slate-400">暂无技能包</div>
+                            <div className="px-5 py-8 text-center text-sm text-slate-400">No skill packages</div>
                         )}
                     </div>
                 </div>
@@ -218,7 +218,7 @@ const WarRoomPage: React.FC = () => {
                 <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
                     <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center gap-2">
                         <Clock className="w-4 h-4 text-slate-400" />
-                        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">最近战报</h3>
+                        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Recent reports</h3>
                         <span className="ml-auto px-2 py-0.5 text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 rounded-full">{missions.length}</span>
                     </div>
                     <div className="divide-y divide-slate-100 dark:divide-slate-700/50">
@@ -233,8 +233,8 @@ const WarRoomPage: React.FC = () => {
                                     <div className="flex-1 min-w-0">
                                         <p className="text-sm text-slate-700 dark:text-slate-200 truncate">{m.user_input}</p>
                                         <p className="text-[11px] text-slate-400">
-                                            #{m.mission_id} · {new Date(m.created_at).toLocaleString('zh-CN')}
-                                            {m.test_results_count > 0 && ` · ${m.test_results_count} 条测试线`}
+                                            #{m.mission_id} · {new Date(m.created_at).toLocaleString('en-US')}
+                                            {m.test_results_count > 0 && ` · ${m.test_results_count} test tracks`}
                                         </p>
                                     </div>
                                     <ChevronRight className="w-4 h-4 text-slate-300" />
@@ -242,7 +242,7 @@ const WarRoomPage: React.FC = () => {
                             );
                         })}
                         {missions.length === 0 && (
-                            <div className="px-5 py-8 text-center text-sm text-slate-400">暂无战报</div>
+                            <div className="px-5 py-8 text-center text-sm text-slate-400">No reports yet</div>
                         )}
                     </div>
                 </div>

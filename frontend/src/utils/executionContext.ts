@@ -25,7 +25,7 @@ function resolveSessionId() {
     return state.activeSessionId || state.sessions[0]?.id || 'default_session';
 }
 
-export function summarizeExecutionTitle(input: string, fallback: string = '未命名测试批次') {
+export function summarizeExecutionTitle(input: string, fallback: string = "Unnamed test batch") {
     const firstLine = input
         .split('\n')
         .map((item) => item.trim())
@@ -34,7 +34,7 @@ export function summarizeExecutionTitle(input: string, fallback: string = '未�
     return title.length > 48 ? `${title.slice(0, 48)}...` : title;
 }
 
-export function summarizeExecutionTarget(input?: string, fallback: string = '专项测试批次') {
+export function summarizeExecutionTarget(input?: string, fallback: string = "Specialized test batch") {
     const raw = (input || '').trim();
     if (!raw) return fallback;
     try {
@@ -52,9 +52,9 @@ export function summarizeExecutionTarget(input?: string, fallback: string = '专
 export function buildSpecializedExecutionTitle(seedTitle: string, targetUrl?: string) {
     const targetLabel = summarizeExecutionTarget(targetUrl, '');
     if (targetLabel) {
-        return summarizeExecutionTitle(`专项测试 · ${targetLabel}`, '专项测试批次');
+        return summarizeExecutionTitle(`Specialized testing · ${targetLabel}`, "Specialized test batch");
     }
-    return summarizeExecutionTitle(seedTitle || '专项测试批次', '专项测试批次');
+    return summarizeExecutionTitle(seedTitle || "Specialized test batch", "Specialized test batch");
 }
 
 export function buildExecutionContextPayload(sessionId?: string): ExecutionContextPayload {

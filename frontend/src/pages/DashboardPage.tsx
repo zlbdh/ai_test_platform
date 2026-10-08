@@ -1,3 +1,4 @@
+import { failureReasonLabel } from '../utils/failureReasonLabel';
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -34,7 +35,7 @@ import {
 import { API_BASE_URL } from '../config';
 import { useAsync, usePolling } from '../hooks';
 
-// ── 统计卡片 ──
+// Statistics cards
 interface StatCardProps {
     label: string;
     value: string | number;
@@ -74,14 +75,14 @@ const StatCard: React.FC<StatCardProps> = ({ label, value, sub, icon, gradient, 
     );
 };
 
-// ── 空状态 ──
+// Empty state
 const EmptyChart: React.FC<{ message: string }> = ({ message }) => (
     <div className="flex h-52 items-center justify-center text-sm text-slate-400 dark:text-slate-500">
         {message}
     </div>
 );
 
-// ── 自定义 Tooltip ──
+// Custom tooltip
 interface TooltipPayload {
     name: string;
     value: number;
@@ -99,17 +100,17 @@ const ChartTooltip: React.FC<ChartTooltipProps> = ({ active, payload, label }) =
             <p className="mb-1 text-xs font-semibold text-slate-500 dark:text-slate-400">{label}</p>
             {payload.map((p, i) => (
                 <p key={i} className="text-sm" style={{ color: p.color }}>
-                    {p.name}: <span className="font-bold">{p.value}{p.name === '成功率' ? '%' : ''}</span>
+                    {p.name}: <span className="font-bold">{p.value}{p.name === "Success rate" ? '%' : ''}</span>
                 </p>
             ))}
         </div>
     );
 };
 
-// ── 深度分析面板 ──
+// Detailed analysis panel
 const REASON_COLORS: Record<string, string> = {
-    '超时': '#f59e0b', '元素定位': '#ef4444', '断言失败': '#8b5cf6',
-    '网络错误': '#3b82f6', '权限/认证': '#ec4899', '其他': '#94a3b8',
+    "Timeout": '#f59e0b', "Element location": '#ef4444', "Assertion failure": '#8b5cf6',
+    "Network error": '#3b82f6', "Permissions/authentication": '#ec4899', "Other": '#94a3b8',
 };
 
 interface FailureItem { name: string; failCount: number; lastFailure: string }
@@ -150,16 +151,16 @@ const AnalyticsPanel: React.FC = () => {
         <div className="space-y-4">
             <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-indigo-500" />
-                深度分析
+                Detailed analysis
             </h3>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {/* 失败 Top N 热图 */}
+                {/* Top N failure heatmap*/}
                 {failures.length > 0 && (
                     <div className="rounded-2xl card-hover-lift border border-slate-200/60 bg-white/80 backdrop-blur-sm p-5 dark:border-slate-700/60 dark:bg-slate-800/60">
                         <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-2">
                             <Bug className="w-4 h-4 text-red-500" />
-                            失败热图 Top {failures.length}
+                            Failure heatmap: top {failures.length}
                         </h4>
                         <ResponsiveContainer width="100%" height={Math.max(120, failures.length * 36)}>
                             <BarChart data={failures} layout="vertical" margin={{ left: 0, right: 20 }}>
@@ -170,32 +171,32 @@ const AnalyticsPanel: React.FC = () => {
                                     tickFormatter={(v: string) => v.length > 20 ? v.slice(0, 20) + '…' : v}
                                 />
                                 <Tooltip />
-                                <Bar dataKey="failCount" name="失败次数" fill="#ef4444" radius={[0, 6, 6, 0]} barSize={20} />
+                                <Bar dataKey="failCount" name={"Failure count"} fill="#ef4444" radius={[0, 6, 6, 0]} barSize={20} />
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
                 )}
 
-                {/* 失败原因分布 */}
+                {/* Failure cause distribution*/}
                 {reasons.length > 0 && (
                     <div className="rounded-2xl card-hover-lift border border-slate-200/60 bg-white/80 backdrop-blur-sm p-5 dark:border-slate-700/60 dark:bg-slate-800/60">
                         <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-2">
                             <AlertTriangle className="w-4 h-4 text-amber-500" />
-                            失败原因分类
+                            Failure causes
                         </h4>
                         <div className="space-y-3">
                             {reasons.map((r) => (
                                 <div key={r.reason}>
                                     <div className="flex justify-between text-xs mb-1">
-                                        <span className="text-slate-600 dark:text-slate-400 font-medium">{r.reason}</span>
-                                        <span className="text-slate-500">{r.count} 次 ({r.percentage}%)</span>
+                                        <span className="text-slate-600 dark:text-slate-400 font-medium">{failureReasonLabel(r.reason)}</span>
+                                        <span className="text-slate-500">{r.count} occurrences ( {r.percentage}%)</span>
                                     </div>
                                     <div className="h-2.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                                         <div
                                             className="h-full rounded-full transition-all duration-500"
                                             style={{
                                                 width: `${r.percentage}%`,
-                                                backgroundColor: REASON_COLORS[r.reason] || '#94a3b8',
+                                                backgroundColor: REASON_COLORS[failureReasonLabel(r.reason)] || '#94a3b8',
                                             }}
                                         />
                                     </div>
@@ -206,14 +207,14 @@ const AnalyticsPanel: React.FC = () => {
                 )}
             </div>
 
-            {/* Flaky 检测 */}
+            {/* Flaky test detection*/}
             {flakyTests.length > 0 && (
                 <div className="rounded-2xl border border-amber-200 bg-amber-50/50 p-5 shadow-sm dark:border-amber-500/30 dark:bg-amber-500/5">
                     <h4 className="text-sm font-semibold text-amber-700 dark:text-amber-400 mb-3 flex items-center gap-2">
                         <AlertTriangle className="w-4 h-4" />
-                        Flaky 用例检测 ({flakyTests.length})
+                        Flaky test detection ( {flakyTests.length})
                         <span className="ml-auto text-xs font-normal text-amber-600/60 dark:text-amber-400/60">
-                            通过率在 20-80% 之间视为 Flaky
+                            Tests with a pass rate between 20% and 80% are considered flaky
                         </span>
                     </h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -224,14 +225,14 @@ const AnalyticsPanel: React.FC = () => {
                                         ? 'bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-400'
                                         : 'bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400'
                                         }`}>
-                                        {t.severity === 'high' ? '高' : '中'}
+                                        {t.severity === 'high' ? "High" : "Medium"}
                                     </span>
                                     <span className="text-xs text-slate-700 dark:text-slate-300 font-medium truncate" title={t.name}>
                                         {t.name}
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-3 text-[11px] text-slate-500">
-                                    <span>共 {t.total} 次</span>
+                                    <span>Total: {t.total} occurrences</span>
                                     <span className="text-emerald-600">✓{t.passed}</span>
                                     <span className="text-red-500">✗{t.failed}</span>
                                     <span className="ml-auto font-bold text-amber-600">{t.passRate}%</span>
@@ -291,10 +292,10 @@ const DashboardPage: React.FC = () => {
         setPlatformRemediation(remediationResp?.remediation || null);
     }), [run]);
 
-    // 初始加载
+    // Initial load
     useEffect(() => { load(); }, [load]);
 
-    // 每 30s 自动刷新
+    // Refresh automatically every 30 seconds.
     const { start } = usePolling(async () => { await load(); }, { interval: 30_000, immediate: false });
     useEffect(() => { start(); }, [start]);
 
@@ -305,10 +306,10 @@ const DashboardPage: React.FC = () => {
     };
 
     const formatTimestamp = (value?: string) => {
-        if (!value) return '未执行';
+        if (!value) return "Not run";
         const date = new Date(value);
         if (Number.isNaN(date.getTime())) return value;
-        return `${date.getMonth() + 1}/${date.getDate()} ${date.toLocaleTimeString('zh-CN', {
+        return `${date.getMonth() + 1}/${date.getDate()} ${date.toLocaleTimeString('en-US', {
             hour: '2-digit',
             minute: '2-digit',
             second: '2-digit',
@@ -352,8 +353,8 @@ const DashboardPage: React.FC = () => {
             const result = await archivePlatformMaintenanceSuspects('dashboard_archive_suspect');
             setArchiveSummary(
                 result.archived_count > 0
-                    ? `已归档 ${result.archived_count} 条可疑维护记录，剩余 ${result.remaining} 条待处理`
-                    : '当前没有可归档的可疑维护记录'
+                    ? `Archived ${result.archived_count} suspicious maintenance records; ${result.remaining} remain pending`
+                    : "No suspicious maintenance records are available to archive"
             );
             await load();
         } finally {
@@ -368,8 +369,8 @@ const DashboardPage: React.FC = () => {
             const result = await exportPlatformMaintenanceArchive('dashboard_export_archive', 'json');
             setArchiveExportSummary(
                 result.count > 0
-                    ? `已导出 ${result.count} 条归档记录到 ${result.file_path}`
-                    : `已生成空归档文件 ${result.file_path}`
+                    ? `Exported ${result.count} archived records to ${result.file_path}`
+                    : `Created empty archive file ${result.file_path}`
             );
             await load();
         } finally {
@@ -388,8 +389,8 @@ const DashboardPage: React.FC = () => {
             );
             setArchiveCleanupSummary(
                 dryRun
-                    ? `保留策略检查完成：待清理归档记录 ${result.candidate_runs} 条，待清理导出文件 ${result.candidate_exports} 个`
-                    : `归档清理完成：删除归档记录 ${result.deleted_runs} 条，删除导出文件 ${result.deleted_exports} 个`
+                    ? `Retention check completed: archive records to clean up ${result.candidate_runs}; export files to clean up ${result.candidate_exports} files`
+                    : `Archive cleanup completed: deleted archive records ${result.deleted_runs}; deleted export files ${result.deleted_exports} files`
             );
             await load();
         } finally {
@@ -404,8 +405,8 @@ const DashboardPage: React.FC = () => {
             const result = await quarantinePlatformShadowDbs('dashboard_shadow_db_quarantine');
             setShadowDbSummary(
                 result.moved_count > 0
-                    ? `已隔离 ${result.moved_count} 个影子业务库，当前风险等级 ${result.observability.risk_level}`
-                    : `未隔离新的影子业务库，跳过 ${result.skipped_count} 个`
+                    ? `Isolated ${result.moved_count} shadow business databases; current risk level ${result.observability.risk_level}`
+                    : `No new shadow business databases isolated; skipped ${result.skipped_count} files`
             );
             await load();
         } finally {
@@ -418,7 +419,7 @@ const DashboardPage: React.FC = () => {
     const maintenanceCurrent = maintenance?.current;
     const latestActivity = maintenance?.latest_activity;
     const maintenanceRisk = maintenanceCurrent?.risk;
-    const businessDbPath = platformInfo?.operations?.business_db_path || '未识别';
+    const businessDbPath = platformInfo?.operations?.business_db_path || "Unrecognized";
     const shadowBusinessDbs = platformInfo?.operations?.shadow_business_dbs || [];
     const shadowBusinessDbCount = platformInfo?.operations?.shadow_business_db_count || shadowBusinessDbs.length;
     const businessDbUpdatedAt = platformInfo?.operations?.business_db_updated_at || '';
@@ -429,14 +430,14 @@ const DashboardPage: React.FC = () => {
     const notificationHealthyCount = platformInfo?.operations?.notification_healthy_webhook_count ?? maintenanceCurrent?.notification?.healthy_enabled ?? 0;
     const notificationUntestedCount = platformInfo?.operations?.notification_untested_webhook_count ?? maintenanceCurrent?.notification?.untested_enabled ?? Math.max(notificationWebhookCount - notificationTestedCount, 0);
     const notificationReady = platformInfo?.operations?.notification_ready ?? maintenanceCurrent?.notification?.ready ?? false;
-    const notificationSummary = platformInfo?.operations?.notification_summary || maintenanceCurrent?.notification?.summary || '尚未配置启用中的生产告警 Webhook';
+    const notificationSummary = platformInfo?.operations?.notification_summary || maintenanceCurrent?.notification?.summary || "No enabled production alert webhook is configured";
     const notificationBadgeText = notificationReady
-        ? `健康 ${notificationHealthyCount}/${notificationWebhookCount}`
+        ? `Healthy ${notificationHealthyCount}/${notificationWebhookCount}`
         : notificationWebhookCount === 0
-            ? '未配置'
+            ? "Not configured"
             : notificationTestedCount === 0
-                ? `待验证 ${notificationUntestedCount}`
-                : `健康 ${notificationHealthyCount}/${notificationWebhookCount}`;
+                ? `Pending verification ${notificationUntestedCount}`
+                : `Healthy ${notificationHealthyCount}/${notificationWebhookCount}`;
     const chatopsReady = platformInfo?.operations?.commander_chatops_ready ?? false;
     const chatopsPlatformReady = platformInfo?.operations?.commander_chatops_platform_ready ?? false;
     const chatopsExternalConnected = platformInfo?.operations?.commander_chatops_external_connected ?? false;
@@ -454,15 +455,15 @@ const DashboardPage: React.FC = () => {
     const chatopsDeliveryStrategy = platformInfo?.operations?.commander_chatops_delivery_strategy || (chatopsAppBotConfigured ? 'single_robot_with_webhook_fallback' : 'webhook_only');
     const chatopsDeliveryStrategySummary = platformInfo?.operations?.commander_chatops_delivery_strategy_summary || (
         chatopsAppBotConfigured
-            ? '对外建议使用当前项目专属的同一个通知平台应用机器人承接命令与回复，Webhook 仅保留兜底通知。'
-            : '当前仍主要依赖 Webhook 机器人发通知，尚未形成“一个机器人”对外体验。'
+            ? "Use the same project-specific notification app bot for commands and replies. Keep webhooks as a notification fallback."
+            : "Notifications still rely mainly on a webhook bot; a unified bot experience is not yet in place."
     );
     const chatopsSubscriptionVerified = platformInfo?.operations?.commander_chatops_subscription_endpoint_verified ?? false;
     const chatopsTokenConfigured = platformInfo?.operations?.commander_chatops_verification_token_configured ?? false;
     const chatopsTokenMasked = platformInfo?.operations?.commander_chatops_verification_token_masked || '';
     const chatopsCallbackUrl = platformInfo?.operations?.commander_chatops_callback_url || '';
     const chatopsCallbackUrlPublic = platformInfo?.operations?.commander_chatops_callback_url_public ?? false;
-    const chatopsCallbackProviderLabel = platformInfo?.operations?.commander_chatops_callback_provider?.label || (chatopsCallbackUrlPublic ? '自定义公网地址' : '本地地址');
+    const chatopsCallbackProviderLabel = platformInfo?.operations?.commander_chatops_callback_provider?.label || (chatopsCallbackUrlPublic ? "Custom public URL" : "Local URL");
     const chatopsCallbackProviderHost = platformInfo?.operations?.commander_chatops_callback_provider?.host || '';
     const chatopsCallbackRecommendation = platformInfo?.operations?.commander_chatops_callback_recommendation || '';
     const chatopsCallbackProbeAttempted = platformInfo?.operations?.commander_chatops_callback_probe_attempted ?? false;
@@ -475,37 +476,37 @@ const DashboardPage: React.FC = () => {
     const chatopsRecentSuccessAt = platformInfo?.operations?.commander_chatops_recent_success_at || '';
     const chatopsLatestExternalSuccessAt = platformInfo?.operations?.commander_chatops_latest_external_success_at || '';
     const chatopsLatestExternalSelfCheckAt = platformInfo?.operations?.commander_chatops_latest_external_self_check_at || '';
-    const chatopsSummary = platformInfo?.operations?.commander_chatops_summary || '通知平台双向指令状态暂不可用';
+    const chatopsSummary = platformInfo?.operations?.commander_chatops_summary || "Two-way notification command status is temporarily unavailable";
     const chatopsLatestVerifiedAt = chatopsLatestExternalSuccessAt || chatopsLatestExternalSelfCheckAt || chatopsRecentSuccessAt || '';
     const chatopsLatestVerifiedLabel = chatopsLatestExternalSuccessAt
-        ? '最近真实通知平台回流'
+        ? "Latest actual inbound notification event"
         : chatopsLatestExternalSelfCheckAt
-            ? '最近公网自测'
+            ? "Latest public endpoint self-test"
             : chatopsRecentSuccessAt
-                ? '最近成功事件'
-                : '尚未验证';
+                ? "Latest successful event"
+                : "Not verified yet";
     const chatopsCurrentEntryLabel = chatopsDirectChatReady
-        ? '单聊 AI Test Platform'
+        ? "Direct message AI Test Platform"
         : chatopsExternalConnectionStale
-            ? '历史已打通，当前待恢复'
+            ? "Previously connected; restoration pending"
             : chatopsPlatformReady
-                ? '去通知配置页继续联调'
-                : '先补平台配置';
+                ? "Continue integration testing in notification settings"
+                : "Complete platform configuration first";
     const chatopsBadgeText = chatopsDirectChatReady
-        ? '已联通'
+        ? "Connected"
         : !chatopsPlatformReady
-            ? '平台侧待完成'
+            ? "Platform setup pending"
             : !chatopsCallbackUrlPublic
-                ? '本地回调'
+                ? "Local callback"
                 : chatopsExternalConnectionStale
-                    ? '外部已退化'
+                    ? "External connection degraded"
                 : chatopsCallbackProbeAttempted && !chatopsCallbackProbeSuccess
-                    ? '公网回探失败'
+                    ? "Public endpoint probe failed"
                 : !chatopsAppBotConfigured
-                    ? '缺专属机器人'
+                    ? "Project-specific bot missing"
                     : !chatopsExternalConnected
-                        ? '待真实群测'
-                        : '待确认';
+                        ? "Real group test pending"
+                        : "Pending confirmation";
     const chatopsBadgeClass = chatopsDirectChatReady
         ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300'
         : chatopsPlatformReady && !(chatopsCallbackProbeAttempted && !chatopsCallbackProbeSuccess)
@@ -514,20 +515,20 @@ const DashboardPage: React.FC = () => {
                 ? 'bg-rose-50 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300'
                 : 'bg-violet-50 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300';
     const chatopsActionHint = !chatopsPlatformReady
-        ? '先补齐公网回调、Token 和 challenge 自检'
+        ? "Complete the public callback, token, and challenge self-check first"
         : !chatopsCallbackUrlPublic
-            ? '先去通知配置页保存公网回调地址'
+            ? "Save the public callback URL in notification settings first"
             : chatopsExternalSelfCheckRecentSuccess && !chatopsDirectChatReady
-                ? '公网自测已通过，下一步在目标群里发一条真实消息完成最终联调'
+                ? "The public self-test passed. Send a real message in the target group to finish integration testing."
             : chatopsExternalConnectionStale
-                ? '平台历史上已打通过，但当前公网入口已退化；先修复公网地址/隧道，再重新做群测'
+                ? "The platform was connected previously, but the public endpoint has degraded. Fix the public URL or tunnel, then repeat the group test."
             : chatopsCallbackProbeAttempted && !chatopsCallbackProbeSuccess
-                ? '先修复当前公网回调地址或隧道，再去通知平台后台联调'
+                ? "Fix the current public callback URL or tunnel, then test integration in the notification platform console"
                 : !chatopsAppBotConfigured
-                    ? '先补当前项目专属通知平台应用机器人，再把它加入目标群'
+                    ? "Add a notification app bot dedicated to this project, then invite it to the target group"
                     : !chatopsExternalConnected
-                        ? '去通知平台后台完成事件订阅并发一条测试消息'
-                        : '双向指令链路已完成联调';
+                        ? "Configure event subscriptions in the notification platform console and send a test message"
+                        : "Two-way command integration testing completed";
     const maintenanceSuspectHistoryCount = platformInfo?.operations?.maintenance_suspect_history_count ?? maintenanceCurrent?.data_quality?.suspect_history_count ?? 0;
     const maintenanceArchivedHistoryCount = platformInfo?.operations?.maintenance_archived_history_count ?? maintenanceCurrent?.data_quality?.archived_history_count ?? 0;
     const maintenanceArchiveExportCount = platformInfo?.operations?.maintenance_archive_export_count ?? maintenanceCurrent?.data_quality?.archive_export_count ?? 0;
@@ -547,11 +548,11 @@ const DashboardPage: React.FC = () => {
     const maintenanceLastArchiveCleanupDeletedRuns = platformInfo?.operations?.maintenance_last_archive_cleanup_deleted_runs ?? maintenanceCurrent?.data_quality?.last_archive_cleanup_deleted_runs ?? 0;
     const maintenanceLastArchiveCleanupDeletedExports = platformInfo?.operations?.maintenance_last_archive_cleanup_deleted_exports ?? maintenanceCurrent?.data_quality?.last_archive_cleanup_deleted_exports ?? 0;
     const maintenanceHistoryClean = platformInfo?.operations?.maintenance_history_clean ?? maintenanceCurrent?.data_quality?.clean ?? true;
-    const maintenanceHistorySummary = platformInfo?.operations?.maintenance_history_summary || maintenanceCurrent?.data_quality?.summary || '维护历史正常';
+    const maintenanceHistorySummary = platformInfo?.operations?.maintenance_history_summary || maintenanceCurrent?.data_quality?.summary || "Maintenance history is normal";
     const readiness = platformReadiness;
     const readinessStage = readiness?.stage || platformInfo?.operations?.readiness_stage || 'beta';
     const readinessScore = readiness?.score ?? platformInfo?.operations?.readiness_score ?? 0;
-    const readinessSummary = readiness?.summary || platformInfo?.operations?.readiness_summary || '就绪度评估暂不可用';
+    const readinessSummary = readiness?.summary || platformInfo?.operations?.readiness_summary || "Readiness assessment is temporarily unavailable";
     const maintenanceBadgeClass = maintenanceCurrent?.status === 'failed'
         ? 'bg-rose-50 text-rose-600 dark:bg-rose-500/15 dark:text-rose-300'
         : maintenanceCurrent?.skipped
@@ -577,71 +578,71 @@ const DashboardPage: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            {/* ── 标题 ── */}
+            {/* Title*/}
             <div className="mb-2">
                 <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
                     <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
                         <LayoutDashboard className="w-5 h-5" />
                     </div>
-                    控制中心
+                    Control center
                 </h2>
-                <p className="text-slate-500 mt-2 text-sm">智能体状态总览与系统监控</p>
+                <p className="text-slate-500 mt-2 text-sm">Agent status and system monitoring</p>
             </div>
 
-            {/* ── 统计卡片组 ── */}
+            {/* Statistics cards*/}
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 stagger-enter">
                 <StatCard
-                    label="今日执行"
+                    label={"Runs today"}
                     value={loading ? '—' : stats?.todayExecutions ?? 0}
-                    sub="测试任务执行次数"
+                    sub={"Test task execution count"}
                     icon={<Activity className="w-5 h-5" />}
                     gradient="bg-gradient-to-br from-indigo-500 to-indigo-700"
                 />
                 <StatCard
-                    label="成功率"
+                    label={"Success rate"}
                     value={loading ? '—' : `${stats?.todaySuccessRate ?? 0}%`}
-                    sub="今日通过率"
+                    sub={"Today's pass rate"}
                     icon={<CheckCircle2 className="w-5 h-5" />}
                     gradient="bg-gradient-to-br from-emerald-500 to-emerald-700"
                 />
                 <StatCard
-                    label="平均耗时"
+                    label={"Average duration"}
                     value={loading ? '—' : formatDuration(stats?.avgDurationMs ?? 0)}
-                    sub="全部任务平均"
+                    sub={"Average across all tasks"}
                     icon={<Clock className="w-5 h-5" />}
                     gradient="bg-gradient-to-br from-amber-500 to-orange-600"
                 />
                 <StatCard
-                    label="发现缺陷"
+                    label={"Defects found"}
                     value={loading ? '—' : stats?.todayDefects ?? 0}
-                    sub="今日错误计数"
+                    sub={"Today's error count"}
                     icon={<Bug className="w-5 h-5" />}
                     gradient="bg-gradient-to-br from-rose-500 to-rose-700"
                 />
             </div>
 
-            {/* ── 快速开始 ── */}
+            {/* Quick start*/}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {[
                     {
-                        title: '快速测试',
-                        desc: '输入 URL 和需求，AI 自动生成计划并执行',
+                        title: "Quick test",
+                        desc: "Enter a URL and requirements; AI generates and executes a plan",
                         path: '/orchestrator',
                         icon: Play,
                         gradient: 'from-indigo-500 to-blue-500',
                         shadow: 'shadow-indigo-500/20',
                     },
                     {
-                        title: '全面测试',
-                        desc: '一句话启动多类型测试，Commander 智能调度',
+                        title: "Comprehensive testing",
+                        desc: "Start multiple test types with one instruction and Commander scheduling",
                         path: '/commander',
                         icon: Swords,
                         gradient: 'from-purple-500 to-pink-500',
                         shadow: 'shadow-purple-500/20',
                     },
                     {
-                        title: '探索发现',
-                        desc: '让 AI 自主浏览网站，自动发现异常和 Bug',
+                        title: "Exploration findings",
+                        desc: "Let AI explore the website and discover anomalies and bugs",
                         path: '/exploratory',
                         icon: Compass,
                         gradient: 'from-teal-500 to-emerald-500',
@@ -659,23 +660,23 @@ const DashboardPage: React.FC = () => {
                             <h3 className="text-lg font-bold mb-1">{g.title}</h3>
                             <p className="text-sm text-white/80 leading-relaxed">{g.desc}</p>
                             <div className="mt-3 flex items-center gap-1 text-xs font-medium text-white/70 group-hover:text-white transition-colors">
-                                开始使用 <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                                Get started <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                             </div>
                         </div>
                     </button>
                 ))}
             </div>
 
-            {/* ── 图表行 ── */}
+            {/* Charts row*/}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                {/* 7 天趋势 — 占 2/3 */}
+                {/* Seven-day trend: two-thirds width*/}
                 <div className="lg:col-span-2 card-hover-lift rounded-2xl border border-slate-200/60 bg-white/80 backdrop-blur-sm p-5 dark:border-slate-700/60 dark:bg-slate-800/60">
                     <h3 className="mb-4 text-base font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
                         <BarChart3 className="w-4 h-4 text-indigo-500" />
-                        最近 7 天趋势
+                        Last 7 days
                     </h3>
                     {!stats?.trend7Days?.some(d => d.executions > 0) ? (
-                        <EmptyChart message="暂无执行数据" />
+                        <EmptyChart message={"No execution data yet"} />
                     ) : (
                         <ResponsiveContainer width="100%" height={240}>
                             <AreaChart data={stats?.trend7Days} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
@@ -694,21 +695,21 @@ const DashboardPage: React.FC = () => {
                                 <YAxis yAxisId="left" tick={{ fontSize: 12 }} stroke="#94a3b8" />
                                 <YAxis yAxisId="right" orientation="right" domain={[0, 100]} tick={{ fontSize: 12 }} stroke="#94a3b8" />
                                 <Tooltip content={<ChartTooltip />} />
-                                <Area yAxisId="left" type="monotone" dataKey="executions" name="执行数" stroke="#6366f1" fill="url(#colorExec)" strokeWidth={2} />
-                                <Area yAxisId="right" type="monotone" dataKey="successRate" name="成功率" stroke="#22c55e" fill="url(#colorRate)" strokeWidth={2} />
+                                <Area yAxisId="left" type="monotone" dataKey="executions" name={"Executions"} stroke="#6366f1" fill="url(#colorExec)" strokeWidth={2} />
+                                <Area yAxisId="right" type="monotone" dataKey="successRate" name={"Success rate"} stroke="#22c55e" fill="url(#colorRate)" strokeWidth={2} />
                             </AreaChart>
                         </ResponsiveContainer>
                     )}
                 </div>
 
-                {/* 测试类型分布 — 占 1/3 */}
+                {/* Test type distribution: one-third width*/}
                 <div className="rounded-2xl card-hover-lift border border-slate-200/60 bg-white/80 backdrop-blur-sm p-5 dark:border-slate-700/60 dark:bg-slate-800/60">
                     <h3 className="mb-4 text-base font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
                         <PieChartLucide className="w-4 h-4 text-violet-500" />
-                        测试类型分布
+                        Test type distribution
                     </h3>
                     {!stats?.typeDistribution?.length ? (
-                        <EmptyChart message="暂无数据" />
+                        <EmptyChart message={"No data yet"} />
                     ) : (
                         <ResponsiveContainer width="100%" height={240}>
                             <PieChart>
@@ -740,19 +741,19 @@ const DashboardPage: React.FC = () => {
                     <div>
                         <h3 className="text-base font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
                             <BarChart3 className="w-4 h-4 text-indigo-500" />
-                            生产推进视角
+                            Production readiness
                         </h3>
                         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                            同时从局部模块和全局架构两个层面，衡量平台距离生产级还有多远。
+                            Measure progress toward production readiness at both the module and overall architecture levels.
                         </p>
                     </div>
                     <div className="flex items-center gap-3">
                         <div className="text-right">
-                            <div className="text-xs text-slate-400">总体就绪度</div>
+                            <div className="text-xs text-slate-400">Overall readiness</div>
                             <div className="text-2xl font-bold text-slate-900 dark:text-white">{readinessScore}</div>
                         </div>
                         <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${readinessBadgeClass}`}>
-                            {readinessStage === 'production-ready' ? '生产级' : readinessStage === 'pre-production' ? '准生产' : 'Beta'}
+                            {readinessStage === 'production-ready' ? "Production-ready" : readinessStage === 'pre-production' ? "Near production" : 'Beta'}
                         </span>
                     </div>
                 </div>
@@ -761,7 +762,7 @@ const DashboardPage: React.FC = () => {
                 </div>
                 <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
                     <div className="rounded-2xl border border-slate-200/70 bg-slate-50/70 p-4 dark:border-slate-700/60 dark:bg-slate-900/30">
-                        <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">局部视角</div>
+                        <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">Module view</div>
                         <div className="mt-3 space-y-3">
                             {(readiness?.local || []).map(section => (
                                 <div key={section.key} className="rounded-xl border border-slate-200/70 bg-white px-3 py-3 dark:border-slate-700/60 dark:bg-slate-800">
@@ -769,7 +770,7 @@ const DashboardPage: React.FC = () => {
                                         <div className="text-sm font-medium text-slate-800 dark:text-slate-100">{section.name}</div>
                                         <div className="flex items-center gap-2">
                                             <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${readinessStatusClass(section.status)}`}>
-                                                {section.status === 'good' ? '稳定' : section.status === 'warning' ? '关注' : '阻塞'}
+                                                {section.status === 'good' ? "Stable" : section.status === 'warning' ? "Needs attention" : "Blocked"}
                                             </span>
                                             <span className="text-sm font-bold text-slate-800 dark:text-slate-100">{section.score}</span>
                                         </div>
@@ -780,7 +781,7 @@ const DashboardPage: React.FC = () => {
                         </div>
                     </div>
                     <div className="rounded-2xl border border-slate-200/70 bg-slate-50/70 p-4 dark:border-slate-700/60 dark:bg-slate-900/30">
-                        <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">全局视角</div>
+                        <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">Architecture view</div>
                         <div className="mt-3 space-y-3">
                             {(readiness?.global || []).map(section => (
                                 <div key={section.key} className="rounded-xl border border-slate-200/70 bg-white px-3 py-3 dark:border-slate-700/60 dark:bg-slate-800">
@@ -788,7 +789,7 @@ const DashboardPage: React.FC = () => {
                                         <div className="text-sm font-medium text-slate-800 dark:text-slate-100">{section.name}</div>
                                         <div className="flex items-center gap-2">
                                             <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${readinessStatusClass(section.status)}`}>
-                                                {section.status === 'good' ? '稳定' : section.status === 'warning' ? '关注' : '阻塞'}
+                                                {section.status === 'good' ? "Stable" : section.status === 'warning' ? "Needs attention" : "Blocked"}
                                             </span>
                                             <span className="text-sm font-bold text-slate-800 dark:text-slate-100">{section.score}</span>
                                         </div>
@@ -801,7 +802,7 @@ const DashboardPage: React.FC = () => {
                 </div>
                 {!!readiness?.recommendations?.length && (
                     <div className="mt-4 rounded-2xl border border-indigo-200/70 bg-indigo-50/70 p-4 dark:border-indigo-500/30 dark:bg-indigo-500/10">
-                        <div className="text-sm font-semibold text-indigo-700 dark:text-indigo-300">下一步推进建议</div>
+                        <div className="text-sm font-semibold text-indigo-700 dark:text-indigo-300">Suggested next steps</div>
                         <div className="mt-3 grid grid-cols-1 gap-2">
                             {readiness.recommendations.slice(0, 3).map((item, index) => (
                                 <div key={`${index}-${item}`} className="rounded-xl bg-white/80 px-3 py-2 text-sm text-slate-700 dark:bg-slate-900/40 dark:text-slate-200">
@@ -815,17 +816,17 @@ const DashboardPage: React.FC = () => {
                     <div className="mt-4 rounded-2xl border border-rose-200/70 bg-rose-50/70 p-4 dark:border-rose-500/30 dark:bg-rose-500/10">
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                             <div>
-                                <div className="text-sm font-semibold text-rose-700 dark:text-rose-300">关键行动项</div>
+                                <div className="text-sm font-semibold text-rose-700 dark:text-rose-300">Key action items</div>
                                 <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                                    当前共 {remediation.counts.total} 项，其中阻塞项 {remediation.counts.blocking} 项。
+                                    Currently {remediation.counts.total} items, including {remediation.counts.blocking} blockers.
                                 </div>
                             </div>
                             <div className="flex items-center gap-2 text-xs">
                                 <span className="rounded-full bg-white/80 px-2 py-1 text-slate-700 dark:bg-slate-900/40 dark:text-slate-200">
-                                    局部 {remediation.counts.local}
+                                    Module {remediation.counts.local}
                                 </span>
                                 <span className="rounded-full bg-white/80 px-2 py-1 text-slate-700 dark:bg-slate-900/40 dark:text-slate-200">
-                                    全局 {remediation.counts.global}
+                                    Overall {remediation.counts.global}
                                 </span>
                             </div>
                         </div>
@@ -840,12 +841,12 @@ const DashboardPage: React.FC = () => {
                                                     {item.priority}
                                                 </span>
                                                 <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${remediationScopeClass(item.scope)}`}>
-                                                    {item.scope === 'local' ? '局部' : '全局'}
+                                                    {item.scope === 'local' ? "Module" : "Overall"}
                                                 </span>
                                             </div>
                                             <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">{item.summary}</div>
-                                            <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">影响：{item.impact}</div>
-                                            <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">下一步：{item.next_step}</div>
+                                            <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">Impact: {item.impact}</div>
+                                            <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">Next step: {item.next_step}</div>
                                             {Array.isArray(item.evidence?.shadow_paths) && item.evidence.shadow_paths.length > 0 && (
                                                 <div className="mt-2 rounded-lg bg-slate-50 px-2 py-2 font-mono text-[11px] text-slate-600 dark:bg-slate-800/80 dark:text-slate-300">
                                                     {(item.evidence.shadow_paths as string[]).join('\n')}
@@ -858,7 +859,7 @@ const DashboardPage: React.FC = () => {
                                                 onClick={() => navigate(item.route!)}
                                                 className="inline-flex shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
                                             >
-                                                立即处理
+                                                Resolve now
                                             </button>
                                         )}
                                     </div>
@@ -874,10 +875,10 @@ const DashboardPage: React.FC = () => {
                     <div>
                         <h3 className="text-base font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
                             <Server className="w-4 h-4 text-cyan-500" />
-                            平台维护
+                            Platform maintenance
                         </h3>
                         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                            启动自维护、历史修复和报告修复的当前状态与最近执行记录
+                            Current status and recent runs for startup self-maintenance, history repair, and report repair
                         </p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -889,7 +890,7 @@ const DashboardPage: React.FC = () => {
                                 className="inline-flex items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-medium text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300 dark:hover:bg-rose-500/20"
                             >
                                 <Wrench className={`w-4 h-4 ${shadowQuarantineRunning ? 'animate-spin' : ''}`} />
-                                {shadowQuarantineRunning ? '隔离中...' : '隔离影子库'}
+                                {shadowQuarantineRunning ? "Isolating..." : "Isolate shadow databases"}
                             </button>
                         )}
                         {maintenanceArchivedHistoryCount > 0 && (
@@ -900,7 +901,7 @@ const DashboardPage: React.FC = () => {
                                 className="inline-flex items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2 text-sm font-medium text-indigo-700 transition hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-indigo-500/30 dark:bg-indigo-500/10 dark:text-indigo-300 dark:hover:bg-indigo-500/20"
                             >
                                 <Wrench className={`w-4 h-4 ${archiveCleanupRunning ? 'animate-spin' : ''}`} />
-                                {archiveCleanupRunning ? '检查中...' : '检查归档保留'}
+                                {archiveCleanupRunning ? "Checking..." : "Check archive retention"}
                             </button>
                         )}
                         {maintenanceArchiveCleanupNeeded && (
@@ -911,7 +912,7 @@ const DashboardPage: React.FC = () => {
                                 className="inline-flex items-center justify-center gap-2 rounded-xl border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-medium text-violet-700 transition hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-violet-500/30 dark:bg-violet-500/10 dark:text-violet-300 dark:hover:bg-violet-500/20"
                             >
                                 <Wrench className={`w-4 h-4 ${archiveCleanupRunning ? 'animate-spin' : ''}`} />
-                                {archiveCleanupRunning ? '清理中...' : '清理过期归档'}
+                                {archiveCleanupRunning ? "Cleaning up..." : "Clean up expired archives"}
                             </button>
                         )}
                         {maintenanceArchivedHistoryCount > 0 && (
@@ -922,7 +923,7 @@ const DashboardPage: React.FC = () => {
                                 className="inline-flex items-center justify-center gap-2 rounded-xl border border-sky-200 bg-sky-50 px-4 py-2 text-sm font-medium text-sky-700 transition hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-300 dark:hover:bg-sky-500/20"
                             >
                                 <Wrench className={`w-4 h-4 ${archiveExportRunning ? 'animate-spin' : ''}`} />
-                                {archiveExportRunning ? '导出中...' : '导出归档记录'}
+                                {archiveExportRunning ? "Exporting..." : "Export archived records"}
                             </button>
                         )}
                         {maintenanceSuspectHistoryCount > 0 && (
@@ -933,7 +934,7 @@ const DashboardPage: React.FC = () => {
                                 className="inline-flex items-center justify-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-700 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300 dark:hover:bg-amber-500/20"
                             >
                                 <Wrench className={`w-4 h-4 ${archiveRunning ? 'animate-spin' : ''}`} />
-                                {archiveRunning ? '归档中...' : '归档可疑记录'}
+                                {archiveRunning ? "Archiving..." : "Archive suspicious records"}
                             </button>
                         )}
                         <button
@@ -943,7 +944,7 @@ const DashboardPage: React.FC = () => {
                             className="inline-flex items-center justify-center gap-2 rounded-xl border border-cyan-200 bg-cyan-50 px-4 py-2 text-sm font-medium text-cyan-700 transition hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-cyan-500/30 dark:bg-cyan-500/10 dark:text-cyan-300 dark:hover:bg-cyan-500/20"
                         >
                             <RefreshCw className={`w-4 h-4 ${maintenanceRunning ? 'animate-spin' : ''}`} />
-                            {maintenanceRunning ? '执行中...' : '立即维护'}
+                            {maintenanceRunning ? "Running..." : "Run maintenance now"}
                         </button>
                     </div>
                 </div>
@@ -951,48 +952,48 @@ const DashboardPage: React.FC = () => {
                 <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-[1.1fr_0.9fr]">
                     <div className="rounded-2xl border border-slate-200/70 bg-slate-50/70 p-4 dark:border-slate-700/60 dark:bg-slate-900/30">
                         <div className="flex items-center justify-between">
-                            <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">当前维护状态</div>
+                            <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">Current maintenance status</div>
                             <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${maintenanceBadgeClass}`}>
                                 {maintenanceCurrent?.status === 'failed'
-                                    ? '失败'
+                                    ? "Failed"
                                     : maintenanceCurrent?.skipped
-                                        ? '节流跳过'
+                                        ? "Skipped due to throttling"
                                         : maintenanceCurrent?.status === 'success'
-                                            ? '正常'
-                                            : '未执行'}
+                                            ? "Normal"
+                                            : "Not run"}
                             </span>
                         </div>
                         <div className="mt-4 grid grid-cols-2 gap-3">
                             <div className="rounded-xl bg-white px-3 py-3 text-sm dark:bg-slate-800">
-                                <div className="text-xs text-slate-400">最近执行</div>
+                                <div className="text-xs text-slate-400">Latest run</div>
                                 <div className="mt-1 font-semibold text-slate-800 dark:text-slate-100">{formatTimestamp(maintenanceCurrent?.timestamp)}</div>
                             </div>
                             <div className="rounded-xl bg-white px-3 py-3 text-sm dark:bg-slate-800">
-                                <div className="text-xs text-slate-400">耗时</div>
+                                <div className="text-xs text-slate-400">Duration</div>
                                 <div className="mt-1 font-semibold text-slate-800 dark:text-slate-100">{formatDuration(maintenanceCurrent?.duration_ms || 0)}</div>
                             </div>
                             <div className="rounded-xl bg-white px-3 py-3 text-sm dark:bg-slate-800">
-                                <div className="text-xs text-slate-400">触发原因</div>
-                                <div className="mt-1 font-semibold text-slate-800 dark:text-slate-100">{maintenanceCurrent?.reason || '未执行'}</div>
+                                <div className="text-xs text-slate-400">Trigger reason</div>
+                                <div className="mt-1 font-semibold text-slate-800 dark:text-slate-100">{maintenanceCurrent?.reason || "Not run"}</div>
                             </div>
                             <div className="rounded-xl bg-white px-3 py-3 text-sm dark:bg-slate-800">
-                                <div className="text-xs text-slate-400">报告历史</div>
+                                <div className="text-xs text-slate-400">Report history</div>
                                 <div className="mt-1 font-semibold text-slate-800 dark:text-slate-100">
-                                    {maintenanceCurrent?.report_history?.history_entries ?? 0} 条 / 修复 {maintenanceCurrent?.report_history?.updated_entries ?? 0} 条
+                                    {maintenanceCurrent?.report_history?.history_entries ?? 0} entries / Repaired {maintenanceCurrent?.report_history?.updated_entries ?? 0} tasks
                                 </div>
                             </div>
                         </div>
                         <div className="mt-3 grid grid-cols-3 gap-3">
                             <div className="rounded-xl border border-slate-200/70 bg-white px-3 py-3 text-sm dark:border-slate-700/60 dark:bg-slate-800">
-                                <div className="text-xs text-slate-400">性能导入</div>
+                                <div className="text-xs text-slate-400">Performance import</div>
                                 <div className="mt-1 font-semibold text-slate-800 dark:text-slate-100">{maintenanceCurrent?.sync?.performance ?? 0}</div>
                             </div>
                             <div className="rounded-xl border border-slate-200/70 bg-white px-3 py-3 text-sm dark:border-slate-700/60 dark:bg-slate-800">
-                                <div className="text-xs text-slate-400">安全导入</div>
+                                <div className="text-xs text-slate-400">Security import</div>
                                 <div className="mt-1 font-semibold text-slate-800 dark:text-slate-100">{maintenanceCurrent?.sync?.security ?? 0}</div>
                             </div>
                             <div className="rounded-xl border border-slate-200/70 bg-white px-3 py-3 text-sm dark:border-slate-700/60 dark:bg-slate-800">
-                                <div className="text-xs text-slate-400">文本修复</div>
+                                <div className="text-xs text-slate-400">Text repair</div>
                                 <div className="mt-1 font-semibold text-slate-800 dark:text-slate-100">
                                     {(maintenanceCurrent?.repair?.group_updates ?? 0) + (maintenanceCurrent?.repair?.record_updates ?? 0)}
                                 </div>
@@ -1000,30 +1001,30 @@ const DashboardPage: React.FC = () => {
                         </div>
                         <div className="mt-3 grid grid-cols-2 gap-3">
                             <div className="rounded-xl border border-slate-200/70 bg-white px-3 py-3 text-sm dark:border-slate-700/60 dark:bg-slate-800">
-                                <div className="text-xs text-slate-400">最近活动</div>
-                                <div className="mt-1 font-semibold text-slate-800 dark:text-slate-100">{latestActivity?.reason || '未记录'}</div>
+                                <div className="text-xs text-slate-400">Recent activity</div>
+                                <div className="mt-1 font-semibold text-slate-800 dark:text-slate-100">{latestActivity?.reason || "Not recorded"}</div>
                                 <div className="mt-1 text-xs text-slate-400">{formatTimestamp(latestActivity?.timestamp)}</div>
                             </div>
                             <div className="rounded-xl border border-slate-200/70 bg-white px-3 py-3 text-sm dark:border-slate-700/60 dark:bg-slate-800">
-                                <div className="text-xs text-slate-400">业务库风险</div>
+                                <div className="text-xs text-slate-400">Business database risk</div>
                                 <div className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
                                     businessDbRiskLevel === 'warning'
                                         ? 'bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300'
                                         : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300'
                                 }`}>
-                                    {businessDbRiskLevel === 'warning' ? `存在 ${shadowBusinessDbCount} 个影子库` : '正常'}
+                                    {businessDbRiskLevel === 'warning' ? `Found ${shadowBusinessDbCount} shadow databases` : "Normal"}
                                 </div>
-                                <div className="mt-1 text-xs text-slate-400">{maintenanceRisk?.summary || '最新扰动不会覆盖关键维护主状态'}</div>
+                                <div className="mt-1 text-xs text-slate-400">{maintenanceRisk?.summary || "Recent disruptions do not overwrite the primary maintenance status"}</div>
                                 {businessDbRiskLevel === 'warning' && (
                                     <div className="mt-1 text-xs text-slate-400">
-                                        预警状态 {maintenanceCurrent?.risk_alert_sent ? '已发送' : '未发送'}
+                                        Warning status {maintenanceCurrent?.risk_alert_sent ? "Sent" : "Not sent"}
                                     </div>
                                 )}
                             </div>
                         </div>
                         <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
                             <div className="rounded-xl border border-slate-200/70 bg-white px-3 py-3 text-sm dark:border-slate-700/60 dark:bg-slate-800">
-                                <div className="text-xs text-slate-400">告警接出</div>
+                                <div className="text-xs text-slate-400">Alert delivery</div>
                                 <div className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
                                     notificationReady
                                         ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300'
@@ -1034,14 +1035,14 @@ const DashboardPage: React.FC = () => {
                                 <div className="mt-1 text-xs text-slate-400">{notificationSummary}</div>
                                 {notificationWebhookCount > 0 && (
                                     <div className="mt-1 text-xs text-slate-400">
-                                        启用 {notificationWebhookCount} 个，已测试 {notificationTestedCount} 个，未验证 {notificationUntestedCount} 个
+                                        Enabled {notificationWebhookCount} , tested {notificationTestedCount} , unverified {notificationUntestedCount} endpoints
                                     </div>
                                 )}
                             </div>
                     <div className="rounded-xl border border-slate-200/70 bg-white px-3 py-3 text-sm dark:border-slate-700/60 dark:bg-slate-800">
                                 <div className="flex items-start justify-between gap-2">
                                     <div>
-                                        <div className="text-xs text-slate-400">通知平台双向指令</div>
+                                        <div className="text-xs text-slate-400">Two-way notification commands</div>
                                         <div className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${chatopsBadgeClass}`}>
                                             {chatopsBadgeText}
                                         </div>
@@ -1051,119 +1052,119 @@ const DashboardPage: React.FC = () => {
                                         onClick={() => navigate('/notifications')}
                                         className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[11px] font-medium text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-200 dark:hover:bg-slate-700"
                                     >
-                                        去处理
+                                        Resolve
                                     </button>
                                 </div>
                                     <div className="mt-1 text-xs text-slate-400">{chatopsSummary}</div>
                                     <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
                                         <div className="rounded-xl border border-slate-200/70 bg-slate-50/80 px-3 py-2 dark:border-slate-700/60 dark:bg-slate-900/40">
-                                            <div className="text-[11px] text-slate-400">当前入口</div>
+                                            <div className="text-[11px] text-slate-400">Current entry point</div>
                                             <div className="mt-1 text-xs font-semibold text-slate-700 dark:text-slate-100">{chatopsCurrentEntryLabel}</div>
                                         </div>
                                         <div className="rounded-xl border border-slate-200/70 bg-slate-50/80 px-3 py-2 dark:border-slate-700/60 dark:bg-slate-900/40">
                                             <div className="text-[11px] text-slate-400">{chatopsLatestVerifiedLabel}</div>
                                             <div className="mt-1 text-xs font-semibold text-slate-700 dark:text-slate-100">
-                                                {chatopsLatestVerifiedAt ? formatTimestamp(chatopsLatestVerifiedAt) : '暂无'}
+                                                {chatopsLatestVerifiedAt ? formatTimestamp(chatopsLatestVerifiedAt) : "None"}
                                             </div>
                                         </div>
                                         <div className="rounded-xl border border-slate-200/70 bg-slate-50/80 px-3 py-2 dark:border-slate-700/60 dark:bg-slate-900/40">
-                                            <div className="text-[11px] text-slate-400">团队通知入口</div>
-                                            <div className="mt-1 text-xs font-semibold text-slate-700 dark:text-slate-100">测试平台群</div>
+                                            <div className="text-[11px] text-slate-400">Team notification entry point</div>
+                                            <div className="mt-1 text-xs font-semibold text-slate-700 dark:text-slate-100">Testing platform group</div>
                                         </div>
                                     </div>
                                     <div className="mt-1 space-y-1 text-xs text-slate-400">
-                                        <div>平台侧 {chatopsPlatformReady ? '已就绪' : '未就绪'} · 公网入口 {chatopsExternalCallbackReady ? '已打通' : '未打通'} · 群聊直连 {chatopsDirectChatReady ? '已联通' : '未联通'}</div>
+                                        <div>Platform {chatopsPlatformReady ? "Ready" : "Not ready"} · Public endpoint {chatopsExternalCallbackReady ? "Connected" : "Not connected"} · Direct group connection {chatopsDirectChatReady ? "Connected" : "Not connected"}</div>
                                         <div>
-                                            对外机器人 {chatopsUnifiedRobotReady ? '已完成单机器人' : chatopsUnifiedRobotPlatformReady ? '单机器人待群测' : chatopsUnifiedRobotTarget ? '单机器人建设中' : '仍为多入口'}
+                                            External bot {chatopsUnifiedRobotReady ? "Unified bot ready" : chatopsUnifiedRobotPlatformReady ? "Unified bot awaiting group test" : chatopsUnifiedRobotTarget ? "Unified bot setup in progress" : "Multiple entry points remain"}
                                             {' · '}
                                             {chatopsDeliveryStrategy === 'single_robot_with_webhook_fallback'
-                                                ? '应用机器人主通道 + Webhook 兜底'
+                                                ? "App bot primary channel with webhook fallback"
                                                 : chatopsDeliveryStrategy === 'app_bot_only'
-                                                    ? '仅应用机器人'
+                                                    ? "App bot only"
                                                     : chatopsDeliveryStrategy === 'webhook_only'
-                                                        ? '仅 Webhook 机器人'
-                                                        : '未配置'}
+                                                        ? "Webhook bot only"
+                                                        : "Not configured"}
                                         </div>
                                         <div>{chatopsDeliveryStrategySummary}</div>
-                                        <div>回调地址 {chatopsCallbackUrlPublic ? '公网可达' : '本地/内网'}{chatopsCallbackUrl ? ` · ${chatopsCallbackUrl}` : ''}</div>
+                                        <div>Callback URL {chatopsCallbackUrlPublic ? "Publicly reachable" : "Local/private network"}{chatopsCallbackUrl ? ` · ${chatopsCallbackUrl}` : ''}</div>
                                         <div>
-                                            公网回探 {chatopsCallbackProbeSuccess ? '已通过' : chatopsCallbackProbeAttempted ? '未通过' : '未执行'}
+                                            Public endpoint probe {chatopsCallbackProbeSuccess ? "Passed" : chatopsCallbackProbeAttempted ? "Failed" : "Not run"}
                                             {chatopsCallbackProbeIssue ? ` · ${chatopsCallbackProbeIssue}` : ''}
                                             {typeof chatopsCallbackProbeStatusCode === 'number' ? ` · HTTP ${chatopsCallbackProbeStatusCode}` : ''}
                                         </div>
-                                        <div>公网入口 {chatopsCallbackProviderLabel}{chatopsCallbackProviderHost ? ` · ${chatopsCallbackProviderHost}` : ''}</div>
+                                        <div>Public endpoint {chatopsCallbackProviderLabel}{chatopsCallbackProviderHost ? ` · ${chatopsCallbackProviderHost}` : ''}</div>
                                         {chatopsCallbackProbeSummary && (
                                             <div>{chatopsCallbackProbeSummary}</div>
                                         )}
                                         {chatopsCallbackRecommendation && (
-                                            <div>建议动作 {chatopsCallbackRecommendation}</div>
+                                            <div>Suggested action {chatopsCallbackRecommendation}</div>
                                         )}
                                         <div>
-                                            历史回流 {chatopsExternalHistoryObserved ? '已观察到' : '未观察到'}
+                                            Historical inbound events {chatopsExternalHistoryObserved ? "Observed" : "Not observed"}
                                             {chatopsLatestExternalSuccessAt ? ` · ${formatTimestamp(chatopsLatestExternalSuccessAt)}` : ''}
-                                            {chatopsExternalConnectionStale ? ' · 当前已退化' : ''}
+                                            {chatopsExternalConnectionStale ? " · Currently degraded" : ''}
                                         </div>
                                         <div>
-                                            最近公网自测 {chatopsExternalSelfCheckRecentSuccess ? '已通过' : '未通过'}
+                                            Latest public self-test {chatopsExternalSelfCheckRecentSuccess ? "Passed" : "Failed"}
                                             {chatopsLatestExternalSelfCheckAt ? ` · ${formatTimestamp(chatopsLatestExternalSelfCheckAt)}` : ''}
                                         </div>
-                                        <div>应用机器人 {chatopsAppBotConfigured ? '已配置' : '未配置'}{chatopsAppBotIdMasked ? ` · ${chatopsAppBotIdMasked}` : ''}</div>
-                                        <div>Token {chatopsTokenConfigured ? '已配置' : '未配置'}{chatopsTokenMasked ? ` · ${chatopsTokenMasked}` : ''}</div>
-                                        <div>challenge 自检 {chatopsSubscriptionVerified ? '已通过' : '未通过'}</div>
+                                        <div>App bot {chatopsAppBotConfigured ? "Configured" : "Not configured"}{chatopsAppBotIdMasked ? ` · ${chatopsAppBotIdMasked}` : ''}</div>
+                                        <div>Token {chatopsTokenConfigured ? "Configured" : "Not configured"}{chatopsTokenMasked ? ` · ${chatopsTokenMasked}` : ''}</div>
+                                        <div>Challenge self-check {chatopsSubscriptionVerified ? "Passed" : "Failed"}</div>
                                         {(chatopsRecentEventAt || chatopsRecentSuccessAt) && (
-                                            <div>最近事件 {formatTimestamp(chatopsRecentEventAt || chatopsRecentSuccessAt)}</div>
+                                            <div>Latest event {formatTimestamp(chatopsRecentEventAt || chatopsRecentSuccessAt)}</div>
                                         )}
                                         {chatopsCallbackProbeProbedAt && (
-                                            <div>最近回探 {formatTimestamp(chatopsCallbackProbeProbedAt)}</div>
+                                            <div>Latest probe {formatTimestamp(chatopsCallbackProbeProbedAt)}</div>
                                         )}
                                         <div>{chatopsActionHint}</div>
                                     </div>
                                 </div>
                             <div className="rounded-xl border border-slate-200/70 bg-white px-3 py-3 text-sm dark:border-slate-700/60 dark:bg-slate-800">
-                                <div className="text-xs text-slate-400">历史洁净度</div>
+                                <div className="text-xs text-slate-400">History integrity</div>
                                 <div className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
                                     maintenanceHistoryClean
                                         ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300'
                                         : 'bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300'
                                 }`}>
-                                    {maintenanceHistoryClean ? '正常' : `隐藏 ${maintenanceSuspectHistoryCount} 条可疑记录`}
+                                    {maintenanceHistoryClean ? "Normal" : `Hidden ${maintenanceSuspectHistoryCount} suspicious records`}
                                 </div>
                                 <div className="mt-1 text-xs text-slate-400">{maintenanceHistorySummary}</div>
                                 {maintenanceArchivedHistoryCount > 0 && (
                                     <div className="mt-1 space-y-1 text-xs text-slate-400">
-                                        <div>已归档 {maintenanceArchivedHistoryCount} 条历史记录</div>
+                                        <div>Archived {maintenanceArchivedHistoryCount} history records</div>
                                         <div>
-                                            归档导出 {maintenanceArchiveExportFresh ? '已更新' : '待更新'}
-                                            {maintenanceArchiveExportCount > 0 ? ` · 共 ${maintenanceArchiveExportCount} 次` : ''}
+                                            Archive export {maintenanceArchiveExportFresh ? "Updated" : "Update pending"}
+                                            {maintenanceArchiveExportCount > 0 ? ` · Total ${maintenanceArchiveExportCount} occurrences` : ''}
                                         </div>
                                         <div>
-                                            保留策略 {maintenanceArchiveRetentionDays} 天
+                                            Retention policy {maintenanceArchiveRetentionDays} days
                                             {maintenanceArchiveCleanupNeeded
-                                                ? ` · 待清理 ${maintenanceArchiveCleanupCandidateCount} 项`
-                                                : ' · 当前无待清理项'}
+                                                ? ` · Pending cleanup ${maintenanceArchiveCleanupCandidateCount} items`
+                                                : " · No pending cleanup"}
                                         </div>
                                         <div>
-                                            清理拆分：记录 {maintenanceArchiveRunCleanupCandidates} 条
+                                            Cleanup breakdown: records {maintenanceArchiveRunCleanupCandidates} entries
                                             {' · '}
-                                            导出文件 {maintenanceArchiveExportCleanupCandidates} 个
+                                            Export files {maintenanceArchiveExportCleanupCandidates} files
                                         </div>
                                         {maintenanceLastArchiveExportAt && (
                                             <div>
-                                                最近导出 {formatTimestamp(maintenanceLastArchiveExportAt)}
+                                                Latest export {formatTimestamp(maintenanceLastArchiveExportAt)}
                                                 {maintenanceLastArchiveExportFormat ? ` · ${maintenanceLastArchiveExportFormat.toUpperCase()}` : ''}
                                             </div>
                                         )}
                                         {maintenanceLastArchiveExportReason && (
-                                            <div>导出原因 {maintenanceLastArchiveExportReason}</div>
+                                            <div>Export reason {maintenanceLastArchiveExportReason}</div>
                                         )}
                                         {maintenanceLastArchiveCleanupAt && (
                                             <div>
-                                                最近清理 {formatTimestamp(maintenanceLastArchiveCleanupAt)}
-                                                {maintenanceLastArchiveCleanupDryRun ? ' · Dry Run' : ` · 删除记录 ${maintenanceLastArchiveCleanupDeletedRuns} 条 / 文件 ${maintenanceLastArchiveCleanupDeletedExports} 个`}
+                                                Latest cleanup {formatTimestamp(maintenanceLastArchiveCleanupAt)}
+                                                {maintenanceLastArchiveCleanupDryRun ? ' · Dry Run' : ` · Records deleted ${maintenanceLastArchiveCleanupDeletedRuns} / Files ${maintenanceLastArchiveCleanupDeletedExports} files`}
                                             </div>
                                         )}
                                         {maintenanceLastArchiveCleanupReason && (
-                                            <div>清理原因 {maintenanceLastArchiveCleanupReason}</div>
+                                            <div>Cleanup reason {maintenanceLastArchiveCleanupReason}</div>
                                         )}
                                     </div>
                                 )}
@@ -1190,16 +1191,16 @@ const DashboardPage: React.FC = () => {
                             </div>
                         )}
                         <div className="mt-3 rounded-xl border border-slate-200/70 bg-white px-3 py-3 text-sm dark:border-slate-700/60 dark:bg-slate-800">
-                            <div className="text-xs text-slate-400">当前业务库</div>
+                            <div className="text-xs text-slate-400">Current business database</div>
                             <div className="mt-1 break-all font-mono text-xs text-slate-700 dark:text-slate-200">{businessDbPath}</div>
                             <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-400">
-                                <span>大小 {formatBytes(businessDbSizeBytes)}</span>
-                                <span>最近修改 {formatTimestamp(businessDbUpdatedAt)}</span>
+                                <span>Size {formatBytes(businessDbSizeBytes)}</span>
+                                <span>Last modified {formatTimestamp(businessDbUpdatedAt)}</span>
                             </div>
                         </div>
                         {maintenanceLastArchiveExportPath && (
                             <div className="mt-3 rounded-xl border border-slate-200/70 bg-white px-3 py-3 text-sm dark:border-slate-700/60 dark:bg-slate-800">
-                                <div className="text-xs text-slate-400">最近归档导出文件</div>
+                                <div className="text-xs text-slate-400">Latest archive export file</div>
                                 <div className="mt-1 break-all font-mono text-[11px] text-slate-700 dark:text-slate-200">{maintenanceLastArchiveExportPath}</div>
                             </div>
                         )}
@@ -1207,10 +1208,10 @@ const DashboardPage: React.FC = () => {
                             <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
                                 <div className="flex items-center gap-2 font-semibold">
                                     <AlertTriangle className="h-4 w-4" />
-                                    检测到影子业务库
+                                    Shadow business databases detected
                                 </div>
                                 <div className="mt-2 text-xs leading-5">
-                                    当前服务已统一写入上方业务库；以下旧库路径仍存在，后续请避免从错误目录启动旧实例：
+                                    The current service writes to the business database shown above. These older database paths still exist; avoid starting old instances from the wrong directory:
                                 </div>
                                 <div className="mt-2 space-y-1">
                                     {shadowBusinessDbs.map(path => (
@@ -1229,16 +1230,16 @@ const DashboardPage: React.FC = () => {
                     </div>
 
                     <div className="rounded-2xl border border-slate-200/70 bg-slate-50/70 p-4 dark:border-slate-700/60 dark:bg-slate-900/30">
-                        <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">最近维护记录</div>
+                        <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">Recent maintenance records</div>
                         {!!maintenance?.history.suspect_count && (
                             <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
-                                已自动隐藏 {maintenance.history.suspect_count} 条可疑测试污染记录，避免影响生产运维主视图判断。
+                                Automatically hidden {maintenance.history.suspect_count} suspicious test-contamination records to keep the primary production operations view accurate.
                             </div>
                         )}
                         <div className="mt-3 space-y-2">
                             {!maintenance?.history.items?.length ? (
                                 <div className="rounded-xl border border-dashed border-slate-200 px-3 py-6 text-center text-sm text-slate-400 dark:border-slate-700 dark:text-slate-500">
-                                    暂无维护记录
+                                    No maintenance records yet
                                 </div>
                             ) : maintenance.history.items.slice(0, 5).map(item => (
                                 <div key={item.id} className="rounded-xl border border-slate-200/70 bg-white px-3 py-3 dark:border-slate-700/60 dark:bg-slate-800">
@@ -1250,31 +1251,31 @@ const DashboardPage: React.FC = () => {
                                         <div className="flex shrink-0 items-center gap-2">
                                             {item.warning_detected && (
                                                 <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
-                                                    风险
+                                                    Risk
                                                 </span>
                                             )}
                                             {item.risk_alert_sent && (
                                                 <span className="rounded-full bg-sky-50 px-2 py-0.5 text-[11px] font-semibold text-sky-700 dark:bg-sky-500/15 dark:text-sky-300">
-                                                    已预警
+                                                    Warning sent
                                                 </span>
                                             )}
                                             {item.status === 'failed' && item.alert_sent && (
                                                 <span className="rounded-full bg-rose-50 px-2 py-0.5 text-[11px] font-semibold text-rose-700 dark:bg-rose-500/15 dark:text-rose-300">
-                                                    已告警
+                                                    Alert sent
                                                 </span>
                                             )}
                                             <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${item.status === 'failed'
                                                 ? 'bg-rose-50 text-rose-600 dark:bg-rose-500/15 dark:text-rose-300'
                                                 : 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300'
                                                 }`}>
-                                                {item.status === 'failed' ? '失败' : '成功'}
+                                                {item.status === 'failed' ? "Failed" : "Success"}
                                             </span>
                                         </div>
                                     </div>
                                     <div className="mt-2 grid grid-cols-3 gap-2 text-xs text-slate-500 dark:text-slate-400">
-                                        <span>耗时 {formatDuration(item.duration_ms)}</span>
-                                        <span>修复 {item.repair.group_updates + item.repair.record_updates}</span>
-                                        <span>报告 {item.report_history.updated_entries}</span>
+                                        <span>Duration {formatDuration(item.duration_ms)}</span>
+                                        <span>Repaired {item.repair.group_updates + item.repair.record_updates}</span>
+                                        <span>Report {item.report_history.updated_entries}</span>
                                     </div>
                                     {item.risk?.summary && (
                                         <div className="mt-2 text-xs text-slate-400">
@@ -1288,7 +1289,7 @@ const DashboardPage: React.FC = () => {
                 </div>
             </div>
 
-            {/* ── 军团概览 ── */}
+            {/* Agent fleet overview*/}
             <div
                 onClick={() => navigate('/legion')}
                 className="group rounded-2xl border border-slate-200 bg-gradient-to-r from-indigo-50/50 via-purple-50/50 to-pink-50/50 dark:from-indigo-500/5 dark:via-purple-500/5 dark:to-pink-500/5 dark:border-slate-700 p-5 shadow-sm hover:shadow-md hover:border-indigo-300/80 dark:hover:border-indigo-500/50 transition-all duration-200 cursor-pointer"
@@ -1296,32 +1297,32 @@ const DashboardPage: React.FC = () => {
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="text-base font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
                         <Swords className="w-4 h-4 text-indigo-500" />
-                        军团概览
+                        Agent fleet overview
                     </h3>
                     <span className="flex items-center gap-1 text-xs text-indigo-500 font-medium group-hover:text-indigo-600 transition-colors">
-                        进入军团中心 <ChevronRight className="w-3.5 h-3.5" />
+                        Open agent hub <ChevronRight className="w-3.5 h-3.5" />
                     </span>
                 </div>
                 <div className="grid grid-cols-3 gap-4">
                     <div className="text-center p-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200/50 dark:border-slate-700/50">
                         <Users className="w-5 h-5 text-emerald-500 mx-auto mb-1" />
                         <div className="text-2xl font-bold text-slate-800 dark:text-slate-100">{onlineCount}<span className="text-sm text-slate-400 font-normal">/{legionHealth.length}</span></div>
-                        <div className="text-xs text-slate-500">Agent 在线</div>
+                        <div className="text-xs text-slate-500">Agents online</div>
                     </div>
                     <div className="text-center p-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200/50 dark:border-slate-700/50">
                         <Swords className="w-5 h-5 text-indigo-500 mx-auto mb-1" />
                         <div className="text-2xl font-bold text-slate-800 dark:text-slate-100">{squadCount}</div>
-                        <div className="text-xs text-slate-500">测试班</div>
+                        <div className="text-xs text-slate-500">Test squads</div>
                     </div>
                     <div className="text-center p-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200/50 dark:border-slate-700/50">
                         <Wrench className="w-5 h-5 text-purple-500 mx-auto mb-1" />
                         <div className="text-2xl font-bold text-slate-800 dark:text-slate-100">{skillCount}</div>
-                        <div className="text-xs text-slate-500">技能包</div>
+                        <div className="text-xs text-slate-500">Skill packages</div>
                     </div>
                 </div>
             </div>
 
-            {/* ── 深度分析面板 ── */}
+            {/* Detailed analysis panel*/}
             <AnalyticsPanel />
         </div>
     );

@@ -69,11 +69,11 @@ const ISSUE_SEVERITY_STYLES: Record<string, string> = {
 };
 
 const ISSUE_SEVERITY_LABELS: Record<string, string> = {
-    critical: '严重',
-    major: '主要',
-    minor: '次要',
-    info: '提示',
-    unknown: '未知',
+    critical: "Critical",
+    major: "Major",
+    minor: "Minor",
+    info: "Notice",
+    unknown: "Unknown",
 };
 
 const toSafeText = (value: unknown, fallback = ''): string => {
@@ -96,7 +96,7 @@ export const normalizeMobileIssue = (issue: string | RawMobileIssue | undefined,
     const raw = issue && typeof issue === 'object' ? issue : {};
     return {
         ruleId: toSafeText((raw as Record<string, unknown>).ruleId ?? (raw as Record<string, unknown>).rule_id, ''),
-        description: toSafeText(raw.description, '存在移动端问题'),
+        description: toSafeText(raw.description, "Mobile issues found"),
         severity: toSafeText(raw.severity, 'unknown').toLowerCase() || 'unknown',
         device: toSafeText(raw.device, fallbackDevice) || fallbackDevice,
         suggestion: toSafeText(raw.suggestion, ''),
@@ -135,13 +135,13 @@ const calculateDeviceScore = (issues: MobileIssue[]): number => {
 };
 
 export const normalizeMobileTestResult = (raw: RawMobileTestResult): MobileTestResult => {
-    const device = toSafeText(raw.device, '未知设备');
+    const device = toSafeText(raw.device, "Unknown device");
     const viewport = parseViewport(raw.viewport);
     const issues = (raw.issues || []).map(issue => normalizeMobileIssue(issue, device));
     return {
         device,
         viewport,
-        viewportText: viewport.width > 0 && viewport.height > 0 ? `${viewport.width}×${viewport.height}` : '未知视口',
+        viewportText: viewport.width > 0 && viewport.height > 0 ? `${viewport.width}×${viewport.height}` : "Unknown viewport",
         issues,
         screenshot_url: raw.screenshot_url,
         score: typeof raw.score === 'number' ? raw.score : calculateDeviceScore(issues),
@@ -219,8 +219,8 @@ const MobilePage: React.FC = () => {
         <div className="space-y-6 max-w-7xl mx-auto">
             <PageHeader
                 icon={<Smartphone className="w-5 h-5" />}
-                title="移动端模拟测试"
-                description="选择设备、输入 URL，检测响应式布局和移动端兼容性"
+                title={"Mobile emulation testing"}
+                description={"Select devices and enter a URL to check responsive layouts and mobile compatibility"}
                 accent="pink"
             />
 
@@ -228,25 +228,25 @@ const MobilePage: React.FC = () => {
             <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 space-y-4">
                 <div className="grid md:grid-cols-3 gap-3 items-end">
                     <div className="md:col-span-2 space-y-1">
-                        <label className="block text-[10px] font-medium uppercase tracking-wider text-slate-400">目标 URL</label>
+                        <label className="block text-[10px] font-medium uppercase tracking-wider text-slate-400">Target URL</label>
                         <input type="url" value={url} onChange={e => setUrl(e.target.value)} placeholder="https://example.com" className="w-full text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 outline-none focus:ring-2 focus:ring-pink-500/30" />
                     </div>
                     <button onClick={handleTest} disabled={testing || !url || selectedDevices.length === 0} className="flex items-center justify-center gap-2 rounded-lg bg-pink-500 hover:bg-pink-600 text-white text-sm font-medium py-2 transition-colors disabled:opacity-50">
                         {testing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-                        {testing ? '测试中...' : `测试 (${selectedDevices.length} 设备)`}
+                        {testing ? "Testing..." : `Test (${selectedDevices.length} devices)`}
                     </button>
                 </div>
 
                 {/* Device Selection */}
                 <div>
                     <label className="block text-[10px] font-medium uppercase tracking-wider text-slate-400 mb-2 flex items-center justify-between">
-                        <span>选择设备</span>
+                        <span>Select devices</span>
                         <button onClick={() => setIsLandscape(!isLandscape)}
                             className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium transition-all border ${isLandscape
                                 ? 'bg-pink-50 dark:bg-pink-900/20 border-pink-300 dark:border-pink-500/30 text-pink-600'
                                 : 'border-slate-200 dark:border-slate-700 text-slate-500 hover:border-pink-300'}`}>
                             <RotateCcw className="w-3 h-3" />
-                            {isLandscape ? '横屏' : '竖屏'}
+                            {isLandscape ? "Landscape" : "Portrait"}
                         </button>
                     </label>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
@@ -277,24 +277,24 @@ const MobilePage: React.FC = () => {
                     {/* Custom Resolution */}
                     <div className="mt-3 flex items-end gap-2">
                         <div className="space-y-1">
-                            <label className="text-[10px] text-slate-400">宽</label>
+                            <label className="text-[10px] text-slate-400">Width</label>
                             <input type="number" value={customWidth} onChange={e => setCustomWidth(e.target.value)}
                                 className="w-20 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-1.5 outline-none focus:ring-2 focus:ring-pink-500/30" />
                         </div>
                         <span className="text-slate-400 text-xs pb-1.5">×</span>
                         <div className="space-y-1">
-                            <label className="text-[10px] text-slate-400">高</label>
+                            <label className="text-[10px] text-slate-400">High</label>
                             <input type="number" value={customHeight} onChange={e => setCustomHeight(e.target.value)}
                                 className="w-20 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-1.5 outline-none focus:ring-2 focus:ring-pink-500/30" />
                         </div>
                         <div className="space-y-1">
-                            <label className="text-[10px] text-slate-400">缩放</label>
+                            <label className="text-[10px] text-slate-400">Scale</label>
                             <input type="number" step="0.5" value={customScale} onChange={e => setCustomScale(e.target.value)}
                                 className="w-16 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-1.5 outline-none focus:ring-2 focus:ring-pink-500/30" />
                         </div>
                         <button onClick={addCustomDevice}
                             className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-pink-600 bg-pink-50 dark:bg-pink-900/20 border border-pink-200 dark:border-pink-800 rounded-lg hover:bg-pink-100 transition">
-                            <Plus className="w-3 h-3" /> 添加
+                            <Plus className="w-3 h-3" /> Add
                         </button>
                     </div>
                 </div>
@@ -323,7 +323,7 @@ const MobilePage: React.FC = () => {
                             <div className="px-4 py-3 space-y-1.5">
                                 {result.issues.length === 0 ? (
                                     <div className="flex items-center gap-2 text-emerald-500 text-xs">
-                                        <CheckCircle2 className="w-3.5 h-3.5" /> 无问题
+                                        <CheckCircle2 className="w-3.5 h-3.5" /> No issues
                                     </div>
                                 ) : (
                                     result.issues.map((issue, j) => (
@@ -333,17 +333,17 @@ const MobilePage: React.FC = () => {
                                                 <div className="flex flex-wrap items-center gap-2">
                                                     <span>{issue.description}</span>
                                                     <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${ISSUE_SEVERITY_STYLES[issue.severity] || ISSUE_SEVERITY_STYLES.unknown}`}>
-                                                        {ISSUE_SEVERITY_LABELS[issue.severity] || issue.severity || '未知'}
+                                                        {ISSUE_SEVERITY_LABELS[issue.severity] || issue.severity || "Unknown"}
                                                     </span>
                                                 </div>
                                                 {issue.ruleId && (
                                                     <div className="text-[10px] text-slate-400">
-                                                        规则：{issue.ruleId}
+                                                        Rule: {issue.ruleId}
                                                     </div>
                                                 )}
                                                 {issue.suggestion && (
                                                     <div className="text-[10px] text-slate-500 dark:text-slate-400">
-                                                        建议：{issue.suggestion}
+                                                        Suggestion: {issue.suggestion}
                                                     </div>
                                                 )}
                                             </div>
@@ -357,8 +357,8 @@ const MobilePage: React.FC = () => {
             ) : (
                 <div className="rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 p-12 text-center">
                     <Smartphone className="w-12 h-12 text-pink-300 dark:text-pink-700 mx-auto mb-3" />
-                    <p className="text-sm font-medium text-slate-500 dark:text-slate-400">选择设备并输入 URL 开始移动端测试</p>
-                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">检测响应式布局、触摸适配、视口兼容性</p>
+                    <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Select devices and enter a URL to start mobile testing</p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Check responsive layouts, touch support, and viewport compatibility</p>
                 </div>
             )}
         </div>

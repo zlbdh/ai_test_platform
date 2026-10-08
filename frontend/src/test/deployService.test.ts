@@ -50,12 +50,12 @@ describe('deployService', () => {
         localStorage.clear();
     });
 
-    it('能从 APIResponse.data.projects 解包项目列表', async () => {
+    it("unwraps the project list from APIResponse.data.projects", async () => {
         mockFetch.mockResolvedValue(mockResponse({
             status: 'ok',
             message: 'success',
             data: {
-                projects: [{ key: 'p1', name: '示例项目', repos: [], has_token: true }],
+                projects: [{ key: 'p1', name: "Sample project", repos: [], has_token: true }],
             },
         }));
 
@@ -65,7 +65,7 @@ describe('deployService', () => {
         expect(projects[0].key).toBe('p1');
     });
 
-    it('兼容旧的裸 history 响应结构', async () => {
+    it("supports the legacy unwrapped history response", async () => {
         mockFetch.mockResolvedValue(mockResponse({
             history: [{ id: 'r1', status: 'success', logs: [] }],
         }));
@@ -76,7 +76,7 @@ describe('deployService', () => {
         expect(history[0].id).toBe('r1');
     });
 
-    it('能解包 fullDeployRepo 返回的 record_id', async () => {
+    it("unwraps record_id returned by fullDeployRepo", async () => {
         saveDeployAuthSession({ token: 'demo-token' });
         mockFetch.mockResolvedValue(mockResponse({
             status: 'ok',
@@ -98,7 +98,7 @@ describe('deployService', () => {
         expect(headers.get('Authorization')).toBe('Bearer demo-token');
     });
 
-    it('能从包装响应中读取记录详情、日志和 AI 分析', async () => {
+    it("reads record details, logs, and AI analysis from wrapped responses", async () => {
         mockFetch
             .mockResolvedValueOnce(mockResponse({
                 status: 'ok',
@@ -135,7 +135,7 @@ describe('deployService', () => {
         expect(analysis.port).toBe(81);
     });
 
-    it('能创建仓库和项目级部署审批单', async () => {
+    it("creates repository-level and project-level deployment approval requests", async () => {
         mockFetch
             .mockResolvedValueOnce(mockResponse({
                 status: 'ok',
@@ -166,7 +166,7 @@ describe('deployService', () => {
         );
     });
 
-    it('能查询审批列表并提交批准与驳回动作', async () => {
+    it("queries approval requests and submits approval or rejection actions", async () => {
         mockFetch
             .mockResolvedValueOnce(mockResponse({
                 status: 'ok',
@@ -182,8 +182,8 @@ describe('deployService', () => {
             }));
 
         const approvals = await listDeployApprovals('pending', 10);
-        const approved = await approveDeployApproval('approval-1', '批准发布');
-        const rejected = await rejectDeployApproval('approval-2', '窗口关闭');
+        const approved = await approveDeployApproval('approval-1', "Approve release");
+        const rejected = await rejectDeployApproval('approval-2', "Window closed");
 
         expect(approvals).toEqual([{ id: 'approval-1', status: 'pending' }]);
         expect(approved.status).toBe('approved');
@@ -200,7 +200,7 @@ describe('deployService', () => {
             expect.stringContaining('/api/deploy/approvals/approval-1/approve'),
             expect.objectContaining({
                 method: 'POST',
-                body: JSON.stringify({ comment: '批准发布' }),
+                body: JSON.stringify({ comment: "Approve release" }),
             }),
         );
         expect(mockFetch).toHaveBeenNthCalledWith(
@@ -208,12 +208,12 @@ describe('deployService', () => {
             expect.stringContaining('/api/deploy/approvals/approval-2/reject'),
             expect.objectContaining({
                 method: 'POST',
-                body: JSON.stringify({ comment: '窗口关闭' }),
+                body: JSON.stringify({ comment: "Window closed" }),
             }),
         );
     });
 
-    it('能查询部署审计日志并携带筛选参数', async () => {
+    it("queries deployment audit logs with filter parameters", async () => {
         mockFetch.mockResolvedValue(mockResponse({
             status: 'ok',
             data: {
@@ -249,7 +249,7 @@ describe('deployService', () => {
         );
     });
 
-    it('能读取部署审批详情与作业详情', async () => {
+    it("reads deployment approval and job details", async () => {
         mockFetch
             .mockResolvedValueOnce(mockResponse({
                 status: 'ok',
@@ -257,7 +257,7 @@ describe('deployService', () => {
                     approval: {
                         id: 'approval-1',
                         status: 'approved',
-                        repo_label: '后端服务',
+                        repo_label: "Backend service",
                         record_id: 'record-1',
                     },
                 },
@@ -268,7 +268,7 @@ describe('deployService', () => {
                     job: {
                         id: 'job-1',
                         status: 'success',
-                        repo_label: '后端服务',
+                        repo_label: "Backend service",
                         record_id: 'record-1',
                     },
                 },
@@ -297,7 +297,7 @@ describe('deployService', () => {
         );
     });
 
-    it('能查询部署作业列表并取消作业', async () => {
+    it("queries deployment jobs and cancels a job", async () => {
         mockFetch
             .mockResolvedValueOnce(mockResponse({
                 status: 'ok',
@@ -305,7 +305,7 @@ describe('deployService', () => {
                     jobs: [{
                         id: 'job-1',
                         status: 'running',
-                        repo_label: '后端服务',
+                        repo_label: "Backend service",
                         record_id: 'record-1',
                     }],
                 },
@@ -316,7 +316,7 @@ describe('deployService', () => {
                     job: {
                         id: 'job-1',
                         status: 'cancel_requested',
-                        repo_label: '后端服务',
+                        repo_label: "Backend service",
                         record_id: 'record-1',
                     },
                 },

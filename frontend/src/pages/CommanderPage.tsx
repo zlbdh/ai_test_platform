@@ -15,62 +15,62 @@ import { ConfirmDialog, useConfirmDialog } from '../components/ui/ConfirmDialog'
 import { useToast } from '../components/ui/Toast';
 import { useCommanderStore } from '../stores';
 
-// ── 状态图标映射 ────────────────────────────────────────────
+// Status icon mapping
 
 const STATUS_CONFIG: Record<string, { icon: React.ReactNode; color: string; bg: string; label: string }> = {
     pending: {
         icon: <Clock className="w-4 h-4" />,
         color: 'text-slate-400',
         bg: 'bg-slate-100 dark:bg-slate-800',
-        label: '等待中',
+        label: "Waiting",
     },
     parsing: {
         icon: <Loader2 className="w-4 h-4 animate-spin" />,
         color: 'text-blue-500',
         bg: 'bg-blue-50 dark:bg-blue-500/10',
-        label: '解析需求',
+        label: "Parse requirements",
     },
     planning: {
         icon: <Loader2 className="w-4 h-4 animate-spin" />,
         color: 'text-indigo-500',
         bg: 'bg-indigo-50 dark:bg-indigo-500/10',
-        label: '选择策略',
+        label: "Select strategy",
     },
     dispatching: {
         icon: <Loader2 className="w-4 h-4 animate-spin" />,
         color: 'text-amber-500',
         bg: 'bg-amber-50 dark:bg-amber-500/10',
-        label: '分发任务',
+        label: "Dispatch tasks",
     },
     executing: {
         icon: <Loader2 className="w-4 h-4 animate-spin" />,
         color: 'text-purple-500',
         bg: 'bg-purple-50 dark:bg-purple-500/10',
-        label: '执行测试',
+        label: "Run tests",
     },
     reporting: {
         icon: <Loader2 className="w-4 h-4 animate-spin" />,
         color: 'text-cyan-500',
         bg: 'bg-cyan-50 dark:bg-cyan-500/10',
-        label: '生成报告',
+        label: "Generate report",
     },
     completed: {
         icon: <CheckCircle2 className="w-4 h-4" />,
         color: 'text-emerald-500',
         bg: 'bg-emerald-50 dark:bg-emerald-500/10',
-        label: '完成',
+        label: "Complete",
     },
     failed: {
         icon: <XCircle className="w-4 h-4" />,
         color: 'text-red-500',
         bg: 'bg-red-50 dark:bg-red-500/10',
-        label: '失败',
+        label: "Failed",
     },
     cancelled: {
         icon: <Ban className="w-4 h-4" />,
         color: 'text-gray-500',
         bg: 'bg-gray-50 dark:bg-gray-500/10',
-        label: '已取消',
+        label: "Canceled",
     },
 };
 
@@ -86,14 +86,14 @@ const TEST_TYPE_ICON: Record<string, React.ReactNode> = {
 };
 
 const TEST_TYPE_LABELS: Record<string, string> = {
-    ui_e2e: 'UI 自动化',
-    api_rest: 'API 测试',
-    api_graphql: 'GraphQL 测试',
-    security: '安全扫描',
-    performance: '性能测试',
-    database: '数据库测试',
-    accessibility: '无障碍测试',
-    visual_regression: '视觉回归',
+    ui_e2e: "UI automation",
+    api_rest: "API testing",
+    api_graphql: "GraphQL testing",
+    security: "Security scanning",
+    performance: "Performance testing",
+    database: "Database testing",
+    accessibility: "Accessibility testing",
+    visual_regression: "Visual regression",
 };
 
 interface CommanderReportSummary {
@@ -229,10 +229,10 @@ function getBugSeverityRank(status: string): number {
 
 function getBugSeverityTone(status: string): string {
     const normalized = String(status || '').toLowerCase();
-    if (normalized === 'error' || normalized === 'failed') return '错误';
-    if (normalized === 'warning' || normalized === 'warn') return '警告';
-    if (normalized === 'recovered' || normalized === 'healed') return '已恢复';
-    return '提示';
+    if (normalized === 'error' || normalized === 'failed') return "Error";
+    if (normalized === 'warning' || normalized === 'warn') return "Warning";
+    if (normalized === 'recovered' || normalized === 'healed') return "Recovered";
+    return "Notice";
 }
 
 function normalizeCommanderBugSeverity(status: string): CommanderBugBoardItem['severityKey'] {
@@ -247,8 +247,8 @@ export function buildCommanderBugHotspotKey(
     bug: Pick<MissionBugSummaryItem, 'test_type' | 'title' | 'summary'>,
 ): string {
     const testType = String(bug.test_type || 'unknown');
-    const title = String(bug.title || TEST_TYPE_LABELS[testType] || '未命名问题');
-    const summary = String(bug.summary || '发现失败项').trim();
+    const title = String(bug.title || TEST_TYPE_LABELS[testType] || "Unnamed issue");
+    const summary = String(bug.summary || "Failures found").trim();
     return `${testType}::${title}::${summary}`;
 }
 
@@ -336,7 +336,7 @@ export function buildCommanderBugHotspots(
 
     for (const mission of missions) {
         for (const bug of getMissionBugSummaryItems(mission)) {
-            const title = String(bug.title || TEST_TYPE_LABELS[bug.test_type] || '未命名问题');
+            const title = String(bug.title || TEST_TYPE_LABELS[bug.test_type] || "Unnamed issue");
             const key = buildCommanderBugHotspotKey(bug);
             const existing = hotspotMap.get(key);
             if (existing) {
@@ -353,7 +353,7 @@ export function buildCommanderBugHotspots(
                 key,
                 testType: String(bug.test_type || 'unknown'),
                 title,
-                summary: String(bug.summary || '发现失败项'),
+                summary: String(bug.summary || "Failures found"),
                 status: String(bug.status || 'unknown'),
                 count: 1,
                 missionIds: [mission.mission_id],
@@ -369,7 +369,7 @@ export function buildCommanderBugHotspots(
             if (getBugSeverityRank(right.status) !== getBugSeverityRank(left.status)) {
                 return getBugSeverityRank(right.status) - getBugSeverityRank(left.status);
             }
-            return left.title.localeCompare(right.title, 'zh-CN');
+            return left.title.localeCompare(right.title, 'en-US');
         })
         .slice(0, Math.max(limit, 0));
 }
@@ -398,8 +398,8 @@ export function buildCommanderBugBoardItems(
                 executionGroupId: String(mission.execution_group_id || ''),
                 executionRecordId: bug.execution_record_id || null,
                 testType: String(bug.test_type || 'unknown'),
-                title: String(bug.title || TEST_TYPE_LABELS[String(bug.test_type || '')] || '未命名问题'),
-                summary: String(bug.summary || '发现失败项'),
+                title: String(bug.title || TEST_TYPE_LABELS[String(bug.test_type || '')] || "Unnamed issue"),
+                summary: String(bug.summary || "Failures found"),
                 status: String(bug.status || 'unknown'),
                 severityKey,
                 hasReport,
@@ -415,7 +415,7 @@ export function buildCommanderBugBoardItems(
             const rightTime = new Date(right.missionCreatedAt || 0).getTime();
             const leftTime = new Date(left.missionCreatedAt || 0).getTime();
             if (rightTime !== leftTime) return rightTime - leftTime;
-            return left.summary.localeCompare(right.summary, 'zh-CN');
+            return left.summary.localeCompare(right.summary, 'en-US');
         })
         .slice(0, Math.max(limit, 0));
 }
@@ -496,31 +496,31 @@ export function buildCommanderBatchActionFeedback(
     if (type === 'empty') {
         return {
             tone: 'info',
-            message: '当前问题范围内没有待补报告的任务。',
+            message: "No tasks in the current issue scope need reports.",
             timestamp: Date.now(),
         };
     }
     if (type === 'delete') {
         return {
             tone: 'success',
-            message: `已删除 ${payload.count ?? 0} 条任务记录。`,
+            message: `Deleted ${payload.count ?? 0} task records.`,
             timestamp: Date.now(),
         };
     }
     if (type === 'clear') {
         return {
             tone: 'info',
-            message: `已清空 ${payload.count ?? 0} 条已选任务。`,
+            message: `Cleared ${payload.count ?? 0} selected tasks.`,
             timestamp: Date.now(),
             missionIds: payload.missionIds ?? [],
             actionKind: (payload.missionIds?.length ?? 0) > 0 ? 'restore_selected' : undefined,
         };
     }
-    const prefix = type === 'bug_board_report' ? '问题清单处理完成' : '批量处理完成';
+    const prefix = type === 'bug_board_report' ? "Issue list processing completed" : "Batch processing completed";
     const failed = payload.failed ?? 0;
     return {
         tone: failed > 0 ? 'warning' : 'success',
-        message: `${prefix}：新生成 ${payload.generated ?? 0} 份，已存在 ${payload.skipped ?? 0} 份，失败 ${failed} 份。`,
+        message: `${prefix}: generated ${payload.generated ?? 0}, already existed ${payload.skipped ?? 0}, failed ${failed}.`,
         timestamp: Date.now(),
         missionIds: payload.missionIds ?? [],
         actionKind: (payload.missionIds?.length ?? 0) > 0 ? 'focus_selected' : undefined,
@@ -546,9 +546,9 @@ export function getMissionBugSummaryItems(mission: Pick<MissionResult, 'bug_summ
     const directSummary = Array.isArray(mission.bug_summary) ? mission.bug_summary : [];
     return (reportSummary.length ? reportSummary : directSummary).map(item => ({
         test_type: String(item.test_type || ''),
-        title: String(item.title || TEST_TYPE_LABELS[String(item.test_type || '')] || '未命名问题'),
+        title: String(item.title || TEST_TYPE_LABELS[String(item.test_type || '')] || "Unnamed issue"),
         status: String(item.status || 'unknown'),
-        summary: String(item.summary || '发现失败项'),
+        summary: String(item.summary || "Failures found"),
         execution_record_id: item.execution_record_id || null,
     }));
 }
@@ -575,41 +575,41 @@ export function getCommanderMissionMetaBadges(
     if (metrics.totalTests > 0) {
         badges.push({
             key: 'lanes',
-            label: `${metrics.totalTests} 条测试线`,
+            label: `${metrics.totalTests} test tracks`,
             tone: 'neutral',
         });
     }
     if (metrics.passedTests > 0) {
         badges.push({
             key: 'passed',
-            label: `通过 ${metrics.passedTests}`,
+            label: `Passed ${metrics.passedTests}`,
             tone: 'indigo',
         });
     }
     if (metrics.failedTests > 0) {
         badges.push({
             key: 'failed',
-            label: `失败 ${metrics.failedTests}`,
+            label: `Failed ${metrics.failedTests}`,
             tone: 'red',
         });
     }
     if (metrics.successRate !== null && metrics.totalTests > 0) {
         badges.push({
             key: 'success_rate',
-            label: `${metrics.successRate}% 通过率`,
+            label: `${metrics.successRate}% pass rate`,
             tone: metrics.failedTests > 0 ? 'amber' : 'indigo',
         });
     }
     const bugCount = getMissionBugSummaryItems(mission).length;
     badges.push({
         key: 'report',
-        label: hasReport ? '已生成报告' : '待生成报告',
+        label: hasReport ? "Report generated" : "Report pending",
         tone: hasReport ? 'indigo' : 'amber',
     });
     if (bugCount > 0) {
         badges.push({
             key: 'bugs',
-            label: `${bugCount} 个问题`,
+            label: `${bugCount} ${bugCount === 1 ? 'issue' : 'issues'}`,
             tone: 'red',
         });
     }
@@ -697,7 +697,7 @@ export function filterCommanderMissionsBySelection(
     return missions.filter(mission => selected.has(mission.mission_id));
 }
 
-// ── 主页面 ──────────────────────────────────────────────────
+// Main page
 
 const CommanderPage: React.FC = () => {
     const navigate = useNavigate();
@@ -721,7 +721,7 @@ const CommanderPage: React.FC = () => {
     const { showToast } = useToast();
     const { confirm, dialogProps } = useConfirmDialog();
 
-    // 从全局 store 读取执行状态 — 跨页面持久化
+    // Read execution state from the global store to persist across pages.
     const {
         isRunning, activeMission, streamLogs, missions,
         startMission, appendStreamLog, finishMission,
@@ -879,7 +879,7 @@ const CommanderPage: React.FC = () => {
             const data = await res.json();
             if (!res.ok || data.status === 'error') {
                 if (!config.silent) {
-                    showToast('error', `生成报告失败: ${data.message || '未知错误'}`);
+                    showToast('error', `Failed to generate report: ${data.message || "Unknown error"}`);
                 }
                 return { ok: false, existed: false };
             }
@@ -895,12 +895,12 @@ const CommanderPage: React.FC = () => {
                 return { ok: true, existed: false, url: reportUrl };
             }
             if (!config.silent) {
-                showToast('success', '批次报告已生成，请到执行中心或测试报告历史中查看。');
+                showToast('success', "Batch report generated. View it in the execution center or test report history.");
             }
             return { ok: true, existed: false, url: reportUrl || null };
         } catch (err) {
             if (!config.silent) {
-                showToast('error', `生成报告失败: ${err instanceof Error ? err.message : '网络错误'}`);
+                showToast('error', `Failed to generate report: ${err instanceof Error ? err.message : "Network error"}`);
             }
             return { ok: false, existed: false };
         } finally {
@@ -1029,7 +1029,7 @@ const CommanderPage: React.FC = () => {
 
     const handleBulkDelete = useCallback(async () => {
         if (selectedMissionIds.length === 0) return;
-        const ok = await confirm('批量删除任务', `确定要删除选中的 ${selectedMissionIds.length} 条任务记录吗？`);
+        const ok = await confirm("Delete tasks in bulk", `Delete the selected ${selectedMissionIds.length} task records?`);
         if (!ok) return;
         const deleteCount = selectedMissionIds.length;
         for (const missionId of selectedMissionIds) {
@@ -1070,7 +1070,7 @@ const CommanderPage: React.FC = () => {
         }
     }, [activeBugHotspotKey, visibleMissions, expandedMission]);
 
-    // 加载历史任务 + Agent 健康（仅当 store 中无数据时加载）
+    // Load task history and agent health only when the store has no data.
     useEffect(() => {
         if (missions.length === 0) {
             commanderMissions(10).then(setMissions).catch(() => { });
@@ -1079,7 +1079,7 @@ const CommanderPage: React.FC = () => {
         loadReportMap();
     }, [missions.length, setMissions, loadReportMap]);
 
-    // 自动滚动日志
+    // Scroll logs automatically.
     useEffect(() => {
         logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [streamLogs]);
@@ -1088,18 +1088,18 @@ const CommanderPage: React.FC = () => {
         if (!input.trim() || isRunning) return;
 
         try {
-            // 1. 启动任务（非阻塞，立即返回 mission_id）
+            // 1. Start the task without blocking; return mission_id immediately.
             const result = await commanderRun(input, targetUrl, true);
             startMission(result);
 
-            // 2. 开启 SSE 流式日志（由 store 管理生命周期）
+            // 2. Open SSE logs; the store manages their lifecycle.
             const cleanup = commanderStream(
                 result.mission_id,
                 (log) => {
                     appendStreamLog(log);
                 },
                 async () => {
-                    // SSE 结束 → 刷新最终状态 + 历史列表
+                    // Refresh final status and history when SSE ends.
                     let final: typeof result | null = null;
                     try {
                         final = await commanderStatus(result.mission_id);
@@ -1111,7 +1111,7 @@ const CommanderPage: React.FC = () => {
             );
             setSseCleanup(cleanup);
 
-            // 3. 轮询更新任务状态（补充 SSE 可能漏掉的状态字段）
+            // 3. Poll task status for fields that SSE may miss.
             const pollInterval = setInterval(async () => {
                 try {
                     const status = await commanderStatus(result.mission_id);
@@ -1131,7 +1131,7 @@ const CommanderPage: React.FC = () => {
             appendStreamLog({
                 timestamp: new Date().toISOString(),
                 level: 'error',
-                message: `❌ 启动失败: ${err instanceof Error ? err.message : String(err)}`,
+                message: `❌ Failed to start: ${err instanceof Error ? err.message : String(err)}`,
                 data: {},
             });
             setIsRunning(false);
@@ -1157,8 +1157,8 @@ const CommanderPage: React.FC = () => {
                             <Sword className="w-5 h-5" />
                         </div>
                         <div>
-                            <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">Commander 总指挥</h2>
-                            <p className="text-sm text-slate-500 dark:text-slate-400">一句话启动全面测试 · 自动解析 · 智能调度 · 并行执行</p>
+                            <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">Commander</h2>
+                            <p className="text-sm text-slate-500 dark:text-slate-400">Start comprehensive testing with one instruction: automatic parsing, intelligent scheduling, and parallel execution</p>
                         </div>
                     </div>
 
@@ -1169,7 +1169,7 @@ const CommanderPage: React.FC = () => {
                                 value={input}
                                 onChange={e => setInput(e.target.value)}
                                 onKeyDown={handleKeyDown}
-                                placeholder="输入测试需求，例如: 全面测试淘宝登录功能，包括正常登录、错误密码、验证码..."
+                                placeholder={"Enter test requirements, for example: Fully test the store login flow, including valid credentials, incorrect passwords, and verification codes..."}
                                 className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all min-h-[56px] max-h-[120px]"
                                 rows={2}
                                 disabled={isRunning}
@@ -1179,7 +1179,7 @@ const CommanderPage: React.FC = () => {
                             <button
                                 onClick={() => setShowUrlInput(!showUrlInput)}
                                 className="absolute right-2 bottom-2 p-1.5 text-slate-400 hover:text-indigo-500 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-colors"
-                                title="添加目标 URL"
+                                title={"Add target URL"}
                             >
                                 <Target className="w-4 h-4" />
                             </button>
@@ -1192,9 +1192,9 @@ const CommanderPage: React.FC = () => {
                             className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 disabled:from-slate-300 disabled:to-slate-400 dark:disabled:from-slate-700 dark:disabled:to-slate-600 text-white rounded-xl font-medium text-sm transition-all shadow-lg shadow-indigo-500/25 disabled:shadow-none flex items-center gap-2 shrink-0"
                         >
                             {isRunning ? (
-                                <><Loader2 className="w-4 h-4 animate-spin" /> 执行中...</>
+                                <><Loader2 className="w-4 h-4 animate-spin" /> Running...</>
                             ) : (
-                                <><Send className="w-4 h-4" /> 发射</>
+                                <><Send className="w-4 h-4" /> Launch</>
                             )}
                         </button>
                     </div>
@@ -1214,12 +1214,12 @@ const CommanderPage: React.FC = () => {
 
                     {/* Quick Actions */}
                     <div className="flex items-center gap-2 mt-3 flex-wrap">
-                        <span className="text-xs text-slate-400 dark:text-slate-500">快速:</span>
+                        <span className="text-xs text-slate-400 dark:text-slate-500">Quick start:</span>
                         {[
-                            '全面测试登录功能',
-                            'API 接口回归测试',
-                            '安全漏洞扫描',
-                            '性能压测首页',
+                            "Comprehensive login testing",
+                            "API regression testing",
+                            "Security vulnerability scan",
+                            "Load-test the home page",
                         ].map(q => (
                             <button
                                 key={q}
@@ -1254,7 +1254,7 @@ const CommanderPage: React.FC = () => {
                         <div className="flex items-center gap-2 text-xs text-slate-400">
                             {!!activeMission.report?.summary && (
                                 <span className="px-2 py-1 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-md font-medium">
-                                    成功率 {String((activeMission.report.summary as Record<string, unknown>)?.success_rate ?? '–')}%
+                                    Success rate {String((activeMission.report.summary as Record<string, unknown>)?.success_rate ?? '–')}%
                                 </span>
                             )}
                             {activeMission.execution_group_id && (
@@ -1263,7 +1263,7 @@ const CommanderPage: React.FC = () => {
                                     className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md border border-indigo-200 dark:border-indigo-500/30 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-colors"
                                 >
                                     <ExternalLink className="w-3.5 h-3.5" />
-                                    查看执行中心
+                                    View execution center
                                 </button>
                             )}
                             {activeMission.execution_group_id && (
@@ -1277,7 +1277,7 @@ const CommanderPage: React.FC = () => {
                                     ) : (
                                         <FileText className="w-3.5 h-3.5" />
                                     )}
-                                    {activeMissionReportUrl ? '查看批次报告' : '生成批次报告'}
+                                    {activeMissionReportUrl ? "View batch report" : "Generate batch report"}
                                 </button>
                             )}
                         </div>
@@ -1314,14 +1314,14 @@ const CommanderPage: React.FC = () => {
                             <div className="flex items-center justify-between gap-3 mb-3">
                                 <div className="flex items-center gap-2 text-sm font-semibold text-red-700 dark:text-red-300">
                                     <AlertTriangle className="w-4 h-4" />
-                                    发现 {getMissionBugSummaryItems(activeMission).length} 个重点问题
+                                    Found {getMissionBugSummaryItems(activeMission).length} priority issues
                                 </div>
                                 {activeMission.execution_group_id && (
                                     <button
                                         onClick={() => openExecutionCenter(activeMission)}
                                         className="text-xs text-indigo-600 dark:text-indigo-300 hover:text-indigo-700 transition-colors"
                                     >
-                                        去执行中心看完整日志
+                                        View complete logs in the execution center
                                     </button>
                                 )}
                             </div>
@@ -1339,7 +1339,7 @@ const CommanderPage: React.FC = () => {
                                                     className="shrink-0 inline-flex items-center gap-1 text-[11px] text-indigo-600 dark:text-indigo-300 hover:text-indigo-700 transition-colors"
                                                 >
                                                     <ExternalLink className="w-3 h-3" />
-                                                    定位记录
+                                                    Locate record
                                                 </button>
                                             )}
                                         </div>
@@ -1358,7 +1358,7 @@ const CommanderPage: React.FC = () => {
                                     'text-slate-700 dark:text-slate-300'
                                 }`}>
                                 <span className="text-slate-400 dark:text-slate-500 shrink-0 select-none text-xs mt-0.5">
-                                    {new Date(log.timestamp).toLocaleTimeString('zh-CN')}
+                                    {new Date(log.timestamp).toLocaleTimeString('en-US')}
                                 </span>
                                 <span className="break-all">{log.message}</span>
                             </div>
@@ -1369,7 +1369,7 @@ const CommanderPage: React.FC = () => {
                                     'text-slate-700 dark:text-slate-300'
                                 }`}>
                                 <span className="text-slate-400 dark:text-slate-500 shrink-0 select-none text-xs mt-0.5">
-                                    {new Date(log.timestamp).toLocaleTimeString('zh-CN')}
+                                    {new Date(log.timestamp).toLocaleTimeString('en-US')}
                                 </span>
                                 <span className="break-all">{log.message}</span>
                             </div>
@@ -1390,9 +1390,9 @@ const CommanderPage: React.FC = () => {
                 >
                     <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-2">
                         <Users className="w-4 h-4 text-indigo-500" />
-                        军团状态
+                        Agent fleet status
                         <span className="px-2 py-0.5 text-xs bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full font-medium">
-                            {agentHealth.filter(a => a.healthy).length}/{agentHealth.length} 就绪
+                            {agentHealth.filter(a => a.healthy).length}/{agentHealth.length} Ready
                         </span>
                     </h3>
                     <div className="text-slate-400">
@@ -1440,14 +1440,14 @@ const CommanderPage: React.FC = () => {
                     <div className="flex items-center gap-3">
                         <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-2">
                             <Clock className="w-4 h-4 text-slate-400" />
-                            任务历史
+                            Task history
                         </h3>
                         <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
                             {([
-                                ['all', '全部'],
-                                ['has_bugs', '有问题'],
-                                ['has_report', '已出报告'],
-                                ['pending_report', '待出报告'],
+                                ['all', "All"],
+                                ['has_bugs', "Has issues"],
+                                ['has_report', "Report available"],
+                                ['pending_report', "Report pending"],
                             ] as [MissionHistoryFilter, string][]).map(([key, label]) => (
                                 <button
                                     key={key}
@@ -1466,25 +1466,25 @@ const CommanderPage: React.FC = () => {
                         <button
                             onClick={() => commanderMissions(10).then(setMissions)}
                             className="p-1.5 text-slate-400 hover:text-indigo-500 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-colors"
-                            title="刷新"
+                            title={"Refresh"}
                         >
                             <RotateCcw className="w-4 h-4" />
                         </button>
                         {missions.length > 0 && (
                             <button
                                 onClick={async () => {
-                                    const ok = await confirm('清空全部任务', `确定要清空全部 ${missions.length} 条任务记录吗？此操作不可恢复。`);
+                                    const ok = await confirm("Clear all tasks", `Clear all ${missions.length} task records? This cannot be undone.`);
                                     if (!ok) return;
                                     await commanderClearMissions();
                                     setMissions([]);
                                     setSelectedMissionIds([]);
-                                    showToast('success', '全部军团任务记录已清空。');
+                                    showToast('success', "All agent fleet task records cleared.");
                                 }}
                                 className="flex items-center gap-1 px-2 py-1 text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors"
-                                title="清空全部"
+                                title={"Clear all"}
                             >
                                 <Trash2 className="w-3.5 h-3.5" />
-                                清空全部
+                                Clear all
                             </button>
                         )}
                     </div>
@@ -1496,16 +1496,16 @@ const CommanderPage: React.FC = () => {
                             type="text"
                             value={historyKeyword}
                             onChange={e => setHistoryKeyword(e.target.value)}
-                            placeholder="搜索任务 ID / 测试需求 / 目标 URL"
+                            placeholder={"Search task ID, test requirements, or target URL"}
                             className="w-full pl-9 pr-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 outline-none transition-all"
                         />
                     </div>
                     <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
                         {([
-                            ['all', '全部状态'],
-                            ['completed', '已完成'],
-                            ['failed', '失败/取消'],
-                            ['running', '运行中'],
+                            ['all', "All statuses"],
+                            ['completed', "Completed"],
+                            ['failed', "Failed/canceled"],
+                            ['running', "Running"],
                         ] as [MissionStatusFilter, string][]).map(([key, label]) => (
                             <button
                                 key={key}
@@ -1521,10 +1521,10 @@ const CommanderPage: React.FC = () => {
                     </div>
                     <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
                         {([
-                            ['latest', '最新优先'],
-                            ['bugs_first', '问题优先'],
-                            ['pending_report_first', '待报告优先'],
-                            ['report_ready_first', '已出报告优先'],
+                            ['latest', "Newest first"],
+                            ['bugs_first', "Issues first"],
+                            ['pending_report_first', "Pending reports first"],
+                            ['report_ready_first', "Available reports first"],
                         ] as [MissionHistorySort, string][]).map(([key, label]) => (
                             <button
                                 key={key}
@@ -1540,8 +1540,8 @@ const CommanderPage: React.FC = () => {
                     </div>
                     <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
                         {([
-                            ['all', `全部任务 (${filteredMissions.length})`],
-                            ['selected', `仅看已加入批量 (${selectedMissionIds.length})`],
+                            ['all', `All tasks (${filteredMissions.length})`],
+                            ['selected', `Selected for batch only (${selectedMissionIds.length})`],
                         ] as [MissionSelectionScope, string][]).map(([key, label]) => (
                             <button
                                 key={key}
@@ -1563,31 +1563,31 @@ const CommanderPage: React.FC = () => {
                             onClick={toggleSelectVisibleMissions}
                             className="px-2.5 py-1 text-[11px] font-medium rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                         >
-                            {allVisibleSelected ? '取消全选当前列表' : '全选当前列表'}
+                            {allVisibleSelected ? "Deselect current list" : "Select current list"}
                         </button>
                         {selectedMissionIds.length > 0 && (
                             <>
                                 <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                                    已选 {selectedMissionIds.length} 条
+                                    Selected {selectedMissionIds.length} tasks
                                 </span>
                                 <button
                                     onClick={() => void handleBulkGenerateReports()}
                                     className="px-2.5 py-1 text-[11px] font-medium rounded-lg border border-emerald-200 dark:border-emerald-500/30 text-emerald-600 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors"
                                 >
-                                    批量生成报告
+                                    Generate reports in bulk
                                 </button>
                                 <button
                                     onClick={() => void handleBulkDelete()}
                                     className="px-2.5 py-1 text-[11px] font-medium rounded-lg border border-red-200 dark:border-red-500/30 text-red-600 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
                                 >
-                                    批量删除
+                                    Delete in bulk
                                 </button>
                             </>
                         )}
                     </div>
                     <span className="text-[11px] text-slate-400">
                         <span data-testid="commander-history-visible-count">
-                        显示 {visibleMissions.length} / {missions.length} 条任务
+                        Showing {visibleMissions.length} / {missions.length} tasks
                         </span>
                     </span>
                 </div>
@@ -1598,41 +1598,41 @@ const CommanderPage: React.FC = () => {
                                 {
                                     key: 'mission_scope',
                                     icon: <Activity className="w-4 h-4 text-indigo-500" />,
-                                    title: '当前视图',
-                                    value: `${historyOverview.missionCount} 条`,
-                                    detail: `运行中 ${historyOverview.runningCount} · 已完成 ${historyOverview.completedCount}`,
+                                    title: "Current view",
+                                    value: `${historyOverview.missionCount} entries`,
+                                    detail: `Running ${historyOverview.runningCount} · Completed ${historyOverview.completedCount}`,
                                 },
                                 {
                                     key: 'bug_scope',
                                     icon: <AlertTriangle className="w-4 h-4 text-red-500" />,
-                                    title: '问题概览',
-                                    value: `${historyOverview.bugMissionCount} 条任务`,
-                                    detail: `累计 ${historyOverview.bugItemCount} 个问题`,
+                                    title: "Issue overview",
+                                    value: `${historyOverview.bugMissionCount} tasks`,
+                                    detail: `Total ${historyOverview.bugItemCount} issues`,
                                 },
                                 {
                                     key: 'test_lines',
                                     icon: <XCircle className="w-4 h-4 text-amber-500" />,
-                                    title: '失败测试线',
-                                    value: `${historyOverview.failedTestLines} 条`,
-                                    detail: `总测试线 ${historyOverview.totalTestLines} 条`,
+                                    title: "Failed test tracks",
+                                    value: `${historyOverview.failedTestLines} entries`,
+                                    detail: `Total test tracks ${historyOverview.totalTestLines} entries`,
                                 },
                                 {
                                     key: 'report_coverage',
                                     icon: <FileText className="w-4 h-4 text-emerald-500" />,
-                                    title: '报告覆盖',
-                                    value: `${historyOverview.reportReadyCount} 已出`,
-                                    detail: `待补 ${historyOverview.pendingReportCount} 条`,
+                                    title: "Report coverage",
+                                    value: `${historyOverview.reportReadyCount} available`,
+                                    detail: `Pending ${historyOverview.pendingReportCount} entries`,
                                 },
                                 {
                                     key: 'success_rate',
                                     icon: <Gauge className="w-4 h-4 text-cyan-500" />,
-                                    title: '平均成功率',
+                                    title: "Average success rate",
                                     value: historyOverview.averageSuccessRate === null
                                         ? '—'
                                         : `${historyOverview.averageSuccessRate}%`,
                                     detail: historyOverview.averageSuccessRateSamples > 0
-                                        ? `基于 ${historyOverview.averageSuccessRateSamples} 条已汇总任务`
-                                        : '暂无可计算结果',
+                                        ? `Based on ${historyOverview.averageSuccessRateSamples} summarized tasks`
+                                        : "No results available to calculate",
                                 },
                             ].map(card => (
                                 <div
@@ -1660,10 +1660,10 @@ const CommanderPage: React.FC = () => {
                                 <div className="flex items-center justify-between gap-3">
                                     <div className="flex items-center gap-2 text-xs font-medium text-red-600 dark:text-red-300">
                                         <AlertTriangle className="w-4 h-4" />
-                                        高频问题热点
+                                        Frequent issue hotspots
                                         {activeBugHotspotKey && (
                                             <span className="rounded-full bg-red-100 dark:bg-red-500/20 px-2 py-0.5 text-[10px] font-medium">
-                                                已按热点过滤
+                                                Filtered by hotspot
                                             </span>
                                         )}
                                     </div>
@@ -1672,7 +1672,7 @@ const CommanderPage: React.FC = () => {
                                             onClick={() => setActiveBugHotspotKey(null)}
                                             className="text-[11px] font-medium text-red-600 dark:text-red-300 hover:text-red-700 transition-colors"
                                         >
-                                            清除热点过滤
+                                            Clear hotspot filter
                                         </button>
                                     )}
                                 </div>
@@ -1715,7 +1715,7 @@ const CommanderPage: React.FC = () => {
                                                             {getBugSeverityTone(hotspot.status)}
                                                         </span>
                                                         <span className="shrink-0 inline-flex items-center rounded-full bg-red-100 dark:bg-red-500/20 px-2 py-0.5 text-[10px] font-medium text-red-600 dark:text-red-300">
-                                                            {hotspot.count} 次
+                                                            {hotspot.count} occurrences
                                                         </span>
                                                     </div>
                                                 </div>
@@ -1734,13 +1734,13 @@ const CommanderPage: React.FC = () => {
                                                     ))}
                                                     {hotspot.missionIds.length > 2 && (
                                                         <span className="text-[10px] text-slate-400 dark:text-slate-500">
-                                                            +{hotspot.missionIds.length - 2} 条
+                                                            +{hotspot.missionIds.length - 2} entries
                                                         </span>
                                                     )}
                                                 </div>
                                                 <div className="mt-3 flex items-center justify-between gap-3">
                                                     <span className="text-[10px] text-slate-500 dark:text-slate-400">
-                                                        影响 {hotspot.missionIds.length} 条任务 · 报告 {reportedMissionCount}/{hotspot.missionIds.length}
+                                                        Affects {hotspot.missionIds.length} tasks · Reports {reportedMissionCount}/{hotspot.missionIds.length}
                                                     </span>
                                                     <div className="flex items-center gap-2">
                                                         {primaryMission && (
@@ -1749,7 +1749,7 @@ const CommanderPage: React.FC = () => {
                                                                 className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-600 dark:text-emerald-300 hover:text-emerald-700 transition-colors"
                                                             >
                                                                 <FileText className="w-3 h-3" />
-                                                                {primaryMissionReportUrl ? '查看首个报告' : '生成首个报告'}
+                                                                {primaryMissionReportUrl ? "View first report" : "Generate first report"}
                                                             </button>
                                                         )}
                                                         {primaryMission && (
@@ -1758,14 +1758,14 @@ const CommanderPage: React.FC = () => {
                                                                 className="inline-flex items-center gap-1 text-[10px] font-medium text-indigo-600 dark:text-indigo-300 hover:text-indigo-700 transition-colors"
                                                             >
                                                                 <ExternalLink className="w-3 h-3" />
-                                                                定位首个问题
+                                                                Locate first issue
                                                             </button>
                                                         )}
                                                         <button
                                                             onClick={() => setActiveBugHotspotKey(prev => prev === hotspot.key ? null : hotspot.key)}
                                                             className="text-[10px] font-medium text-red-600 dark:text-red-300 hover:text-red-700 transition-colors"
                                                         >
-                                                            {activeBugHotspotKey === hotspot.key ? '取消过滤' : '只看相关任务'}
+                                                            {activeBugHotspotKey === hotspot.key ? "Clear filter" : "Related tasks only"}
                                                         </button>
                                                     </div>
                                                 </div>
@@ -1784,23 +1784,23 @@ const CommanderPage: React.FC = () => {
                                     <div>
                                         <div className="flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-300">
                                             <AlertTriangle className="w-4 h-4 text-red-500" />
-                                            问题清单
+                                            Issue list
                                         </div>
                                         <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                                            首屏直接看具体问题、所属任务、报告状态和排查入口。当前筛选 {bugBoardItems.length} 个问题，影响 {bugBoardMissionIds.length} 条任务。
+                                            View issues, associated tasks, report status, and troubleshooting links immediately. Current filter: {bugBoardItems.length} issues affecting {bugBoardMissionIds.length} tasks.
                                         </div>
                                         {bugBoardMissionIds.length > 0 && (
                                             <div
                                                 data-testid="commander-bug-board-selection-summary"
                                                 className="mt-2 text-[11px] text-slate-500 dark:text-slate-400"
                                             >
-                                                已加入批量 {selectedBugBoardMissionCount} / {bugBoardMissionIds.length} 条任务 · 待补报告 {bugBoardPendingReportMissionIds.length} 条
+                                                Added to batch: {selectedBugBoardMissionCount} / {bugBoardMissionIds.length} tasks · Pending reports: {bugBoardPendingReportMissionIds.length} entries
                                                 {historySelectionScope === 'selected' && (
                                                     <span
                                                         data-testid="commander-bug-board-selected-scope-badge"
                                                         className="ml-2 inline-flex items-center rounded-full bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 text-[10px] text-indigo-600 dark:text-indigo-300"
                                                     >
-                                                        当前仅看已加入批量
+                                                        Showing only tasks added to the batch
                                                     </span>
                                                 )}
                                             </div>
@@ -1808,10 +1808,10 @@ const CommanderPage: React.FC = () => {
                                     </div>
                                     <div className="flex flex-wrap items-center gap-2">
                                         {([
-                                            ['all', `全部问题 (${historyOverview.bugItemCount})`],
-                                            ['error', '错误'],
-                                            ['warning', '警告'],
-                                            ['recovered', '已恢复'],
+                                            ['all', `All issues (${historyOverview.bugItemCount})`],
+                                            ['error', "Error"],
+                                            ['warning', "Warning"],
+                                            ['recovered', "Recovered"],
                                         ] as [CommanderBugBoardSeverityFilter, string][]).map(([key, label]) => (
                                             <button
                                                 key={key}
@@ -1836,7 +1836,7 @@ const CommanderPage: React.FC = () => {
                                                         : 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-500/20'
                                                 }`}
                                             >
-                                                {allBugBoardSelected ? `取消相关任务 (${bugBoardMissionIds.length})` : `选中相关任务 (${bugBoardMissionIds.length})`}
+                                                {allBugBoardSelected ? `Deselect related tasks (${bugBoardMissionIds.length})` : `Select related tasks (${bugBoardMissionIds.length})`}
                                             </button>
                                         )}
                                         <button
@@ -1849,9 +1849,9 @@ const CommanderPage: React.FC = () => {
                                         >
                                             {selectedBugBoardMissionCount > 0
                                                 ? selectedBugBoardPendingReportMissionIds.length > 0
-                                                    ? `为已选任务补报告 (${selectedBugBoardPendingReportMissionIds.length})`
-                                                    : `已选任务已全出报告 (${selectedBugBoardMissionCount})`
-                                                : `补当前问题报告 (${bugBoardPendingReportMissionIds.length})`}
+                                                    ? `Generate missing reports for selected tasks (${selectedBugBoardPendingReportMissionIds.length})`
+                                                    : `All selected tasks have reports (${selectedBugBoardMissionCount})`
+                                                : `Generate missing reports for current issues (${bugBoardPendingReportMissionIds.length})`}
                                         </button>
                                         {selectedMissionIds.length > 0 && (
                                             <button
@@ -1864,8 +1864,8 @@ const CommanderPage: React.FC = () => {
                                                 }`}
                                             >
                                                 {historySelectionScope === 'selected'
-                                                    ? `返回全部任务 (${filteredMissions.length})`
-                                                    : `仅看已加入批量 (${selectedMissionIds.length})`}
+                                                    ? `Return to all tasks (${filteredMissions.length})`
+                                                    : `Selected for batch only (${selectedMissionIds.length})`}
                                             </button>
                                         )}
                                     </div>
@@ -1877,13 +1877,13 @@ const CommanderPage: React.FC = () => {
                                     >
                                         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                                             <div className="text-[11px] text-slate-600 dark:text-slate-300">
-                                                正在处置已选任务 {selectedMissionSummary.total} 条
+                                                Processing selected tasks: {selectedMissionSummary.total} entries
                                                 <span className="mx-2 text-slate-300 dark:text-slate-600">|</span>
-                                                有问题 {selectedMissionSummary.withBugs} 条
+                                                With issues {selectedMissionSummary.withBugs} entries
                                                 <span className="mx-2 text-slate-300 dark:text-slate-600">|</span>
-                                                已出报告 {selectedMissionSummary.reportReady} 条
+                                                Reports available {selectedMissionSummary.reportReady} entries
                                                 <span className="mx-2 text-slate-300 dark:text-slate-600">|</span>
-                                                待补报告 {selectedMissionSummary.pendingReport} 条
+                                                Reports pending {selectedMissionSummary.pendingReport} entries
                                             </div>
                                             <div className="flex flex-wrap items-center gap-2">
                                                 <button
@@ -1893,22 +1893,22 @@ const CommanderPage: React.FC = () => {
                                                     className="px-2.5 py-1 rounded-md text-[11px] font-medium bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                                 >
                                                     {selectedMissionSummary.pendingReport > 0
-                                                        ? `批量生成报告 (${selectedMissionSummary.pendingReport})`
-                                                        : `已全部出报告 (${selectedMissionSummary.total})`}
+                                                        ? `Generate reports in bulk (${selectedMissionSummary.pendingReport})`
+                                                        : `All reports available (${selectedMissionSummary.total})`}
                                                 </button>
                                                 <button
                                                     onClick={() => void handleBulkDelete()}
                                                     data-testid="commander-bug-board-batch-delete"
                                                     className="px-2.5 py-1 rounded-md text-[11px] font-medium bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-500/20 transition-all"
                                                 >
-                                                    批量删除 ({selectedMissionSummary.total})
+                                                    Delete in bulk ( {selectedMissionSummary.total})
                                                 </button>
                                                 <button
                                                     onClick={clearSelectedMissions}
                                                     data-testid="commander-bug-board-batch-clear"
                                                     className="px-2.5 py-1 rounded-md text-[11px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
                                                 >
-                                                    清空已选
+                                                    Clear selection
                                                 </button>
                                             </div>
                                         </div>
@@ -1929,7 +1929,7 @@ const CommanderPage: React.FC = () => {
                                             <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                                                 <span>{bugBoardActionFeedback.message}</span>
                                                 <span className="text-[10px] opacity-70">
-                                                    最近处置 {new Date(bugBoardActionFeedback.timestamp).toLocaleTimeString('zh-CN')}
+                                                    Recent action {new Date(bugBoardActionFeedback.timestamp).toLocaleTimeString('en-US')}
                                                 </span>
                                             </div>
                                             <div className="flex flex-wrap items-center gap-2">
@@ -1939,7 +1939,7 @@ const CommanderPage: React.FC = () => {
                                                         data-testid="commander-bug-board-feedback-action"
                                                         className="px-2.5 py-1 rounded-md text-[11px] font-medium bg-white/80 dark:bg-slate-900/40 text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-900 transition-all"
                                                     >
-                                                        {bugBoardActionFeedback.actionKind === 'restore_selected' ? '恢复选中' : `仅看这批任务 (${bugBoardActionFeedback.missionIds.length})`}
+                                                        {bugBoardActionFeedback.actionKind === 'restore_selected' ? "Restore selection" : `Show only this batch (${bugBoardActionFeedback.missionIds.length})`}
                                                     </button>
                                                 ) : null}
                                                 <button
@@ -1947,7 +1947,7 @@ const CommanderPage: React.FC = () => {
                                                     data-testid="commander-bug-board-feedback-dismiss"
                                                     className="px-2.5 py-1 rounded-md text-[11px] font-medium bg-transparent text-slate-500 dark:text-slate-300 hover:text-slate-700 dark:hover:text-white transition-all"
                                                 >
-                                                    收起反馈
+                                                    Hide feedback
                                                 </button>
                                             </div>
                                         </div>
@@ -1955,7 +1955,7 @@ const CommanderPage: React.FC = () => {
                                 )}
                                 {bugBoardItems.length === 0 ? (
                                     <div className="mt-4 rounded-lg border border-dashed border-slate-200 dark:border-slate-700 px-4 py-5 text-center text-xs text-slate-400 dark:text-slate-500">
-                                        当前筛选下暂无问题记录，可以切回“全部问题”或更换热点过滤再看。
+                                        No issues match the current filters. Switch to All issues or choose another hotspot.
                                     </div>
                                 ) : (
                                     <div className="mt-4 space-y-3">
@@ -1994,16 +1994,16 @@ const CommanderPage: React.FC = () => {
                                                                         ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-300'
                                                                         : 'bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-300'
                                                                 }`}>
-                                                                    {item.hasReport ? '已出报告' : '待补报告'}
+                                                                    {item.hasReport ? "Report available" : "Report pending"}
                                                                 </span>
                                                             </div>
                                                             <div className="mt-2 text-sm text-slate-700 dark:text-slate-200">
                                                                 {item.summary}
                                                             </div>
                                                             <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-slate-400 dark:text-slate-500">
-                                                                <span className="truncate max-w-[360px]">任务：{item.missionInput || '未命名任务'}</span>
-                                                                <span>状态：{STATUS_CONFIG[item.missionStatus]?.label || item.missionStatus}</span>
-                                                                <span>{item.missionCreatedAt ? new Date(item.missionCreatedAt).toLocaleString('zh-CN') : '时间未知'}</span>
+                                                                <span className="truncate max-w-[360px]">Task: {item.missionInput || "Unnamed task"}</span>
+                                                                <span>Status: {STATUS_CONFIG[item.missionStatus]?.label || item.missionStatus}</span>
+                                                                <span>{item.missionCreatedAt ? new Date(item.missionCreatedAt).toLocaleString('en-US') : "Unknown time"}</span>
                                                             </div>
                                                         </div>
                                                         <div className="flex flex-wrap items-center gap-2 xl:justify-end">
@@ -2016,13 +2016,13 @@ const CommanderPage: React.FC = () => {
                                                                         : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
                                                                 }`}
                                                             >
-                                                                {missionSelected ? '已加入批量' : '加入批量'}
+                                                                {missionSelected ? "Added to batch" : "Add to batch"}
                                                             </button>
                                                             <button
                                                                 onClick={() => focusMission(item.missionId)}
                                                                 className="inline-flex items-center gap-1 rounded-md border border-slate-200 dark:border-slate-700 px-2.5 py-1 text-[11px] font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
                                                             >
-                                                                聚焦任务
+                                                                Focus task
                                                             </button>
                                                             {mission && (
                                                                 <button
@@ -2030,7 +2030,7 @@ const CommanderPage: React.FC = () => {
                                                                     className="inline-flex items-center gap-1 rounded-md border border-emerald-200 dark:border-emerald-500/30 px-2.5 py-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors"
                                                                 >
                                                                     <FileText className="w-3.5 h-3.5" />
-                                                                    {item.hasReport ? '查看报告' : '生成报告'}
+                                                                    {item.hasReport ? "View report" : "Generate report"}
                                                                 </button>
                                                             )}
                                                             {mission && item.executionRecordId && item.executionGroupId && (
@@ -2039,7 +2039,7 @@ const CommanderPage: React.FC = () => {
                                                                     className="inline-flex items-center gap-1 rounded-md border border-indigo-200 dark:border-indigo-500/30 px-2.5 py-1 text-[11px] font-medium text-indigo-600 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-colors"
                                                                 >
                                                                     <ExternalLink className="w-3.5 h-3.5" />
-                                                                    定位记录
+                                                                    Locate record
                                                                 </button>
                                                             )}
                                                         </div>
@@ -2056,11 +2056,11 @@ const CommanderPage: React.FC = () => {
 
                 {missions.length === 0 ? (
                     <div className="px-5 py-10 text-center text-sm text-slate-400 dark:text-slate-500">
-                        暂无任务记录。输入需求后点击"发射"开始第一次测试
+                        No task records yet. Enter requirements and click Launch to start your first test.
                     </div>
                 ) : filteredMissions.length === 0 ? (
                     <div className="px-5 py-10 text-center text-sm text-slate-400 dark:text-slate-500">
-                        当前筛选下暂无匹配任务，切换筛选后再看一眼。
+                        No tasks match the current filters. Try changing the filters.
                     </div>
                 ) : (
                     <div className="divide-y divide-slate-100 dark:divide-slate-700/50">
@@ -2096,7 +2096,7 @@ const CommanderPage: React.FC = () => {
                                                 {m.user_input}
                                             </p>
                                             <p className="text-xs text-slate-400 mt-0.5">
-                                                #{m.mission_id} · {new Date(m.created_at).toLocaleString('zh-CN')}
+                                                #{m.mission_id} · {new Date(m.created_at).toLocaleString('en-US')}
                                             </p>
                                             <div className="flex flex-wrap items-center gap-1.5 mt-1">
                                                 {missionMetaBadges.map(badge => (
@@ -2131,7 +2131,7 @@ const CommanderPage: React.FC = () => {
                                         {missionReportUrl && (
                                             <span className="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-300">
                                                 <FileText className="w-3.5 h-3.5" />
-                                                报告
+                                                Report
                                             </span>
                                         )}
                                         <div className={`shrink-0 px-2 py-1 rounded text-xs font-medium ${cfg.bg} ${cfg.color}`}>
@@ -2145,19 +2145,19 @@ const CommanderPage: React.FC = () => {
                                                 }}
                                                 disabled={reportLoadingId === m.execution_group_id}
                                                 className="shrink-0 px-2 py-1 text-xs text-indigo-600 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed opacity-0 group-hover:opacity-100"
-                                                title={missionReportUrl ? '查看批次报告' : '生成批次报告'}
+                                                title={missionReportUrl ? "View batch report" : "Generate batch report"}
                                             >
                                                 {reportLoadingId === m.execution_group_id
-                                                    ? '生成中...'
+                                                    ? "Generating..."
                                                     : missionReportUrl
-                                                        ? '查看报告'
-                                                        : '生成报告'}
+                                                        ? "View report"
+                                                        : "Generate report"}
                                             </button>
                                         )}
                                         <button
                                             onClick={async (e) => {
                                                 e.stopPropagation();
-                                                const ok = await confirm('删除单条任务', '确定要删除这条任务记录吗？');
+                                                const ok = await confirm("Delete task", "Delete this task record?");
                                                 if (!ok) return;
                                                 await commanderDeleteMission(m.mission_id);
                                                 setMissions(prev => prev.filter(x => x.mission_id !== m.mission_id));
@@ -2165,10 +2165,10 @@ const CommanderPage: React.FC = () => {
                                                 if (activeMission?.mission_id === m.mission_id) {
                                                     setActiveMission(null);
                                                 }
-                                                showToast('success', '任务记录已删除。');
+                                                showToast('success', "Task record deleted.");
                                             }}
                                             className="shrink-0 p-1 text-slate-300 hover:text-red-500 rounded hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors opacity-0 group-hover:opacity-100"
-                                            title="删除"
+                                            title={"Delete"}
                                         >
                                             <Trash2 className="w-3.5 h-3.5" />
                                         </button>
@@ -2186,7 +2186,7 @@ const CommanderPage: React.FC = () => {
                                                         className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md border border-indigo-200 dark:border-indigo-500/30 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-colors text-xs"
                                                     >
                                                         <ExternalLink className="w-3.5 h-3.5" />
-                                                        查看执行中心
+                                                        View execution center
                                                     </button>
                                                 )}
                                                 {m.execution_group_id && (
@@ -2200,17 +2200,17 @@ const CommanderPage: React.FC = () => {
                                                         ) : (
                                                             <FileText className="w-3.5 h-3.5" />
                                                         )}
-                                                        {missionReportUrl ? '查看批次报告' : '生成批次报告'}
+                                                        {missionReportUrl ? "View batch report" : "Generate batch report"}
                                                     </button>
                                                 )}
                                             </div>
                                             {m.report && (
                                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
                                                     {[
-                                                        { label: '总测试', value: (m.report.summary as Record<string, unknown>)?.total_tests ?? '–' },
-                                                        { label: '通过', value: (m.report.summary as Record<string, unknown>)?.completed ?? '–' },
-                                                        { label: '失败', value: (m.report.summary as Record<string, unknown>)?.failed ?? '–' },
-                                                        { label: '成功率', value: `${(m.report.summary as Record<string, unknown>)?.success_rate ?? '–'}%` },
+                                                        { label: "Total tests", value: (m.report.summary as Record<string, unknown>)?.total_tests ?? '–' },
+                                                        { label: "Passed", value: (m.report.summary as Record<string, unknown>)?.completed ?? '–' },
+                                                        { label: "Failed", value: (m.report.summary as Record<string, unknown>)?.failed ?? '–' },
+                                                        { label: "Success rate", value: `${(m.report.summary as Record<string, unknown>)?.success_rate ?? '–'}%` },
                                                     ].map(s => (
                                                         <div key={s.label} className="text-center py-2 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
                                                             <div className="text-lg font-bold text-slate-700 dark:text-slate-200">{String(s.value)}</div>
@@ -2224,7 +2224,7 @@ const CommanderPage: React.FC = () => {
                                                     <div className="flex items-center justify-between gap-3 mb-3">
                                                         <div className="flex items-center gap-2 text-sm font-semibold text-red-700 dark:text-red-300">
                                                             <AlertTriangle className="w-4 h-4" />
-                                                            本次军团任务发现的问题
+                                                            Issues found by this agent fleet task
                                                         </div>
                                                         {m.execution_group_id && (
                                                             <button
@@ -2232,7 +2232,7 @@ const CommanderPage: React.FC = () => {
                                                                 className="inline-flex items-center gap-1 text-xs text-indigo-600 dark:text-indigo-300 hover:text-indigo-700 transition-colors"
                                                             >
                                                                 <ExternalLink className="w-3.5 h-3.5" />
-                                                                去执行中心
+                                                                Open execution center
                                                             </button>
                                                         )}
                                                     </div>
@@ -2250,7 +2250,7 @@ const CommanderPage: React.FC = () => {
                                                                             className="shrink-0 inline-flex items-center gap-1 text-[11px] text-indigo-600 dark:text-indigo-300 hover:text-indigo-700 transition-colors"
                                                                         >
                                                                             <ExternalLink className="w-3 h-3" />
-                                                                            定位记录
+                                                                            Locate record
                                                                         </button>
                                                                     )}
                                                                 </div>

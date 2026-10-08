@@ -16,10 +16,10 @@ interface Task {
 }
 
 const CRON_PRESETS = [
-    { label: '每天 8:00', cron: '0 8 * * *' },
-    { label: '每天 20:00', cron: '0 20 * * *' },
-    { label: '每小时', cron: '0 * * * *' },
-    { label: '每周一 9:00', cron: '0 9 * * 1' },
+    { label: "Daily at 8:00 AM", cron: '0 8 * * *' },
+    { label: "Daily at 8:00 PM", cron: '0 20 * * *' },
+    { label: "Hourly", cron: '0 * * * *' },
+    { label: "Every Monday at 9:00 AM", cron: '0 9 * * 1' },
 ];
 
 export default function SchedulerPage() {
@@ -82,9 +82,9 @@ export default function SchedulerPage() {
                         <div className="p-2 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-500 text-white">
                             <Calendar className="w-5 h-5" />
                         </div>
-                        定时任务
+                        Scheduled tasks
                     </h2>
-                    <p className="text-slate-500 mt-2 text-sm">配置 Cron 定时执行测试计划</p>
+                    <p className="text-slate-500 mt-2 text-sm">Configure test plans to run on a cron schedule</p>
                 </div>
                 <div className="flex gap-2">
                     <button onClick={load} className="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-indigo-500 transition-colors">
@@ -92,7 +92,7 @@ export default function SchedulerPage() {
                     </button>
                     <button onClick={() => setShowAdd(true)}
                         className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-teal-500 to-cyan-500 text-white rounded-xl text-sm font-medium shadow-lg shadow-teal-500/25 transition-all hover:shadow-xl">
-                        <Plus className="w-4 h-4" /> 新建任务
+                        <Plus className="w-4 h-4" /> New task
                     </button>
                 </div>
             </div>
@@ -102,8 +102,8 @@ export default function SchedulerPage() {
                 {tasks.length === 0 ? (
                     <div className="py-20 text-center">
                         <Clock className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-                        <p className="text-slate-400 text-sm">暂无定时任务</p>
-                        <p className="text-slate-400 text-xs mt-1">创建任务后会按 Cron 表达式自动执行</p>
+                        <p className="text-slate-400 text-sm">No scheduled tasks</p>
+                        <p className="text-slate-400 text-xs mt-1">Tasks run automatically according to their cron expressions</p>
                     </div>
                 ) : (
                     <div className="divide-y divide-slate-100 dark:divide-slate-700/50">
@@ -116,22 +116,22 @@ export default function SchedulerPage() {
                                     <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{t.name}</p>
                                     <div className="flex gap-3 mt-0.5 text-xs text-slate-400">
                                         <span className="font-mono bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded">{t.cron}</span>
-                                        <span>类型: {t.task_type}</span>
-                                        {t.next_run && <span>下次: {new Date(t.next_run).toLocaleString('zh-CN')}</span>}
+                                        <span>Type: {t.task_type}</span>
+                                        {t.next_run && <span>Next: {new Date(t.next_run).toLocaleString('en-US')}</span>}
                                     </div>
                                 </div>
                                 <div className="flex gap-1 shrink-0">
                                     <button onClick={() => handleToggle(t.id)}
                                         className={`p-2 rounded-lg transition-colors ${t.enabled ? 'text-emerald-500 hover:bg-emerald-50' : 'text-slate-400 hover:bg-slate-100'}`}
-                                        title={t.enabled ? '禁用' : '启用'}>
+                                        title={t.enabled ? "Disable" : "Enable"}>
                                         {t.enabled ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                                     </button>
                                     <button onClick={() => handleRunNow(t.id)} disabled={triggering === t.id}
-                                        className="p-2 rounded-lg text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-colors" title="立即执行">
+                                        className="p-2 rounded-lg text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-colors" title={"Run now"}>
                                         {triggering === t.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
                                     </button>
                                     <button onClick={() => handleDelete(t.id)}
-                                        className="p-2 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors" title="删除">
+                                        className="p-2 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors" title={"Delete"}>
                                         <Trash2 className="w-4 h-4" />
                                     </button>
                                 </div>
@@ -149,25 +149,25 @@ export default function SchedulerPage() {
                             <X className="w-5 h-5" />
                         </button>
                         <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
-                            <Calendar className="w-5 h-5 text-teal-500" /> 新建定时任务
+                            <Calendar className="w-5 h-5 text-teal-500" /> New scheduled task
                         </h3>
                         <div className="space-y-3">
                             <div>
-                                <label className="text-xs font-medium text-slate-500">任务名称</label>
+                                <label className="text-xs font-medium text-slate-500">Task name</label>
                                 <input type="text" value={name} onChange={e => setName(e.target.value)}
-                                    placeholder="如：每日回归测试" className="w-full mt-1 px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 text-sm outline-none" />
+                                    placeholder={"Example: Daily regression tests"} className="w-full mt-1 px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 text-sm outline-none" />
                             </div>
                             <div>
-                                <label className="text-xs font-medium text-slate-500">任务类型</label>
+                                <label className="text-xs font-medium text-slate-500">Task type</label>
                                 <select value={taskType} onChange={e => setTaskType(e.target.value)}
                                     className="w-full mt-1 px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 text-sm outline-none">
-                                    <option value="exploratory">探索性测试</option>
-                                    <option value="commander">Commander 任务</option>
-                                    <option value="api">API 测试</option>
+                                    <option value="exploratory">Exploratory testing</option>
+                                    <option value="commander">Commander task</option>
+                                    <option value="api">API testing</option>
                                 </select>
                             </div>
                             <div>
-                                <label className="text-xs font-medium text-slate-500">Cron 表达式</label>
+                                <label className="text-xs font-medium text-slate-500">Cron expression</label>
                                 <input type="text" value={cron} onChange={e => setCron(e.target.value)}
                                     className="w-full mt-1 px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 text-sm font-mono outline-none" />
                                 <div className="flex gap-2 mt-2 flex-wrap">
@@ -181,7 +181,7 @@ export default function SchedulerPage() {
                             </div>
                             <button onClick={handleAdd} disabled={!name.trim()}
                                 className="w-full mt-2 px-4 py-2.5 bg-gradient-to-r from-teal-500 to-cyan-500 text-white rounded-xl text-sm font-medium disabled:opacity-50 transition-all">
-                                创建任务
+                                Create task
                             </button>
                         </div>
                     </div>

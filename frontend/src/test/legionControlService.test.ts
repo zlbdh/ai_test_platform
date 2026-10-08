@@ -44,7 +44,7 @@ describe('legionControlService', () => {
         localStorage.clear();
     });
 
-    it('会为命令运行查询附带项目、来源筛选和 Bearer token', async () => {
+    it("includes project, source filters, and Bearer token in command run queries", async () => {
         saveControlAuthSession({ token: 'legion-token' });
         mockFetch.mockResolvedValue(mockResponse({
             status: 'success',
@@ -65,7 +65,7 @@ describe('legionControlService', () => {
         expect(headers.get('Authorization')).toBe('Bearer legion-token');
     });
 
-    it('能通过命令网关执行探索和发布风险写动作', async () => {
+    it("executes exploration and release risk writes through the command gateway", async () => {
         saveControlAuthSession({ token: 'legion-token' });
         mockFetch
             .mockResolvedValueOnce(mockResponse({
@@ -115,7 +115,7 @@ describe('legionControlService', () => {
         const execution = await executeCommand('exploration.session.create', {
             project_key: 'demo',
             target_url: 'https://demo.example.com',
-            charter: '围绕登录链路做探索',
+            charter: "Explore the login flow",
         });
         const sessions = await listExplorationSessions({ project_key: 'demo' });
         const assessments = await listReleaseRiskAssessments({ project_key: 'demo', auto_release_eligible: true });
@@ -135,7 +135,7 @@ describe('legionControlService', () => {
                     arguments: {
                         project_key: 'demo',
                         target_url: 'https://demo.example.com',
-                        charter: '围绕登录链路做探索',
+                        charter: "Explore the login flow",
                     },
                     confirm: false,
                 }),
@@ -143,7 +143,7 @@ describe('legionControlService', () => {
         );
     });
 
-    it('能读取探索发现详情、复核队列与 review_status 筛选', async () => {
+    it("reads exploratory finding details, the review queue, and review_status filters", async () => {
         saveControlAuthSession({ token: 'legion-token' });
         mockFetch
             .mockResolvedValueOnce(mockResponse({
@@ -155,10 +155,10 @@ describe('legionControlService', () => {
                     project_key: 'demo',
                     severity: 'high',
                     finding_type: 'business',
-                    title: '登录主链路需重点复核',
-                    summary: '认证提示与失败重试链路需要人工复核。',
+                    title: "The primary login flow needs focused review",
+                    summary: "Authentication messages and failure retries need human review.",
                     confidence: 0.74,
-                    evidence: { impact_scope: '认证主链路' },
+                    evidence: { impact_scope: "Primary authentication flow" },
                     requires_human_review: true,
                     review_status: 'pending',
                     review_comment: '',
@@ -176,13 +176,13 @@ describe('legionControlService', () => {
                     project_key: 'demo',
                     severity: 'high',
                     finding_type: 'business',
-                    title: '登录主链路需重点复核',
-                    summary: '认证提示与失败重试链路需要人工复核。',
+                    title: "The primary login flow needs focused review",
+                    summary: "Authentication messages and failure retries need human review.",
                     confidence: 0.74,
-                    evidence: { impact_scope: '认证主链路' },
+                    evidence: { impact_scope: "Primary authentication flow" },
                     requires_human_review: true,
                     review_status: 'confirmed',
-                    review_comment: '人工确认',
+                    review_comment: "Human confirmation",
                     reviewed_by: 'alice',
                     reviewed_at: '2026-03-24T10:05:00',
                     created_at: '2026-03-24T10:00:00',
@@ -197,10 +197,10 @@ describe('legionControlService', () => {
                     project_key: 'demo',
                     severity: 'high',
                     finding_type: 'business',
-                    title: '登录主链路需重点复核',
-                    summary: '认证提示与失败重试链路需要人工复核。',
+                    title: "The primary login flow needs focused review",
+                    summary: "Authentication messages and failure retries need human review.",
                     confidence: 0.74,
-                    evidence: { impact_scope: '认证主链路' },
+                    evidence: { impact_scope: "Primary authentication flow" },
                     requires_human_review: true,
                     review_status: 'pending',
                     review_comment: '',
@@ -223,7 +223,7 @@ describe('legionControlService', () => {
         expect(String(mockFetch.mock.calls[2][0])).toContain('/api/exploration/review-queue');
     });
 
-    it('能获取、签发并撤销通知平台绑定', async () => {
+    it("retrieves, issues, and revokes notification platform bindings", async () => {
         saveControlAuthSession({ token: 'legion-token' });
         mockFetch
             .mockResolvedValueOnce(mockResponse({

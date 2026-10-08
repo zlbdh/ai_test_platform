@@ -66,7 +66,7 @@ describe('frontdoorTaskService', () => {
 
         const result = await createFrontdoorTask({
             task_kind: 'general',
-            user_goal: '检查登录流程',
+            user_goal: "Check the login workflow",
             source_context: { target_url: 'https://demo.example.com' },
             strategy: { parallel: true },
         });
@@ -101,7 +101,7 @@ describe('frontdoorTaskService', () => {
                 task_id: 'task001',
                 cancelled: true,
                 status: 'cancelled',
-                message: '任务已停止。',
+                message: "Task stopped.",
             }))
             .mockResolvedValueOnce(mockResponse({
                 task_id: 'task002',
@@ -131,14 +131,14 @@ describe('frontdoorTaskService', () => {
             data: JSON.stringify({
                 timestamp: '2026-04-02T15:00:00',
                 level: 'info',
-                message: '开始执行',
+                message: "Start execution",
                 data: {},
             }),
         });
         eventSources[0].instance.onmessage?.({
             data: JSON.stringify({
                 level: 'end',
-                message: '任务结束',
+                message: "Task ended",
             }),
         });
 

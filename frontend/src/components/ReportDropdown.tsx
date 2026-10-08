@@ -106,7 +106,7 @@ const ReportDropdown: React.FC = () => {
                 setToast({ message: `${scopeLabel}Generated (no test data yet)`, type: 'success' });
             } else {
                 setToast({
-                    message: `${scopeLabel}Generated: ${recordCount} records, ${caseCount} test cases, ${platformIssueCount} platform issues${failed > 0 ? `，${failed} failed test cases` : ''}${passed > 0 ? `，${passed} passed test cases` : ''}`,
+                    message: `${scopeLabel}Generated: ${recordCount} records, ${caseCount} test cases, ${platformIssueCount} platform issues${failed > 0 ? `, ${failed} failed test cases` : ''}${passed > 0 ? `, ${passed} passed test cases` : ''}`,
                     type: 'success'
                 });
             }

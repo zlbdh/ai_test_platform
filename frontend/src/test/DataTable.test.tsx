@@ -10,12 +10,12 @@ interface RowData {
 describe('DataTable', () => {
     const columns: DataTableColumn<RowData>[] = [
         { key: 'id', title: 'ID' },
-        { key: 'id', title: '重复 ID 列', render: (_value, row) => row.id },
-        { key: 'name', title: '名称' },
+        { key: 'id', title: "Duplicate ID column", render: (_value, row) => row.id },
+        { key: 'name', title: "Name" },
     ];
 
     const data: RowData[] = [
-        { id: 'row-1', name: '第一行' },
+        { id: 'row-1', name: "First row" },
     ];
 
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
@@ -24,7 +24,7 @@ describe('DataTable', () => {
         consoleErrorSpy.mockClear();
     });
 
-    it('允许重复业务列 key，但不应产生 React duplicate key 警告', () => {
+    it("allows duplicate business column keys without React duplicate key warnings", () => {
         render(
             <DataTable<RowData>
                 columns={columns}
@@ -33,21 +33,21 @@ describe('DataTable', () => {
             />
         );
 
-        expect(screen.getByText('重复 ID 列')).toBeInTheDocument();
+        expect(screen.getByText("Duplicate ID column")).toBeInTheDocument();
         const duplicateKeyWarnings = consoleErrorSpy.mock.calls.filter(([message]) =>
             String(message).includes('same key')
         );
         expect(duplicateKeyWarnings).toHaveLength(0);
     });
 
-    it('支持根据 activeRowKey 自动翻页并高亮目标行', () => {
+    it("paginates and highlights the target row using activeRowKey", () => {
         render(
             <DataTable<RowData>
                 columns={columns}
                 data={[
-                    { id: 'row-1', name: '第一行' },
-                    { id: 'row-2', name: '第二行' },
-                    { id: 'row-3', name: '第三行' },
+                    { id: 'row-1', name: "First row" },
+                    { id: 'row-2', name: "Second row" },
+                    { id: 'row-3', name: "Third row" },
                 ]}
                 rowKey="id"
                 pageSize={1}
@@ -55,8 +55,8 @@ describe('DataTable', () => {
             />
         );
 
-        expect(screen.queryByText('第一行')).not.toBeInTheDocument();
-        expect(screen.getByText('第二行')).toBeInTheDocument();
-        expect(screen.getByText('第二行').closest('tr')).toHaveAttribute('data-active', 'true');
+        expect(screen.queryByText("First row")).not.toBeInTheDocument();
+        expect(screen.getByText("Second row")).toBeInTheDocument();
+        expect(screen.getByText("Second row").closest('tr')).toHaveAttribute('data-active', 'true');
     });
 });

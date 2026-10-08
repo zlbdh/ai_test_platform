@@ -80,22 +80,22 @@ const severityBadge: Record<string, string> = {
 };
 
 const metricLabels: Record<string, string> = {
-    goal_achievement: '目标达成率',
-    step_accuracy: '步骤准确率',
-    hallucination_score: '幻觉抑制分',
-    healing_success_rate: '自愈成功率',
-    token_efficiency: 'Token 效率',
-    login_success_rate: '登录成功率',
-    core_flow_pass_rate: '核心流程通过率',
-    blocking_bug_count: '阻断缺陷数',
-    unexplained_5xx_count: '未解释 5xx 数',
-    critical_ui_error_count: '关键 UI 异常数',
-    module_coverage_rate: '模块覆盖率',
-    page_mapping_rate: '页面映射率',
-    critical_page_missing_count: '关键页面缺失数',
-    blocking_prototype_gap_count: '阻断级原型差异数',
-    critical_field_missing_count: '关键字段缺失数',
-    critical_state_transition_gap_count: '关键状态流转缺失数',
+    goal_achievement: "Goal achievement rate",
+    step_accuracy: "Step accuracy",
+    hallucination_score: "Hallucination suppression score",
+    healing_success_rate: "Self-healing success rate",
+    token_efficiency: "Token efficiency",
+    login_success_rate: "Login success rate",
+    core_flow_pass_rate: "Core flow pass rate",
+    blocking_bug_count: "Blocking defects",
+    unexplained_5xx_count: "Unexplained 5xx responses",
+    critical_ui_error_count: "Critical UI anomalies",
+    module_coverage_rate: "Module coverage",
+    page_mapping_rate: "Page mapping rate",
+    critical_page_missing_count: "Missing critical pages",
+    blocking_prototype_gap_count: "Blocking prototype differences",
+    critical_field_missing_count: "Missing critical fields",
+    critical_state_transition_gap_count: "Missing critical state transitions",
 };
 
 const defaultMetricSamples: Record<string, number> = {
@@ -120,14 +120,14 @@ const defaultMetricSamples: Record<string, number> = {
 const getRulePackSummary = (pack: ImportedRulePack | null, rules: GateRule[]) => {
     if (pack?.playbook_id === 'sample-platform-prototype' || rules.some(rule => rule.name.startsWith('sample_platform_platform_'))) {
         return {
-            title: pack?.playbook_title || '示例项目大平台原型测试包',
-            description: '规则覆盖模块覆盖率、页面映射率、关键页面缺失、阻断级原型差异、关键字段缺失和关键状态流转缺失。',
+            title: pack?.playbook_title || "Sample project platform prototype test package",
+            description: "Rules cover module coverage, page mapping, missing critical pages, blocking prototype differences, missing critical fields, and missing critical state transitions.",
         };
     }
     if (pack?.playbook_id === 'sample-first-regression' || rules.some(rule => rule.name.startsWith('sample_platform_'))) {
         return {
-            title: pack?.playbook_title || '示例项目企业平台端首轮真实回归',
-            description: '规则覆盖登录成功率、核心流程通过率、阻断缺陷数、未解释 5xx、关键页面异常数。',
+            title: pack?.playbook_title || "Sample enterprise platform initial live regression",
+            description: "Rules cover login success rate, core flow pass rate, blocking defects, unexplained 5xx responses, and critical page anomalies.",
         };
     }
     return null;
@@ -410,8 +410,8 @@ export default function QualityGatePage() {
                         <ShieldCheck className="w-5 h-5" />
                     </div>
                     <div>
-                        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">质量门禁</h2>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">统一任务的深读结论页与业务准入检查点</p>
+                        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Quality gate</h2>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">Detailed unified task conclusions and business acceptance checks</p>
                     </div>
                 </div>
                 <div className="flex gap-2">
@@ -421,7 +421,7 @@ export default function QualityGatePage() {
                         className="flex items-center gap-1.5 px-3 py-2 border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 rounded-lg text-sm text-emerald-700 transition-colors shadow-sm disabled:opacity-50 dark:bg-emerald-900/20 dark:border-emerald-800/60 dark:text-emerald-300 dark:hover:bg-emerald-900/30"
                     >
                         {importingRules ? <RefreshCw className="w-4 h-4 animate-spin" /> : <BookOpen className="w-4 h-4" />}
-                        {importingRules ? '导入中...' : '导入示例项目规则'}
+                        {importingRules ? "Importing..." : "Import sample project rules"}
                     </button>
                     <button
                         onClick={() => void importRules('sample-platform-prototype')}
@@ -429,13 +429,13 @@ export default function QualityGatePage() {
                         className="flex items-center gap-1.5 px-3 py-2 border border-blue-200 bg-blue-50 hover:bg-blue-100 rounded-lg text-sm text-blue-700 transition-colors shadow-sm disabled:opacity-50 dark:bg-blue-900/20 dark:border-blue-800/60 dark:text-blue-300 dark:hover:bg-blue-900/30"
                     >
                         {importingRules ? <RefreshCw className="w-4 h-4 animate-spin" /> : <BookOpen className="w-4 h-4" />}
-                        {importingRules ? '导入中...' : '导入大平台原型规则'}
+                        {importingRules ? "Importing..." : "Import platform prototype rules"}
                     </button>
                     <button onClick={() => setShowAddModal(true)} className="flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg text-sm text-slate-700 transition-colors shadow-sm dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700">
-                        <Plus className="w-4 h-4" /> 添加规则
+                        <Plus className="w-4 h-4" /> Add rule
                     </button>
                     <button onClick={runCheck} disabled={checking || currentMetrics.length === 0} className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 rounded-lg text-sm text-white transition-all disabled:opacity-50 shadow-sm">
-                        {checking ? <RefreshCw className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />} 执行检查
+                        {checking ? <RefreshCw className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />} Run checks
                     </button>
                 </div>
             </div>
@@ -445,156 +445,155 @@ export default function QualityGatePage() {
                     {taskContextLoading ? (
                         <div className="flex items-center gap-2 text-sm text-violet-600 dark:text-violet-300">
                             <RefreshCw className="h-4 w-4 animate-spin" />
-                            正在加载统一任务上下文...
+                            Loading unified task context...
                         </div>
                     ) : taskContext ? (
                         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                             <div>
-                                <p className="text-xs uppercase tracking-wide text-violet-500">来自统一测试任务</p>
+                                <p className="text-xs uppercase tracking-wide text-violet-500">From unified testing task</p>
                                 <h3 className="text-base font-semibold text-slate-800 dark:text-slate-200">{taskContext.user_goal}</h3>
                                 <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                                    {taskContext.task_kind} · {taskContext.task_id} · 当前状态 {taskContext.status}
+                                    {taskContext.task_kind} · {taskContext.task_id} · Current status {taskContext.status}
                                 </p>
                                 <div className="mt-2 flex flex-wrap gap-3 text-xs text-slate-500 dark:text-slate-400">
-                                    <span>执行组：{taskContext.execution_group_id || '-'}</span>
-                                    <span>复跑链：{taskContext.lineage_root_id || '-'}</span>
-                                    <span>run_id：{runIdParam || taskContext.task_id || '-'}</span>
-                                    <span>{taskContext.rerun_from_task_id ? `来自复跑：${taskContext.rerun_from_task_id}` : '当前为首轮任务'}</span>
-                                    <span>任务态：{statusMeta(taskContext.status).label}</span>
+                                    <span>Execution group: {taskContext.execution_group_id || '-'}</span>
+                                    <span>Rerun chain: {taskContext.lineage_root_id || '-'}</span>
+                                    <span>run_id: {runIdParam || taskContext.task_id || '-'}</span>
+                                    <span>{taskContext.rerun_from_task_id ? `Rerun of: ${taskContext.rerun_from_task_id}` : "This is the initial task"}</span>
+                                    <span>Task state: {statusMeta(taskContext.status).label}</span>
                                 </div>
                                 <div className="mt-3 flex flex-wrap items-center gap-2">
                                     <span className={`rounded-full px-3 py-1 text-xs font-medium ${taskGateColor}`}>
-                                        当前 Gate：{taskContext.gate_summary?.status || 'pending'}
+                                        Current gate: {taskContext.gate_summary?.status || 'pending'}
                                     </span>
                                     <span className="text-sm text-slate-600 dark:text-slate-300">
-                                        {taskContext.gate_summary?.summary || '当前任务暂无门禁摘要。'}
+                                        {taskContext.gate_summary?.summary || "No gate summary is available for this task."}
                                     </span>
                                 </div>
                                 {taskContext.gate_summary?.decision_reason && (
                                     <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                                        判定原因：{taskContext.gate_summary.decision_reason}
+                                        Decision reason: {taskContext.gate_summary.decision_reason}
                                     </div>
                                 )}
                                 {runIdParam && (
                                     <div className="mt-3 text-xs text-slate-500 dark:text-slate-400">
-                                        当前已聚焦 run_id = {runIdParam} 的门禁历史，并把任务指标带入“业务指标录入”区域。
-                                        {historyStatusParam ? ` 同时过滤状态 = ${historyStatusParam}。` : ''}
+                                        Focused on gate history for run_id = {runIdParam} , with task metrics loaded into Business metrics input.
+                                        {historyStatusParam ? ` Also filtering status = ${historyStatusParam}.` : ''}
                                     </div>
                                 )}
                                 {comparableTask && (
                                     <div className="mt-3 rounded-xl border border-violet-200/60 bg-white/80 px-3 py-3 text-xs text-slate-600 dark:border-violet-500/20 dark:bg-slate-900/50 dark:text-slate-300">
-                                        <div className="font-semibold text-slate-700 dark:text-slate-100">最近一次可比复跑</div>
+                                        <div className="font-semibold text-slate-700 dark:text-slate-100">Most recent comparable rerun</div>
                                         <div className="mt-2 flex flex-wrap gap-3">
-                                            <span>任务：{comparableTask.task_id}</span>
-                                            <span>状态：{statusMeta(comparableTask.status).label}</span>
-                                            <span>Gate：{comparableTask.gate_summary?.status || 'pending'}</span>
+                                            <span>Task: {comparableTask.task_id}</span>
+                                            <span>Status: {statusMeta(comparableTask.status).label}</span>
+                                            <span>Gate: {comparableTask.gate_summary?.status || 'pending'}</span>
                                         </div>
                                         <div className="mt-2 text-slate-500 dark:text-slate-400">
-                                            {comparableTask.gate_summary?.summary || '当前可比任务暂无门禁摘要。'}
+                                            {comparableTask.gate_summary?.summary || "No gate summary is available for the comparable task."}
                                         </div>
                                     </div>
                                 )}
                                 {comparableTask && comparisonSummary && (
                                     <div className="mt-3 rounded-xl border border-violet-200/60 bg-white/80 px-3 py-3 text-xs text-slate-600 dark:border-violet-500/20 dark:bg-slate-900/50 dark:text-slate-300">
-                                        <div className="font-semibold text-slate-700 dark:text-slate-100">本次 vs 最近一次复跑</div>
+                                        <div className="font-semibold text-slate-700 dark:text-slate-100">Current run vs. most recent rerun</div>
                                         <div className="mt-2 grid gap-2 md:grid-cols-2">
                                             <div className="rounded-lg bg-slate-50 px-3 py-3 dark:bg-slate-800/60">
-                                                <div className="text-slate-400">Findings 数量</div>
+                                                <div className="text-slate-400">Finding count</div>
                                                 <div className="mt-1 text-slate-700 dark:text-slate-200">
-                                                    本次 {comparisonSummary.currentFindingCount} / 上次 {comparisonSummary.comparableFindingCount}
+                                                    Current {comparisonSummary.currentFindingCount} / Previous {comparisonSummary.comparableFindingCount}
                                                 </div>
                                             </div>
                                             <div className="rounded-lg bg-slate-50 px-3 py-3 dark:bg-slate-800/60">
-                                                <div className="text-slate-400">高风险 Findings</div>
+                                                <div className="text-slate-400">High-risk findings</div>
                                                 <div className="mt-1 text-slate-700 dark:text-slate-200">
-                                                    本次 {comparisonSummary.currentSeveritySummary.blocking + comparisonSummary.currentSeveritySummary.major}
+                                                    Current {comparisonSummary.currentSeveritySummary.blocking + comparisonSummary.currentSeveritySummary.major}
                                                     {' / '}
-                                                    上次 {comparisonSummary.comparableSeveritySummary.blocking + comparisonSummary.comparableSeveritySummary.major}
+                                                    Previous {comparisonSummary.comparableSeveritySummary.blocking + comparisonSummary.comparableSeveritySummary.major}
                                                 </div>
                                             </div>
                                             <div className="rounded-lg bg-slate-50 px-3 py-3 dark:bg-slate-800/60">
-                                                <div className="text-slate-400">Gate 状态</div>
+                                                <div className="text-slate-400">Gate status</div>
                                                 <div className="mt-1 text-slate-700 dark:text-slate-200">
-                                                    本次 {taskContext.gate_summary?.status || 'pending'} / 上次 {comparableTask.gate_summary?.status || 'pending'}
+                                                    Current {taskContext.gate_summary?.status || 'pending'} / Previous {comparableTask.gate_summary?.status || 'pending'}
                                                 </div>
                                             </div>
                                             <div className="rounded-lg bg-slate-50 px-3 py-3 dark:bg-slate-800/60">
-                                                <div className="text-slate-400">验证态</div>
+                                                <div className="text-slate-400">Verification state</div>
                                                 <div className="mt-1 text-slate-700 dark:text-slate-200">
-                                                    本次 {verificationStateMeta(taskContext.verification_state).label}
+                                                    Current {verificationStateMeta(taskContext.verification_state).label}
                                                     {' / '}
-                                                    上次 {verificationStateMeta(comparableTask.verification_state).label}
+                                                    Previous {verificationStateMeta(comparableTask.verification_state).label}
                                                 </div>
                                             </div>
                                         </div>
                                         <div className="mt-2 rounded-lg bg-slate-50 px-3 py-3 dark:bg-slate-800/60">
-                                            <div className="text-slate-400">严重级别变化</div>
+                                            <div className="text-slate-400">Severity changes</div>
                                             <div className="mt-1 text-slate-700 dark:text-slate-200">
-                                                本次：{formatFindingSeveritySummary(comparisonSummary.currentSeveritySummary)}
+                                                Current: {formatFindingSeveritySummary(comparisonSummary.currentSeveritySummary)}
                                             </div>
                                             <div className="mt-1 text-slate-500 dark:text-slate-400">
-                                                上次：{formatFindingSeveritySummary(comparisonSummary.comparableSeveritySummary)}
+                                                Previous: {formatFindingSeveritySummary(comparisonSummary.comparableSeveritySummary)}
                                             </div>
                                         </div>
                                         <div className="mt-2 rounded-lg bg-slate-50 px-3 py-3 dark:bg-slate-800/60">
-                                            <div className="text-slate-400">判定原因变化</div>
+                                            <div className="text-slate-400">Decision reason changes</div>
                                             <div className="mt-1 text-slate-700 dark:text-slate-200">
-                                                本次：{taskContext.gate_summary?.decision_reason || '当前没有结构化决策原因。'}
+                                                Current: {taskContext.gate_summary?.decision_reason || "No structured decision reasons for this run."}
                                             </div>
                                             <div className="mt-1 text-slate-500 dark:text-slate-400">
-                                                上次：{comparableTask.gate_summary?.decision_reason || '上次没有结构化决策原因。'}
+                                                Previous: {comparableTask.gate_summary?.decision_reason || "No structured decision reasons for the previous run."}
                                             </div>
                                         </div>
                                         <div className="mt-2 rounded-lg bg-slate-50 px-3 py-3 dark:bg-slate-800/60">
                                             <div className="flex items-center justify-between gap-3">
-                                                <div className="text-slate-400">关键 Metrics 变化</div>
+                                                <div className="text-slate-400">Key metric changes</div>
                                                 <div className="text-[11px] text-slate-400">
-                                                    {comparisonSummary.changedMetricCount > 0 ? `${comparisonSummary.changedMetricCount} 项变化` : '与上次一致'}
+                                                    {comparisonSummary.changedMetricCount > 0 ? `${comparisonSummary.changedMetricCount} changes` : "Unchanged from previous run"}
                                                 </div>
                                             </div>
                                             <div className="mt-2 space-y-2">
                                                 {comparisonSummary.metricChanges.length === 0 ? (
-                                                    <div className="text-slate-400">当前没有可对比的 metrics。</div>
+                                                    <div className="text-slate-400">No comparable metrics are available.</div>
                                                 ) : comparisonSummary.metricChanges.slice(0, 6).map((metric) => (
                                                     <div key={metric.key} className="rounded-lg border border-slate-200/70 bg-white px-3 py-3 dark:border-slate-700/70 dark:bg-slate-900/40">
                                                         <div className="flex items-center justify-between gap-3">
                                                             <div className="text-slate-400">{metric.key}</div>
                                                             <span className={`rounded-full px-2 py-0.5 text-[10px] ${metric.changed ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300' : 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-300'}`}>
-                                                                {metric.changed ? '已变化' : '一致'}
+                                                                {metric.changed ? "Changed" : "Unchanged"}
                                                             </span>
                                                         </div>
-                                                        <div className="mt-1 text-slate-700 dark:text-slate-200">本次：{formatMetricValue(metric.currentValue)}</div>
-                                                        <div className="mt-1 text-slate-500 dark:text-slate-400">上次：{formatMetricValue(metric.comparableValue)}</div>
+                                                        <div className="mt-1 text-slate-700 dark:text-slate-200">Current: {formatMetricValue(metric.currentValue)}</div>
+                                                        <div className="mt-1 text-slate-500 dark:text-slate-400">Previous: {formatMetricValue(metric.comparableValue)}</div>
                                                     </div>
                                                 ))}
                                             </div>
                                         </div>
                                         <div className="mt-2 rounded-lg bg-slate-50 px-3 py-3 dark:bg-slate-800/60">
                                             <div className="flex items-center justify-between gap-3">
-                                                <div className="text-slate-400">Checks 变化</div>
+                                                <div className="text-slate-400">Check changes</div>
                                                 <div className="text-[11px] text-slate-400">
-                                                    {changedGateChecks.length > 0 ? `${changedGateChecks.length} 条规则变化` : '与上次一致'}
+                                                    {changedGateChecks.length > 0 ? `${changedGateChecks.length} ${changedGateChecks.length === 1 ? 'rule change' : 'rule changes'}` : "Unchanged from previous run"}
                                                 </div>
                                             </div>
                                             {!currentGateHistory ? (
-                                                <div className="mt-2 text-slate-400">当前任务还没有可用的门禁历史 checks。</div>
+                                                <div className="mt-2 text-slate-400">No gate history checks are available for this task yet.</div>
                                             ) : !comparableGateHistory ? (
-                                                <div className="mt-2 text-slate-400">最近一次复跑还没有可对比的门禁历史。</div>
+                                                <div className="mt-2 text-slate-400">No comparable gate history is available for the most recent rerun yet.</div>
                                             ) : (
                                                 <div className="mt-2 space-y-2">
                                                     <div className="text-slate-500 dark:text-slate-400">
-                                                        本次 {currentGateHistory.verdict?.failed_checks ?? 0}/{currentGateHistory.verdict?.total_checks ?? 0} 失败，
-                                                        上次 {comparableGateHistory.verdict?.failed_checks ?? 0}/{comparableGateHistory.verdict?.total_checks ?? 0} 失败。
+                                                        Current {currentGateHistory.verdict?.failed_checks ?? 0}/{currentGateHistory.verdict?.total_checks ?? 0} failed, previous {comparableGateHistory.verdict?.failed_checks ?? 0}/{comparableGateHistory.verdict?.total_checks ?? 0} failed.
                                                     </div>
                                                     {(changedGateChecks.length > 0 ? changedGateChecks : gateCheckDiff).slice(0, 4).map((item) => (
                                                         <div key={item.ruleName} className="rounded-lg border border-slate-200/70 bg-white px-3 py-3 dark:border-slate-700/70 dark:bg-slate-900/40">
                                                             <div className="text-slate-700 dark:text-slate-200">{item.ruleName}</div>
                                                             <div className="mt-1 text-slate-500 dark:text-slate-400">
-                                                                本次：{item.currentStatus} / 上次：{item.comparableStatus}
+                                                                Current: {item.currentStatus} / Previous: {item.comparableStatus}
                                                             </div>
                                                             {(item.currentMessage || item.comparableMessage) && (
                                                                 <div className="mt-1 text-[11px] text-slate-400">
-                                                                    本次说明：{item.currentMessage || '无'}；上次说明：{item.comparableMessage || '无'}
+                                                                    Current explanation: {item.currentMessage || "None"} ; previous explanation: {item.comparableMessage || "None"}
                                                                 </div>
                                                             )}
                                                         </div>
@@ -611,28 +610,28 @@ export default function QualityGatePage() {
                                     onClick={() => setTab('check')}
                                     className="rounded-lg border border-violet-200 bg-white px-3 py-2 text-sm text-violet-700 transition-colors hover:bg-violet-50 dark:border-violet-700/50 dark:bg-slate-800 dark:text-violet-300 dark:hover:bg-violet-500/10"
                                 >
-                                    带入指标复核
+                                    Load metrics for review
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => setTab('history')}
                                     className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 transition-colors hover:text-violet-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
                                 >
-                                    聚焦门禁历史
+                                    Focus gate history
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => navigate(taskContext.execution_center_path)}
                                     className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 transition-colors hover:text-violet-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
                                 >
-                                    返回执行中心
+                                    Return to execution center
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => navigate('/quality-gate')}
                                     className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 transition-colors hover:text-violet-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
                                 >
-                                    清除任务上下文
+                                    Clear task context
                                 </button>
                             </div>
                         </div>
@@ -644,7 +643,7 @@ export default function QualityGatePage() {
                 <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-5 dark:border-emerald-800/50 dark:bg-emerald-900/10">
                     <div className="flex items-start justify-between gap-4">
                         <div>
-                            <p className="text-xs uppercase tracking-wide text-emerald-500">项目门禁</p>
+                            <p className="text-xs uppercase tracking-wide text-emerald-500">Project gate</p>
                             <h3 className="text-base font-semibold text-slate-800 dark:text-slate-200">{rulePackSummary.title}</h3>
                             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                                 {rulePackSummary.description}
@@ -652,7 +651,7 @@ export default function QualityGatePage() {
                         </div>
                         {lastImportedCount > 0 && (
                             <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-emerald-700 shadow-sm dark:bg-slate-800 dark:text-emerald-300">
-                                已导入 {lastImportedCount} 条规则
+                                Imported {lastImportedCount} rules
                             </span>
                         )}
                     </div>
@@ -669,7 +668,7 @@ export default function QualityGatePage() {
                             : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
                             }`}
                     >
-                        {{ rules: '门禁规则', check: '检查结果', history: '历史记录' }[t]}
+                        {{ rules: "Gate rules", check: "Check results", history: "History" }[t]}
                     </button>
                 ))}
             </div>
@@ -689,7 +688,7 @@ export default function QualityGatePage() {
                             {r.description && <p className="text-sm text-slate-500 dark:text-slate-400 mt-2 ml-7">{r.description}</p>}
                         </div>
                     ))}
-                    {rules.length === 0 && !loading && <div className="text-center text-slate-400 dark:text-slate-500 py-8">暂无门禁规则</div>}
+                    {rules.length === 0 && !loading && <div className="text-center text-slate-400 dark:text-slate-500 py-8">No gate rules yet</div>}
                 </div>
             )}
 
@@ -698,15 +697,15 @@ export default function QualityGatePage() {
                     <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-slate-700/80 dark:bg-slate-800/60">
                         <div className="flex items-center justify-between gap-3 mb-4">
                             <div>
-                                <h3 className="text-base font-semibold text-slate-800 dark:text-slate-200">业务指标录入</h3>
-                                <p className="text-sm text-slate-500 dark:text-slate-400">按本次回归结果填写指标，执行准入检查。</p>
+                                <h3 className="text-base font-semibold text-slate-800 dark:text-slate-200">Business metrics input</h3>
+                                <p className="text-sm text-slate-500 dark:text-slate-400">Enter metrics from this regression run to check acceptance criteria.</p>
                             </div>
                             <button
                                 onClick={runCheck}
                                 disabled={checking || currentMetrics.length === 0}
                                 className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-500 text-sm text-white hover:bg-emerald-600 disabled:opacity-50"
                             >
-                                {checking ? <RefreshCw className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />} 运行门禁
+                                {checking ? <RefreshCw className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />} Run gate
                             </button>
                         </div>
                         {currentMetrics.length > 0 ? (
@@ -728,7 +727,7 @@ export default function QualityGatePage() {
                                 ))}
                             </div>
                         ) : (
-                            <div className="text-center text-slate-400 dark:text-slate-500 py-6">暂无可录入指标，请先添加或导入规则。</div>
+                            <div className="text-center text-slate-400 dark:text-slate-500 py-6">No metrics are available for input. Add or import rules first.</div>
                         )}
                     </div>
 
@@ -756,11 +755,11 @@ export default function QualityGatePage() {
                                 })}
                             </div>
                             <div className="mt-4 text-xs text-slate-500 dark:text-slate-400">
-                                通过: {checkResult.passed_checks}/{checkResult.total_checks} | 失败: {checkResult.failed_checks}
+                                Passed: {checkResult.passed_checks}/{checkResult.total_checks} | Failed: {checkResult.failed_checks}
                             </div>
                         </div>
                     ) : (
-                        <div className="text-center text-slate-400 dark:text-slate-500 py-8">录入指标后点击“运行门禁”查看结果</div>
+                        <div className="text-center text-slate-400 dark:text-slate-500 py-8">Enter metrics and click Run gate to view results</div>
                     )}
                 </div>
             )}
@@ -769,12 +768,12 @@ export default function QualityGatePage() {
                 <div className="space-y-3">
                     {comparableTask && (
                         <div className="rounded-2xl border border-violet-200/60 bg-violet-50/70 p-4 dark:border-violet-500/20 dark:bg-violet-500/10">
-                            <div className="text-sm font-semibold text-slate-800 dark:text-slate-100">最近一次对比对象</div>
+                            <div className="text-sm font-semibold text-slate-800 dark:text-slate-100">Most recent comparison target</div>
                             <div className="mt-2 flex flex-wrap gap-3 text-xs text-slate-500 dark:text-slate-300">
-                                <span>任务：{comparableTask.task_id}</span>
-                                <span>复跑链：{comparableTask.lineage_root_id || '-'}</span>
-                                <span>Gate：{comparableTask.gate_summary?.status || 'pending'}</span>
-                                {comparableGateHistory && <span>历史 verdict：{comparableGateHistory.verdict?.status || 'pending'}</span>}
+                                <span>Task: {comparableTask.task_id}</span>
+                                <span>Rerun chain: {comparableTask.lineage_root_id || '-'}</span>
+                                <span>Gate: {comparableTask.gate_summary?.status || 'pending'}</span>
+                                {comparableGateHistory && <span>Historical verdict: {comparableGateHistory.verdict?.status || 'pending'}</span>}
                             </div>
                         </div>
                     )}
@@ -788,14 +787,14 @@ export default function QualityGatePage() {
                                         <span className={`font-medium ${statusColor[h.status]}`}>{h.status.toUpperCase()}</span>
                                         <span className="text-xs text-slate-500 dark:text-slate-400">{h.run_id}</span>
                                     </div>
-                                    <span className="text-xs text-slate-500 dark:text-slate-400">{new Date(h.timestamp * 1000).toLocaleString('zh-CN')}</span>
+                                    <span className="text-xs text-slate-500 dark:text-slate-400">{new Date(h.timestamp * 1000).toLocaleString('en-US')}</span>
                                 </div>
                             </div>
                         );
                     })}
                     {filteredHistory.length === 0 && !loading && (
                         <div className="text-center text-slate-400 dark:text-slate-500 py-8">
-                            {runIdParam ? '当前任务还没有对应的门禁历史。' : '暂无检查历史'}
+                            {runIdParam ? "No corresponding gate history exists for this task yet." : "No check history yet"}
                         </div>
                     )}
                 </div>
@@ -804,10 +803,10 @@ export default function QualityGatePage() {
             {showAddModal && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 animate-in fade-in duration-300">
                     <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-6 w-96 space-y-4 shadow-2xl shadow-black/20 dark:shadow-black/50 animate-in zoom-in-95 duration-300">
-                        <h3 className="text-lg font-bold text-slate-900 dark:text-white">添加门禁规则</h3>
+                        <h3 className="text-lg font-bold text-slate-900 dark:text-white">Add gate rule</h3>
                         {[
-                            { label: '规则名称', key: 'name' },
-                            { label: '描述', key: 'description' },
+                            { label: "Rule name", key: 'name' },
+                            { label: "Description", key: 'description' },
                         ].map(field => (
                             <div key={field.key}>
                                 <label className="text-sm font-medium text-slate-600 dark:text-slate-400">{field.label}</label>
@@ -820,7 +819,7 @@ export default function QualityGatePage() {
                         ))}
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="text-sm font-medium text-slate-600 dark:text-slate-400">指标</label>
+                                <label className="text-sm font-medium text-slate-600 dark:text-slate-400">Metrics</label>
                                 <select
                                     value={newRule.metric}
                                     onChange={e => setNewRule(prev => ({ ...prev, metric: e.target.value }))}
@@ -832,7 +831,7 @@ export default function QualityGatePage() {
                                 </select>
                             </div>
                             <div>
-                                <label className="text-sm font-medium text-slate-600 dark:text-slate-400">阈值</label>
+                                <label className="text-sm font-medium text-slate-600 dark:text-slate-400">Threshold</label>
                                 <input
                                     type="number"
                                     step="0.01"
@@ -844,7 +843,7 @@ export default function QualityGatePage() {
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="text-sm font-medium text-slate-600 dark:text-slate-400">操作符</label>
+                                <label className="text-sm font-medium text-slate-600 dark:text-slate-400">Operator</label>
                                 <select
                                     value={newRule.operator}
                                     onChange={e => setNewRule(prev => ({ ...prev, operator: e.target.value }))}
@@ -856,7 +855,7 @@ export default function QualityGatePage() {
                                 </select>
                             </div>
                             <div>
-                                <label className="text-sm font-medium text-slate-600 dark:text-slate-400">级别</label>
+                                <label className="text-sm font-medium text-slate-600 dark:text-slate-400">Level</label>
                                 <select
                                     value={newRule.severity}
                                     onChange={e => setNewRule(prev => ({ ...prev, severity: e.target.value }))}
@@ -869,8 +868,8 @@ export default function QualityGatePage() {
                             </div>
                         </div>
                         <div className="flex gap-3 pt-2">
-                            <button onClick={() => setShowAddModal(false)} className="flex-1 py-2 rounded-lg border border-slate-200 bg-white text-slate-600 text-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600">取消</button>
-                            <button onClick={addRule} disabled={!newRule.name} className="flex-1 py-2 rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-sm hover:from-emerald-600 hover:to-emerald-700 disabled:opacity-50">添加</button>
+                            <button onClick={() => setShowAddModal(false)} className="flex-1 py-2 rounded-lg border border-slate-200 bg-white text-slate-600 text-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600">Cancel</button>
+                            <button onClick={addRule} disabled={!newRule.name} className="flex-1 py-2 rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-sm hover:from-emerald-600 hover:to-emerald-700 disabled:opacity-50">Add</button>
                         </div>
                     </div>
                 </div>

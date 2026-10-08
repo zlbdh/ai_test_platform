@@ -12,7 +12,7 @@ const baseTask = {
     task_id: 'task001',
     mission_kind: 'prototype_agents',
     task_kind: 'prototype' as const,
-    user_goal: '原型测试',
+    user_goal: "Prototype testing",
     status: 'completed',
     created_at: '2026-04-03T10:00:00',
     source_context: {},
@@ -30,8 +30,8 @@ const baseTask = {
     findings: [
         {
             severity: 'major',
-            title: '页面映射风险',
-            summary: '映射存在偏差。',
+            title: "Page mapping risk",
+            summary: "The mapping differs from expectations.",
             category: 'mis_mapping',
             agent_id: 'orchestrator',
             evidence_id: 'evi001',
@@ -40,8 +40,8 @@ const baseTask = {
         },
         {
             severity: 'normal',
-            title: '提示文案缺失',
-            summary: '提示文案不够完整。',
+            title: "Missing guidance text",
+            summary: "The guidance text is incomplete.",
             category: 'field_gap',
             agent_id: 'reporter',
             evidence_id: 'evi002',
@@ -51,17 +51,17 @@ const baseTask = {
     ],
     gate_summary: {
         status: 'warning' as const,
-        summary: '当前仍有待确认项。',
+        summary: "Some items still require confirmation.",
         metrics: {
             page_mapping_rate: 0.98,
             static_unprovable_count: 1,
         },
-        decision_reason: '存在静态无法证明项。',
+        decision_reason: "Some items cannot be proven statically.",
     },
     verification_state: {
         status: 'context_unprovable' as const,
-        label: '当前上下文无法证明',
-        summary: '仍有静态无法证明项。',
+        label: "Not provable in the current context",
+        summary: "Some items still cannot be proven statically.",
     },
     recommendations: [],
     result_summary: {},
@@ -90,12 +90,12 @@ describe('frontdoorTaskShared', () => {
     it('buildGateCheckDiff should surface rule-level changes', () => {
         const items = buildGateCheckDiff(
             [
-                { rule_name: 'mapping_gate', status: 'warning', message: '页面映射率下降' },
-                { rule_name: 'page_gate', status: 'passed', message: '关键页面齐全' },
+                { rule_name: 'mapping_gate', status: 'warning', message: "Page mapping rate decreased" },
+                { rule_name: 'page_gate', status: 'passed', message: "All key pages are present" },
             ],
             [
-                { rule_name: 'mapping_gate', status: 'passed', message: '页面映射率稳定' },
-                { rule_name: 'page_gate', status: 'passed', message: '关键页面齐全' },
+                { rule_name: 'mapping_gate', status: 'passed', message: "Page mapping rate stable" },
+                { rule_name: 'page_gate', status: 'passed', message: "All key pages are present" },
             ],
         );
 
@@ -119,17 +119,17 @@ describe('frontdoorTaskShared', () => {
                 findings: [baseTask.findings[0]],
                 gate_summary: {
                     status: 'passed' as const,
-                    summary: '上一轮已通过。',
+                    summary: "The previous run passed.",
                     metrics: {
                         page_mapping_rate: 1,
                         static_unprovable_count: 0,
                     },
-                    decision_reason: '上一轮无阻断问题。',
+                    decision_reason: "The previous run had no blocking issues.",
                 },
                 verification_state: {
                     status: 'verified_passed' as const,
-                    label: '已验证通过',
-                    summary: '上一轮已通过。',
+                    label: "Verified",
+                    summary: "The previous run passed.",
                 },
                 execution_group_id: 'task000',
             },
@@ -155,17 +155,17 @@ describe('frontdoorTaskShared', () => {
             gate_summary: {
                 ...baseTask.gate_summary,
                 status: 'passed' as const,
-                summary: '上一轮已通过。',
+                summary: "The previous run passed.",
                 metrics: {
                     page_mapping_rate: 1,
                     static_unprovable_count: 0,
                 },
-                decision_reason: '上一轮无阻断问题。',
+                decision_reason: "The previous run had no blocking issues.",
             },
             verification_state: {
                 status: 'verified_passed' as const,
-                label: '已验证通过',
-                summary: '上一轮已通过。',
+                label: "Verified",
+                summary: "The previous run passed.",
             },
             findings: [baseTask.findings[0]],
             evidence_summary: {
@@ -181,7 +181,7 @@ describe('frontdoorTaskShared', () => {
             execution_group_id: 'task900',
             lineage_root_id: 'chain_9',
             rerun_from_task_id: '',
-            user_goal: '同类参考任务',
+            user_goal: "Similar reference task",
             created_at: '2026-04-03T08:00:00',
         };
 
@@ -195,9 +195,9 @@ describe('frontdoorTaskShared', () => {
                 status: 'warning',
                 verdict: {
                     status: 'warning',
-                    summary: '当前门禁需确认。',
+                    summary: "The current gate requires confirmation.",
                     checks: [
-                        { rule_name: 'mapping_gate', status: 'warning', message: '页面映射率下降' },
+                        { rule_name: 'mapping_gate', status: 'warning', message: "Page mapping rate decreased" },
                     ],
                     total_checks: 1,
                     passed_checks: 0,
@@ -209,9 +209,9 @@ describe('frontdoorTaskShared', () => {
                 status: 'passed',
                 verdict: {
                     status: 'passed',
-                    summary: '上一轮门禁通过。',
+                    summary: "The previous gate passed.",
                     checks: [
-                        { rule_name: 'mapping_gate', status: 'passed', message: '页面映射率稳定' },
+                        { rule_name: 'mapping_gate', status: 'passed', message: "Page mapping rate stable" },
                     ],
                     total_checks: 1,
                     passed_checks: 1,

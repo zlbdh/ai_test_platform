@@ -20,13 +20,13 @@ describe('frontdoorTaskStore', () => {
             streamConnected: false,
         });
 
-        useFrontdoorTaskStore.getState().setDraft({ userGoal: '检查首页主链路', targetUrl: 'https://demo.example.com' });
+        useFrontdoorTaskStore.getState().setDraft({ userGoal: "Check the primary home page flow", targetUrl: 'https://demo.example.com' });
         useFrontdoorTaskStore.getState().setFilters({ taskKind: 'general', status: 'completed' });
         useFrontdoorTaskStore.getState().setCurrentTask({
             task_id: 'task001',
             mission_kind: 'commander',
             task_kind: 'general',
-            user_goal: '检查首页主链路',
+            user_goal: "Check the primary home page flow",
             status: 'completed',
             created_at: '2026-04-02T15:00:00',
             started_at: '2026-04-02T15:00:01',
@@ -48,8 +48,8 @@ describe('frontdoorTaskStore', () => {
             gate_summary: { status: 'passed', summary: 'ok', metrics: {} },
             verification_state: {
                 status: 'verified_passed',
-                label: '已验证通过',
-                summary: '当前任务没有发现阻断问题。',
+                label: "Verified",
+                summary: "This task found no blocking issues.",
             },
             recommendations: [],
             result_summary: {},
@@ -64,7 +64,7 @@ describe('frontdoorTaskStore', () => {
         });
 
         const state = useFrontdoorTaskStore.getState();
-        expect(state.draft.userGoal).toBe('检查首页主链路');
+        expect(state.draft.userGoal).toBe("Check the primary home page flow");
         expect(state.filters.taskKind).toBe('general');
         expect(state.currentTaskId).toBe('task001');
     });

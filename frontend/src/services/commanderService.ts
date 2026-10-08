@@ -1,10 +1,10 @@
 /**
- * Commander Service — 总指挥 API 交互层
+ * Commander service: Commander API client
  */
 
 import { API_BASE_URL } from '../config';
 
-const TIMEOUT = 60_000; // Commander 任务可能比较耗时
+const TIMEOUT = 60_000; // Commander tasks can take longer to complete
 
 async function fetchJSON<T>(url: string, options: RequestInit = {}): Promise<T> {
     const controller = new AbortController();
@@ -18,7 +18,7 @@ async function fetchJSON<T>(url: string, options: RequestInit = {}): Promise<T> 
     }
 }
 
-// ── 类型 ────────────────────────────────────────────────────
+// Types
 
 export interface MissionLog {
     timestamp: string;
@@ -188,7 +188,7 @@ function createMissionStream(url: string, onLog: (log: MissionLog) => void, onEn
     return () => evtSource.close();
 }
 
-/** 一句话启动全面测试 */
+/** Start comprehensive testing with one sentence*/
 export async function commanderRun(
     userInput: string,
     targetUrl: string = '',
@@ -201,12 +201,12 @@ export async function commanderRun(
     });
 }
 
-/** 查询任务状态 */
+/** Query task status*/
 export async function commanderStatus(missionId: string): Promise<MissionResult> {
     return fetchJSON(`${BASE}/status/${missionId}`);
 }
 
-/** 取消任务 */
+/** Cancel a task*/
 export async function commanderCancel(missionId: string): Promise<{ mission_id: string; cancelled: boolean }> {
     return fetchJSON(`${BASE}/cancel`, {
         method: 'POST',
@@ -215,22 +215,22 @@ export async function commanderCancel(missionId: string): Promise<{ mission_id: 
     });
 }
 
-/** 获取所有任务 */
+/** Get all tasks*/
 export async function commanderMissions(limit = 20): Promise<MissionResult[]> {
     return fetchJSON(`${BASE}/missions?limit=${limit}`);
 }
 
-/** 删除单条任务 */
+/** Delete a single task*/
 export async function commanderDeleteMission(missionId: string): Promise<{ deleted: boolean }> {
     return fetchJSON(`${BASE}/missions/${missionId}`, { method: 'DELETE' });
 }
 
-/** 清空全部任务 */
+/** Clear all tasks*/
 export async function commanderClearMissions(): Promise<{ cleared: boolean; count: number }> {
     return fetchJSON(`${BASE}/missions`, { method: 'DELETE' });
 }
 
-/** 测试架构师分析 */
+/** Test architect analysis*/
 export async function commanderArchitect(
     inputText: string,
     targetUrl: string = '',
@@ -244,18 +244,18 @@ export async function commanderArchitect(
     });
 }
 
-/** 获取 Agent 列表 */
+/** Get the agent list*/
 export async function commanderAgents(): Promise<{ agents: AgentInfo[]; statistics: Record<string, unknown> }> {
     return fetchJSON(`${BASE}/agents`);
 }
 
-/** 获取链路追踪 */
+/** Get a trace*/
 export async function commanderTracing(traceId?: string): Promise<TracingSummary> {
     const url = traceId ? `${BASE}/tracing?trace_id=${traceId}` : `${BASE}/tracing`;
     return fetchJSON(url);
 }
 
-/** SSE 流式日志 */
+/** Stream logs over SSE*/
 export function commanderStream(missionId: string, onLog: (log: MissionLog) => void, onEnd?: () => void): () => void {
     return createMissionStream(`${BASE}/stream/${missionId}`, onLog, onEnd);
 }
@@ -284,7 +284,7 @@ export function commanderPrototypeStream(
     return createMissionStream(`${BASE}/prototype/stream/${missionId}`, onLog, onEnd);
 }
 
-// ── 军团扩展 API ────────────────────────────────────────────
+// Extended agent APIs
 
 export interface AgentHealth {
     name: string;
@@ -304,7 +304,7 @@ export interface AgentProfile {
     members: string[];
 }
 
-/** 🐝 蜂群模式启动 */
+/** 🐝 Start swarm mode*/
 export async function commanderSwarm(
     userInput: string,
     targetUrl: string = '',
@@ -318,12 +318,12 @@ export async function commanderSwarm(
     });
 }
 
-/** 🏥 Agent 健康状态 */
+/** 🏥 Agent health*/
 export async function commanderHealth(): Promise<{ agents: AgentHealth[]; statistics: Record<string, unknown> }> {
     return fetchJSON(`${BASE}/health`);
 }
 
-/** 📋 Agent Profile 列表 */
+/** 📋 Agent profile list*/
 export async function commanderProfiles(): Promise<{ profiles: AgentProfile[]; total: number }> {
     return fetchJSON(`${BASE}/profiles`);
 }

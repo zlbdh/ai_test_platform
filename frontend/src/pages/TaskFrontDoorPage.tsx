@@ -74,7 +74,7 @@ const TaskFrontDoorPage: React.FC = () => {
             });
             setTasks(next);
         } catch (err) {
-            setError(`加载最近任务失败：${err}`);
+            setError(`Failed to load recent tasks: ${err}`);
         } finally {
             setLoading(false);
         }
@@ -87,15 +87,15 @@ const TaskFrontDoorPage: React.FC = () => {
     const handleSubmit = useCallback(async () => {
         setError('');
         if (!draft.userGoal.trim()) {
-            setError('请先输入任务目标。');
+            setError("Enter a task objective first.");
             return;
         }
         if (draft.taskKind === 'prototype' && !draft.source.trim()) {
-            setError('原型测试需要提供原型来源。');
+            setError("Prototype testing requires a prototype source.");
             return;
         }
         if (draft.taskKind === 'exploration' && !draft.targetUrl.trim()) {
-            setError('探索测试需要提供目标 URL。');
+            setError("Exploratory testing requires a target URL.");
             return;
         }
 
@@ -107,7 +107,7 @@ const TaskFrontDoorPage: React.FC = () => {
             await loadTasks();
             navigate(`/tasks/${created.task_id}`);
         } catch (err) {
-            setError(`创建任务失败：${err}`);
+            setError(`Failed to create task: ${err}`);
         } finally {
             setSubmitting(false);
         }
@@ -124,8 +124,8 @@ const TaskFrontDoorPage: React.FC = () => {
         <div className="mx-auto max-w-6xl space-y-6">
             <PageHeader
                 icon={<Sparkles className="h-5 w-5" />}
-                title="统一测试前门"
-                description="从一个入口发起通用编排、原型测试和探索测试，再进入统一结果页或工作台后座继续深挖。"
+                title={"Unified testing entry point"}
+                description={"Start general orchestration, prototype testing, or exploratory testing here, then open the unified results page or a specialized workbench for further investigation."}
                 accent="violet"
                 actions={(
                     <button
@@ -134,7 +134,7 @@ const TaskFrontDoorPage: React.FC = () => {
                         className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-500 transition-colors hover:text-violet-500 dark:border-slate-700"
                     >
                         <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-                        刷新最近任务
+                        Refresh recent tasks
                     </button>
                 )}
             />
@@ -157,7 +157,7 @@ const TaskFrontDoorPage: React.FC = () => {
                                 >
                                     <div className="flex items-center justify-between gap-3">
                                         <div className="text-sm font-semibold text-slate-700 dark:text-slate-100">{option.title}</div>
-                                        {active && <Badge variant="info" size="sm">当前</Badge>}
+                                        {active && <Badge variant="info" size="sm">Current</Badge>}
                                     </div>
                                     <div className="mt-2 text-xs leading-5 text-slate-500 dark:text-slate-400">{option.description}</div>
                                 </button>
@@ -168,7 +168,7 @@ const TaskFrontDoorPage: React.FC = () => {
                     <div className="grid gap-4 lg:grid-cols-[1.2fr,0.8fr]">
                         <div className="space-y-4">
                             <div className="space-y-2">
-                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400">任务目标</label>
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400">Task objective</label>
                                 <textarea
                                     value={draft.userGoal}
                                     onChange={(event) => setDraft({ userGoal: event.target.value })}
@@ -199,13 +199,13 @@ const TaskFrontDoorPage: React.FC = () => {
                                             className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:ring-2 focus:ring-violet-500/30 dark:border-slate-700 dark:bg-slate-800"
                                         >
                                             <option value="url">URL</option>
-                                            <option value="file">文件</option>
-                                            <option value="directory">目录</option>
+                                            <option value="file">File</option>
+                                            <option value="directory">Directory</option>
                                         </select>
                                         <input
                                             value={draft.playbookId}
                                             onChange={(event) => setDraft({ playbookId: event.target.value })}
-                                            placeholder="项目包 ID"
+                                            placeholder={"Project package ID"}
                                             className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:ring-2 focus:ring-violet-500/30 dark:border-slate-700 dark:bg-slate-800"
                                         />
                                     </div>
@@ -218,7 +218,7 @@ const TaskFrontDoorPage: React.FC = () => {
                                     <input
                                         value={draft.compareSource}
                                         onChange={(event) => setDraft({ compareSource: event.target.value })}
-                                        placeholder="对比来源（可选）"
+                                        placeholder={"Comparison source (optional)"}
                                         className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:ring-2 focus:ring-violet-500/30 dark:border-slate-700 dark:bg-slate-800"
                                     />
                                 </div>
@@ -237,13 +237,13 @@ const TaskFrontDoorPage: React.FC = () => {
                                 className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-500 to-indigo-500 px-4 py-3 text-sm font-medium text-white disabled:opacity-50"
                             >
                                 {submitting ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
-                                发起任务并进入结果页
+                                Start task and open results
                             </button>
                         </div>
 
                         <div className="space-y-4 rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 p-4 dark:border-slate-700 dark:bg-slate-800/40">
                             <div>
-                                <div className="text-xs font-semibold uppercase tracking-wider text-slate-400">当前任务形态</div>
+                                <div className="text-xs font-semibold uppercase tracking-wider text-slate-400">Current task type</div>
                                 <div className="mt-2 text-lg font-semibold text-slate-800 dark:text-white">{currentKindMeta.title}</div>
                                 <div className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">{currentKindMeta.description}</div>
                             </div>
@@ -251,14 +251,14 @@ const TaskFrontDoorPage: React.FC = () => {
                             <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 dark:border-slate-700 dark:bg-slate-900">
                                 <div className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
                                     <Compass className="h-4 w-4 text-teal-500" />
-                                    结果页将固定展示
+                                    The results page always includes
                                 </div>
                                 <ul className="mt-3 space-y-2 text-sm text-slate-500 dark:text-slate-400">
-                                    <li>任务意图与输入上下文</li>
-                                    <li>执行策略与当前状态</li>
-                                    <li>实时日志与关键证据</li>
-                                    <li>Findings 与 Gate 结论</li>
-                                    <li>下一步建议与专家入口</li>
+                                    <li>Task intent and input context</li>
+                                    <li>Execution strategy and current status</li>
+                                    <li>Live logs and key evidence</li>
+                                    <li>Findings and gate decision</li>
+                                    <li>Recommended next steps and expert tools</li>
                                 </ul>
                             </div>
                         </div>
@@ -269,7 +269,7 @@ const TaskFrontDoorPage: React.FC = () => {
                     <div className="flex flex-wrap items-center justify-between gap-3">
                         <div className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
                             <History className="h-4 w-4 text-slate-400" />
-                            最近任务
+                            Recent tasks
                         </div>
                         <div className="flex gap-2">
                             <select
@@ -277,7 +277,7 @@ const TaskFrontDoorPage: React.FC = () => {
                                 onChange={(event) => setFilters({ taskKind: event.target.value as FrontdoorTaskKind | '' })}
                                 className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs outline-none transition focus:ring-2 focus:ring-violet-500/30 dark:border-slate-700 dark:bg-slate-800"
                             >
-                                <option value="">全部类型</option>
+                                <option value="">All types</option>
                                 {TASK_KIND_OPTIONS.map((option) => (
                                     <option key={option.kind} value={option.kind}>{option.title}</option>
                                 ))}
@@ -287,11 +287,11 @@ const TaskFrontDoorPage: React.FC = () => {
                                 onChange={(event) => setFilters({ status: event.target.value })}
                                 className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs outline-none transition focus:ring-2 focus:ring-violet-500/30 dark:border-slate-700 dark:bg-slate-800"
                             >
-                                <option value="">全部状态</option>
-                                <option value="pending">执行中</option>
-                                <option value="completed">已完成</option>
-                                <option value="failed">失败</option>
-                                <option value="cancelled">已停止</option>
+                                <option value="">All statuses</option>
+                                <option value="pending">Running</option>
+                                <option value="completed">Completed</option>
+                                <option value="failed">Failed</option>
+                                <option value="cancelled">Stopped</option>
                             </select>
                         </div>
                     </div>
@@ -299,7 +299,7 @@ const TaskFrontDoorPage: React.FC = () => {
                     <div className="space-y-3">
                         {tasks.length === 0 ? (
                             <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-10 text-center text-sm text-slate-400 dark:border-slate-700">
-                                当前筛选条件下还没有统一前门任务
+                                No unified tasks match the current filters
                             </div>
                         ) : tasks.map((task) => {
                             const taskMeta = getTaskKindMeta(task.task_kind);
@@ -328,7 +328,7 @@ const TaskFrontDoorPage: React.FC = () => {
                                             <div className="mt-1 font-medium text-slate-700 dark:text-slate-200">{task.gate_summary.status}</div>
                                         </div>
                                         <div>
-                                            <div className="text-[10px] uppercase tracking-wider text-slate-400">日志</div>
+                                            <div className="text-[10px] uppercase tracking-wider text-slate-400">Logs</div>
                                             <div className="mt-1 font-medium text-slate-700 dark:text-slate-200">{task.evidence_summary.log_count}</div>
                                         </div>
                                     </div>

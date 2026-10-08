@@ -1,7 +1,7 @@
 /**
- * config.ts 单元测试 (P2-2)
- * 
- * 验证 API 端点配置的完整性和正确性
+ * config.ts unit tests (P2-2)
+ *
+ * Verify API endpoint configuration completeness and correctness
  */
 import { describe, it, expect } from 'vitest';
 import { API_ENDPOINTS, WS_ENDPOINTS, DEFAULT_CONFIG, resolveImageUrl, API_BASE_URL } from '../config';

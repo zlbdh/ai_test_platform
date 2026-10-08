@@ -1,11 +1,11 @@
 ﻿/**
- * backendService.ts 单元测试 (P2-2)
+ * backendService.ts unit tests (P2-2)
  *
- * 覆盖：
- * - fetch 请求格式（URL / method / headers / body）
- * - 错误处理（HTTP error / network failure / timeout）
- * - 数据转换（plan steps / dashboard stats 聚合）
- * - 边界情况（空响应 / 不可达服务器）
+ * Covers:
+ * - fetch request format (URL / method / headers / body)
+ * - Error handling (HTTP errors / network failures / timeouts)
+ * - Data conversion (plan steps / dashboard aggregation)
+ * - Edge cases (empty responses / unreachable servers)
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
@@ -90,7 +90,7 @@ describe('backendService.ts', () => {
         it('should POST with correct body format', async () => {
             mockFetch.mockResolvedValue(mockResponse({ task_id: 'task-1' }));
 
-            const result = await startExecution('测试登录', true, true, 'http://example.com');
+            const result = await startExecution("Test login", true, true, 'http://example.com');
 
             expect(mockFetch).toHaveBeenCalled();
             const [url, options] = mockFetch.mock.calls[0];
@@ -99,7 +99,7 @@ describe('backendService.ts', () => {
             expect(options.headers['Content-Type']).toBe('application/json');
 
             const body = JSON.parse(options.body);
-            expect(body.requirement).toBe('测试登录');
+            expect(body.requirement).toBe("Test login");
             expect(body.mode).toBe('CLOUD');
             expect(body.planner_mode).toBe('smart');
             expect(body.target_url).toBe('http://example.com');
@@ -128,7 +128,7 @@ describe('backendService.ts', () => {
         it('should include probe execution fields when enabled', async () => {
             mockFetch.mockResolvedValue(mockResponse({ task_id: 'task-probe' }));
 
-            await startExecution('只读探针', true, true, 'http://example.com', 'sess_probe', 'chromium', 'group_probe', 'probe', 'read_only');
+            await startExecution("Read-only probe", true, true, 'http://example.com', 'sess_probe', 'chromium', 'group_probe', 'probe', 'read_only');
 
             const body = JSON.parse(mockFetch.mock.calls[0][1].body);
             expect(body.execution_mode).toBe('probe');
@@ -138,7 +138,7 @@ describe('backendService.ts', () => {
         it('should throw on HTTP error', async () => {
             mockFetch.mockResolvedValue(mockResponse('Server Error', false, 500));
 
-            await expect(startExecution('test')).rejects.toThrow('API 请求失败');
+            await expect(startExecution('test')).rejects.toThrow("API request failed");
         });
 
         it('should throw on network failure', async () => {
@@ -216,18 +216,18 @@ describe('backendService.ts', () => {
             const backendData = {
                 status: 'ok',
                 steps: [
-                    { action: 'goto', target: 'https://example.com', value: '', description: '打开首页' },
-                    { action: 'click', target: '#login-btn', value: '', description: '点击登录' },
+                    { action: 'goto', target: 'https://example.com', value: '', description: "Open the home page" },
+                    { action: 'click', target: '#login-btn', value: '', description: "Click login" },
                 ],
                 coverage_summary: {
                     total_scenarios: 2,
                     by_priority: { P0: 1, P1: 1, P2: 0 },
-                    dimensions_covered: ['功能', '安全'],
+                    dimensions_covered: ["Functional", "Security"],
                 },
             };
             mockFetch.mockResolvedValue(mockResponse(backendData));
 
-            const result = await generateTestPlanWithCoverage('测试登录', 'https://example.com');
+            const result = await generateTestPlanWithCoverage("Test login", 'https://example.com');
 
             expect(result.steps).toHaveLength(2);
             expect(result.steps[0].id).toBe('step-1');
@@ -252,7 +252,7 @@ describe('backendService.ts', () => {
         it('should include probe plan fields when generating a probe plan', async () => {
             mockFetch.mockResolvedValue(mockResponse({ steps: [], coverage_summary: null }));
 
-            await generateTestPlanWithCoverage('只读探针', 'http://target.com', 'probe', 'read_only');
+            await generateTestPlanWithCoverage("Read-only probe", 'http://target.com', 'probe', 'read_only');
 
             const body = JSON.parse(mockFetch.mock.calls[0][1].body);
             expect(body.execution_mode).toBe('probe');
@@ -403,7 +403,7 @@ describe('backendService.ts', () => {
                     notification_healthy_webhook_count: 1,
                     notification_untested_webhook_count: 0,
                     notification_ready: true,
-                    notification_summary: '已配置 2 个 Webhook，其中 1 个最近测试通过',
+                    notification_summary: "2 Webhooks configured; 1 passed its latest test",
                     commander_chatops_ready: false,
                     commander_chatops_platform_ready: true,
                     commander_chatops_webhook_ready: true,
@@ -420,11 +420,11 @@ describe('backendService.ts', () => {
                     commander_chatops_callback_url_public: false,
                     commander_chatops_callback_provider: {
                         key: 'local',
-                        label: '本地地址',
+                        label: "Local URL",
                         host: 'localhost',
                     },
-                    commander_chatops_callback_recommendation: '先把 PUBLIC_API_BASE_URL 改成通知平台云侧可访问的公网地址，再执行 challenge 回探。',
-                    commander_chatops_summary: '平台侧事件订阅已就绪，但当前回调地址仍是本地或内网地址；请先配置一个通知平台可访问的公网回调地址。',
+                    commander_chatops_callback_recommendation: "Set PUBLIC_API_BASE_URL to a public address accessible to the notification platform before running the challenge probe.",
+                    commander_chatops_summary: "Platform event subscription is ready, but the callback address is still local or private. Configure a public callback URL accessible to the notification platform first.",
                     commander_chatops_recent_event_at: '2026-03-18T12:05:00',
                     commander_chatops_recent_success_at: '2026-03-18T12:05:00',
                     commander_chatops_latest_external_success_at: '2026-03-18T11:59:00',
@@ -433,10 +433,10 @@ describe('backendService.ts', () => {
                     maintenance_suspect_history_count: 3,
                     maintenance_archived_history_count: 4,
                     maintenance_history_clean: false,
-                    maintenance_history_summary: '检测到 3 条可疑维护历史，默认主视图已隐藏',
+                    maintenance_history_summary: "Detected 3 suspicious maintenance records; hidden from the main view by default",
                     readiness_stage: 'pre-production',
                     readiness_score: 78,
-                    readiness_summary: '主能力已收口到准生产阶段，但告警接出与环境治理仍是主要约束。',
+                    readiness_summary: "Core capabilities are ready for preproduction, but alert integration and environment governance remain the main constraints.",
                 },
             }));
 
@@ -456,7 +456,7 @@ describe('backendService.ts', () => {
             expect(result.operations?.commander_chatops_external_connection_stale).toBe(true);
             expect(result.operations?.commander_chatops_external_self_check_recent_success).toBe(true);
             expect(result.operations?.commander_chatops_callback_url_public).toBe(false);
-            expect(result.operations?.commander_chatops_callback_provider?.label).toBe('本地地址');
+            expect(result.operations?.commander_chatops_callback_provider?.label).toBe("Local URL");
             expect(result.operations?.commander_chatops_callback_recommendation).toContain('PUBLIC_API_BASE_URL');
             expect(result.operations?.commander_chatops_verification_token_masked).toBe('CLIy...6Qxa');
             expect(result.operations?.commander_chatops_latest_external_self_check_at).toBe('2026-03-18T12:08:00');
@@ -474,15 +474,15 @@ describe('backendService.ts', () => {
                     score: 78,
                     local_score: 72,
                     global_score: 84,
-                    summary: '主能力已收口到准生产阶段，但告警接出与环境治理仍是主要约束。',
+                    summary: "Core capabilities are ready for preproduction, but alert integration and environment governance remain the main constraints.",
                     computed_at: '2026-03-16T18:00:00',
                     local: [
-                        { key: 'maintenance_module', name: '维护模块', score: 100, status: 'good', summary: 'ok' },
+                        { key: 'maintenance_module', name: "Maintenance module", score: 100, status: 'good', summary: 'ok' },
                     ],
                     global: [
-                        { key: 'architecture', name: '架构稳定性', score: 88, status: 'good', summary: 'ok' },
+                        { key: 'architecture', name: "Architecture stability", score: 88, status: 'good', summary: 'ok' },
                     ],
-                    recommendations: ['接出至少 1 个生产告警 Webhook，让维护失败和风险预警真正进入通知链路。'],
+                    recommendations: ["Connect at least one production alert Webhook so maintenance failures and risk warnings enter the notification workflow."],
                 },
             }));
 
@@ -490,8 +490,8 @@ describe('backendService.ts', () => {
 
             expect(mockFetch.mock.calls[0][0]).toContain('/api/platform/readiness');
             expect(result.readiness.stage).toBe('pre-production');
-            expect(result.readiness.local[0].name).toBe('维护模块');
-            expect(result.readiness.global[0].name).toBe('架构稳定性');
+            expect(result.readiness.local[0].name).toBe("Maintenance module");
+            expect(result.readiness.global[0].name).toBe("Architecture stability");
         });
 
         it('getPlatformRemediation should request remediation actions', async () => {
@@ -500,19 +500,19 @@ describe('backendService.ts', () => {
                 remediation: {
                     computed_at: '2026-03-16T18:00:00',
                     status: 'attention',
-                    summary: '当前存在需要继续推进的生产化行动项。',
+                    summary: "Further production readiness actions are required.",
                     counts: { total: 2, blocking: 1, local: 1, global: 1, p0: 1, p1: 1 },
                     risk: { shadow_count: 1, notification_ready: false, readiness_stage: 'pre-production' },
                     items: [
                         {
                             key: 'notification_webhook',
-                            title: '接出生产告警 Webhook',
+                            title: "Connect a production alert Webhook",
                             scope: 'local',
                             priority: 'P0',
                             blocking: true,
                             status: 'open',
                             route: '/notifications',
-                            summary: '当前没有启用中的生产告警 Webhook',
+                            summary: "No production alert Webhook is currently enabled",
                             impact: 'impact',
                             next_step: 'step',
                             evidence: { webhook_count: 0 },
@@ -540,9 +540,9 @@ describe('backendService.ts', () => {
                     sync: { performance: 0, security: 0 },
                     repair: { group_updates: 0, record_updates: 0, legacy_groups: 0 },
                     report_history: { history_entries: 5, updated_entries: 1 },
-                    risk: { level: 'warning', shadow_count: 1, summary: '检测到 1 个影子业务库' },
-                    notification: { webhook_count: 1, tested_enabled: 1, healthy_enabled: 1, untested_enabled: 0, ready: true, summary: '已配置 1 个 Webhook，其中 1 个最近测试通过' },
-                    data_quality: { suspect_history_count: 2, archived_history_count: 5, clean: false, summary: '检测到 2 条可疑维护历史，默认主视图已隐藏' },
+                    risk: { level: 'warning', shadow_count: 1, summary: "Detected 1 shadow business database" },
+                    notification: { webhook_count: 1, tested_enabled: 1, healthy_enabled: 1, untested_enabled: 0, ready: true, summary: "1 Webhook configured; 1 passed its latest test" },
+                    data_quality: { suspect_history_count: 2, archived_history_count: 5, clean: false, summary: "Detected 2 suspicious maintenance records; hidden from the main view by default" },
                     warning_detected: true,
                     risk_alert_sent: true,
                 },
@@ -555,9 +555,9 @@ describe('backendService.ts', () => {
                     sync: { performance: 0, security: 0 },
                     repair: { group_updates: 0, record_updates: 0, legacy_groups: 0 },
                     report_history: { history_entries: 5, updated_entries: 1 },
-                    risk: { level: 'warning', shadow_count: 1, summary: '检测到 1 个影子业务库' },
-                    notification: { webhook_count: 1, tested_enabled: 1, healthy_enabled: 1, untested_enabled: 0, ready: true, summary: '已配置 1 个 Webhook，其中 1 个最近测试通过' },
-                    data_quality: { suspect_history_count: 2, archived_history_count: 5, clean: false, summary: '检测到 2 条可疑维护历史，默认主视图已隐藏' },
+                    risk: { level: 'warning', shadow_count: 1, summary: "Detected 1 shadow business database" },
+                    notification: { webhook_count: 1, tested_enabled: 1, healthy_enabled: 1, untested_enabled: 0, ready: true, summary: "1 Webhook configured; 1 passed its latest test" },
+                    data_quality: { suspect_history_count: 2, archived_history_count: 5, clean: false, summary: "Detected 2 suspicious maintenance records; hidden from the main view by default" },
                     warning_detected: true,
                     risk_alert_sent: false,
                 },
@@ -627,7 +627,7 @@ describe('backendService.ts', () => {
                     reason: 'dashboard_archive_suspect',
                     archived_at: '2026-03-16T12:00:00',
                     remaining: 0,
-                    data_quality: { suspect_history_count: 0, raw_history_count: 128, archived_history_count: 44, visible_history_count: 84, clean: true, summary: '已归档 44 条历史维护记录' },
+                    data_quality: { suspect_history_count: 0, raw_history_count: 128, archived_history_count: 44, visible_history_count: 84, clean: true, summary: "Archived 44 historical maintenance records" },
                 },
             }));
 
@@ -663,7 +663,7 @@ describe('backendService.ts', () => {
                         last_archive_export_format: 'json',
                         archive_export_fresh: true,
                         clean: true,
-                        summary: '已归档 60 条历史维护记录，最近已完成导出',
+                        summary: "Archived 60 historical maintenance records; export completed recently",
                     },
                 },
             }));
@@ -713,7 +713,7 @@ describe('backendService.ts', () => {
                         last_archive_cleanup_deleted_runs: 0,
                         last_archive_cleanup_deleted_exports: 0,
                         clean: true,
-                        summary: '已归档 60 条历史维护记录，最近已完成导出',
+                        summary: "Archived 60 historical maintenance records; export completed recently",
                     },
                 },
             }));

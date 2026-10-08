@@ -102,7 +102,7 @@ const TaskResultPage: React.FC = () => {
             setCurrentTask(detail);
             setCurrentTaskId(detail.task_id);
         } catch (err) {
-            setError(`加载任务详情失败：${err}`);
+            setError(`Failed to load task details: ${err}`);
         } finally {
             setLoading(false);
         }
@@ -194,7 +194,7 @@ const TaskResultPage: React.FC = () => {
             setActionMessage(result.message);
             await loadTask(taskId);
         } catch (err) {
-            setError(`停止任务失败：${err}`);
+            setError(`Failed to stop task: ${err}`);
         } finally {
             setActionLoading('');
         }
@@ -211,7 +211,7 @@ const TaskResultPage: React.FC = () => {
             setCurrentTaskId(rerunTask.task_id);
             navigate(`/tasks/${rerunTask.task_id}`);
         } catch (err) {
-            setError(`重新运行失败：${err}`);
+            setError(`Failed to rerun task: ${err}`);
         } finally {
             setActionLoading('');
         }
@@ -222,7 +222,7 @@ const TaskResultPage: React.FC = () => {
             <div className="mx-auto flex min-h-[60vh] max-w-4xl items-center justify-center">
                 <div className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900">
                     <RefreshCw className="h-4 w-4 animate-spin" />
-                    正在加载任务结果…
+                    Loading task results…
                 </div>
             </div>
         );
@@ -233,12 +233,12 @@ const TaskResultPage: React.FC = () => {
             <div className="mx-auto max-w-4xl space-y-4">
                 <PageHeader
                     icon={<Sparkles className="h-5 w-5" />}
-                    title="统一任务结果"
-                    description="任务不存在、尚未加载完成，或者当前页面已失去上下文。"
+                    title={"Unified task results"}
+                    description={"The task does not exist, has not finished loading, or the page context is no longer available."}
                     accent="violet"
                 />
                 <div className="rounded-3xl border border-dashed border-slate-200 bg-white px-6 py-12 text-center text-sm text-slate-400 dark:border-slate-700 dark:bg-slate-900">
-                    {error || '没有找到对应任务，请从统一测试前门重新进入。'}
+                    {error || "No matching task was found. Return to the unified testing entry point."}
                 </div>
             </div>
         );
@@ -248,8 +248,8 @@ const TaskResultPage: React.FC = () => {
         <div className="mx-auto max-w-7xl space-y-6">
             <PageHeader
                 icon={<Sparkles className="h-5 w-5" />}
-                title={`${taskMeta.title}结果`}
-                description="统一结果页固定展示任务意图、执行状态、证据、Findings、Gate 和下一步建议。"
+                title={`${taskMeta.title}Result`}
+                description={"The unified results page always shows task intent, execution status, evidence, findings, gate decisions, and next steps."}
                 accent="violet"
                 actions={(
                     <>
@@ -259,7 +259,7 @@ const TaskResultPage: React.FC = () => {
                             className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-500 transition-colors hover:text-violet-500 dark:border-slate-700"
                         >
                             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-                            刷新
+                            Refresh
                         </button>
                         {running && (
                             <button
@@ -269,7 +269,7 @@ const TaskResultPage: React.FC = () => {
                                 className="inline-flex items-center gap-2 rounded-lg border border-amber-200 px-3 py-2 text-sm text-amber-600 transition-colors hover:bg-amber-50 disabled:opacity-50 dark:border-amber-500/30 dark:hover:bg-amber-500/10"
                             >
                                 {actionLoading === 'cancel' ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Pause className="h-4 w-4" />}
-                                停止任务
+                                Stop task
                             </button>
                         )}
                         <button
@@ -279,7 +279,7 @@ const TaskResultPage: React.FC = () => {
                             className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-500 transition-colors hover:text-violet-500 disabled:opacity-50 dark:border-slate-700"
                         >
                             {actionLoading === 'rerun' ? <RefreshCw className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
-                            重新运行
+                            Rerun
                         </button>
                     </>
                 )}
@@ -302,9 +302,9 @@ const TaskResultPage: React.FC = () => {
                     <div className="flex items-start gap-3">
                         <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
                         <div>
-                            <div className="font-semibold">当前上下文无法证明</div>
+                            <div className="font-semibold">Not provable in the current context</div>
                             <div className="mt-1 leading-6">
-                                本任务包含 `static_unprovable` 指标，说明仍有静态原型、当前环境或当前会话无法直接证明的点，它不等于“通过”。
+                                This task includes `static_unprovable` metrics: some points cannot be proven directly from a static prototype, the current environment, or the current session. This does not mean they passed.
                             </div>
                         </div>
                     </div>
@@ -336,10 +336,10 @@ const TaskResultPage: React.FC = () => {
                                 </div>
                                 <div className="mt-2 text-xs text-slate-400">{selectedTask.task_kind} · {selectedTask.task_id}</div>
                                 <div className="mt-2 flex flex-wrap gap-2 text-xs text-slate-400">
-                                    <span>执行组：{selectedTask.execution_group_id || '-'}</span>
-                                    <span>复跑链：{selectedTask.lineage_root_id || '-'}</span>
+                                    <span>Execution group: {selectedTask.execution_group_id || '-'}</span>
+                                    <span>Rerun chain: {selectedTask.lineage_root_id || '-'}</span>
                                     {selectedTask.rerun_from_task_id && (
-                                        <span>来自复跑：{selectedTask.rerun_from_task_id}</span>
+                                        <span>Rerun of: {selectedTask.rerun_from_task_id}</span>
                                     )}
                                 </div>
                             </div>
@@ -350,7 +350,7 @@ const TaskResultPage: React.FC = () => {
                                     className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-500 transition-colors hover:text-violet-500 dark:border-slate-700"
                                 >
                                     <History className="h-4 w-4" />
-                                    执行中心
+                                    Execution center
                                 </button>
                                 <button
                                     type="button"
@@ -358,7 +358,7 @@ const TaskResultPage: React.FC = () => {
                                     className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-500 transition-colors hover:text-violet-500 dark:border-slate-700"
                                 >
                                     <ShieldAlert className="h-4 w-4" />
-                                    质量门禁
+                                    Quality gate
                                 </button>
                                 <button
                                     type="button"
@@ -366,24 +366,24 @@ const TaskResultPage: React.FC = () => {
                                     className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-500 transition-colors hover:text-violet-500 dark:border-slate-700"
                                 >
                                     <ExternalLink className="h-4 w-4" />
-                                    专家深挖
+                                    Expert investigation
                                 </button>
                             </div>
                         </div>
                     </section>
 
                     <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                        <div className="mb-4 text-sm font-semibold text-slate-700 dark:text-slate-200">1. 任务意图与输入上下文</div>
+                        <div className="mb-4 text-sm font-semibold text-slate-700 dark:text-slate-200">1. Task intent and input context</div>
                         <div className="grid gap-4 md:grid-cols-2">
                             <div className="rounded-2xl border border-slate-200 p-4 dark:border-slate-700">
-                                <div className="text-xs uppercase tracking-wider text-slate-400">任务意图</div>
+                                <div className="text-xs uppercase tracking-wider text-slate-400">Task intent</div>
                                 <div className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">{selectedTask.user_goal}</div>
                             </div>
                             <div className="rounded-2xl border border-slate-200 p-4 dark:border-slate-700">
-                                <div className="text-xs uppercase tracking-wider text-slate-400">输入上下文</div>
+                                <div className="text-xs uppercase tracking-wider text-slate-400">Input context</div>
                                 <div className="mt-3 space-y-2">
                                     {Object.entries(selectedTask.source_context || {}).length === 0 ? (
-                                        <div className="text-sm text-slate-400">当前任务没有额外上下文字段</div>
+                                        <div className="text-sm text-slate-400">This task has no additional context fields</div>
                                     ) : Object.entries(selectedTask.source_context || {}).map(([key, value]) => (
                                         <div key={key} className="flex items-start justify-between gap-3 text-sm">
                                             <span className="text-slate-400">{key}</span>
@@ -396,36 +396,36 @@ const TaskResultPage: React.FC = () => {
                     </section>
 
                     <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                        <div className="mb-4 text-sm font-semibold text-slate-700 dark:text-slate-200">2. 执行策略与当前状态</div>
+                        <div className="mb-4 text-sm font-semibold text-slate-700 dark:text-slate-200">2. Execution strategy and current status</div>
                         <div className="grid gap-4 lg:grid-cols-[0.9fr,1.1fr]">
                             <div className="rounded-2xl border border-slate-200 p-4 dark:border-slate-700">
                                 <div className="grid grid-cols-2 gap-3 text-sm">
                                     <div>
-                                        <div className="text-xs uppercase tracking-wider text-slate-400">创建时间</div>
+                                        <div className="text-xs uppercase tracking-wider text-slate-400">Created at</div>
                                         <div className="mt-1 text-slate-700 dark:text-slate-200">{formatTimestamp(selectedTask.created_at)}</div>
                                     </div>
                                     <div>
-                                        <div className="text-xs uppercase tracking-wider text-slate-400">开始时间</div>
+                                        <div className="text-xs uppercase tracking-wider text-slate-400">Start time</div>
                                         <div className="mt-1 text-slate-700 dark:text-slate-200">{formatTimestamp(selectedTask.started_at)}</div>
                                     </div>
                                     <div>
-                                        <div className="text-xs uppercase tracking-wider text-slate-400">结束时间</div>
+                                        <div className="text-xs uppercase tracking-wider text-slate-400">End time</div>
                                         <div className="mt-1 text-slate-700 dark:text-slate-200">{formatTimestamp(selectedTask.completed_at)}</div>
                                     </div>
                                     <div>
-                                        <div className="text-xs uppercase tracking-wider text-slate-400">日志流</div>
-                                        <div className="mt-1 text-slate-700 dark:text-slate-200">{streamConnected ? '已连接' : '未连接'}</div>
+                                        <div className="text-xs uppercase tracking-wider text-slate-400">Log stream</div>
+                                        <div className="mt-1 text-slate-700 dark:text-slate-200">{streamConnected ? "Connected" : "Disconnected"}</div>
                                     </div>
                                 </div>
                             </div>
                             <div className="rounded-2xl border border-slate-200 p-4 dark:border-slate-700">
-                                <div className="text-xs uppercase tracking-wider text-slate-400">执行策略 / Agent 状态</div>
+                                <div className="text-xs uppercase tracking-wider text-slate-400">Execution strategy / agent status</div>
                                 <div className="mt-3 grid gap-3 md:grid-cols-2">
                                     <div className="rounded-xl bg-slate-50 px-3 py-3 dark:bg-slate-800/60">
-                                        <div className="text-xs font-semibold uppercase tracking-wider text-slate-400">策略</div>
+                                        <div className="text-xs font-semibold uppercase tracking-wider text-slate-400">Strategy</div>
                                         <div className="mt-2 space-y-1.5">
                                             {Object.entries(selectedTask.strategy || {}).length === 0 ? (
-                                                <div className="text-sm text-slate-400">未设置额外策略</div>
+                                                <div className="text-sm text-slate-400">No additional strategy configured</div>
                                             ) : Object.entries(selectedTask.strategy || {}).map(([key, value]) => (
                                                 <div key={key} className="flex items-start justify-between gap-3 text-sm">
                                                     <span className="text-slate-400">{key}</span>
@@ -435,10 +435,10 @@ const TaskResultPage: React.FC = () => {
                                         </div>
                                     </div>
                                     <div className="rounded-xl bg-slate-50 px-3 py-3 dark:bg-slate-800/60">
-                                        <div className="text-xs font-semibold uppercase tracking-wider text-slate-400">Agent 状态</div>
+                                        <div className="text-xs font-semibold uppercase tracking-wider text-slate-400">Agent status</div>
                                         <div className="mt-2 space-y-2">
                                             {Object.entries(selectedTask.agent_states || {}).length === 0 ? (
-                                                <div className="text-sm text-slate-400">当前没有 agent 状态</div>
+                                                <div className="text-sm text-slate-400">No agent status available</div>
                                             ) : Object.entries(selectedTask.agent_states || {}).map(([key, value]) => (
                                                 <div key={key} className="flex items-center justify-between gap-3">
                                                     <span className="text-sm text-slate-500 dark:text-slate-400">{key}</span>
@@ -453,15 +453,15 @@ const TaskResultPage: React.FC = () => {
                     </section>
 
                     <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                        <div className="mb-4 text-sm font-semibold text-slate-700 dark:text-slate-200">3. 实时 / 历史日志时间线</div>
+                        <div className="mb-4 text-sm font-semibold text-slate-700 dark:text-slate-200">3. Live and historical log timeline</div>
                         <div className="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700">
                             <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-700">
-                                <div className="text-sm text-slate-600 dark:text-slate-300">统一日志流</div>
-                                {running && <Badge variant="warning" dot>持续更新中</Badge>}
+                                <div className="text-sm text-slate-600 dark:text-slate-300">Unified log stream</div>
+                                {running && <Badge variant="warning" dot>Updating continuously</Badge>}
                             </div>
                             <div className="max-h-[360px] overflow-y-auto bg-slate-950 px-4 py-3 font-mono text-xs text-slate-300">
                                 {(selectedTask.logs || []).length === 0 ? (
-                                    <div className="py-8 text-center text-slate-500">当前任务还没有日志</div>
+                                    <div className="py-8 text-center text-slate-500">This task has no logs yet</div>
                                 ) : (
                                     <div className="space-y-1.5">
                                         {(selectedTask.logs || []).map((log, index) => (
@@ -478,16 +478,16 @@ const TaskResultPage: React.FC = () => {
                     </section>
 
                     <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                        <div className="mb-4 text-sm font-semibold text-slate-700 dark:text-slate-200">4. 关键证据与 Findings</div>
+                        <div className="mb-4 text-sm font-semibold text-slate-700 dark:text-slate-200">4. Key evidence and findings</div>
                         <div className="grid gap-4 lg:grid-cols-[0.8fr,1.2fr]">
                             <div className="rounded-2xl border border-slate-200 p-4 dark:border-slate-700">
                                 <div className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
                                     <Activity className="h-4 w-4 text-sky-500" />
-                                    证据摘要
+                                    Evidence summary
                                 </div>
                                 <div className="mt-4 grid grid-cols-2 gap-3">
                                     <div className="rounded-xl bg-slate-50 px-3 py-3 dark:bg-slate-800/60">
-                                        <div className="text-xs uppercase tracking-wider text-slate-400">日志</div>
+                                        <div className="text-xs uppercase tracking-wider text-slate-400">Logs</div>
                                         <div className="mt-1 text-lg font-semibold text-slate-800 dark:text-white">{selectedTask.evidence_summary.log_count}</div>
                                     </div>
                                     <div className="rounded-xl bg-slate-50 px-3 py-3 dark:bg-slate-800/60">
@@ -495,25 +495,25 @@ const TaskResultPage: React.FC = () => {
                                         <div className="mt-1 text-lg font-semibold text-slate-800 dark:text-white">{selectedTask.evidence_summary.finding_count}</div>
                                     </div>
                                     <div className="rounded-xl bg-slate-50 px-3 py-3 dark:bg-slate-800/60">
-                                        <div className="text-xs uppercase tracking-wider text-slate-400">报告</div>
-                                        <div className="mt-1 text-lg font-semibold text-slate-800 dark:text-white">{selectedTask.evidence_summary.has_report ? '已生成' : '暂无'}</div>
+                                        <div className="text-xs uppercase tracking-wider text-slate-400">Report</div>
+                                        <div className="mt-1 text-lg font-semibold text-slate-800 dark:text-white">{selectedTask.evidence_summary.has_report ? "Generated" : "None"}</div>
                                     </div>
                                     <div className="rounded-xl bg-slate-50 px-3 py-3 dark:bg-slate-800/60">
-                                        <div className="text-xs uppercase tracking-wider text-slate-400">执行组</div>
+                                        <div className="text-xs uppercase tracking-wider text-slate-400">Execution group</div>
                                         <div className="mt-1 text-sm font-semibold text-slate-800 dark:text-white">{selectedTask.execution_group_id}</div>
                                     </div>
                                 </div>
                                 <div className="mt-4 space-y-2 text-xs text-slate-400">
-                                    <div>摘要字段：{(selectedTask.evidence_summary.summary_keys || []).join('、') || '无'}</div>
-                                    <div>证据标识：{(selectedTask.evidence_summary.evidence_ids || []).join('、') || '无'}</div>
-                                    <div>最新日志：{formatTimestamp(selectedTask.evidence_summary.latest_log_at || '')}</div>
-                                    <div>静态无法证明项：{selectedTask.evidence_summary.static_unprovable_count ?? 0}</div>
+                                    <div>Summary fields: {(selectedTask.evidence_summary.summary_keys || []).join('、') || "None"}</div>
+                                    <div>Evidence identifiers: {(selectedTask.evidence_summary.evidence_ids || []).join('、') || "None"}</div>
+                                    <div>Latest log: {formatTimestamp(selectedTask.evidence_summary.latest_log_at || '')}</div>
+                                    <div>Statically unprovable items: {selectedTask.evidence_summary.static_unprovable_count ?? 0}</div>
                                 </div>
                             </div>
                             <div className="space-y-3">
                                 {(selectedTask.findings || []).length === 0 ? (
                                     <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-10 text-center text-sm text-slate-400 dark:border-slate-700">
-                                        当前任务没有 Findings
+                                        This task has no findings
                                     </div>
                                 ) : (
                                     (selectedTask.findings || []).map((finding) => (
@@ -529,9 +529,9 @@ const TaskResultPage: React.FC = () => {
                                             </div>
                                             <div className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">{finding.summary}</div>
                                             <div className="mt-3 grid gap-2 text-xs text-slate-400 md:grid-cols-3">
-                                                <div>证据：{finding.evidence_id || '无'}</div>
-                                                <div>来源：{finding.source_type || '未知'}</div>
-                                                <div>定位：{finding.locator || '无'}</div>
+                                                <div>Evidence: {finding.evidence_id || "None"}</div>
+                                                <div>Source: {finding.source_type || "Unknown"}</div>
+                                                <div>Location: {finding.locator || "None"}</div>
                                             </div>
                                         </div>
                                     ))
@@ -541,24 +541,24 @@ const TaskResultPage: React.FC = () => {
                     </section>
 
                     <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                        <div className="mb-4 text-sm font-semibold text-slate-700 dark:text-slate-200">5. Gate 结论与核心指标</div>
+                        <div className="mb-4 text-sm font-semibold text-slate-700 dark:text-slate-200">5. Gate decision and core metrics</div>
                         <div className="grid gap-4 lg:grid-cols-[0.85fr,1.15fr]">
                             <div className="rounded-2xl border border-slate-200 p-4 dark:border-slate-700">
                                 <div className="flex items-center gap-2">
                                     <ShieldAlert className="h-4 w-4 text-amber-500" />
-                                    <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">Gate 结论</div>
+                                    <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">Gate decision</div>
                                     <Badge variant={gateInfo.variant}>{selectedTask.gate_summary.status}</Badge>
                                 </div>
                                 <div className="mt-3 text-sm leading-6 text-slate-500 dark:text-slate-400">{selectedTask.gate_summary.summary}</div>
                                 <div className="mt-3 rounded-xl bg-slate-50 px-3 py-3 text-xs leading-6 text-slate-500 dark:bg-slate-800/60 dark:text-slate-400">
-                                    结论原因：{selectedTask.gate_summary.decision_reason || '当前没有结构化决策原因。'}
+                                    Decision reason: {selectedTask.gate_summary.decision_reason || "No structured decision reasons for this run."}
                                 </div>
                             </div>
                             <div className="rounded-2xl border border-slate-200 p-4 dark:border-slate-700">
-                                <div className="text-xs uppercase tracking-wider text-slate-400">核心 Metrics</div>
+                                <div className="text-xs uppercase tracking-wider text-slate-400">Core metrics</div>
                                 <div className="mt-3 grid gap-2 md:grid-cols-2">
                                     {Object.entries(selectedTask.gate_summary.metrics || {}).length === 0 ? (
-                                        <div className="text-sm text-slate-400">当前没有可展示的 metrics</div>
+                                        <div className="text-sm text-slate-400">No metrics available</div>
                                     ) : Object.entries(selectedTask.gate_summary.metrics || {}).map(([key, value]) => (
                                         <div key={key} className="flex items-start justify-between gap-3 rounded-xl bg-slate-50 px-3 py-3 text-sm dark:bg-slate-800/60">
                                             <span className="text-slate-400">{key}</span>
@@ -571,12 +571,12 @@ const TaskResultPage: React.FC = () => {
                     </section>
 
                     <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                        <div className="mb-4 text-sm font-semibold text-slate-700 dark:text-slate-200">6. 下一步建议与深挖入口</div>
+                        <div className="mb-4 text-sm font-semibold text-slate-700 dark:text-slate-200">6. Recommended next steps and investigation tools</div>
                         <div className="grid gap-4 lg:grid-cols-[1fr,0.9fr]">
                             <div className="space-y-3">
                                 {(selectedTask.recommendations || []).length === 0 ? (
                                     <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-8 text-sm text-slate-400 dark:border-slate-700">
-                                        当前任务没有额外建议
+                                        This task has no additional recommendations
                                     </div>
                                 ) : (
                                     (selectedTask.recommendations || []).map((item, index) => (
@@ -593,8 +593,8 @@ const TaskResultPage: React.FC = () => {
                                     className="flex w-full items-center justify-between rounded-2xl border border-slate-200 px-4 py-4 text-left transition-colors hover:border-violet-300 hover:bg-violet-50/40 dark:border-slate-700 dark:hover:border-violet-500/40 dark:hover:bg-violet-500/10"
                                 >
                                     <div>
-                                        <div className="text-sm font-semibold text-slate-700 dark:text-slate-100">进入执行中心</div>
-                                        <div className="mt-1 text-xs text-slate-400">查看同执行组记录、历史与回放</div>
+                                        <div className="text-sm font-semibold text-slate-700 dark:text-slate-100">Open execution center</div>
+                                        <div className="mt-1 text-xs text-slate-400">View records, history, and replays from the same execution group</div>
                                     </div>
                                     <History className="h-4 w-4 text-slate-400" />
                                 </button>
@@ -604,8 +604,8 @@ const TaskResultPage: React.FC = () => {
                                     className="flex w-full items-center justify-between rounded-2xl border border-slate-200 px-4 py-4 text-left transition-colors hover:border-violet-300 hover:bg-violet-50/40 dark:border-slate-700 dark:hover:border-violet-500/40 dark:hover:bg-violet-500/10"
                                 >
                                     <div>
-                                        <div className="text-sm font-semibold text-slate-700 dark:text-slate-100">进入质量门禁</div>
-                                        <div className="mt-1 text-xs text-slate-400">按当前任务上下文查看门禁结论与历史</div>
+                                        <div className="text-sm font-semibold text-slate-700 dark:text-slate-100">Open quality gates</div>
+                                        <div className="mt-1 text-xs text-slate-400">View gate decisions and history in the current task context</div>
                                     </div>
                                     <ShieldAlert className="h-4 w-4 text-slate-400" />
                                 </button>
@@ -615,8 +615,8 @@ const TaskResultPage: React.FC = () => {
                                     className="flex w-full items-center justify-between rounded-2xl border border-slate-200 px-4 py-4 text-left transition-colors hover:border-violet-300 hover:bg-violet-50/40 dark:border-slate-700 dark:hover:border-violet-500/40 dark:hover:bg-violet-500/10"
                                 >
                                     <div>
-                                        <div className="text-sm font-semibold text-slate-700 dark:text-slate-100">进入专家深挖页</div>
-                                        <div className="mt-1 text-xs text-slate-400">在保持主链语境的前提下，进入对应专项页继续深挖</div>
+                                        <div className="text-sm font-semibold text-slate-700 dark:text-slate-100">Open expert investigation</div>
+                                        <div className="mt-1 text-xs text-slate-400">Continue in a specialized view while preserving the main workflow context</div>
                                     </div>
                                     <ExternalLink className="h-4 w-4 text-slate-400" />
                                 </button>
@@ -624,11 +624,11 @@ const TaskResultPage: React.FC = () => {
                                 <div className="rounded-2xl border border-slate-200 p-4 dark:border-slate-700">
                                     <div className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
                                         <Compass className="h-4 w-4 text-teal-500" />
-                                        同类任务参考
+                                        Similar tasks
                                     </div>
                                     <div className="mt-3 space-y-2">
                                         {sameTaskKindReferences.length === 0 ? (
-                                            <div className="text-sm text-slate-400">当前没有可参考的同类任务</div>
+                                            <div className="text-sm text-slate-400">No similar tasks available</div>
                                         ) : sameTaskKindReferences.map((task) => (
                                             <button
                                                 key={task.task_id}
@@ -649,15 +649,15 @@ const TaskResultPage: React.FC = () => {
                                 <div className="rounded-2xl border border-slate-200 p-4 dark:border-slate-700">
                                     <div className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
                                         <RotateCcw className="h-4 w-4 text-violet-500" />
-                                        复跑链摘要
+                                        Rerun chain summary
                                     </div>
                                     <div className="mt-3 space-y-2 text-xs text-slate-400">
-                                        <div>链根任务：{selectedTask.lineage_root_id || '无'}</div>
-                                        <div>当前来源：{selectedTask.rerun_from_task_id || '首次运行'}</div>
+                                        <div>Root task: {selectedTask.lineage_root_id || "None"}</div>
+                                        <div>Current source: {selectedTask.rerun_from_task_id || "First run"}</div>
                                     </div>
                                     <div className="mt-3 space-y-2">
                                         {lineageContext.sortedTasks.length === 0 ? (
-                                            <div className="text-sm text-slate-400">当前没有同链路任务</div>
+                                            <div className="text-sm text-slate-400">No tasks in the same chain</div>
                                         ) : lineageContext.sortedTasks.slice(0, 5).map((task) => (
                                             <button
                                                 key={task.task_id}
@@ -669,7 +669,7 @@ const TaskResultPage: React.FC = () => {
                                                     <div className="truncate text-sm font-medium text-slate-700 dark:text-slate-100">{task.user_goal}</div>
                                                     <div className="mt-1 text-xs text-slate-400">
                                                         {task.task_id}
-                                                        {task.rerun_from_task_id ? ` · 来自 ${task.rerun_from_task_id}` : ' · 首次运行'}
+                                                        {task.rerun_from_task_id ? ` · From ${task.rerun_from_task_id}` : " · First run"}
                                                     </div>
                                                 </div>
                                                 <Badge variant={statusMeta(task.status).variant} size="sm">{task.status}</Badge>
@@ -681,82 +681,82 @@ const TaskResultPage: React.FC = () => {
                                 <div className="rounded-2xl border border-slate-200 p-4 dark:border-slate-700">
                                     <div className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
                                         <RotateCcw className="h-4 w-4 text-amber-500" />
-                                        最近复跑对比
+                                        Latest rerun comparison
                                     </div>
                                     {!comparableTask || !comparisonSummary ? (
-                                        <div className="mt-3 text-sm text-slate-400">当前还没有可比的历史复跑任务。</div>
+                                        <div className="mt-3 text-sm text-slate-400">No comparable historical rerun is available yet.</div>
                                     ) : (
                                         <div className="mt-3 space-y-3">
                                             <div className="rounded-xl bg-slate-50 px-3 py-3 text-xs text-slate-500 dark:bg-slate-800/60 dark:text-slate-400">
-                                                对比对象：{comparableTask.task_id} · {statusMeta(comparableTask.status).label} · {formatTimestamp(comparableTask.completed_at || comparableTask.created_at)}
+                                                Compared with: {comparableTask.task_id} · {statusMeta(comparableTask.status).label} · {formatTimestamp(comparableTask.completed_at || comparableTask.created_at)}
                                             </div>
                                             <div className="grid gap-2">
                                                 <div className="flex items-start justify-between gap-3 rounded-xl bg-slate-50 px-3 py-3 text-sm dark:bg-slate-800/60">
-                                                    <span className="text-slate-400">Findings 数量</span>
+                                                    <span className="text-slate-400">Finding count</span>
                                                     <span className="text-right text-slate-700 dark:text-slate-200">
-                                                        本次 {comparisonSummary.currentFindingCount} / 上次 {comparisonSummary.comparableFindingCount}
+                                                        Current {comparisonSummary.currentFindingCount} / Previous {comparisonSummary.comparableFindingCount}
                                                         {comparisonSummary.findingDelta !== 0 && ` (${comparisonSummary.findingDelta > 0 ? '+' : ''}${comparisonSummary.findingDelta})`}
                                                     </span>
                                                 </div>
                                                 <div className="flex items-start justify-between gap-3 rounded-xl bg-slate-50 px-3 py-3 text-sm dark:bg-slate-800/60">
-                                                    <span className="text-slate-400">高风险 Findings</span>
+                                                    <span className="text-slate-400">High-risk findings</span>
                                                     <span className="text-right text-slate-700 dark:text-slate-200">
-                                                        本次 {comparisonSummary.currentSeveritySummary.blocking + comparisonSummary.currentSeveritySummary.major} / 上次 {comparisonSummary.comparableSeveritySummary.blocking + comparisonSummary.comparableSeveritySummary.major}
+                                                        Current {comparisonSummary.currentSeveritySummary.blocking + comparisonSummary.currentSeveritySummary.major} / Previous {comparisonSummary.comparableSeveritySummary.blocking + comparisonSummary.comparableSeveritySummary.major}
                                                         {comparisonSummary.highRiskDelta !== 0 && ` (${comparisonSummary.highRiskDelta > 0 ? '+' : ''}${comparisonSummary.highRiskDelta})`}
                                                     </span>
                                                 </div>
                                                 <div className="rounded-xl bg-slate-50 px-3 py-3 text-sm dark:bg-slate-800/60">
-                                                    <div className="text-slate-400">严重级别变化</div>
-                                                    <div className="mt-2 text-slate-700 dark:text-slate-200">本次：{formatFindingSeveritySummary(comparisonSummary.currentSeveritySummary)}</div>
-                                                    <div className="mt-1 text-slate-500 dark:text-slate-400">上次：{formatFindingSeveritySummary(comparisonSummary.comparableSeveritySummary)}</div>
+                                                    <div className="text-slate-400">Severity changes</div>
+                                                    <div className="mt-2 text-slate-700 dark:text-slate-200">Current: {formatFindingSeveritySummary(comparisonSummary.currentSeveritySummary)}</div>
+                                                    <div className="mt-1 text-slate-500 dark:text-slate-400">Previous: {formatFindingSeveritySummary(comparisonSummary.comparableSeveritySummary)}</div>
                                                 </div>
                                                 <div className="flex items-start justify-between gap-3 rounded-xl bg-slate-50 px-3 py-3 text-sm dark:bg-slate-800/60">
-                                                    <span className="text-slate-400">Gate 状态</span>
+                                                    <span className="text-slate-400">Gate status</span>
                                                     <span className="text-right text-slate-700 dark:text-slate-200">
-                                                        本次 {selectedTask.gate_summary.status} / 上次 {comparableTask.gate_summary.status}
+                                                        Current {selectedTask.gate_summary.status} / Previous {comparableTask.gate_summary.status}
                                                     </span>
                                                 </div>
                                                 <div className="flex items-start justify-between gap-3 rounded-xl bg-slate-50 px-3 py-3 text-sm dark:bg-slate-800/60">
-                                                    <span className="text-slate-400">验证态</span>
+                                                    <span className="text-slate-400">Verification state</span>
                                                     <span className="text-right text-slate-700 dark:text-slate-200">
-                                                        本次 {verificationInfo.label} / 上次 {verificationStateMeta(comparableTask.verification_state).label}
+                                                        Current {verificationInfo.label} / Previous {verificationStateMeta(comparableTask.verification_state).label}
                                                     </span>
                                                 </div>
                                                 <div className="rounded-xl bg-slate-50 px-3 py-3 text-sm dark:bg-slate-800/60">
-                                                    <div className="text-slate-400">判定原因变化</div>
-                                                    <div className="mt-2 text-slate-700 dark:text-slate-200">本次：{selectedTask.gate_summary.decision_reason || '当前没有结构化决策原因。'}</div>
-                                                    <div className="mt-1 text-slate-500 dark:text-slate-400">上次：{comparableTask.gate_summary.decision_reason || '上次没有结构化决策原因。'}</div>
+                                                    <div className="text-slate-400">Decision reason changes</div>
+                                                    <div className="mt-2 text-slate-700 dark:text-slate-200">Current: {selectedTask.gate_summary.decision_reason || "No structured decision reasons for this run."}</div>
+                                                    <div className="mt-1 text-slate-500 dark:text-slate-400">Previous: {comparableTask.gate_summary.decision_reason || "No structured decision reasons for the previous run."}</div>
                                                     {!comparisonSummary.decisionReasonChanged && (
-                                                        <div className="mt-2 text-xs text-slate-400">本次与上次的结构化判定原因一致。</div>
+                                                        <div className="mt-2 text-xs text-slate-400">The structured decision reason is unchanged from the previous run.</div>
                                                     )}
                                                 </div>
                                                 <div className="rounded-xl bg-slate-50 px-3 py-3 text-sm dark:bg-slate-800/60">
                                                     <div className="flex items-center justify-between gap-3">
-                                                        <div className="text-slate-400">关键 Metrics 变化</div>
+                                                        <div className="text-slate-400">Key metric changes</div>
                                                         <div className="text-xs text-slate-400">
                                                             {comparisonSummary.changedMetricCount > 0
-                                                                ? `${comparisonSummary.changedMetricCount} 项变化`
-                                                                : '与上次一致'}
+                                                                ? `${comparisonSummary.changedMetricCount} changes`
+                                                                : "Unchanged from previous run"}
                                                         </div>
                                                     </div>
                                                     <div className="mt-2 space-y-2">
                                                         {comparisonSummary.metricChanges.length === 0 ? (
-                                                            <div className="text-xs text-slate-400">当前没有可对比的 metrics。</div>
+                                                            <div className="text-xs text-slate-400">No comparable metrics are available.</div>
                                                         ) : comparisonSummary.metricChanges.slice(0, 6).map((metric) => (
                                                             <div key={metric.key} className="rounded-lg border border-slate-200/70 bg-white px-3 py-3 dark:border-slate-700/70 dark:bg-slate-900/40">
                                                                 <div className="flex items-center justify-between gap-3">
                                                                     <div className="text-xs text-slate-400">{metric.key}</div>
                                                                     {metric.changed ? (
-                                                                        <Badge variant="warning" size="sm">已变化</Badge>
+                                                                        <Badge variant="warning" size="sm">Changed</Badge>
                                                                     ) : (
-                                                                        <Badge variant="neutral" size="sm">一致</Badge>
+                                                                        <Badge variant="neutral" size="sm">Unchanged</Badge>
                                                                     )}
                                                                 </div>
                                                                 <div className="mt-2 text-slate-700 dark:text-slate-200">
-                                                                    本次：{formatMetricValue(metric.currentValue)}
+                                                                    Current: {formatMetricValue(metric.currentValue)}
                                                                 </div>
                                                                 <div className="mt-1 text-slate-500 dark:text-slate-400">
-                                                                    上次：{formatMetricValue(metric.comparableValue)}
+                                                                    Previous: {formatMetricValue(metric.comparableValue)}
                                                                 </div>
                                                             </div>
                                                         ))}
@@ -773,10 +773,10 @@ const TaskResultPage: React.FC = () => {
 
                 <aside className="space-y-4">
                     <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                        <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">结果摘要</div>
+                        <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">Results summary</div>
                         <div className="mt-4 space-y-2">
                             {Object.entries(selectedTask.result_summary || {}).length === 0 ? (
-                                <div className="text-sm text-slate-400">当前没有结构化结果摘要</div>
+                                <div className="text-sm text-slate-400">No structured results summary available</div>
                             ) : Object.entries(selectedTask.result_summary || {}).map(([key, value]) => (
                                 <div key={key} className="flex items-start justify-between gap-3 rounded-xl bg-slate-50 px-3 py-3 text-sm dark:bg-slate-800/60">
                                     <span className="text-slate-400">{key}</span>

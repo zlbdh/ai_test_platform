@@ -9,9 +9,9 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Inter', '"Noto Sans SC"', 'system-ui', '-apple-system', 'sans-serif'],
+                sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
                 mono: ['"JetBrains Mono"', '"Fira Code"', 'monospace'],
-                message: ['"Microsoft YaHei"', 'sans-serif'],
+                message: ['Inter', 'system-ui', 'sans-serif'],
             },
             colors: {
                 'chat-user': '#e3f2fd',

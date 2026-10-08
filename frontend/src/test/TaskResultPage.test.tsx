@@ -40,7 +40,7 @@ const runningTask = {
     task_id: 'task001',
     mission_kind: 'commander',
     task_kind: 'prototype' as const,
-    user_goal: '对订单原型做统一核查',
+    user_goal: "Perform a unified review of the order prototype",
     status: 'executing',
     created_at: '2026-04-02T15:00:00',
     started_at: '2026-04-02T15:00:01',
@@ -63,8 +63,8 @@ const runningTask = {
             finding_id: 'finding001',
             evidence_id: 'evi001',
             severity: 'major',
-            title: '页面映射存在风险',
-            summary: '代购管理列表未正确承接。',
+            title: "Page mapping risk",
+            summary: "The purchasing management list is not mapped correctly.",
             category: 'mis_mapping',
             agent_id: 'orchestrator',
             source_type: 'html',
@@ -73,20 +73,20 @@ const runningTask = {
     ],
     gate_summary: {
         status: 'warning' as const,
-        summary: '当前仍有上下文无法证明的点。',
+        summary: "Some points cannot be proven in the current context.",
         metrics: { static_unprovable_count: 1, page_mapping_rate: 0.98 },
-        decision_reason: '存在静态无法证明项，不能直接视为通过。',
+        decision_reason: "Some items cannot be proven statically and cannot be treated as passing.",
     },
     verification_state: {
         status: 'context_unprovable' as const,
-        label: '当前上下文无法证明',
-        summary: '当前任务仍有静态原型或上下文无法直接证明的点。',
+        label: "Not provable in the current context",
+        summary: "Some points cannot be proven directly from the static prototype or current context.",
     },
-    recommendations: ['先复核误映射项，再决定是否进入视觉回归。'],
+    recommendations: ["Review incorrect mappings before deciding whether to run visual regression tests."],
     result_summary: { page_mapping_rate: 0.98 },
     logs: [
-        { timestamp: '2026-04-02T15:00:02', level: 'info', message: '开始执行', data: {} },
-        { timestamp: '2026-04-02T15:00:03', level: 'warn', message: '发现待确认项', data: {} },
+        { timestamp: '2026-04-02T15:00:02', level: 'info', message: "Start execution", data: {} },
+        { timestamp: '2026-04-02T15:00:03', level: 'warn', message: "Found items requiring confirmation", data: {} },
     ],
     execution_group_id: 'task001',
     lineage_root_id: 'chain_1',
@@ -133,23 +133,23 @@ describe('TaskResultPage', () => {
                 {
                     ...runningTask,
                     task_id: 'task000',
-                    user_goal: '上一次原型核查',
+                    user_goal: "Previous prototype review",
                     status: 'completed',
                     rerun_from_task_id: '',
                     gate_summary: {
                         ...runningTask.gate_summary,
                         status: 'passed',
-                        summary: '上一轮已通过。',
+                        summary: "The previous run passed.",
                         metrics: {
                             page_mapping_rate: 1,
                             static_unprovable_count: 0,
                         },
-                        decision_reason: '上一轮无阻断问题。',
+                        decision_reason: "The previous run had no blocking issues.",
                     },
                     verification_state: {
                         status: 'verified_passed' as const,
-                        label: '已验证通过',
-                        summary: '上一轮已通过。',
+                        label: "Verified",
+                        summary: "The previous run passed.",
                     },
                 },
             ]);
@@ -163,23 +163,23 @@ describe('TaskResultPage', () => {
         );
 
         await waitFor(() => {
-            expect(screen.getByText('1. 任务意图与输入上下文')).toBeInTheDocument();
+            expect(screen.getByText("1. Task intent and input context")).toBeInTheDocument();
         });
-        expect(screen.getAllByText('当前上下文无法证明').length).toBeGreaterThan(0);
-        expect(screen.getByText('页面映射存在风险')).toBeInTheDocument();
-        expect(screen.getByText('5. Gate 结论与核心指标')).toBeInTheDocument();
-        expect(screen.getAllByText(/存在静态无法证明项/).length).toBeGreaterThan(0);
-        expect(screen.getByText('证据：evi001')).toBeInTheDocument();
-        expect(screen.getByText('定位：modules/site-list.html')).toBeInTheDocument();
-        expect(screen.getByText('复跑链摘要')).toBeInTheDocument();
-        expect(screen.getByText('当前来源：task000')).toBeInTheDocument();
-        expect(screen.getByText('最近复跑对比')).toBeInTheDocument();
-        expect(screen.getByText('严重级别变化')).toBeInTheDocument();
-        expect(screen.getByText('关键 Metrics 变化')).toBeInTheDocument();
-        expect(screen.getByText('2 项变化')).toBeInTheDocument();
+        expect(screen.getAllByText("Not provable in the current context").length).toBeGreaterThan(0);
+        expect(screen.getByText("Page mapping risk")).toBeInTheDocument();
+        expect(screen.getByText("5. Gate decision and core metrics")).toBeInTheDocument();
+        expect(screen.getAllByText(/Some items cannot be proven statically/).length).toBeGreaterThan(0);
+        expect(screen.getByText("Evidence: evi001")).toBeInTheDocument();
+        expect(screen.getByText("Location: modules/site-list.html")).toBeInTheDocument();
+        expect(screen.getByText("Rerun chain summary")).toBeInTheDocument();
+        expect(screen.getByText("Current source: task000")).toBeInTheDocument();
+        expect(screen.getByText("Latest rerun comparison")).toBeInTheDocument();
+        expect(screen.getByText("Severity changes")).toBeInTheDocument();
+        expect(screen.getByText("Key metric changes")).toBeInTheDocument();
+        expect(screen.getByText("2 changes")).toBeInTheDocument();
         expect(screen.getAllByText('page_mapping_rate').length).toBeGreaterThan(0);
         expect(screen.getAllByText('static_unprovable_count').length).toBeGreaterThan(0);
-        expect(screen.getAllByText(/本次 1 \/ 上次 1/).length).toBeGreaterThan(0);
+        expect(screen.getAllByText(/Current 1 \/ Previous 1/).length).toBeGreaterThan(0);
     });
 
     it('should call cancel action and show action feedback', async () => {
@@ -189,7 +189,7 @@ describe('TaskResultPage', () => {
             task_id: 'task001',
             cancelled: false,
             status: 'executing',
-            message: '探索任务当前无法可靠停止。',
+            message: "The exploratory task cannot currently be stopped reliably.",
         });
 
         render(
@@ -201,9 +201,9 @@ describe('TaskResultPage', () => {
         );
 
         await waitFor(() => {
-            expect(screen.getByRole('button', { name: '停止任务' })).toBeInTheDocument();
+            expect(screen.getByRole('button', { name: "Stop task" })).toBeInTheDocument();
         });
-        fireEvent.click(screen.getByRole('button', { name: '停止任务' }));
+        fireEvent.click(screen.getByRole('button', { name: "Stop task" }));
 
         await waitFor(() => {
             expect(mockCancelFrontdoorTask).toHaveBeenCalledWith('task001');
@@ -224,9 +224,9 @@ describe('TaskResultPage', () => {
         );
 
         await waitFor(() => {
-            expect(screen.getByRole('button', { name: '重新运行' })).toBeInTheDocument();
+            expect(screen.getByRole('button', { name: "Rerun" })).toBeInTheDocument();
         });
-        fireEvent.click(screen.getByRole('button', { name: '重新运行' }));
+        fireEvent.click(screen.getByRole('button', { name: "Rerun" }));
 
         await waitFor(() => {
             expect(mockRerunFrontdoorTask).toHaveBeenCalledWith('task001');
@@ -247,9 +247,9 @@ describe('TaskResultPage', () => {
         );
 
         await waitFor(() => {
-            expect(screen.getByRole('button', { name: '质量门禁' })).toBeInTheDocument();
+            expect(screen.getByRole('button', { name: "Quality gate" })).toBeInTheDocument();
         });
-        fireEvent.click(screen.getByRole('button', { name: '质量门禁' }));
+        fireEvent.click(screen.getByRole('button', { name: "Quality gate" }));
 
         expect(mockNavigate).toHaveBeenCalledWith('/quality-gate?task_id=task001&run_id=task001&focus=history');
     });

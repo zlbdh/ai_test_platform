@@ -34,9 +34,9 @@ describe('ExecutionHistory task context', () => {
                         items: [
                             {
                                 group_id: 'task001',
-                                title: '订单原型检查批次',
-                                requirement: '对订单原型做统一核查',
-                                requirement_display: '对订单原型做统一核查',
+                                title: "Order prototype review batch",
+                                requirement: "Perform a unified review of the order prototype",
+                                requirement_display: "Perform a unified review of the order prototype",
                                 status: 'failed',
                                 target_url: 'https://demo.example.com/order',
                                 mode: 'commander',
@@ -50,8 +50,8 @@ describe('ExecutionHistory task context', () => {
                                 records: [
                                     {
                                         task_id: 'task001',
-                                        requirement: '对订单原型做统一核查',
-                                        requirement_display: '对订单原型做统一核查',
+                                        requirement: "Perform a unified review of the order prototype",
+                                        requirement_display: "Perform a unified review of the order prototype",
                                         status: 'failed',
                                         log_count: 2,
                                         error_count: 1,
@@ -81,7 +81,7 @@ describe('ExecutionHistory task context', () => {
             task_id: 'task001',
             mission_kind: 'prototype_agents',
             task_kind: 'prototype',
-            user_goal: '对订单原型做统一核查',
+            user_goal: "Perform a unified review of the order prototype",
             status: 'completed',
             created_at: '2026-04-02T15:00:00',
             started_at: '2026-04-02T15:00:01',
@@ -98,13 +98,13 @@ describe('ExecutionHistory task context', () => {
             findings: [],
             gate_summary: {
                 status: 'warning',
-                summary: '仍有待确认项。',
+                summary: "Some items still require confirmation.",
                 metrics: { static_unprovable_count: 1 },
             },
             verification_state: {
                 status: 'context_unprovable',
-                label: '当前上下文无法证明',
-                summary: '仍有待确认项。',
+                label: "Not provable in the current context",
+                summary: "Some items still require confirmation.",
             },
             recommendations: [],
             result_summary: {},
@@ -125,7 +125,7 @@ describe('ExecutionHistory task context', () => {
                         task_id: 'task001',
                         mission_kind: 'prototype_agents',
                         task_kind: 'prototype',
-                        user_goal: '对订单原型做统一核查',
+                        user_goal: "Perform a unified review of the order prototype",
                         status: 'completed',
                         created_at: '2026-04-02T15:00:00',
                         started_at: '2026-04-02T15:00:01',
@@ -142,13 +142,13 @@ describe('ExecutionHistory task context', () => {
                         findings: [],
                         gate_summary: {
                             status: 'warning',
-                            summary: '仍有待确认项。',
+                            summary: "Some items still require confirmation.",
                             metrics: { static_unprovable_count: 1 },
                         },
                         verification_state: {
                             status: 'context_unprovable',
-                            label: '当前上下文无法证明',
-                            summary: '仍有待确认项。',
+                            label: "Not provable in the current context",
+                            summary: "Some items still require confirmation.",
                         },
                         recommendations: [],
                         result_summary: {},
@@ -165,7 +165,7 @@ describe('ExecutionHistory task context', () => {
                         task_id: 'task000',
                         mission_kind: 'prototype_agents',
                         task_kind: 'prototype',
-                        user_goal: '上一轮原型核查',
+                        user_goal: "Previous prototype review",
                         status: 'completed',
                         created_at: '2026-04-02T14:00:00',
                         started_at: '2026-04-02T14:00:01',
@@ -182,13 +182,13 @@ describe('ExecutionHistory task context', () => {
                         findings: [],
                         gate_summary: {
                             status: 'passed',
-                            summary: '上一轮已通过。',
+                            summary: "The previous run passed.",
                             metrics: {},
                         },
                         verification_state: {
                             status: 'verified_passed',
-                            label: '已验证通过',
-                            summary: '上一轮已通过。',
+                            label: "Verified",
+                            summary: "The previous run passed.",
                         },
                         recommendations: [],
                         result_summary: {},
@@ -208,7 +208,7 @@ describe('ExecutionHistory task context', () => {
                     task_id: 'task900',
                     mission_kind: 'prototype_agents',
                     task_kind: 'prototype',
-                    user_goal: '同类型参考任务',
+                    user_goal: "Similar reference task",
                     status: 'completed',
                     created_at: '2026-04-02T13:00:00',
                     started_at: '2026-04-02T13:00:01',
@@ -225,13 +225,13 @@ describe('ExecutionHistory task context', () => {
                     findings: [],
                     gate_summary: {
                         status: 'passed',
-                        summary: '参考任务已通过。',
+                        summary: "The reference task passed.",
                         metrics: {},
                     },
                     verification_state: {
                         status: 'verified_passed',
-                        label: '已验证通过',
-                        summary: '参考任务已通过。',
+                        label: "Verified",
+                        summary: "The reference task passed.",
                     },
                     recommendations: [],
                     result_summary: {},
@@ -254,13 +254,13 @@ describe('ExecutionHistory task context', () => {
         );
 
         await waitFor(() => expect(screen.getByText("Current task context")).toBeInTheDocument());
-        expect(screen.getAllByText('对订单原型做统一核查').length).toBeGreaterThan(0);
+        expect(screen.getAllByText("Perform a unified review of the order prototype").length).toBeGreaterThan(0);
         expect(screen.getByText("Rerun chain summary")).toBeInTheDocument();
         expect(screen.getByText("Chain timeline")).toBeInTheDocument();
-        expect(screen.getByText('Most recent comparable task: task000')).toBeInTheDocument();
+        expect(screen.getByText("Most recent comparable task: task000")).toBeInTheDocument();
         expect(screen.getByText("Same task type reference")).toBeInTheDocument();
-        expect(screen.getByText('同类型参考任务')).toBeInTheDocument();
+        expect(screen.getByText("Similar reference task")).toBeInTheDocument();
         expect(screen.getByText("Current task execution group")).toBeInTheDocument();
-        expect(screen.getByText('Run 2')).toBeInTheDocument();
+        expect(screen.getByText("Run 2")).toBeInTheDocument();
     });
 });

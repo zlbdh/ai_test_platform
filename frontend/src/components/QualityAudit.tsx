@@ -146,7 +146,7 @@ const QualityAudit: React.FC = () => {
     const [report, setReport] = useState<AuditReport | null>(null);
 
     // i18n specific
-    const [locales, setLocales] = useState('zh-CN, en-US');
+    const [locales, setLocales] = useState('en-US');
     // compliance specific
     const [standards, setStandards] = useState<string[]>(['GDPR', 'SOC2', 'PCI-DSS']);
     // a11y specific
@@ -207,7 +207,7 @@ const QualityAudit: React.FC = () => {
                 endpoint = API_ENDPOINTS.i18n.quickCheck;
                 body = {
                     url,
-                    locale: locales.split(',').map(l => l.trim()).find(Boolean) || 'zh-CN',
+                    locale: locales.split(',').map(l => l.trim()).find(Boolean) || 'en-US',
                     ...executionPayload,
                 };
             }
@@ -289,7 +289,7 @@ const QualityAudit: React.FC = () => {
                         <div className="flex items-center gap-2 flex-1">
                             <span className="text-slate-500">Languages:</span>
                             <input type="text" value={locales} onChange={(e) => setLocales(e.target.value)}
-                                placeholder="zh-CN, en-US, ja-JP"
+                                placeholder="en-US, es-US, fr-CA"
                                 className="flex-1 max-w-md px-3 py-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm outline-none font-mono" />
                         </div>
                     )}

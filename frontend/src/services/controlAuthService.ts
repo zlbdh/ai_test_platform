@@ -71,7 +71,7 @@ async function ensureJsonResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
         const detail = typeof payload === 'object' && payload && 'detail' in payload
             ? String((payload as Record<string, unknown>).detail)
-            : `请求失败 (${response.status})`;
+            : `Request failed (${response.status})`;
         throw new Error(detail);
     }
     return payload as T;
@@ -153,7 +153,7 @@ export async function loginControl(username: string, password: string): Promise<
     saveControlAuthSession({ token: payload.token, expires_at: payload.expires_at });
     const profile = await fetchControlAuthProfile(payload.token);
     if (!profile) {
-        throw new Error('登录成功，但获取当前用户信息失败');
+        throw new Error("Login succeeded, but the current user could not be loaded");
     }
     return {
         ...profile,
@@ -166,7 +166,7 @@ export async function attachControlToken(token: string): Promise<ControlAuthProf
     try {
         const profile = await fetchControlAuthProfile(token);
         if (!profile) {
-            throw new Error('无效 token');
+            throw new Error("Invalid token");
         }
         return profile;
     } catch (error) {

@@ -31,7 +31,7 @@ describe('KnowledgeBase', () => {
         mockFetch.mockReset();
     });
 
-    it('能将后端 knowledge list 的 metadata 映射成文件名和类型', async () => {
+    it("maps backend knowledge list metadata to filenames and types", async () => {
         mockFetch.mockResolvedValue(mockJsonResponse({
             status: 'success',
             items: [

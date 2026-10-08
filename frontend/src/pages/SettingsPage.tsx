@@ -6,17 +6,17 @@ import {
 } from '../components/icons';
 import PageHeader from '../components/ui/PageHeader';
 
-// ── 更多工具入口 ─────────────────────────────────────────────
+// More tools
 
 const TOOLS = [
-    { path: '/batch', label: '批量测试', desc: '批量执行多组测试用例', icon: <Layers className="w-5 h-5" /> },
-    { path: '/semantic', label: '语义测试', desc: '自然语言逐步操控浏览器', icon: <Sparkles className="w-5 h-5" /> },
-    { path: '/cicd', label: 'CI/CD 集成', desc: 'Jenkins / GitHub Actions 接入', icon: <Webhook className="w-5 h-5" /> },
-    { path: '/requirement', label: '需求解析', desc: '从文档自动生成测试需求', icon: <FileSearch className="w-5 h-5" /> },
-    { path: '/contract', label: '契约测试', desc: 'API 契约一致性验证', icon: <FileCode2 className="w-5 h-5" /> },
-    { path: '/mobile', label: '移动端测试', desc: 'iOS / Android 自动化', icon: <Smartphone className="w-5 h-5" /> },
-    { path: '/quality', label: '质量审计', desc: '代码质量与覆盖率分析', icon: <ClipboardCheck className="w-5 h-5" /> },
-    { path: '/resilience', label: '韧性测试', desc: '混沌工程与故障注入', icon: <ShieldAlert className="w-5 h-5" /> },
+    { path: '/batch', label: "Batch testing", desc: "Run multiple sets of test cases in batches", icon: <Layers className="w-5 h-5" /> },
+    { path: '/semantic', label: "Semantic testing", desc: "Control the browser step by step using natural language", icon: <Sparkles className="w-5 h-5" /> },
+    { path: '/cicd', label: "CI/CD integration", desc: "Connect Jenkins or GitHub Actions", icon: <Webhook className="w-5 h-5" /> },
+    { path: '/requirement', label: "Requirements analysis", desc: "Generate test requirements from documents", icon: <FileSearch className="w-5 h-5" /> },
+    { path: '/contract', label: "Contract testing", desc: "Verify API contract consistency", icon: <FileCode2 className="w-5 h-5" /> },
+    { path: '/mobile', label: "Mobile testing", desc: "iOS / Android automation", icon: <Smartphone className="w-5 h-5" /> },
+    { path: '/quality', label: "Quality audit", desc: "Analyze code quality and coverage", icon: <ClipboardCheck className="w-5 h-5" /> },
+    { path: '/resilience', label: "Resilience testing", desc: "Chaos engineering and fault injection", icon: <ShieldAlert className="w-5 h-5" /> },
 ];
 
 const SettingsPage: React.FC = () => {
@@ -26,8 +26,8 @@ const SettingsPage: React.FC = () => {
         <div className="flex flex-col gap-6">
             <PageHeader
                 icon={<Settings className="w-5 h-5" />}
-                title="更多工具"
-                description="这些是低频但有用的测试工具，按需使用"
+                title={"More tools"}
+                description={"Use these specialized testing tools when needed"}
                 accent="slate"
             />
 

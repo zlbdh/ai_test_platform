@@ -38,7 +38,7 @@ describe('QualityGatePage', () => {
                         status: 'ok',
                         data: {
                             playbook_id: 'sample-first-regression',
-                            playbook_title: '示例项目企业平台端首轮真实回归',
+                            playbook_title: "Sample enterprise platform initial live regression",
                             imported_count: 5,
                         },
                     }),
@@ -52,9 +52,9 @@ describe('QualityGatePage', () => {
                         status: 'ok',
                         data: {
                             rules: imported ? [
-                                { name: 'sample_platform_login_success_gate', description: '登录', metric: 'login_success_rate', operator: '>=', threshold: 1, severity: 'blocking', enabled: true },
-                                { name: 'sample_platform_core_flow_pass_gate', description: '核心流程', metric: 'core_flow_pass_rate', operator: '>=', threshold: 0.95, severity: 'blocking', enabled: true },
-                                { name: 'sample_platform_blocking_bug_gate', description: '阻断缺陷', metric: 'blocking_bug_count', operator: '<=', threshold: 0, severity: 'blocking', enabled: true },
+                                { name: 'sample_platform_login_success_gate', description: "Login", metric: 'login_success_rate', operator: '>=', threshold: 1, severity: 'blocking', enabled: true },
+                                { name: 'sample_platform_core_flow_pass_gate', description: "Core workflow", metric: 'core_flow_pass_rate', operator: '>=', threshold: 0.95, severity: 'blocking', enabled: true },
+                                { name: 'sample_platform_blocking_bug_gate', description: "Blocking defect", metric: 'blocking_bug_count', operator: '<=', threshold: 0, severity: 'blocking', enabled: true },
                                 { name: 'sample_platform_unexplained_5xx_gate', description: '5xx', metric: 'unexplained_5xx_count', operator: '<=', threshold: 0, severity: 'blocking', enabled: true },
                                 { name: 'sample_platform_critical_ui_error_gate', description: 'UI', metric: 'critical_ui_error_count', operator: '<=', threshold: 0, severity: 'blocking', enabled: true },
                             ] : [],
@@ -81,7 +81,7 @@ describe('QualityGatePage', () => {
                         data: {
                             verdict: {
                                 status: 'passed',
-                                summary: '✅ 质量门禁全部通过',
+                                summary: "✅ All quality gates passed",
                                 checks: [
                                     {
                                         rule_name: 'sample_platform_login_success_gate',
@@ -110,21 +110,21 @@ describe('QualityGatePage', () => {
         );
 
         await waitFor(() => expect(mockFetch).toHaveBeenCalled());
-        fireEvent.click(screen.getByRole('button', { name: '导入示例项目规则' }));
+        fireEvent.click(screen.getByRole('button', { name: "Import sample project rules" }));
 
-        await waitFor(() => expect(screen.getByText('示例项目企业平台端首轮真实回归')).toBeInTheDocument());
-        expect(screen.getByText('已导入 5 条规则')).toBeInTheDocument();
+        await waitFor(() => expect(screen.getByText("Sample enterprise platform initial live regression")).toBeInTheDocument());
+        expect(screen.getByText("Imported 5 rules")).toBeInTheDocument();
         expect(screen.getByText('sample_platform_login_success_gate')).toBeInTheDocument();
 
-        fireEvent.click(screen.getByRole('button', { name: '执行检查' }));
+        fireEvent.click(screen.getByRole('button', { name: "Run checks" }));
 
         await waitFor(() => expect(mockFetch).toHaveBeenCalledWith(
             expect.stringContaining('/api/quality-gate/check'),
             expect.objectContaining({ method: 'POST' }),
         ));
 
-        expect(await screen.findByText('✅ 质量门禁全部通过')).toBeInTheDocument();
-        expect(screen.getByText('通过: 1/1 | 失败: 0')).toBeInTheDocument();
+        expect(await screen.findByText("✅ All quality gates passed")).toBeInTheDocument();
+        expect(screen.getByText("Passed: 1/1 | Failed: 0")).toBeInTheDocument();
     });
 
     it('should import sample_platform platform prototype rules', async () => {
@@ -141,7 +141,7 @@ describe('QualityGatePage', () => {
                         status: 'ok',
                         data: {
                             playbook_id: 'sample-platform-prototype',
-                            playbook_title: '示例项目大平台原型测试包',
+                            playbook_title: "Sample project platform prototype test package",
                             imported_count: 6,
                         },
                     }),
@@ -155,9 +155,9 @@ describe('QualityGatePage', () => {
                         status: 'ok',
                         data: {
                             rules: imported ? [
-                                { name: 'sample_platform_platform_module_coverage_gate', description: '模块覆盖率', metric: 'module_coverage_rate', operator: '>=', threshold: 1, severity: 'blocking', enabled: true },
-                                { name: 'sample_platform_platform_page_mapping_gate', description: '页面映射率', metric: 'page_mapping_rate', operator: '>=', threshold: 0.95, severity: 'blocking', enabled: true },
-                                { name: 'sample_platform_platform_critical_page_gate', description: '关键页面', metric: 'critical_page_missing_count', operator: '<=', threshold: 0, severity: 'blocking', enabled: true },
+                                { name: 'sample_platform_platform_module_coverage_gate', description: "Module coverage", metric: 'module_coverage_rate', operator: '>=', threshold: 1, severity: 'blocking', enabled: true },
+                                { name: 'sample_platform_platform_page_mapping_gate', description: "Page mapping rate", metric: 'page_mapping_rate', operator: '>=', threshold: 0.95, severity: 'blocking', enabled: true },
+                                { name: 'sample_platform_platform_critical_page_gate', description: "Critical pages", metric: 'critical_page_missing_count', operator: '<=', threshold: 0, severity: 'blocking', enabled: true },
                             ] : [],
                         },
                     }),
@@ -184,11 +184,11 @@ describe('QualityGatePage', () => {
         );
 
         await waitFor(() => expect(mockFetch).toHaveBeenCalled());
-        fireEvent.click(screen.getByRole('button', { name: '导入大平台原型规则' }));
+        fireEvent.click(screen.getByRole('button', { name: "Import platform prototype rules" }));
 
-        await waitFor(() => expect(screen.getByText('示例项目大平台原型测试包')).toBeInTheDocument());
-        expect(screen.getByText('已导入 6 条规则')).toBeInTheDocument();
-        expect(screen.getByText('规则覆盖模块覆盖率、页面映射率、关键页面缺失、阻断级原型差异、关键字段缺失和关键状态流转缺失。')).toBeInTheDocument();
+        await waitFor(() => expect(screen.getByText("Sample project platform prototype test package")).toBeInTheDocument());
+        expect(screen.getByText("Imported 6 rules")).toBeInTheDocument();
+        expect(screen.getByText("Rules cover module coverage, page mapping, missing critical pages, blocking prototype differences, missing critical fields, and missing critical state transitions.")).toBeInTheDocument();
         expect(screen.getByText('sample_platform_platform_module_coverage_gate')).toBeInTheDocument();
     });
 
@@ -203,7 +203,7 @@ describe('QualityGatePage', () => {
                         status: 'ok',
                         data: {
                             rules: [
-                                { name: 'prototype_mapping_gate', description: '页面映射率', metric: 'page_mapping_rate', operator: '>=', threshold: 0.95, severity: 'blocking', enabled: true },
+                                { name: 'prototype_mapping_gate', description: "Page mapping rate", metric: 'page_mapping_rate', operator: '>=', threshold: 0.95, severity: 'blocking', enabled: true },
                             ],
                         },
                     }),
@@ -218,14 +218,14 @@ describe('QualityGatePage', () => {
                             status: 'warning',
                             verdict: {
                                 status: 'warning',
-                                summary: '任务上下文门禁',
+                                summary: "Task context gate",
                                 checks: [
                                     {
                                         rule_name: 'prototype_mapping_gate',
                                         status: 'warning',
                                         actual_value: 0.98,
                                         threshold: 0.95,
-                                        message: '页面映射率下降',
+                                        message: "Page mapping rate decreased",
                                     },
                                 ],
                                 total_checks: 1,
@@ -242,14 +242,14 @@ describe('QualityGatePage', () => {
                                 status: 'passed',
                                 verdict: {
                                     status: 'passed',
-                                    summary: '上一轮门禁已通过。',
+                                    summary: "The previous gate passed.",
                                     checks: [
                                         {
                                             rule_name: 'prototype_mapping_gate',
                                             status: 'passed',
                                             actual_value: 1,
                                             threshold: 0.95,
-                                            message: '页面映射率稳定',
+                                            message: "Page mapping rate stable",
                                         },
                                     ],
                                     total_checks: 1,
@@ -265,7 +265,7 @@ describe('QualityGatePage', () => {
                             status: 'warning',
                             verdict: {
                                 status: 'warning',
-                                summary: '任务上下文门禁',
+                                summary: "Task context gate",
                                 checks: [],
                                 total_checks: 0,
                                 passed_checks: 0,
@@ -278,7 +278,7 @@ describe('QualityGatePage', () => {
                             status: 'passed',
                             verdict: {
                                 status: 'passed',
-                                summary: '其他任务门禁',
+                                summary: "Other task gate",
                                 checks: [],
                                 total_checks: 0,
                                 passed_checks: 0,
@@ -305,7 +305,7 @@ describe('QualityGatePage', () => {
             task_id: 'task001',
             mission_kind: 'prototype_agents',
             task_kind: 'prototype',
-            user_goal: '对订单原型执行门禁复核',
+            user_goal: "Review quality gates for the order prototype",
             status: 'completed',
             source_context: {},
             strategy: {},
@@ -319,9 +319,9 @@ describe('QualityGatePage', () => {
             findings: [],
             gate_summary: {
                 status: 'warning',
-                summary: '仍有待确认项。',
+                summary: "Some items still require confirmation.",
                 metrics: { page_mapping_rate: 0.98, static_unprovable_count: 1 },
-                decision_reason: '存在静态无法证明项。',
+                decision_reason: "Some items cannot be proven statically.",
             },
             recommendations: [],
             result_summary: {},
@@ -339,7 +339,7 @@ describe('QualityGatePage', () => {
                 task_id: 'task001',
                 mission_kind: 'prototype_agents',
                 task_kind: 'prototype',
-                user_goal: '对订单原型执行门禁复核',
+                user_goal: "Review quality gates for the order prototype",
                 status: 'completed',
                 source_context: {},
                 strategy: {},
@@ -353,14 +353,14 @@ describe('QualityGatePage', () => {
                 findings: [],
                 gate_summary: {
                     status: 'warning',
-                    summary: '仍有待确认项。',
+                    summary: "Some items still require confirmation.",
                     metrics: { page_mapping_rate: 0.98, static_unprovable_count: 1 },
-                    decision_reason: '存在静态无法证明项。',
+                    decision_reason: "Some items cannot be proven statically.",
                 },
                 verification_state: {
                     status: 'context_unprovable',
-                    label: '当前上下文无法证明',
-                    summary: '当前仍有待确认项。',
+                    label: "Not provable in the current context",
+                    summary: "Some items still require confirmation.",
                 },
                 recommendations: [],
                 result_summary: {},
@@ -377,7 +377,7 @@ describe('QualityGatePage', () => {
                 task_id: 'task000',
                 mission_kind: 'prototype_agents',
                 task_kind: 'prototype',
-                user_goal: '上一轮原型门禁复核',
+                user_goal: "Previous prototype gate review",
                 status: 'completed',
                 source_context: {},
                 strategy: {},
@@ -391,14 +391,14 @@ describe('QualityGatePage', () => {
                 findings: [],
                 gate_summary: {
                     status: 'passed',
-                    summary: '上一轮门禁已通过。',
+                    summary: "The previous gate passed.",
                     metrics: { page_mapping_rate: 1 },
-                    decision_reason: '上一轮无阻断问题。',
+                    decision_reason: "The previous run had no blocking issues.",
                 },
                 verification_state: {
                     status: 'verified_passed',
-                    label: '已验证通过',
-                    summary: '上一轮已通过。',
+                    label: "Verified",
+                    summary: "The previous run passed.",
                 },
                 recommendations: [],
                 result_summary: {},
@@ -419,18 +419,18 @@ describe('QualityGatePage', () => {
             </MemoryRouter>,
         );
 
-        await waitFor(() => expect(screen.getByText('来自统一测试任务')).toBeInTheDocument());
-        expect(screen.getByText('对订单原型执行门禁复核')).toBeInTheDocument();
-        expect(screen.getByText('当前已聚焦 run_id = task001 的门禁历史，并把任务指标带入“业务指标录入”区域。')).toBeInTheDocument();
-        expect(screen.getByText('最近一次可比复跑')).toBeInTheDocument();
-        expect(screen.getByText('本次 vs 最近一次复跑')).toBeInTheDocument();
-        expect(screen.getByText('判定原因：存在静态无法证明项。')).toBeInTheDocument();
-        expect(screen.getByText('上次：上一轮无阻断问题。')).toBeInTheDocument();
-        expect(screen.getByText('关键 Metrics 变化')).toBeInTheDocument();
-        expect(screen.getByText('Checks 变化')).toBeInTheDocument();
-        await screen.findByText('1 条规则变化');
+        await waitFor(() => expect(screen.getByText("From unified testing task")).toBeInTheDocument());
+        expect(screen.getByText("Review quality gates for the order prototype")).toBeInTheDocument();
+        expect(screen.getByText("Focused on gate history for run_id = task001 , with task metrics loaded into Business metrics input.")).toBeInTheDocument();
+        expect(screen.getByText("Most recent comparable rerun")).toBeInTheDocument();
+        expect(screen.getByText("Current run vs. most recent rerun")).toBeInTheDocument();
+        expect(screen.getByText("Decision reason: Some items cannot be proven statically.")).toBeInTheDocument();
+        expect(screen.getByText("Previous: The previous run had no blocking issues.")).toBeInTheDocument();
+        expect(screen.getByText("Key metric changes")).toBeInTheDocument();
+        expect(screen.getByText("Check changes")).toBeInTheDocument();
+        await screen.findByText("1 rule change");
         await screen.findByText('prototype_mapping_gate');
-        expect(screen.getAllByText('任务：task000').length).toBeGreaterThan(0);
+        expect(screen.getAllByText("Task: task000").length).toBeGreaterThan(0);
         expect(screen.getByText('task001')).toBeInTheDocument();
         expect(screen.queryByText('task999')).not.toBeInTheDocument();
         expect(mockFetch).toHaveBeenCalledWith(

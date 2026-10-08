@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 // ============================================================================
-// Exploratory Store — 探索性测试执行状态持久化
+// Exploratory store: persist exploratory testing execution state
 // ============================================================================
 
 interface ExploratoryStoreState {
@@ -30,7 +30,7 @@ export const useExploratoryStore = create<ExploratoryStoreState>((set) => ({
         set({
             running: true,
             taskId,
-            logs: [`[启动] 任务 ${taskId} 已开始`],
+            logs: [`[Started] Task ${taskId} started`],
             status: 'running',
             stats: { pages: 0, actions: 0, anomalies: 0 },
         }),

@@ -28,7 +28,7 @@ import PrototypeAgentsPage, { buildSeveritySummary, getPrototypeAgentNodes } fro
 const baseMission = {
     mission_id: 'proto001',
     mission_kind: 'prototype_agents',
-    user_input: '原型测试 · https://demo.example.com/prototype',
+    user_input: "Prototype testing · https://demo.example.com/prototype",
     target_url: 'https://demo.example.com/prototype',
     status: 'completed',
     created_at: '2026-03-31T10:00:00',
@@ -85,8 +85,8 @@ const baseMission = {
                     finding_id: 'visual-1',
                     agent_id: 'visual',
                     severity: 'high',
-                    title: '视觉回归存在明显差异',
-                    summary: '像素差异 4.60%',
+                    title: "Visual regression has significant differences",
+                    summary: "Pixel difference 4.60%",
                     category: 'visual_regression_gap',
                     provider: 'local-visual-regression',
                 },
@@ -100,15 +100,15 @@ const baseMission = {
             finished_at: '2026-03-31T10:00:05',
             payload: {
                 steps: [{ step: 'goto:index.html', status: 'success' }],
-                failures: [{ type: 'critical_page_missing', page: '审批流', message: '关键页面未映射到原型：审批流' }],
+                failures: [{ type: 'critical_page_missing', page: "Approval flow", message: "Key page not mapped to the prototype: Approval flow" }],
             },
             normalized_findings: [
                 {
                     finding_id: 'flow-1',
                     agent_id: 'flow',
                     severity: 'blocking',
-                    title: '流程连通性存在问题',
-                    summary: '关键页面未映射到原型：审批流',
+                    title: "Workflow connectivity issues",
+                    summary: "Key page not mapped to the prototype: Approval flow",
                     category: 'blocking_prototype_gap',
                     provider: 'playwright-flow',
                 },
@@ -121,7 +121,7 @@ const baseMission = {
             started_at: '2026-03-31T10:00:03',
             finished_at: '2026-03-31T10:00:03',
             payload: {
-                reason: '未提供 compare_source，A/B 结构对比已跳过',
+                reason: "No compare_source provided; A/B structure comparison skipped",
                 changedComponents: [],
                 comparedVersions: [],
             },
@@ -157,8 +157,8 @@ const baseMission = {
                     finding_id: 'perf-1',
                     agent_id: 'perf',
                     severity: 'medium',
-                    title: '性能预警（Mock Lighthouse）',
-                    summary: '当前 mock 性能评分为 72，建议后续接入真实 Lighthouse 复核。',
+                    title: "Performance warning (Mock Lighthouse)",
+                    summary: "The mock performance score is 72. Verify it with real Lighthouse results later.",
                     category: 'mock_perf_warning',
                     provider: 'mock-lighthouse',
                 },
@@ -179,8 +179,8 @@ const baseMission = {
                 finding_id: 'flow-1',
                 agent_id: 'flow',
                 severity: 'blocking',
-                title: '流程连通性存在问题',
-                summary: '关键页面未映射到原型：审批流',
+                title: "Workflow connectivity issues",
+                summary: "Key page not mapped to the prototype: Approval flow",
                 category: 'blocking_prototype_gap',
                 provider: 'playwright-flow',
             },
@@ -188,8 +188,8 @@ const baseMission = {
                 finding_id: 'visual-1',
                 agent_id: 'visual',
                 severity: 'high',
-                title: '视觉回归存在明显差异',
-                summary: '像素差异 4.60%',
+                title: "Visual regression has significant differences",
+                summary: "Pixel difference 4.60%",
                 category: 'visual_regression_gap',
                 provider: 'local-visual-regression',
             },
@@ -197,15 +197,15 @@ const baseMission = {
                 finding_id: 'perf-1',
                 agent_id: 'perf',
                 severity: 'medium',
-                title: '性能预警（Mock Lighthouse）',
-                summary: '当前 mock 性能评分为 72，建议后续接入真实 Lighthouse 复核。',
+                title: "Performance warning (Mock Lighthouse)",
+                summary: "The mock performance score is 72. Verify it with real Lighthouse results later.",
                 category: 'mock_perf_warning',
                 provider: 'mock-lighthouse',
             },
         ],
         recommendations: [
-            '优先补齐阻断级原型差异和关键页面，先恢复主流程骨架，再处理样式细节。',
-            '当前性能结果来自 Mock Lighthouse，先把它作为预警信号，再决定是否接入真实 Lighthouse 复核。',
+            "Resolve blocking prototype differences and missing key pages first, restore the main workflow structure, then address styling details.",
+            "Current performance results come from Mock Lighthouse. Treat them as a warning signal before deciding whether to run real Lighthouse verification.",
         ],
         worker_results: [],
         quality_gate_metrics: {
@@ -220,7 +220,7 @@ const baseMission = {
         {
             timestamp: '2026-03-31T10:00:01',
             level: 'info',
-            message: '开始解析原型来源与项目包上下文',
+            message: "Start parsing the prototype source and project package context",
             data: {
                 agent_id: 'orchestrator',
                 agent_status: 'running',
@@ -229,7 +229,7 @@ const baseMission = {
         {
             timestamp: '2026-03-31T10:00:05',
             level: 'error',
-            message: 'flow Worker 完成',
+            message: "flow Worker completed",
             data: {
                 agent_id: 'flow',
                 agent_status: 'error',
@@ -245,7 +245,7 @@ const baseMission = {
         ],
         playbook_context: {
             critical_pages: [
-                { page_name: '审批流', route: '/approval' },
+                { page_name: "Approval flow", route: '/approval' },
             ],
         },
     },
@@ -287,17 +287,17 @@ describe('PrototypeAgentsPage', () => {
     it('should render mission overview, timeline and raw json tab', async () => {
         render(<PrototypeAgentsPage />);
 
-        expect(await screen.findByText('原型测试 7 Agent 编排台')).toBeInTheDocument();
+        expect(await screen.findByText("Seven-agent prototype testing workspace")).toBeInTheDocument();
         await waitFor(() => expect(mockCommanderPrototypeMissions).toHaveBeenCalledWith(12));
 
-        expect(screen.getByText('Agent 状态图')).toBeInTheDocument();
-        expect(screen.getByText('Worker 结果')).toBeInTheDocument();
-        expect(screen.getByText('时间线')).toBeInTheDocument();
+        expect(screen.getByText("Agent status graph")).toBeInTheDocument();
+        expect(screen.getByText("Worker results")).toBeInTheDocument();
+        expect(screen.getByText("Timeline")).toBeInTheDocument();
         expect(screen.getAllByText('#proto001').length).toBeGreaterThan(0);
-        expect(screen.getAllByText('流程连通性存在问题').length).toBeGreaterThan(0);
-        expect(screen.getByText('flow Worker 完成')).toBeInTheDocument();
+        expect(screen.getAllByText("Workflow connectivity issues").length).toBeGreaterThan(0);
+        expect(screen.getByText("flow Worker completed")).toBeInTheDocument();
 
-        fireEvent.click(screen.getByRole('button', { name: '原始 JSON' }));
+        fireEvent.click(screen.getByRole('button', { name: "Raw JSON" }));
 
         expect(await screen.findByText(/"mission_id": "proto001"/)).toBeInTheDocument();
     });

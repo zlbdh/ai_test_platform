@@ -6,17 +6,17 @@ describe('MobilePage normalization', () => {
     it('should normalize object issues for rendering', () => {
         const issue = normalizeMobileIssue({
             rule_id: 'viewport-meta',
-            description: '缺少 viewport meta 标签',
+            description: "Missing viewport meta tag",
             severity: 'critical',
-            suggestion: '补充 viewport',
+            suggestion: "Add viewport",
         }, 'iPhone 14');
 
         expect(issue).toEqual({
             ruleId: 'viewport-meta',
-            description: '缺少 viewport meta 标签',
+            description: "Missing viewport meta tag",
             severity: 'critical',
             device: 'iPhone 14',
-            suggestion: '补充 viewport',
+            suggestion: "Add viewport",
         });
     });
 
@@ -27,10 +27,10 @@ describe('MobilePage normalization', () => {
             issues: [
                 {
                     rule_id: 'touch-target',
-                    description: '触控目标过小',
+                    description: "Touch targets are too small",
                     severity: 'major',
                 },
-                '存在额外兼容性提示',
+                "Additional compatibility guidance exists",
             ],
         });
 
@@ -38,7 +38,7 @@ describe('MobilePage normalization', () => {
         expect(result.viewportText).toBe('412×915');
         expect(result.score).toBe(89);
         expect(result.issues[0].ruleId).toBe('touch-target');
-        expect(result.issues[1].description).toBe('存在额外兼容性提示');
+        expect(result.issues[1].description).toBe("Additional compatibility guidance exists");
     });
 
     it('should keep explicit score when backend provides it', () => {

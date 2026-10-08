@@ -31,7 +31,7 @@ const baseTask = {
     task_id: 'task001',
     mission_kind: 'commander',
     task_kind: 'general' as const,
-    user_goal: '检查登录链路',
+    user_goal: "Check the login flow",
     status: 'completed',
     created_at: '2026-04-02T15:00:00',
     started_at: '2026-04-02T15:00:01',
@@ -49,10 +49,10 @@ const baseTask = {
     findings: [],
     gate_summary: {
         status: 'failed' as const,
-        summary: '通用编排存在失败测试线，建议进入执行中心复核。',
+        summary: "General orchestration has failed test tracks. Review them in the execution center.",
         metrics: { failed: 1, total_tests: 3 },
     },
-    recommendations: ['先复核失败测试线，再决定是否需要补专项场景。'],
+    recommendations: ["Review failed test tracks before deciding whether additional specialized scenarios are needed."],
     result_summary: { total_tests: 3, failed: 1 },
     logs: [],
     execution_group_id: 'task001',
@@ -94,10 +94,10 @@ describe('TaskFrontDoorPage', () => {
         );
 
         await waitFor(() => {
-            expect(screen.getByText('最近任务')).toBeInTheDocument();
+            expect(screen.getByText("Recent tasks")).toBeInTheDocument();
         });
-        expect(screen.getByText('检查登录链路')).toBeInTheDocument();
-        expect(screen.getByText('结果页将固定展示')).toBeInTheDocument();
+        expect(screen.getByText("Check the login flow")).toBeInTheDocument();
+        expect(screen.getByText("The results page always includes")).toBeInTheDocument();
     });
 
     it('should create a general task and navigate to result page', async () => {
@@ -110,18 +110,18 @@ describe('TaskFrontDoorPage', () => {
             </MemoryRouter>,
         );
 
-        fireEvent.change(screen.getByPlaceholderText('比如：检查登录、下单和支付主链路'), {
-            target: { value: '检查登录主链路' },
+        fireEvent.change(screen.getByPlaceholderText("Example: Check the login, ordering, and payment workflows"), {
+            target: { value: "Check the primary login flow" },
         });
         fireEvent.change(screen.getByPlaceholderText('https://example.com/path'), {
             target: { value: 'https://demo.example.com/login' },
         });
-        fireEvent.click(screen.getByRole('button', { name: '发起任务并进入结果页' }));
+        fireEvent.click(screen.getByRole('button', { name: "Start task and open results" }));
 
         await waitFor(() => {
             expect(mockCreateFrontdoorTask).toHaveBeenCalledWith({
                 task_kind: 'general',
-                user_goal: '检查登录主链路',
+                user_goal: "Check the primary login flow",
                 source_context: { target_url: 'https://demo.example.com/login' },
                 strategy: { parallel: true },
             });

@@ -1,12 +1,12 @@
 /**
- * 核心组件单元测试 (P2-2)
+ * Core component unit tests (P2-2)
  *
- * 覆盖：LogTerminal / AgentCard
- * - 渲染正确性
- * - 日志过滤
- * - 折叠/展开
- * - AgentCard 状态展示
- * - AgentCard 操作按钮
+ * Covers LogTerminal / AgentCard:
+ * - Rendering
+ * - Log filtering
+ * - Collapse / expand
+ * - AgentCard status display
+ * - AgentCard action buttons
  */
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
@@ -52,7 +52,7 @@ describe('LogTerminal', () => {
             { timestamp: '12:02', agent: AgentType.PLANNER, level: 'ERROR', message: 'err2' },
         ];
         render(<LogTerminal logs={logs} />);
-        expect(screen.getByText('2 Errors')).toBeInTheDocument();
+        expect(screen.getByText("2 Errors")).toBeInTheDocument();
     });
 
     it('should filter logs by level when filter button is clicked', () => {
@@ -124,7 +124,7 @@ describe('AgentCard', () => {
     const baseStat: AgentStat = {
         id: AgentType.UI,
         name: 'UI Agent',
-        role: 'UI 测试',
+        role: "UI testing",
         status: 'IDLE',
         tasksCompleted: 42,
         successRate: 95,
@@ -133,7 +133,7 @@ describe('AgentCard', () => {
     it('should render agent name and role', () => {
         render(<AgentCard stat={baseStat} />);
         expect(screen.getByText('UI Agent')).toBeInTheDocument();
-        expect(screen.getByText('UI 测试')).toBeInTheDocument();
+        expect(screen.getByText("UI testing")).toBeInTheDocument();
     });
 
     it('should show tasks completed and success rate', () => {

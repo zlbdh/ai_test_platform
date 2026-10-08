@@ -39,10 +39,10 @@ import {
 import { API_BASE_URL } from '../config';
 
 const TYPE_LABELS: Record<string, string> = {
-    dingtalk: '钉钉',
-    wecom: '企业微信',
-    notification_platform: '通知平台',
-    custom: '自定义',
+    dingtalk: "DingTalk",
+    wecom: "WeCom",
+    notification_platform: "Notification platform",
+    custom: "Custom",
 };
 
 export default function NotificationPage() {
@@ -60,7 +60,7 @@ export default function NotificationPage() {
     const [drilling, setDrilling] = useState(false);
     const [testResult, setTestResult] = useState<{ id: string; ok: boolean; msg: string } | null>(null);
     const [drillResult, setDrillResult] = useState<NotificationDrillResponse | null>(null);
-    const [simulateMessage, setSimulateMessage] = useState('状态');
+    const [simulateMessage, setSimulateMessage] = useState("Status");
     const [simulating, setSimulating] = useState(false);
     const [simulateResult, setSimulateResult] = useState<CommanderChatOpsSimulateResponse | null>(null);
     const [publicApiBaseUrlInput, setPublicApiBaseUrlInput] = useState('');
@@ -129,7 +129,7 @@ export default function NotificationPage() {
                 setTestResult({
                     id: created.id,
                     ok: data.success,
-                    msg: data.success ? (data.message || '发送成功') : (data.error || data.message || `HTTP ${data.status_code}`),
+                    msg: data.success ? (data.message || "Sent successfully") : (data.error || data.message || `HTTP ${data.status_code}`),
                 });
             } finally {
                 setTesting(null);
@@ -153,10 +153,10 @@ export default function NotificationPage() {
         setTestResult(null);
         try {
             const data = await testNotificationWebhook(id);
-            setTestResult({ id, ok: data.success, msg: data.success ? (data.message || '发送成功') : (data.error || data.message || `HTTP ${data.status_code}`) });
+            setTestResult({ id, ok: data.success, msg: data.success ? (data.message || "Sent successfully") : (data.error || data.message || `HTTP ${data.status_code}`) });
             await load();
         } catch (e) {
-            setTestResult({ id, ok: false, msg: '请求失败' });
+            setTestResult({ id, ok: false, msg: "Request failed" });
         }
         setTesting(null);
     };
@@ -319,15 +319,15 @@ export default function NotificationPage() {
             await navigator.clipboard.writeText(text);
             setCopyFeedback({ key, message });
         } catch {
-            setCopyFeedback({ key, message: '复制失败，请检查浏览器剪贴板权限。' });
+            setCopyFeedback({ key, message: "Copy failed. Check browser clipboard permissions." });
         }
     }, []);
 
     const formatTimestamp = (value?: string) => {
-        if (!value) return '未测试';
+        if (!value) return "Not tested";
         const date = new Date(value);
         if (Number.isNaN(date.getTime())) return value;
-        return `${date.getMonth() + 1}/${date.getDate()} ${date.toLocaleTimeString('zh-CN', {
+        return `${date.getMonth() + 1}/${date.getDate()} ${date.toLocaleTimeString('en-US', {
             hour: '2-digit',
             minute: '2-digit',
             second: '2-digit',
@@ -338,26 +338,26 @@ export default function NotificationPage() {
     const formatReplyMode = (value?: string) => {
         switch (value) {
             case 'app_bot':
-                return '应用机器人';
+                return "App bot";
             case 'app_bot_fallback_webhook':
-                return '应用机器人失败，已走 Webhook 兜底';
+                return "App bot failed; webhook fallback used";
             case 'webhook_only':
-                return 'Webhook 机器人';
+                return "Webhook bot";
             default:
-                return value || '未知';
+                return value || "Unknown";
         }
     };
 
     const formatBindingSource = (value?: string) => {
         switch (value) {
             case 'event_subscription':
-                return '通知平台事件订阅';
+                return "Notification platform event subscription";
             case 'simulate':
-                return '平台模拟';
+                return "Platform simulation";
             case 'external_self_check':
-                return '公网自测';
+                return "Public endpoint self-test";
             default:
-                return value || '未知来源';
+                return value || "Unknown source";
         }
     };
 
@@ -381,10 +381,10 @@ export default function NotificationPage() {
     const deliveryStrategy = chatopsOverview?.delivery_strategy || (chatopsAppBotConfigured ? 'single_robot_with_webhook_fallback' : 'webhook_only');
     const deliveryStrategySummary = chatopsOverview?.delivery_strategy_summary || (
         chatopsAppBotConfigured
-            ? '对外建议使用当前项目专属的同一个通知平台应用机器人承接命令与回复，Webhook 仅保留兜底通知。'
-            : '当前仍主要依赖 Webhook 机器人发通知，尚未形成对外单机器人体验。'
+            ? "Use the same project-specific notification app bot for commands and replies. Keep webhooks as a notification fallback."
+            : "Notifications still rely mainly on a webhook bot; a unified external bot experience is not yet in place."
     );
-    const chatopsCallbackProviderLabel = chatopsOverview?.callback_provider?.label || (chatopsOverview?.callback_url_public ? '自定义公网地址' : '本地地址');
+    const chatopsCallbackProviderLabel = chatopsOverview?.callback_provider?.label || (chatopsOverview?.callback_url_public ? "Custom public URL" : "Local URL");
     const chatopsCallbackProviderHost = chatopsOverview?.callback_provider?.host || '';
     const chatopsCallbackRecommendation = chatopsOverview?.callback_recommendation || '';
     const callbackProbe = chatopsOverview?.callback_probe ?? null;
@@ -401,10 +401,10 @@ export default function NotificationPage() {
     const chatopsDirectChatRecoveredHistory = chatopsExternalHistoryObserved && !!latestExternalSuccessAt;
     const chatopsDirectChatDegraded = !chatopsDirectChatReady && chatopsDirectChatRecoveredHistory;
     const directChatStatusLabel = chatopsDirectChatReady
-        ? '单聊可用'
+        ? "Direct messages available"
         : chatopsDirectChatDegraded
-            ? '历史已联通'
-            : '单聊待联通';
+            ? "Previously connected"
+            : "Direct message connection pending";
     const directChatStatusClass = chatopsDirectChatReady
         ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300'
         : chatopsDirectChatDegraded
@@ -413,20 +413,20 @@ export default function NotificationPage() {
                 ? 'bg-cyan-100 text-cyan-700 dark:bg-cyan-500/15 dark:text-cyan-300'
                 : 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300';
     const directChatDescription = chatopsDirectChatDegraded
-        ? `用于个人单聊发指令并即时拿回复；最近一次真实单聊已成功${latestExternalSuccessAt ? `（${formatTimestamp(latestExternalSuccessAt)}）` : ''}，但当前公网入口退化，恢复后可继续直接对话。`
-        : '用于个人单聊发指令并即时拿回复，当前推荐在单聊里发送状态 / 报告 / 测试。';
+        ? `Send commands in a direct message and receive immediate replies. The most recent real direct message succeeded${latestExternalSuccessAt ? ` (${formatTimestamp(latestExternalSuccessAt)})` : ''}, but the public endpoint is currently degraded. Direct messaging can resume after it is restored.`
+        : "Send commands in a direct message and receive immediate replies. Recommended commands: status, report, and test.";
     const commandEntryLabel = chatopsDirectChatReady
-        ? '单聊 AI Test Platform 机器人'
+        ? "Direct message the AI Test Platform bot"
         : chatopsDirectChatDegraded
-            ? '单聊历史已联通，当前公网入口退化'
-            : '先完成应用机器人联调';
+            ? "Direct messaging worked previously; the public endpoint is currently degraded"
+            : "Complete app bot integration testing first";
     const unifiedRobotBadgeLabel = unifiedRobotReady
-        ? '单机器人已完成'
+        ? "Unified bot ready"
         : chatopsDirectChatDegraded
-            ? '单机器人入口退化'
+            ? "Unified bot endpoint degraded"
             : unifiedRobotPlatformReady
-                ? '单机器人待群测'
-                : '单机器人建设中';
+                ? "Unified bot awaiting group test"
+                : "Unified bot setup in progress";
     const unifiedRobotBadgeClass = unifiedRobotReady
         ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300'
         : chatopsDirectChatDegraded
@@ -435,12 +435,12 @@ export default function NotificationPage() {
                 ? 'bg-cyan-100 text-cyan-700 dark:bg-cyan-500/15 dark:text-cyan-300'
                 : 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300';
     const chatopsCurrentStatusLabel = chatopsDirectChatReady
-        ? '当前可直接使用'
+        ? "Ready to use now"
         : chatopsDirectChatDegraded
-            ? '历史可用，当前需恢复入口'
+            ? "Previously available; endpoint restoration required"
             : chatopsPlatformReady
-                ? '平台侧已就绪，待完成最终联调'
-                : '平台侧建设中';
+                ? "Platform ready; final integration testing pending"
+                : "Platform setup in progress";
     const chatopsCurrentStatusClass = chatopsDirectChatReady
         ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300'
         : chatopsDirectChatDegraded
@@ -450,56 +450,56 @@ export default function NotificationPage() {
                 : 'bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300';
     const chatopsLatestVerifiedAt = latestExternalSuccessAt || latestExternalSelfCheckAt || latestSuccessfulChatopsEvent?.created_at || '';
     const chatopsLatestVerifiedLabel = latestExternalSuccessAt
-        ? '最近真实通知平台回流'
+        ? "Latest actual inbound notification event"
         : latestExternalSelfCheckAt
-            ? '最近公网链路自测'
+            ? "Latest public connection self-test"
             : latestSuccessfulChatopsEvent?.created_at
-                ? '最近平台成功事件'
-                : '尚未验证';
+                ? "Latest successful platform event"
+                : "Not verified yet";
     const chatopsCurrentStatusDescription = chatopsDirectChatReady
-        ? `当前推荐直接单聊 AI Test Platform 机器人；最近一次真实通知平台回流${chatopsLatestVerifiedAt ? `在 ${formatTimestamp(chatopsLatestVerifiedAt)}` : '已验证'}，可以继续发送状态 / 报告 / 测试。`
+        ? `Direct message the AI Test Platform bot. Latest real inbound notification event${chatopsLatestVerifiedAt ? `At ${formatTimestamp(chatopsLatestVerifiedAt)}` : "Verified"}; you can continue sending status, report, and test commands.`
         : chatopsDirectChatDegraded
-            ? `历史上已经打通过真实通知平台回流${chatopsLatestVerifiedAt ? `（最近一次 ${formatTimestamp(chatopsLatestVerifiedAt)}）` : ''}，但当前公网入口暂时退化；建议先执行“立即重试回探”或“跑公网链路自测”后再继续单聊使用。`
+            ? `Real inbound notification events were received previously${chatopsLatestVerifiedAt ? ` (latest ${formatTimestamp(chatopsLatestVerifiedAt)})` : ''}, but the public endpoint is currently degraded. Retry the probe or run a public connection self-test before resuming direct messages.`
             : chatopsPlatformReady
-                ? '平台内部和应用机器人已就绪，下一步重点是完成公网回调联调并做一次真实消息验收。'
-                : '当前仍在补齐通知平台双向指令的基础配置，先完成 token、应用机器人或公网回调配置。';
+                ? "The platform and app bot are ready. Complete public callback integration testing and verify one real message next."
+                : "Basic configuration for two-way notification commands is still incomplete. Configure the token, app bot, or public callback first.";
     const chatopsOverviewCards = [
         {
             key: 'status',
-            title: '当前状态',
+            title: "Current status",
             value: chatopsCurrentStatusLabel,
             detail: chatopsDirectChatReady
-                ? '可以直接对话'
+                ? "Direct messaging available"
                 : chatopsDirectChatDegraded
-                    ? '先恢复公网入口'
-                    : '还需继续联调',
+                    ? "Restore the public endpoint first"
+                    : "Further integration testing required",
         },
         {
             key: 'entry',
-            title: '当前命令入口',
+            title: "Current command entry point",
             value: commandEntryLabel,
-            detail: '推荐在这里发状态 / 报告 / 测试',
+            detail: "Send status, report, and test commands here",
         },
         {
             key: 'verified',
             title: chatopsLatestVerifiedLabel,
-            value: chatopsLatestVerifiedAt ? formatTimestamp(chatopsLatestVerifiedAt) : '暂无',
-            detail: chatopsLatestVerifiedAt ? '这是最近一次成功验证时间' : '还没有成功记录',
+            value: chatopsLatestVerifiedAt ? formatTimestamp(chatopsLatestVerifiedAt) : "None",
+            detail: chatopsLatestVerifiedAt ? "Most recent successful verification time" : "No successful records yet",
         },
         {
             key: 'notify',
-            title: '团队通知入口',
-            value: '测试平台群',
-            detail: '群里继续负责接收结果与告警',
+            title: "Team notification entry point",
+            value: "Testing platform group",
+            detail: "The group continues to receive results and alerts",
         },
     ];
     const localTunnelStatusLabel = !localTunnel?.supported
-        ? '当前环境不支持'
+        ? "Unsupported in this environment"
         : !localTunnel?.script_exists
-            ? '脚本缺失'
+            ? "Script missing"
             : localTunnel?.running
-                ? '运行中'
-                : '未运行';
+                ? "Running"
+                : "Not running";
     const localTunnelStatusClass = !localTunnel?.supported
         ? 'text-slate-600 dark:text-slate-300'
         : localTunnel?.running
@@ -509,123 +509,123 @@ export default function NotificationPage() {
     const currentTokenHint = currentTokenValue
         ? currentTokenValue
         : chatopsOverview?.verification_token_configured
-            ? `当前页面未缓存明文 token，请点击“${chatopsOverview.verification_token_configured ? '重新生成 Token' : '生成 Token'}”后再复制。当前摘要：${chatopsOverview?.verification_token_masked || '未生成'}`
-            : '当前尚未生成 verification token。';
+            ? `This page does not cache the plaintext token. Click "${chatopsOverview.verification_token_configured ? "Regenerate token" : "Generate token"}" before copying. Current fingerprint: ${chatopsOverview?.verification_token_masked || "Not generated"}`
+            : "No verification token has been generated yet.";
     const notification_platformRoleCards = [
         {
             key: 'group-notify',
-            title: '测试平台群',
-            status: productionReady ? '通知可用' : '通知待补齐',
+            title: "Testing platform group",
+            status: productionReady ? "Notifications available" : "Notification setup incomplete",
             statusClass: productionReady
                 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300'
                 : 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300',
-            flow: '平台 -> 群',
-            description: '用于团队统一接收测试结果、报告提醒、军团状态和平台告警，不承担命令解析。',
+            flow: "Platform → group",
+            description: "The team receives test results, report reminders, agent fleet status, and platform alerts here. This entry point does not parse commands.",
             hints: [
-                '适合团队同步看结果',
-                '保留 Webhook 作为稳定通知通道',
+                "Suitable for sharing results with the team",
+                "Keep the webhook as a stable notification channel",
             ],
         },
         {
             key: 'bot-command',
-            title: 'AI Test Platform 机器人',
+            title: "AI Test Platform bot",
             status: directChatStatusLabel,
             statusClass: directChatStatusClass,
-            flow: '你 -> 平台 -> 你',
+            flow: "You → platform → you",
             description: directChatDescription,
             hints: [
-                '状态',
-                '报告 <任务ID>',
-                '测试 <URL>',
+                "Status",
+                "report <task ID>",
+                "test <URL>",
             ],
         },
     ];
     const chatopsGuideText = [
-        '通知平台事件订阅配置清单',
-        `1. 事件回调 URL：${notification_platformCallbackUrl}`,
-        `2. Verification Token：${currentTokenValue || currentTokenHint}`,
-        `3. 当前项目专属通知平台应用机器人：${chatopsAppBotConfigured ? `已配置 ${chatopsAppBotIdMasked || ''}` : '仍未配置，请在平台内补 App ID / Secret。'}`,
-        `4. 当前公网入口：${chatopsCallbackProviderLabel}${chatopsCallbackProviderHost ? ` (${chatopsCallbackProviderHost})` : ''}`,
-        `5. 公网回调回探：${callbackProbe?.summary || '尚未执行回探，保存公网地址后平台会自动诊断。'}`,
-        `6. 推荐动作：${chatopsCallbackRecommendation || '先保证公网回调 challenge 回探成功，再去通知平台后台联调。'}`,
-        '7. 在通知平台开发者后台开启事件订阅，并订阅消息接收相关事件。',
-        '8. 把当前项目专属通知平台应用机器人加入目标群，保存配置后，在群里发送一条文本消息，例如：状态。',
-        '9. 若平台仍显示“通知平台侧回流未验证”，请先根据“公网回调回探”提示修复外部入口。',
+        "Notification platform event subscription checklist",
+        `1. Event callback URL: ${notification_platformCallbackUrl}`,
+        `2. Verification Token: ${currentTokenValue || currentTokenHint}`,
+        `3. Project-specific notification app bot: ${chatopsAppBotConfigured ? `Configured ${chatopsAppBotIdMasked || ''}` : "Not configured. Add the app ID and secret in the platform."}`,
+        `4. Current public endpoint: ${chatopsCallbackProviderLabel}${chatopsCallbackProviderHost ? ` (${chatopsCallbackProviderHost})` : ''}`,
+        `5. Public callback probe: ${callbackProbe?.summary || "No probe has run yet. The platform runs diagnostics automatically after you save a public URL."}`,
+        `6. Recommended action: ${chatopsCallbackRecommendation || "Make sure the public callback challenge probe succeeds before testing integration in the notification platform console."}`,
+        "7. Enable event subscriptions in the notification platform developer console and subscribe to message-received events.",
+        "8. Add this project's notification app bot to the target group. Save the configuration, then send a text message such as status in the group.",
+        "9. If inbound notification events remain unverified, follow the public callback probe guidance to fix the external endpoint first.",
     ].join('\n');
     const chatopsSetupSteps = [
         {
             key: 'unified-robot',
-            title: '单机器人模式',
+            title: "Unified bot mode",
             done: unifiedRobotTarget,
             detail: unifiedRobotTarget
                 ? unifiedRobotReady
-                    ? '应用机器人、回调与真实群聊都已打通，对外可以只保留这一个机器人。'
+                    ? "The app bot, callback, and real group messaging are connected. You can use this single bot externally."
                     : unifiedRobotPlatformReady
-                        ? '应用机器人和公网回调都已具备，Webhook 只需保留兜底；再做一次真实群聊联调即可完成。'
+                        ? "The app bot and public callback are ready. Keep the webhook as a fallback and run a real group message test to finish."
                         : deliveryStrategySummary
-                : '当前仍主要依赖 Webhook 自定义机器人发通知，还没有形成“一个机器人对外”的体验。',
+                : "Notifications still rely mainly on a custom webhook bot; a unified external bot experience is not yet in place.",
         },
         {
             key: 'public-url',
-            title: '公网回调地址',
+            title: "Public callback URL",
             done: !!chatopsOverview?.callback_url_public,
             detail: chatopsOverview?.callback_url_public
-                ? '已配置公网基地址，通知平台云端可以访问回调入口。'
-                : '当前仍是本地或内网地址，需要先保存一个公网基地址或隧道地址。',
+                ? "A public base URL is configured, allowing the notification platform to reach the callback endpoint."
+                : "The URL is still local or private. Save a public base URL or tunnel URL first.",
         },
         {
             key: 'callback-probe',
-            title: '公网回调回探',
+            title: "Public callback probe",
             done: !!callbackProbe?.success,
             detail: !chatopsOverview?.callback_url_public
-                ? '当前还是本地或内网地址，平台暂不执行公网回探。'
-                : callbackProbe?.summary || '保存公网地址后，平台会自动做一次 challenge 回探诊断。',
+                ? "The URL is still local or private, so the platform does not run a public probe yet."
+                : callbackProbe?.summary || "Saving a public URL automatically triggers a challenge probe.",
         },
         {
             key: 'verification-token',
             title: 'Verification Token',
             done: !!chatopsOverview?.verification_token_configured,
             detail: chatopsOverview?.verification_token_configured
-                ? `已配置，当前摘要 ${chatopsOverview?.verification_token_masked || '已生成'}。`
-                : '平台里还未生成 verification token。',
+                ? `Configured; current fingerprint ${chatopsOverview?.verification_token_masked || "Generated"}.`
+                : "No verification token has been generated in the platform.",
         },
         {
             key: 'app-bot',
-            title: '通知平台应用机器人',
+            title: "Notification app bot",
             done: chatopsAppBotConfigured,
             detail: chatopsAppBotConfigured
-                ? `已配置应用机器人，当前摘要 ${chatopsAppBotIdMasked || '已保存'}。`
-                : '当前群里仍只是自定义 Webhook 机器人；要让群成员直接发消息回流到平台，还需要在这里补 App ID / Secret。',
+                ? `App bot configured; current fingerprint ${chatopsAppBotIdMasked || "Saved"}.`
+                : "The group currently has only a custom webhook bot. Add an app ID and secret here to route members' messages back to the platform.",
         },
         {
             key: 'subscription-self-check',
-            title: '平台侧自检',
+            title: "Platform self-check",
             done: !!chatopsOverview?.subscription_endpoint_verified,
             detail: chatopsOverview?.subscription_endpoint_verified
-                ? 'challenge 自检已通过，平台回调入口格式正确。'
-                : '请先执行一次“验证回调入口”，确认 challenge 正常返回。',
+                ? "The challenge self-check passed; the platform callback endpoint format is correct."
+                : "Run Verify callback endpoint first to confirm the challenge is returned correctly.",
         },
         {
             key: 'external-self-check',
-            title: '公网链路自测',
+            title: "Public connection self-test",
             done: externalSelfCheckRecentSuccess,
             detail: !chatopsOverview?.callback_url_public
-                ? '需要先配置公网回调地址，平台才能从外部跑 challenge + 文本消息双验证。'
+                ? "Configure a public callback URL before the platform can verify challenges and text messages through the external endpoint."
                 : externalSelfCheckRecentSuccess
-                    ? `最近一次平台公网自测已通过${latestExternalSelfCheckAt ? `（${formatTimestamp(latestExternalSelfCheckAt)}）` : ''}。`
-                    : '建议执行一次“跑公网链路自测”，确认 challenge 与文本消息能从公网入口打到平台。',
+                    ? `The latest public endpoint self-test passed${latestExternalSelfCheckAt ? ` (${formatTimestamp(latestExternalSelfCheckAt)})` : ''}.`
+                    : "Run a public connection self-test to confirm that challenges and text messages reach the platform through the public endpoint.",
         },
         {
             key: 'notification_platform-console',
-            title: '通知平台后台联调',
+            title: "Notification platform integration testing",
             done: chatopsDirectChatReady,
             detail: chatopsDirectChatReady
-                ? '最近已经收到通知平台真实文本消息回流。'
+                ? "A real inbound text message was recently received from the notification platform."
                 : chatopsExternalConnectionStale
-                    ? '平台历史上曾收到真实群消息回流，但当前公网入口已经退化，请先修复外部入口再联调。'
+                    ? "Real group messages were received previously, but the public endpoint is now degraded. Fix it before further integration testing."
                 : !chatopsAppBotConfigured
-                    ? '先补齐通知平台应用机器人，再去通知平台后台完成事件订阅和群内联调。'
-                    : '还需要在通知平台开发者后台完成事件订阅，并发一条真实群消息做最终联调。',
+                    ? "Configure the notification app bot first, then finish event subscriptions and group testing in the notification platform console."
+                    : "Complete event subscriptions in the notification platform developer console and send a real group message for final verification.",
         },
     ];
     const typePlaceholder = type === 'wecom'
@@ -652,16 +652,16 @@ export default function NotificationPage() {
                         <div className="p-2 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 text-white">
                             <Bell className="w-5 h-5" />
                         </div>
-                        通知配置
+                        Notification settings
                     </h2>
-                    <p className="text-slate-500 mt-2 text-sm">测试完成后自动发送通知到钉钉 / 企微 / 通知平台</p>
+                    <p className="text-slate-500 mt-2 text-sm">Automatically notify DingTalk, WeCom, or the notification platform when tests finish</p>
                 </div>
                 <div className="flex gap-2">
                     <a
                         href={legionControlHref}
                         className="flex items-center gap-2 px-4 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-medium transition-all hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
                     >
-                        前往 Legion 控制中心
+                        Open Legion control center
                     </a>
                     <button onClick={load} className="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-indigo-500 transition-colors">
                         <RefreshCw className="w-4 h-4" />
@@ -672,11 +672,11 @@ export default function NotificationPage() {
                         className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-sm font-medium transition-all hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-60"
                     >
                         {drilling ? <Loader2 className="w-4 h-4 animate-spin" /> : <TestTubes className="w-4 h-4" />}
-                        {drilling ? '演练中...' : '演练启用通道'}
+                        {drilling ? "Running drill..." : "Test enabled channels"}
                     </button>
                     <button onClick={() => setShowAdd(true)}
                         className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-xl text-sm font-medium shadow-lg shadow-pink-500/25 transition-all hover:shadow-xl">
-                        <Plus className="w-4 h-4" /> 添加 Webhook
+                        <Plus className="w-4 h-4" /> Add webhook
                     </button>
                 </div>
             </div>
@@ -691,35 +691,35 @@ export default function NotificationPage() {
                         <div className="flex items-center gap-2 text-sm font-semibold">
                             <Bell className={`w-4 h-4 ${productionReady ? 'text-emerald-600 dark:text-emerald-300' : 'text-amber-600 dark:text-amber-300'}`} />
                             <span className={productionReady ? 'text-emerald-700 dark:text-emerald-300' : 'text-amber-700 dark:text-amber-300'}>
-                                {productionReady ? '生产告警已接出' : '生产告警尚未就绪'}
+                                {productionReady ? "Production alert delivery connected" : "Production alerts not ready"}
                             </span>
                         </div>
                         <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                            {overview?.summary || '正在加载通知配置概览...'}
+                            {overview?.summary || "Loading notification configuration overview..."}
                         </p>
                     </div>
                     <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
                         <div className="rounded-xl bg-white/85 px-3 py-3 dark:bg-slate-900/40">
-                            <div className="text-xs text-slate-400">总数</div>
+                            <div className="text-xs text-slate-400">Total</div>
                             <div className="mt-1 font-semibold text-slate-800 dark:text-slate-100">{overview?.total ?? 0}</div>
                         </div>
                         <div className="rounded-xl bg-white/85 px-3 py-3 dark:bg-slate-900/40">
-                            <div className="text-xs text-slate-400">启用中</div>
+                            <div className="text-xs text-slate-400">Enabled</div>
                             <div className="mt-1 font-semibold text-slate-800 dark:text-slate-100">{overview?.enabled ?? 0}</div>
                         </div>
                         <div className="rounded-xl bg-white/85 px-3 py-3 dark:bg-slate-900/40">
-                            <div className="text-xs text-slate-400">已验证</div>
+                            <div className="text-xs text-slate-400">Verified</div>
                             <div className="mt-1 font-semibold text-slate-800 dark:text-slate-100">{overview?.healthy_enabled ?? 0}</div>
                         </div>
                         <div className="rounded-xl bg-white/85 px-3 py-3 dark:bg-slate-900/40">
-                            <div className="text-xs text-slate-400">未测试</div>
+                            <div className="text-xs text-slate-400">Not tested</div>
                             <div className="mt-1 font-semibold text-slate-800 dark:text-slate-100">{overview?.untested_enabled ?? 0}</div>
                         </div>
                     </div>
                 </div>
                 {!productionReady && (
                     <div className="mt-3 rounded-xl border border-amber-200 bg-white/85 px-4 py-3 text-sm text-slate-700 dark:border-amber-500/20 dark:bg-slate-900/40 dark:text-slate-200">
-                        建议先添加 1 个生产可达 Webhook，并立即执行一次测试通知，确认返回 200 后再依赖平台做维护失败和风险预警。
+                        Add one webhook reachable from production and send a test notification. Confirm an HTTP 200 response before relying on maintenance failure and risk alerts.
                     </div>
                 )}
                 {drillResult && (
@@ -750,14 +750,14 @@ export default function NotificationPage() {
             </div>
 
             <div className="rounded-2xl border border-sky-200 bg-sky-50/70 p-5 text-sm text-slate-700 shadow-sm dark:border-sky-500/20 dark:bg-sky-500/10 dark:text-slate-200">
-                <div className="font-semibold text-sky-700 dark:text-sky-300">通知平台接入说明</div>
+                <div className="font-semibold text-sky-700 dark:text-sky-300">Notification platform setup</div>
                 <div className="mt-2 space-y-2">
-                    <p>当前这里配置的是“自定义 Webhook 机器人”，它只能接收平台推送，不能监听群成员发言，所以在群里直接发“你好 / 帮我部署”不会自动回复。</p>
-                    <p>如果你要做“在通知平台群里发命令，平台自动执行并回消息”，需要在通知平台开发者后台配置事件订阅，并把消息回调地址指向：</p>
+                    <p>A custom webhook bot only receives platform notifications; it cannot listen to group members. Messages such as "hello" or "help me deploy" in the group will not receive automatic replies.</p>
+                    <p>To run platform commands from a notification group and receive replies, configure event subscriptions in the notification platform developer console and set the message callback URL to:</p>
                     <div className="rounded-xl bg-white/90 px-3 py-2 font-mono text-xs text-slate-700 dark:bg-slate-900/40 dark:text-slate-100">
                         {notification_platformCallbackUrl}
                     </div>
-                    <p>平台已经内置支持这条入口，支持的文本指令包括：`状态`、`报告 mission_id`、`测试 https://目标地址`。</p>
+                    <p>The platform supports this endpoint and text commands including `status`, `report mission_id`, and `test https://example.com`.</p>
                 </div>
             </div>
 
@@ -773,7 +773,7 @@ export default function NotificationPage() {
             >
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                     <div>
-                        <div className="font-semibold text-slate-800 dark:text-slate-100">当前通知平台使用方式</div>
+                        <div className="font-semibold text-slate-800 dark:text-slate-100">Current notification platform usage</div>
                         <div className="mt-2 text-sm text-slate-600 dark:text-slate-300">
                             {chatopsCurrentStatusDescription}
                         </div>
@@ -800,13 +800,13 @@ export default function NotificationPage() {
             <div className="rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm dark:border-slate-700/60 dark:bg-slate-800/60">
                 <div className="flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between">
                     <div>
-                        <div className="font-semibold text-slate-800 dark:text-slate-100">通知平台入口分工</div>
+                        <div className="font-semibold text-slate-800 dark:text-slate-100">Notification entry point roles</div>
                         <div className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                            当前项目建议保留“一个群负责通知、一个机器人负责指令”的清晰分工；对外机器人策略是 {deliveryStrategySummary}
+                            Use one group for notifications and one bot for commands. The current external bot policy is {deliveryStrategySummary}
                         </div>
                     </div>
                     <div className="rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:bg-slate-900/40 dark:text-slate-300">
-                        当前命令入口：{commandEntryLabel}
+                        Current command entry point: {commandEntryLabel}
                     </div>
                 </div>
                 <div className="mt-4 grid gap-3 lg:grid-cols-2">
@@ -820,7 +820,7 @@ export default function NotificationPage() {
                                 <div className="font-semibold text-slate-800 dark:text-slate-100">{card.title}</div>
                                 <span className={`rounded-full px-2 py-1 text-xs ${card.statusClass}`}>{card.status}</span>
                             </div>
-                            <div className="mt-2 text-xs text-slate-400">链路：{card.flow}</div>
+                            <div className="mt-2 text-xs text-slate-400">Connection: {card.flow}</div>
                             <div className="mt-3 text-sm text-slate-600 dark:text-slate-300">{card.description}</div>
                             <div className="mt-3 flex flex-wrap gap-2">
                                 {card.hints.map(hint => (
@@ -853,28 +853,28 @@ export default function NotificationPage() {
                                     ? 'text-amber-700 dark:text-amber-300'
                                     : 'text-violet-700 dark:text-violet-300'
                         }`}>
-                            通知平台双向指令
+                            Two-way notification commands
                         </div>
                         <div className="mt-2 text-slate-600 dark:text-slate-300">
-                            {chatopsOverview?.summary || '正在加载双向指令状态...'}
+                            {chatopsOverview?.summary || "Loading two-way command status..."}
                         </div>
                         <div className="mt-3 rounded-xl bg-white/90 px-3 py-2 font-mono text-xs text-slate-700 dark:bg-slate-900/40 dark:text-slate-100">
                             {notification_platformCallbackUrl}
                         </div>
                         <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-3 text-xs text-slate-700 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-200">
                             <div className="flex flex-wrap items-center gap-2">
-                                <span className="font-semibold">对外机器人方案</span>
+                                <span className="font-semibold">External bot configuration</span>
                                 <span className={`rounded-full px-2 py-0.5 ${unifiedRobotBadgeClass}`}>
                                     {unifiedRobotBadgeLabel}
                                 </span>
                                 <span className="rounded-full bg-slate-200 px-2 py-0.5 text-slate-700 dark:bg-slate-700 dark:text-slate-200">
                                     {deliveryStrategy === 'single_robot_with_webhook_fallback'
-                                        ? '应用机器人主通道 + Webhook 兜底'
+                                        ? "App bot primary channel with webhook fallback"
                                         : deliveryStrategy === 'app_bot_only'
-                                            ? '仅应用机器人'
+                                            ? "App bot only"
                                             : deliveryStrategy === 'webhook_only'
-                                                ? '仅 Webhook 机器人'
-                                                : '未配置'}
+                                                ? "Webhook bot only"
+                                                : "Not configured"}
                                 </span>
                             </div>
                             <div className="mt-2 leading-5">
@@ -883,32 +883,32 @@ export default function NotificationPage() {
                         </div>
                         {!chatopsOverview?.callback_url_public && (
                             <div className="mt-2 rounded-xl border border-amber-200 bg-amber-50/80 px-3 py-2 text-xs text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-200">
-                                当前回调地址还是本地/内网地址，通知平台云端无法直接访问。要做真实双向指令，还需要配置公网域名或隧道地址。
+                                The callback URL is still local or private and cannot be reached by the notification platform. Configure a public domain or tunnel URL for real two-way commands.
                             </div>
                         )}
                         {chatopsExternalConnectionStale && (
                             <div className="mt-2 rounded-xl border border-amber-200 bg-amber-50/80 px-3 py-2 text-xs text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-200">
-                                平台历史上曾收到真实通知平台群消息回流{latestExternalSuccessAt ? `（最近一次 ${formatTimestamp(latestExternalSuccessAt)}）` : ''}，但当前公网回探失败，说明现在是公网入口退化，不是平台从未打通过。
+                                Real notification group messages were received previously {latestExternalSuccessAt ? ` (latest ${formatTimestamp(latestExternalSuccessAt)})` : ''} , but the public probe now fails. The public endpoint has degraded after a successful connection.
                             </div>
                         )}
                     </div>
                     <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
                         <div className="rounded-xl bg-white/85 px-3 py-3 dark:bg-slate-900/40">
-                            <div className="text-xs text-slate-400">通知平台通道</div>
+                            <div className="text-xs text-slate-400">Notification platform channel</div>
                             <div className="mt-1 font-semibold text-slate-800 dark:text-slate-100">{chatopsOverview?.healthy_notification_platform_webhook_count ?? 0}</div>
                         </div>
                         <div className="rounded-xl bg-white/85 px-3 py-3 dark:bg-slate-900/40">
-                            <div className="text-xs text-slate-400">验证 Token</div>
-                            <div className="mt-1 font-semibold text-slate-800 dark:text-slate-100">{chatopsOverview?.verification_token_configured ? '已配置' : '未配置'}</div>
+                            <div className="text-xs text-slate-400">Verification token</div>
+                            <div className="mt-1 font-semibold text-slate-800 dark:text-slate-100">{chatopsOverview?.verification_token_configured ? "Configured" : "Not configured"}</div>
                         </div>
                         <div className="rounded-xl bg-white/85 px-3 py-3 dark:bg-slate-900/40">
-                            <div className="text-xs text-slate-400">最近事件</div>
-                            <div className="mt-1 font-semibold text-slate-800 dark:text-slate-100">{latestChatopsEvent ? formatTimestamp(latestChatopsEvent.created_at) : '暂无'}</div>
+                            <div className="text-xs text-slate-400">Latest event</div>
+                            <div className="mt-1 font-semibold text-slate-800 dark:text-slate-100">{latestChatopsEvent ? formatTimestamp(latestChatopsEvent.created_at) : "None"}</div>
                         </div>
                         <div className="rounded-xl bg-white/85 px-3 py-3 dark:bg-slate-900/40">
-                            <div className="text-xs text-slate-400">最近回推</div>
+                            <div className="text-xs text-slate-400">Latest reply delivery</div>
                             <div className="mt-1 font-semibold text-slate-800 dark:text-slate-100">
-                                {latestChatopsEvent ? `${latestChatopsEvent.delivery_delivered}/${latestChatopsEvent.delivery_configured}` : '暂无'}
+                                {latestChatopsEvent ? `${latestChatopsEvent.delivery_delivered}/${latestChatopsEvent.delivery_configured}` : "None"}
                             </div>
                         </div>
                     </div>
@@ -916,41 +916,41 @@ export default function NotificationPage() {
 
                 <div className="mt-4 grid gap-3 sm:grid-cols-5">
                     <div className="rounded-xl border border-slate-200 bg-white/85 px-4 py-3 dark:border-slate-700 dark:bg-slate-900/40">
-                        <div className="text-xs text-slate-400">平台侧就绪</div>
+                        <div className="text-xs text-slate-400">Platform readiness</div>
                         <div className={`mt-1 text-sm font-semibold ${chatopsPlatformReady ? 'text-emerald-600 dark:text-emerald-300' : 'text-violet-600 dark:text-violet-300'}`}>
-                            {chatopsPlatformReady ? '已就绪' : '待完成'}
+                            {chatopsPlatformReady ? "Ready" : "Pending"}
                         </div>
                         <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                            Webhook、token 与 challenge 自检全部完成后才会就绪
+                            Ready only after the webhook, token, and challenge self-check are all configured
                         </div>
                     </div>
                     <div className="rounded-xl border border-slate-200 bg-white/85 px-4 py-3 dark:border-slate-700 dark:bg-slate-900/40">
-                        <div className="text-xs text-slate-400">公网回调入口</div>
+                        <div className="text-xs text-slate-400">Public callback endpoint</div>
                         <div className={`mt-1 text-sm font-semibold ${chatopsExternalCallbackReady ? 'text-emerald-600 dark:text-emerald-300' : 'text-amber-600 dark:text-amber-300'}`}>
-                            {chatopsExternalCallbackReady ? '已打通' : '待验证'}
+                            {chatopsExternalCallbackReady ? "Connected" : "Pending verification"}
                         </div>
                         <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                             {chatopsExternalConnectionStale
-                                ? '历史上曾打通过，但当前 challenge 回探失败，公网入口已退化。'
+                                ? "The connection worked previously, but the challenge probe now fails and the public endpoint has degraded."
                                 : chatopsOverview?.callback_url_public
-                                    ? 'challenge 回探通过后，公网入口才算当前稳定可用。'
-                                    : '先把回调地址换成通知平台可访问的公网地址'}
+                                    ? "The public endpoint is considered currently available only after the challenge probe passes."
+                                    : "Set a public callback URL that the notification platform can reach first"}
                         </div>
                         <div className="mt-1 text-[11px] text-slate-400 dark:text-slate-500">
                             {chatopsCallbackProviderLabel}{chatopsCallbackProviderHost ? ` · ${chatopsCallbackProviderHost}` : ''}
                         </div>
                     </div>
                     <div className="rounded-xl border border-slate-200 bg-white/85 px-4 py-3 dark:border-slate-700 dark:bg-slate-900/40">
-                        <div className="text-xs text-slate-400">应用机器人</div>
+                        <div className="text-xs text-slate-400">App bot</div>
                         <div className={`mt-1 text-sm font-semibold ${chatopsAppBotConfigured ? 'text-emerald-600 dark:text-emerald-300' : 'text-amber-600 dark:text-amber-300'}`}>
-                            {chatopsAppBotConfigured ? '已配置' : '未配置'}
+                            {chatopsAppBotConfigured ? "Configured" : "Not configured"}
                         </div>
                         <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                            {chatopsAppBotConfigured ? `当前摘要 ${chatopsAppBotIdMasked || '已保存'}` : '仅有自定义 Webhook 机器人时，群成员直接发消息不会回流到平台。'}
+                            {chatopsAppBotConfigured ? `Current fingerprint ${chatopsAppBotIdMasked || "Saved"}` : "With only a custom webhook bot, group members' messages do not reach the platform."}
                         </div>
                     </div>
                     <div className="rounded-xl border border-slate-200 bg-white/85 px-4 py-3 dark:border-slate-700 dark:bg-slate-900/40">
-                        <div className="text-xs text-slate-400">公网回探</div>
+                        <div className="text-xs text-slate-400">Public endpoint probe</div>
                         <div className={`mt-1 text-sm font-semibold ${
                             callbackProbe?.success
                                 ? 'text-emerald-600 dark:text-emerald-300'
@@ -958,19 +958,19 @@ export default function NotificationPage() {
                                     ? 'text-amber-600 dark:text-amber-300'
                                     : 'text-slate-600 dark:text-slate-300'
                         }`}>
-                            {callbackProbe?.success ? '已通过' : callbackProbe?.attempted ? '未通过' : '未执行'}
+                            {callbackProbe?.success ? "Passed" : callbackProbe?.attempted ? "Failed" : "Not run"}
                         </div>
                         <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                            {callbackProbe?.summary || '保存公网地址后，平台会自动做一次 challenge 回探。'}
+                            {callbackProbe?.summary || "Saving a public URL automatically triggers a challenge probe."}
                         </div>
                         {chatopsCallbackRecommendation && (
                             <div className="mt-1 text-[11px] text-slate-400 dark:text-slate-500">
-                                建议：{chatopsCallbackRecommendation}
+                                Suggestion: {chatopsCallbackRecommendation}
                             </div>
                         )}
                     </div>
                     <div className="rounded-xl border border-slate-200 bg-white/85 px-4 py-3 dark:border-slate-700 dark:bg-slate-900/40">
-                        <div className="text-xs text-slate-400">历史真实回流</div>
+                        <div className="text-xs text-slate-400">Historical real inbound events</div>
                         <div className={`mt-1 text-sm font-semibold ${
                             chatopsExternalConnectedCurrent
                                 ? 'text-emerald-600 dark:text-emerald-300'
@@ -978,41 +978,41 @@ export default function NotificationPage() {
                                     ? 'text-amber-600 dark:text-amber-300'
                                     : 'text-slate-600 dark:text-slate-300'
                         }`}>
-                            {chatopsExternalConnectedCurrent ? '当前有效' : chatopsExternalConnectionStale ? '历史曾成功' : chatopsExternalHistoryObserved ? '已观察到' : '未观察到'}
+                            {chatopsExternalConnectedCurrent ? "Currently valid" : chatopsExternalConnectionStale ? "Previously successful" : chatopsExternalHistoryObserved ? "Observed" : "Not observed"}
                         </div>
                         <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                             {chatopsExternalHistoryObserved
-                                ? `最近一次真实群消息回流 ${latestExternalSuccessAt ? formatTimestamp(latestExternalSuccessAt) : '时间未知'}${chatopsExternalConnectionStale ? '，但当前公网入口已退化。' : '。'}`
-                                : '平台还没收到过真实通知平台群消息回流。'}
+                                ? `Latest real inbound group message ${latestExternalSuccessAt ? formatTimestamp(latestExternalSuccessAt) : "Unknown time"}${chatopsExternalConnectionStale ? ", but the public endpoint is currently degraded." : '.'}`
+                                : "The platform has not received any real notification group messages yet."}
                         </div>
                     </div>
                     <div className="rounded-xl border border-slate-200 bg-white/85 px-4 py-3 dark:border-slate-700 dark:bg-slate-900/40">
-                        <div className="text-xs text-slate-400">Token 摘要</div>
+                        <div className="text-xs text-slate-400">Token fingerprint</div>
                         <div className="mt-1 font-mono text-xs text-slate-700 dark:text-slate-100">
-                            {chatopsOverview?.verification_token_masked || '未生成'}
+                            {chatopsOverview?.verification_token_masked || "Not generated"}
                         </div>
                         <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                            {chatopsOverview?.verification_token_updated_at ? `更新于 ${formatTimestamp(chatopsOverview.verification_token_updated_at)}` : '生成后可复制到通知平台开发者后台'}
+                            {chatopsOverview?.verification_token_updated_at ? `Updated at ${formatTimestamp(chatopsOverview.verification_token_updated_at)}` : "After generation, copy it to the notification platform developer console"}
                         </div>
                     </div>
                 </div>
 
                 <div className="mt-4 rounded-xl border border-slate-200 bg-white/85 px-4 py-4 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-300">
-                    <div className="font-medium text-slate-700 dark:text-slate-100">当前项目专属通知平台应用机器人配置</div>
+                    <div className="font-medium text-slate-700 dark:text-slate-100">Project-specific notification app bot configuration</div>
                     <div className="mt-1">
-                        自定义 Webhook 机器人只能接收平台主动推送；如果要让群成员直接发“状态 / 报告 / 测试 URL”触发平台，还需要为当前项目单独配置一个专属通知平台应用机器人。
+                        Custom webhook bots only receive outbound notifications. Configure a dedicated notification app bot for this project to trigger the platform with status, report, or test URL messages from group members.
                     </div>
                     <div className="mt-3 grid gap-3 lg:grid-cols-[1fr_1.2fr_auto_auto_auto]">
                         <input
                             value={appBotAppIdInput}
                             onChange={(e) => setAppBotAppIdInput(e.target.value)}
-                            placeholder="当前项目专属通知平台 App ID"
+                            placeholder={"Project-specific notification app ID"}
                             className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 outline-none focus:border-violet-300 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-100"
                         />
                         <input
                             value={appBotSecretInput}
                             onChange={(e) => setAppBotSecretInput(e.target.value)}
-                            placeholder="当前项目专属通知平台 App Secret"
+                            placeholder={"Project-specific notification app secret"}
                             type="password"
                             className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 outline-none focus:border-violet-300 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-100"
                         />
@@ -1022,7 +1022,7 @@ export default function NotificationPage() {
                             className="inline-flex items-center justify-center gap-2 rounded-xl bg-violet-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-violet-600 disabled:cursor-not-allowed disabled:opacity-60"
                         >
                             {configuringAppBot ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-                            {configuringAppBot ? '保存中...' : '保存应用机器人'}
+                            {configuringAppBot ? "Saving..." : "Save app bot"}
                         </button>
                         <button
                             onClick={() => { void handleUnbindAppBot(); }}
@@ -1030,7 +1030,7 @@ export default function NotificationPage() {
                             className="inline-flex items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-medium text-rose-700 transition-colors hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-800/60 dark:bg-rose-500/10 dark:text-rose-200 dark:hover:bg-rose-500/20"
                         >
                             {unbindingAppBot ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />}
-                            {unbindingAppBot ? '解绑中...' : '解绑当前应用机器人'}
+                            {unbindingAppBot ? "Unbinding..." : "Unbind current app bot"}
                         </button>
                         <button
                             onClick={() => { void handleSelfCheckAppBot(); }}
@@ -1038,13 +1038,13 @@ export default function NotificationPage() {
                             className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-100 dark:hover:bg-slate-700"
                         >
                             {checkingAppBot ? <Loader2 className="h-4 w-4 animate-spin" /> : <TestTubes className="h-4 w-4" />}
-                            {checkingAppBot ? '校验中...' : '验证应用机器人'}
+                            {checkingAppBot ? "Validating..." : "Verify app bot"}
                         </button>
                     </div>
                     <div className="mt-2 rounded-lg bg-slate-50 px-3 py-2 text-slate-700 dark:bg-slate-800/60 dark:text-slate-100">
                         {chatopsAppBotConfigured
-                            ? `当前项目已配置专属应用机器人：${chatopsAppBotIdMasked || '已保存'}`
-                            : '当前项目尚未配置专属应用机器人，群成员直接发消息不会自动回流到平台。'}
+                            ? `A dedicated app bot is configured for this project: ${chatopsAppBotIdMasked || "Saved"}`
+                            : "This project has no dedicated app bot. Group members' messages will not automatically reach the platform."}
                     </div>
                     {chatopsAppBotConfigured && (
                         <div className={`mt-3 rounded-xl px-3 py-3 ${
@@ -1052,25 +1052,25 @@ export default function NotificationPage() {
                                 ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-200'
                                 : 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-200'
                         }`}>
-                            <div className="font-medium">应用机器人凭据校验</div>
+                            <div className="font-medium">App bot credential verification</div>
                             <div className="mt-1">
-                                状态：{chatopsAppBotReady ? '已通过' : '未通过'}
+                                Status: {chatopsAppBotReady ? "Passed" : "Failed"}
                                 {latestAppBotCheck?.created_at ? ` · ${formatTimestamp(latestAppBotCheck.created_at)}` : ''}
                             </div>
                             <div className="mt-1 text-xs opacity-80">
-                                {latestAppBotCheck?.message || '保存后平台会尝试获取 tenant_access_token；你也可以手动再验一次。'}
+                                {latestAppBotCheck?.message || "The platform attempts to obtain tenant_access_token after saving. You can also verify it manually."}
                             </div>
                             {latestAppBotCheck?.status_code ? (
                                 <div className="mt-1 text-[11px] opacity-80">
                                     HTTP {latestAppBotCheck.status_code}
                                     {latestAppBotCheck.app_id_masked ? ` · ${latestAppBotCheck.app_id_masked}` : ''}
-                                    {latestAppBotCheck.source ? ` · ${latestAppBotCheck.source === 'config_save' ? '保存后自动校验' : '手动校验'}` : ''}
+                                    {latestAppBotCheck.source ? ` · ${latestAppBotCheck.source === 'config_save' ? "Verify automatically after saving" : "Verify manually"}` : ''}
                                 </div>
                             ) : (
                                 latestAppBotCheck?.app_id_masked ? (
                                     <div className="mt-1 text-[11px] opacity-80">
                                         {latestAppBotCheck.app_id_masked}
-                                        {latestAppBotCheck.source ? ` · ${latestAppBotCheck.source === 'config_save' ? '保存后自动校验' : '手动校验'}` : ''}
+                                        {latestAppBotCheck.source ? ` · ${latestAppBotCheck.source === 'config_save' ? "Verify automatically after saving" : "Verify manually"}` : ''}
                                     </div>
                                 ) : null
                             )}
@@ -1078,12 +1078,10 @@ export default function NotificationPage() {
                     )}
                     {appBotUnbindResult && (
                         <div className="mt-3 rounded-xl bg-emerald-50 px-3 py-3 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-200">
-                            <div className="font-medium">已解绑当前项目应用机器人</div>
+                            <div className="font-medium">Project app bot unbound</div>
                             <div className="mt-1">{appBotUnbindResult.message}</div>
                             <div className="mt-1 text-xs opacity-80">
-                                已清理：应用校验 {appBotUnbindResult.purged?.checks_removed ?? 0} 条
-                                · 会话绑定 {appBotUnbindResult.purged?.bindings_removed ?? 0} 条
-                                · 联调事件 {appBotUnbindResult.purged?.events_removed ?? 0} 条
+                                Cleared: app verifications {appBotUnbindResult.purged?.checks_removed ?? 0} · Session bindings {appBotUnbindResult.purged?.bindings_removed ?? 0} · Integration events {appBotUnbindResult.purged?.events_removed ?? 0} entries
                             </div>
                         </div>
                     )}
@@ -1093,9 +1091,9 @@ export default function NotificationPage() {
                                 ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-200'
                                 : 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-200'
                         }`}>
-                            <div>已保存应用机器人配置，当前摘要 {appBotConfigResult.app_id_masked || '已保存'}。</div>
+                            <div>App bot configuration saved; current fingerprint {appBotConfigResult.app_id_masked || "Saved"}.</div>
                             <div className="mt-1 text-xs opacity-80">
-                                {appBotConfigResult.validation?.message || '平台已保存凭据，尚未返回校验结果。'}
+                                {appBotConfigResult.validation?.message || "Credentials saved. Verification results have not been returned yet."}
                             </div>
                         </div>
                     )}
@@ -1105,10 +1103,10 @@ export default function NotificationPage() {
                                 ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-200'
                                 : 'bg-slate-50 text-slate-700 dark:bg-slate-800/60 dark:text-slate-100'
                         }`}>
-                            <div className="font-medium">最近一次手动校验</div>
-                            <div className="mt-1">{appBotSelfCheckResult.validation?.message || '已完成应用机器人校验。'}</div>
+                            <div className="font-medium">Latest manual verification</div>
+                            <div className="mt-1">{appBotSelfCheckResult.validation?.message || "App bot verification completed."}</div>
                             <div className="mt-1 text-xs opacity-80">
-                                {appBotSelfCheckResult.validation?.status_code ? `HTTP ${appBotSelfCheckResult.validation.status_code}` : '未返回 HTTP 状态'}
+                                {appBotSelfCheckResult.validation?.status_code ? `HTTP ${appBotSelfCheckResult.validation.status_code}` : "No HTTP status returned"}
                                 {appBotSelfCheckResult.validation?.app_id_masked ? ` · ${appBotSelfCheckResult.validation.app_id_masked}` : ''}
                             </div>
                         </div>
@@ -1116,9 +1114,9 @@ export default function NotificationPage() {
                 </div>
 
                 <div className="mt-4 rounded-xl border border-slate-200 bg-white/85 px-4 py-4 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-300">
-                    <div className="font-medium text-slate-700 dark:text-slate-100">公网回调地址配置</div>
+                    <div className="font-medium text-slate-700 dark:text-slate-100">Public callback URL configuration</div>
                     <div className="mt-1">
-                        这里只填写公网基地址，平台会自动拼接通知平台事件订阅回调路径。
+                        Enter only the public base URL. The platform appends the notification event subscription callback path automatically.
                     </div>
                     <div className="mt-3 flex flex-col gap-3 lg:flex-row">
                         <input
@@ -1133,7 +1131,7 @@ export default function NotificationPage() {
                             className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-violet-500 dark:hover:bg-violet-600"
                         >
                             {configuringCallbackUrl ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-                            {configuringCallbackUrl ? '保存中...' : '保存公网地址'}
+                            {configuringCallbackUrl ? "Saving..." : "Save public URL"}
                         </button>
                         <button
                             onClick={() => { void handleRefreshProbe(); }}
@@ -1141,7 +1139,7 @@ export default function NotificationPage() {
                             className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-100 dark:hover:bg-slate-700"
                         >
                             {refreshingProbe ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-                            {refreshingProbe ? '回探中...' : '立即重试回探'}
+                            {refreshingProbe ? "Probing..." : "Retry probe now"}
                         </button>
                     </div>
                     <div className="mt-2 rounded-lg bg-slate-50 px-3 py-2 font-mono text-[11px] text-slate-700 dark:bg-slate-800/60 dark:text-slate-100">
@@ -1150,17 +1148,17 @@ export default function NotificationPage() {
                     <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-3 dark:border-slate-700 dark:bg-slate-800/40">
                         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                             <div>
-                                <div className="font-medium text-slate-700 dark:text-slate-100">本机反向隧道</div>
+                                <div className="font-medium text-slate-700 dark:text-slate-100">Local reverse tunnel</div>
                                 <div className={`mt-1 text-sm font-semibold ${localTunnelStatusClass}`}>
                                     {localTunnelStatusLabel}
                                     {localTunnel?.pid ? ` · PID ${localTunnel.pid}` : ''}
                                 </div>
                                 <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                                    {localTunnel?.summary || '正在检测本机反向隧道状态...'}
+                                    {localTunnel?.summary || "Checking local reverse tunnel status..."}
                                 </div>
                                 {localTunnel?.checked_at ? (
                                     <div className="mt-1 text-[11px] text-slate-400 dark:text-slate-500">
-                                        最近检测：{formatTimestamp(localTunnel.checked_at)}
+                                        Last checked: {formatTimestamp(localTunnel.checked_at)}
                                     </div>
                                 ) : null}
                             </div>
@@ -1170,12 +1168,12 @@ export default function NotificationPage() {
                                 className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-100 dark:hover:bg-slate-700"
                             >
                                 {restartingLocalTunnel ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-                                {restartingLocalTunnel ? '重启中...' : '重启本机隧道'}
+                                {restartingLocalTunnel ? "Restarting..." : "Restart local tunnel"}
                             </button>
                         </div>
                         {(localTunnel?.stderr_tail || localTunnel?.stdout_tail) ? (
                             <div className="mt-3 rounded-lg bg-white px-3 py-2 text-[11px] text-slate-600 dark:bg-slate-900/40 dark:text-slate-300">
-                                <div className="font-medium text-slate-700 dark:text-slate-100">最近日志</div>
+                                <div className="font-medium text-slate-700 dark:text-slate-100">Recent logs</div>
                                 <div className="mt-1 whitespace-pre-wrap break-all">
                                     {localTunnel.stderr_tail || localTunnel.stdout_tail}
                                 </div>
@@ -1187,7 +1185,7 @@ export default function NotificationPage() {
                                     ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-200'
                                     : 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-200'
                             }`}>
-                                <div className="font-medium">最近一次隧道重启</div>
+                                <div className="font-medium">Latest tunnel restart</div>
                                 <div className="mt-1">{localTunnelRestartResult.message}</div>
                             </div>
                         ) : null}
@@ -1198,19 +1196,19 @@ export default function NotificationPage() {
                                 ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-200'
                                 : 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-200'
                         }`}>
-                            <div className="font-medium">公网回调回探</div>
+                            <div className="font-medium">Public callback probe</div>
                             <div className="mt-1">{callbackProbe.summary}</div>
                             <div className="mt-1 text-xs opacity-80">
-                                {callbackProbe.probed_at ? `最近回探：${formatTimestamp(callbackProbe.probed_at)}` : '最近回探时间未知'}
+                                {callbackProbe.probed_at ? `Latest probe: ${formatTimestamp(callbackProbe.probed_at)}` : "Latest probe time unknown"}
                                 {callbackProbe.status_code ? ` · HTTP ${callbackProbe.status_code}` : ''}
                                 {callbackProbe.issue ? ` · ${callbackProbe.issue}` : ''}
                             </div>
                             <div className="mt-1 text-xs opacity-80">
-                                当前入口：{chatopsCallbackProviderLabel}{chatopsCallbackProviderHost ? ` · ${chatopsCallbackProviderHost}` : ''}
+                                Current entry point: {chatopsCallbackProviderLabel}{chatopsCallbackProviderHost ? ` · ${chatopsCallbackProviderHost}` : ''}
                             </div>
                             {chatopsCallbackRecommendation && (
                                 <div className="mt-2 text-xs opacity-90">
-                                    建议动作：{chatopsCallbackRecommendation}
+                                    Suggested action: {chatopsCallbackRecommendation}
                                 </div>
                             )}
                         </div>
@@ -1221,10 +1219,10 @@ export default function NotificationPage() {
                                 ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-200'
                                 : 'bg-slate-50 text-slate-700 dark:bg-slate-800/60 dark:text-slate-100'
                         }`}>
-                            <div className="font-medium">最近一次手动重试</div>
-                            <div className="mt-1">{probeRefreshResult.probe?.summary || '已完成回探重试。'}</div>
+                            <div className="font-medium">Latest manual retry</div>
+                            <div className="mt-1">{probeRefreshResult.probe?.summary || "Probe retry completed."}</div>
                             <div className="mt-1 text-xs opacity-80">
-                                {probeRefreshResult.probe?.probed_at ? `时间：${formatTimestamp(probeRefreshResult.probe.probed_at)}` : '时间未知'}
+                                {probeRefreshResult.probe?.probed_at ? `Time: ${formatTimestamp(probeRefreshResult.probe.probed_at)}` : "Unknown time"}
                                 {probeRefreshResult.probe?.status_code ? ` · HTTP ${probeRefreshResult.probe.status_code}` : ''}
                                 {probeRefreshResult.probe?.issue ? ` · ${probeRefreshResult.probe.issue}` : ''}
                             </div>
@@ -1237,15 +1235,15 @@ export default function NotificationPage() {
                                 : 'bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-200'
                         }`}>
                             {callbackConfigResult.status === 'success'
-                                ? `已保存公网基地址，当前回调为 ${callbackConfigResult.callback_url}`
-                                : (callbackConfigResult.message || '保存失败')}
+                                ? `Public base URL saved. Current callback: ${callbackConfigResult.callback_url}`
+                                : (callbackConfigResult.message || "Failed to save")}
                         </div>
                     )}
                     <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-3 dark:border-slate-700 dark:bg-slate-800/40">
                         <div className="flex items-center justify-between gap-3">
-                            <div className="font-medium text-slate-700 dark:text-slate-100">最近回探记录</div>
+                            <div className="font-medium text-slate-700 dark:text-slate-100">Recent probe records</div>
                             <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                                {callbackProbeHistory.length ? `最近 ${callbackProbeHistory.length} 次` : '暂无历史'}
+                                {callbackProbeHistory.length ? `Latest ${callbackProbeHistory.length} occurrences` : "No history yet"}
                             </div>
                         </div>
                         {callbackProbeHistory.length ? (
@@ -1260,15 +1258,15 @@ export default function NotificationPage() {
                                         }`}
                                     >
                                         <div className="flex flex-wrap items-center gap-2 text-[11px] opacity-80">
-                                            <span>{item.created_at ? formatTimestamp(item.created_at) : '时间未知'}</span>
+                                            <span>{item.created_at ? formatTimestamp(item.created_at) : "Unknown time"}</span>
                                             <span>·</span>
-                                            <span>{item.success ? '通过' : item.attempted ? '失败' : '未执行'}</span>
+                                            <span>{item.success ? "Passed" : item.attempted ? "Failed" : "Not run"}</span>
                                             <span>·</span>
-                                            <span>{item.source === 'manual_refresh' ? '手动重试' : '自动诊断'}</span>
+                                            <span>{item.source === 'manual_refresh' ? "Manual retry" : "Automatic diagnostics"}</span>
                                             {item.force_refresh && (
                                                 <>
                                                     <span>·</span>
-                                                    <span>强制刷新</span>
+                                                    <span>Force refresh</span>
                                                 </>
                                             )}
                                             {item.status_code ? (
@@ -1290,7 +1288,7 @@ export default function NotificationPage() {
                             </div>
                         ) : (
                             <div className="mt-3 text-xs text-slate-500 dark:text-slate-400">
-                                还没有历史回探记录。保存公网地址后，平台会自动诊断；也可以点上面的“立即重试回探”主动刷新。
+                                No probe history yet. Saving a public URL triggers diagnostics automatically, or click Retry probe now to refresh manually.
                             </div>
                         )}
                     </div>
@@ -1299,13 +1297,13 @@ export default function NotificationPage() {
                 <div className="mt-4 rounded-xl border border-slate-200 bg-white/85 px-4 py-4 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-300">
                     <div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
                         <div>
-                            <div className="font-medium text-slate-700 dark:text-slate-100">通知平台开发者后台配置清单</div>
+                            <div className="font-medium text-slate-700 dark:text-slate-100">Notification platform developer console checklist</div>
                             <div className="mt-1">
-                                下面这 5 步全部完成后，群里发“状态 / 报告 mission_id / 测试 URL”才会真正回流到平台。
+                                Complete all five steps below before status, report mission_id, or test URL commands from the group can reach the platform.
                             </div>
                         </div>
                         <div className="rounded-lg bg-slate-50 px-3 py-2 text-slate-600 dark:bg-slate-800/60 dark:text-slate-200">
-                            {chatopsDirectChatReady ? '端到端联调已完成' : !chatopsAppBotConfigured ? '仍差应用机器人配置' : '仍差通知平台后台最后一步'}
+                            {chatopsDirectChatReady ? "End-to-end integration testing completed" : !chatopsAppBotConfigured ? "App bot configuration still required" : "Final notification platform console step still required"}
                         </div>
                     </div>
                     <div className="mt-4 grid gap-3 lg:grid-cols-2">
@@ -1328,26 +1326,26 @@ export default function NotificationPage() {
                     </div>
                     <div className="mt-4 flex flex-wrap gap-2">
                         <button
-                            onClick={() => { void handleCopy('callback-url', notification_platformCallbackUrl, '回调地址已复制，可直接粘贴到通知平台开发者后台。'); }}
+                            onClick={() => { void handleCopy('callback-url', notification_platformCallbackUrl, "Callback URL copied. Paste it into the notification platform developer console."); }}
                             className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-100 dark:hover:bg-slate-700"
                         >
                             <Copy className="h-4 w-4" />
-                            复制回调地址
+                            Copy callback URL
                         </button>
                         <button
-                            onClick={() => { void handleCopy('setup-guide', chatopsGuideText, '配置清单已复制，可直接发给运维或粘贴到通知平台后台对照。'); }}
+                            onClick={() => { void handleCopy('setup-guide', chatopsGuideText, "Configuration checklist copied. Share it with operations or compare it against the notification platform console."); }}
                             className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-100 dark:hover:bg-slate-700"
                         >
                             <Copy className="h-4 w-4" />
-                            复制配置清单
+                            Copy configuration checklist
                         </button>
                         <button
-                            onClick={() => { void handleCopy('token', currentTokenValue, '当前会话里的 verification token 已复制。'); }}
+                            onClick={() => { void handleCopy('token', currentTokenValue, "The current session's verification token was copied."); }}
                             disabled={!currentTokenValue}
                             className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-100 dark:hover:bg-slate-700"
                         >
                             <Copy className="h-4 w-4" />
-                            复制当前 Token
+                            Copy current token
                         </button>
                     </div>
                     {copyFeedback && (
@@ -1360,7 +1358,7 @@ export default function NotificationPage() {
                     )}
                     {!currentTokenValue && (
                         <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 leading-5 dark:border-slate-700 dark:bg-slate-800/60">
-                            <div className="font-medium text-slate-700 dark:text-slate-100">Verification Token 当前可见性</div>
+                            <div className="font-medium text-slate-700 dark:text-slate-100">Verification token visibility</div>
                             <div className="mt-1">{currentTokenHint}</div>
                         </div>
                     )}
@@ -1368,9 +1366,9 @@ export default function NotificationPage() {
 
                 <div className="mt-4 rounded-xl border border-slate-200 bg-white/85 px-4 py-4 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-300">
                     <div className="flex items-center justify-between gap-3">
-                        <div className="font-medium text-slate-700 dark:text-slate-100">最近群聊路由</div>
+                        <div className="font-medium text-slate-700 dark:text-slate-100">Recent group chat routing</div>
                         <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                            {recentChatBindings.length ? `最近 ${recentChatBindings.length} 个会话` : '暂无会话'}
+                            {recentChatBindings.length ? `Latest ${recentChatBindings.length} sessions` : "No sessions yet"}
                         </div>
                     </div>
                     {recentChatBindings.length ? (
@@ -1386,25 +1384,25 @@ export default function NotificationPage() {
                                     }`}
                                 >
                                     <div className="flex flex-wrap items-center gap-2 text-[11px] opacity-80">
-                                        <span className="font-mono">{item.chat_id || '未知群会话'}</span>
+                                        <span className="font-mono">{item.chat_id || "Unknown group session"}</span>
                                         <span>·</span>
                                         <span>{formatBindingSource(item.source)}</span>
                                         <span>·</span>
                                         <span>{formatReplyMode(item.last_reply_mode)}</span>
                                         <span>·</span>
-                                        <span>{item.last_delivery_ok ? '最近回推成功' : '最近回推失败'}</span>
+                                        <span>{item.last_delivery_ok ? "Latest reply delivered" : "Latest reply delivery failed"}</span>
                                         <span>·</span>
-                                        <span>{item.last_seen_at ? formatTimestamp(item.last_seen_at) : '时间未知'}</span>
+                                        <span>{item.last_seen_at ? formatTimestamp(item.last_seen_at) : "Unknown time"}</span>
                                     </div>
                                     <div className="mt-1">
-                                        <span className="font-medium">最近消息：</span>
-                                        <span>{item.last_message || '暂无内容'}</span>
+                                        <span className="font-medium">Latest message:</span>
+                                        <span>{item.last_message || "No content yet"}</span>
                                     </div>
                                     <div className="mt-1 text-[11px] opacity-80">
-                                        最近发起人：{item.last_from_user || '未知用户'}
+                                        Latest sender: {item.last_from_user || "Unknown user"}
                                     </div>
                                     <div className="mt-1 text-[11px] opacity-80">
-                                        绑定状态：{item.binding_status || '未知'} · run_id：{item.last_run_id || '未关联'}
+                                        Binding status: {item.binding_status || "Unknown"} · run_id: {item.last_run_id || "Not linked"}
                                     </div>
                                     {item.last_run_id && (
                                         <div className="mt-2">
@@ -1412,7 +1410,7 @@ export default function NotificationPage() {
                                                 href={`/legion?tab=control&run=${encodeURIComponent(item.last_run_id)}`}
                                                 className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-100 dark:hover:bg-slate-800"
                                             >
-                                                查看关联命令
+                                                View linked command
                                             </a>
                                         </div>
                                     )}
@@ -1421,31 +1419,31 @@ export default function NotificationPage() {
                         </div>
                     ) : (
                         <div className="mt-3 text-xs text-slate-500 dark:text-slate-400">
-                            还没有最近群聊路由记录。等通知平台真实群消息回流或平台侧模拟执行一次后，这里会显示最近会话到底是走应用机器人回复，还是走 Webhook 兜底。
+                            No recent group chat routing records. After a real inbound group message or a platform simulation, this view shows whether replies used the app bot or webhook fallback.
                         </div>
                     )}
                 </div>
 
                 {latestChatopsEvent && (
                     <div className="mt-4 rounded-xl border border-slate-200 bg-white/85 px-4 py-3 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-300">
-                        <div className="font-medium text-slate-700 dark:text-slate-100">最近一条指令</div>
-                        <div className="mt-2">消息：{latestChatopsEvent.message || '-'}</div>
-                        <div className="mt-1">回复：{latestChatopsEvent.response || '-'}</div>
-                        <div className="mt-1">状态：{latestChatopsEvent.status} · 回推 {latestChatopsEvent.delivery_delivered}/{latestChatopsEvent.delivery_configured}</div>
-                        <div className="mt-1">命令：{latestChatopsEvent.command_id || '-'} · run_id：{latestChatopsEvent.run_id || '未关联'} · 绑定：{latestChatopsEvent.binding_status || '未知'}</div>
+                        <div className="font-medium text-slate-700 dark:text-slate-100">Latest command</div>
+                        <div className="mt-2">Message: {latestChatopsEvent.message || '-'}</div>
+                        <div className="mt-1">Reply: {latestChatopsEvent.response || '-'}</div>
+                        <div className="mt-1">Status: {latestChatopsEvent.status} · Reply delivery {latestChatopsEvent.delivery_delivered}/{latestChatopsEvent.delivery_configured}</div>
+                        <div className="mt-1">Command: {latestChatopsEvent.command_id || '-'} · run_id: {latestChatopsEvent.run_id || "Not linked"} · Binding: {latestChatopsEvent.binding_status || "Unknown"}</div>
                         {latestEventRunHref && (
                             <div className="mt-2">
                                 <a
                                     href={latestEventRunHref}
                                     className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-100 dark:hover:bg-slate-700"
                                 >
-                                    打开这条命令的 Legion 详情
+                                    Open this command's Legion details
                                 </a>
                             </div>
                         )}
                         {latestChatopsEvent.status === 'ignored' && latestSuccessfulChatopsEvent && (
                             <div className="mt-2 rounded-lg bg-slate-50 px-3 py-2 text-slate-600 dark:bg-slate-800/60 dark:text-slate-200">
-                                最近成功指令：{latestSuccessfulChatopsEvent.message} → {latestSuccessfulChatopsEvent.response}
+                                Latest successful command: {latestSuccessfulChatopsEvent.message} → {latestSuccessfulChatopsEvent.response}
                             </div>
                         )}
                     </div>
@@ -1454,13 +1452,13 @@ export default function NotificationPage() {
                 <div className="mt-4 rounded-xl border border-slate-200 bg-white/85 px-4 py-4 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-300">
                     <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                         <div>
-                            <div className="font-medium text-slate-700 dark:text-slate-100">事件订阅配置</div>
+                            <div className="font-medium text-slate-700 dark:text-slate-100">Event subscription settings</div>
                             <div className="mt-1">
-                                平台现在支持直接生成 verification token，并在本地先做一次 challenge 自检，减少通知平台后台接入前的不确定性。
+                                Generate a verification token and run a local challenge self-check before configuring the notification platform console.
                             </div>
                         </div>
                         <div className="rounded-lg bg-slate-50 px-3 py-2 text-slate-600 dark:bg-slate-800/60 dark:text-slate-200">
-                            {chatopsOverview?.verification_token_configured ? 'Token 已配置' : '还未生成 Token'}
+                            {chatopsOverview?.verification_token_configured ? "Token configured" : "No token generated yet"}
                         </div>
                     </div>
                     <div className="mt-3 flex flex-wrap gap-2">
@@ -1470,7 +1468,7 @@ export default function NotificationPage() {
                             className="inline-flex items-center justify-center gap-2 rounded-xl bg-sky-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-60"
                         >
                             {configuringToken ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-                            {configuringToken ? '生成中...' : (chatopsOverview?.verification_token_configured ? '重新生成 Token' : '生成 Token')}
+                            {configuringToken ? "Generating..." : (chatopsOverview?.verification_token_configured ? "Regenerate token" : "Generate token")}
                         </button>
                         <button
                             onClick={() => { void handleSubscriptionSelfCheck(); }}
@@ -1478,17 +1476,17 @@ export default function NotificationPage() {
                             className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-60"
                         >
                             {selfCheckingSubscription ? <Loader2 className="h-4 w-4 animate-spin" /> : <TestTubes className="h-4 w-4" />}
-                            {selfCheckingSubscription ? '验证中...' : '验证回调入口'}
+                            {selfCheckingSubscription ? "Verifying..." : "Verify callback endpoint"}
                         </button>
                     </div>
                     {tokenConfigResult && (
                         <div className="mt-3 rounded-xl bg-slate-50 px-3 py-3 text-slate-700 dark:bg-slate-800/60 dark:text-slate-100">
-                            <div className="font-medium">最近生成的 verification token</div>
+                            <div className="font-medium">Most recently generated verification token</div>
                             <div className="mt-2 break-all rounded-lg bg-white/90 px-3 py-2 font-mono text-xs dark:bg-slate-900/60">
                                 {tokenConfigResult.token}
                             </div>
                             <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                                请把这串 token 配到通知平台开发者后台的事件订阅配置里；平台内已同时持久化保存。
+                                Add this token to the event subscription settings in the notification platform developer console. It has also been saved persistently in the platform.
                             </div>
                         </div>
                     )}
@@ -1498,16 +1496,16 @@ export default function NotificationPage() {
                                 ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-200'
                                 : 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-200'
                         }`}>
-                            <div className="font-medium">平台侧 challenge 自检</div>
+                            <div className="font-medium">Platform challenge self-check</div>
                             <div className="mt-2">
                                 {subscriptionCheckResult.status === 'success'
-                                    ? `验证成功，challenge=${subscriptionCheckResult.result?.challenge || 'codex-self-check'}`
-                                    : subscriptionCheckResult.message || '验证未通过'}
+                                    ? `Verification succeeded, challenge=${subscriptionCheckResult.result?.challenge || 'codex-self-check'}`
+                                    : subscriptionCheckResult.message || "Verification failed"}
                             </div>
                             <div className="mt-1 text-xs opacity-80">
                                 {latestSubscriptionCheckEvent
-                                    ? `最近一次自检：${formatTimestamp(latestSubscriptionCheckEvent.created_at)}`
-                                    : '自检完成后，这里会显示最近验证时间。'}
+                                    ? `Latest self-check: ${formatTimestamp(latestSubscriptionCheckEvent.created_at)}`
+                                    : "The latest verification time appears here after a self-check completes."}
                             </div>
                         </div>
                     )}
@@ -1517,28 +1515,28 @@ export default function NotificationPage() {
                                 ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-200'
                                 : 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-200'
                         }`}>
-                            <div className="font-medium">公网链路自测</div>
+                            <div className="font-medium">Public connection self-test</div>
                             <div className="mt-2 break-all">
-                                地址：{externalCheckResult.callback_url}
+                                URL: {externalCheckResult.callback_url}
                             </div>
                             <div className="mt-1">
-                                challenge：{externalCheckResult.challenge_check.ok && externalCheckResult.challenge_check.challenge_matched ? '通过' : '未通过'}
+                                challenge: {externalCheckResult.challenge_check.ok && externalCheckResult.challenge_check.challenge_matched ? "Passed" : "Failed"}
                                 {typeof externalCheckResult.challenge_check.status_code === 'number'
                                     ? ` · HTTP ${externalCheckResult.challenge_check.status_code}`
                                     : ''}
                             </div>
                             <div className="mt-1">
-                                文本消息：{externalCheckResult.message_check.ok ? '通过' : '未通过'}
+                                Text message: {externalCheckResult.message_check.ok ? "Passed" : "Failed"}
                                 {typeof externalCheckResult.message_check.status_code === 'number'
                                     ? ` · HTTP ${externalCheckResult.message_check.status_code}`
                                     : ''}
                                 {externalCheckResult.message_check.delivery
-                                    ? ` · 回推 ${externalCheckResult.message_check.delivery.delivered || 0}/${externalCheckResult.message_check.delivery.configured || 0}`
+                                    ? ` · Reply delivery ${externalCheckResult.message_check.delivery.delivered || 0}/${externalCheckResult.message_check.delivery.configured || 0}`
                                     : ''}
                             </div>
                             {!!externalCheckResult.message_check.command_response && (
                                 <div className="mt-1 line-clamp-3">
-                                    回复：{externalCheckResult.message_check.command_response}
+                                    Reply: {externalCheckResult.message_check.command_response}
                                 </div>
                             )}
                             {(externalCheckResult.challenge_check.error || externalCheckResult.message_check.error) && (
@@ -1554,18 +1552,18 @@ export default function NotificationPage() {
                                 ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-200'
                                 : 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-200'
                         }`}>
-                            <div className="font-medium">最近公网链路自测</div>
+                            <div className="font-medium">Latest public connection self-test</div>
                             <div className="mt-1">
-                                状态：{externalSelfCheckRecentSuccess ? '已通过' : '未通过'}
+                                Status: {externalSelfCheckRecentSuccess ? "Passed" : "Failed"}
                                 {latestExternalSelfCheckAt ? ` · ${formatTimestamp(latestExternalSelfCheckAt)}` : ''}
                             </div>
                             <div className="mt-1 text-xs opacity-80">
-                                这代表平台最近一次从公网入口跑通了 challenge 与文本消息双验证；
-                                {chatopsDirectChatReady ? ' 当前真实通知平台群聊也已经联通。' : ' 但这还不等同于真实通知平台群消息已经完成联调。'}
+                                The platform most recently verified both challenges and text messages through the public endpoint;
+                                {chatopsDirectChatReady ? " real notification group messaging is also connected." : " this does not yet confirm that real notification group message integration is complete."}
                             </div>
                             {latestExternalSelfCheckEvent?.response && (
                                 <div className="mt-1 line-clamp-3 text-xs opacity-80">
-                                    最近回复：{latestExternalSelfCheckEvent.response}
+                                    Latest reply: {latestExternalSelfCheckEvent.response}
                                 </div>
                             )}
                         </div>
@@ -1575,27 +1573,27 @@ export default function NotificationPage() {
                 <div className="mt-4 rounded-xl border border-slate-200 bg-white/85 px-4 py-4 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-300">
                     <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                         <div className="flex-1">
-                            <div className="font-medium text-slate-700 dark:text-slate-100">平台侧自检</div>
+                            <div className="font-medium text-slate-700 dark:text-slate-100">Platform self-check</div>
                             <div className="mt-1">
-                                不进入通知平台开发者后台，也可以先在平台内模拟一条通知平台文本指令，验证“收消息 → 解析 → 回推”链路。
+                                Simulate a notification text command inside the platform to verify message receipt, parsing, and reply delivery before opening the notification platform developer console.
                             </div>
                         </div>
                         <div className="rounded-lg bg-slate-50 px-3 py-2 text-slate-600 dark:bg-slate-800/60 dark:text-slate-200">
                             {chatopsDirectChatReady
-                                ? '双向链路已就绪'
+                                ? "Two-way connection ready"
                                 : !chatopsOverview?.callback_url_public
-                                    ? '当前还是本地回调地址'
+                                    ? "The callback URL is still local"
                                 : !chatopsAppBotConfigured
-                                    ? '还缺通知平台应用机器人'
+                                    ? "Notification app bot still required"
                                 : chatopsPlatformReady
-                                    ? '平台侧已就绪，待通知平台侧发一条真实群消息'
+                                    ? "Platform ready; send a real group message from the notification platform"
                                     : chatopsWebhookReady
-                                        ? '还缺 token 或 challenge 自检'
-                                        : '还缺健康的通知平台回推通道'}
+                                        ? "Token or challenge self-check still required"
+                                        : "A healthy notification reply channel is still required"}
                         </div>
                     </div>
                     <div className="mt-3 flex flex-wrap gap-2">
-                        {['状态', '报告 125c69cd', '测试 https://example.com'].map(command => (
+                        {["Status", "report 125c69cd", "test https://example.com"].map(command => (
                             <button
                                 key={command}
                                 onClick={() => {
@@ -1613,7 +1611,7 @@ export default function NotificationPage() {
                         <input
                             value={simulateMessage}
                             onChange={e => setSimulateMessage(e.target.value)}
-                            placeholder="输入要模拟的通知平台文本指令，例如：状态"
+                            placeholder={"Enter a notification text command to simulate, for example: status"}
                             className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 outline-none focus:border-violet-300 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-100"
                         />
                         <button
@@ -1622,7 +1620,7 @@ export default function NotificationPage() {
                             className="inline-flex items-center justify-center gap-2 rounded-xl bg-violet-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-violet-600 disabled:cursor-not-allowed disabled:opacity-60"
                         >
                             {simulating ? <Loader2 className="h-4 w-4 animate-spin" /> : <TestTubes className="h-4 w-4" />}
-                            {simulating ? '模拟中...' : '模拟通知平台指令'}
+                            {simulating ? "Simulating..." : "Simulate notification command"}
                         </button>
                         <button
                             onClick={() => { void handleExternalSelfCheck(); }}
@@ -1630,34 +1628,34 @@ export default function NotificationPage() {
                             className="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700 transition-colors hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200 dark:hover:bg-emerald-500/20"
                         >
                             {externallyChecking ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-                            {externallyChecking ? '公网自测中...' : '跑公网链路自测'}
+                            {externallyChecking ? "Running public self-test..." : "Run public connection self-test"}
                         </button>
                     </div>
                     {simulateResult && (
                         <div className="mt-3 rounded-xl bg-slate-50 px-3 py-3 text-slate-700 dark:bg-slate-800/60 dark:text-slate-100">
-                            <div className="font-medium">最近一次模拟</div>
-                            <div className="mt-2">回复：{simulateResult.result.response || '-'}</div>
+                            <div className="font-medium">Latest simulation</div>
+                            <div className="mt-2">Reply: {simulateResult.result.response || '-'}</div>
                             <div className="mt-1">
-                                回推：{simulateResult.delivery.delivered}/{simulateResult.delivery.configured}
+                                Reply delivery: {simulateResult.delivery.delivered}/{simulateResult.delivery.configured}
                                 {simulateResult.delivery.message ? ` · ${simulateResult.delivery.message}` : ''}
                             </div>
-                            <div className="mt-1">当前状态：{simulateResult.overview.summary}</div>
+                            <div className="mt-1">Current status: {simulateResult.overview.summary}</div>
                             {simulateRunId && (
-                                <div className="mt-1">关联 run_id：{simulateRunId}</div>
+                                <div className="mt-1">Linked run_id: {simulateRunId}</div>
                             )}
                             <div className="mt-3 flex flex-wrap gap-2">
                                 <a
                                     href={legionControlHref}
                                     className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-100 dark:hover:bg-slate-800"
                                 >
-                                    去 Legion 控制中心
+                                    Open Legion control center
                                 </a>
                                 {simulateRunHref && (
                                     <a
                                         href={simulateRunHref}
                                         className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-100 dark:hover:bg-slate-800"
                                     >
-                                        打开关联命令
+                                        Open linked command
                                     </a>
                                 )}
                             </div>
@@ -1671,8 +1669,8 @@ export default function NotificationPage() {
                 {webhooks.length === 0 ? (
                     <div className="py-20 text-center">
                         <Bell className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-                        <p className="text-slate-400 text-sm">暂无通知配置</p>
-                        <p className="text-slate-400 text-xs mt-1">添加 Webhook 后测试完成会自动发送通知</p>
+                        <p className="text-slate-400 text-sm">No notification configuration yet</p>
+                        <p className="text-slate-400 text-xs mt-1">Add a webhook to send notifications automatically when tests finish</p>
                     </div>
                 ) : (
                     <div className="divide-y divide-slate-100 dark:divide-slate-700/50">
@@ -1697,7 +1695,7 @@ export default function NotificationPage() {
                                                 ? 'bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-300'
                                                 : 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-300'
                                         }`}>
-                                            {wh.enabled ? '已启用' : '已停用'}
+                                            {wh.enabled ? "Enabled" : "Disabled"}
                                         </span>
                                         <span className={`rounded-full px-2 py-0.5 ${
                                             wh.last_test_at
@@ -1706,7 +1704,7 @@ export default function NotificationPage() {
                                                     : 'bg-rose-50 text-rose-600 dark:bg-rose-500/15 dark:text-rose-300'
                                                 : 'bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-300'
                                         }`}>
-                                            {!wh.last_test_at ? '未测试' : wh.last_test_success ? '最近测试通过' : '最近测试失败'}
+                                            {!wh.last_test_at ? "Not tested" : wh.last_test_success ? "Latest test passed" : "Latest test failed"}
                                         </span>
                                         <span>{formatTimestamp(wh.last_test_at)}</span>
                                         {!!wh.last_test_message && <span className="truncate max-w-[320px]">{wh.last_test_message}</span>}
@@ -1725,16 +1723,16 @@ export default function NotificationPage() {
                                         onClick={() => { void handleToggleEnabled(wh); }}
                                         disabled={toggling === wh.id}
                                         className="rounded-lg px-2.5 py-2 text-xs text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-700 dark:hover:text-slate-200 transition-colors disabled:opacity-60"
-                                        title={wh.enabled ? '停用' : '启用'}
+                                        title={wh.enabled ? "Disable" : "Enable"}
                                     >
-                                        {toggling === wh.id ? '处理中...' : wh.enabled ? '停用' : '启用'}
+                                        {toggling === wh.id ? "Processing..." : wh.enabled ? "Disable" : "Enable"}
                                     </button>
                                     <button onClick={() => handleTest(wh.id)} disabled={testing === wh.id}
-                                        className="p-2 rounded-lg text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-colors" title="测试">
+                                        className="p-2 rounded-lg text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-colors" title={"Test"}>
                                         {testing === wh.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <TestTubes className="w-4 h-4" />}
                                     </button>
                                     <button onClick={() => handleDelete(wh.id)}
-                                        className="p-2 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors" title="删除">
+                                        className="p-2 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors" title={"Delete"}>
                                         <Trash2 className="w-4 h-4" />
                                     </button>
                                 </div>
@@ -1752,22 +1750,22 @@ export default function NotificationPage() {
                             <X className="w-5 h-5" />
                         </button>
                         <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
-                            <Bell className="w-5 h-5 text-pink-500" /> 添加 Webhook
+                            <Bell className="w-5 h-5 text-pink-500" /> Add webhook
                         </h3>
                         <div className="space-y-3">
                             <div>
-                                <label className="text-xs font-medium text-slate-500">名称</label>
+                                <label className="text-xs font-medium text-slate-500">Name</label>
                                 <input type="text" value={name} onChange={e => setName(e.target.value)}
-                                    placeholder="如：钉钉测试群" className="w-full mt-1 px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 text-sm outline-none" />
+                                    placeholder={"Example: DingTalk testing group"} className="w-full mt-1 px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 text-sm outline-none" />
                             </div>
                             <div>
-                                <label className="text-xs font-medium text-slate-500">类型</label>
+                                <label className="text-xs font-medium text-slate-500">Type</label>
                                 <select value={type} onChange={e => setType(e.target.value)}
                                     className="w-full mt-1 px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 text-sm outline-none">
-                                    <option value="dingtalk">钉钉</option>
-                                    <option value="wecom">企业微信</option>
-                                    <option value="notification_platform">通知平台</option>
-                                    <option value="custom">自定义</option>
+                                    <option value="dingtalk">DingTalk</option>
+                                    <option value="wecom">WeCom</option>
+                                    <option value="notification_platform">Notification platform</option>
+                                    <option value="custom">Custom</option>
                                 </select>
                             </div>
                             <div>
@@ -1777,11 +1775,11 @@ export default function NotificationPage() {
                                     className="w-full mt-1 px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 text-sm font-mono outline-none" />
                             </div>
                             <label className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-700/40 dark:text-slate-200">
-                                <span>添加后立即启用</span>
+                                <span>Enable immediately after adding</span>
                                 <input type="checkbox" checked={enabled} onChange={e => setEnabled(e.target.checked)} />
                             </label>
                             <label className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-700/40 dark:text-slate-200">
-                                <span>添加后立即测试</span>
+                                <span>Test immediately after adding</span>
                                 <input
                                     type="checkbox"
                                     checked={testAfterCreate}
@@ -1791,7 +1789,7 @@ export default function NotificationPage() {
                             </label>
                             <button onClick={handleAdd} disabled={!name.trim() || !url.trim()}
                                 className="w-full mt-2 px-4 py-2.5 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-xl text-sm font-medium disabled:opacity-50 transition-all">
-                                {enabled && testAfterCreate ? '添加并测试' : '添加'}
+                                {enabled && testAfterCreate ? "Add and test" : "Add"}
                             </button>
                         </div>
                     </div>

@@ -89,20 +89,20 @@ const selTpl = templates.find(t => t.id === selected);
 
     return (
         <div className="space-y-6">
-            {/* ── 标题 ── */}
+            {/* Title*/}
             <div className="mb-2">
                 <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
                     <div className="p-2 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 text-white">
                         <Database className="w-5 h-5" />
                     </div>
-                    测试数据管理
+                    Test data management
                 </h2>
                 <p className="text-slate-500 mt-2 text-sm">
-                    AI 驱动的测试数据生成 — 自动生成边界值、安全攻击数据和格式化数据
+                    AI-powered test data generation: boundary values, security attack data, and formatted data
                 </p>
             </div>
 
-            {/* ── 模板选择卡片 ── */}
+            {/* Template selection cards*/}
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
                 {templates.map(t => (
                     <button
@@ -124,17 +124,17 @@ const selTpl = templates.find(t => t.id === selected);
                 ))}
             </div>
 
-            {/* ── 配置行 ── */}
+            {/* Configuration row*/}
             <div className="flex flex-wrap items-center gap-4 bg-white/80 dark:bg-slate-800/60 rounded-2xl border border-slate-200/60 dark:border-slate-700/60 backdrop-blur-sm p-4">
                 <div className="flex items-center gap-2">
                     <Settings2 className="w-4 h-4 text-slate-400" />
-                    <span className="text-sm text-slate-600 dark:text-slate-400">生成数量</span>
+                    <span className="text-sm text-slate-600 dark:text-slate-400">Number to generate</span>
                     <select
                         value={count}
                         onChange={e => setCount(Number(e.target.value))}
                         className="px-3 py-1.5 text-sm rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200"
                     >
-                        {[3, 5, 10, 20, 50].map(n => <option key={n} value={n}>{n} 条</option>)}
+                        {[3, 5, 10, 20, 50].map(n => <option key={n} value={n}>{n} entries</option>)}
                     </select>
                 </div>
 
@@ -145,12 +145,12 @@ const selTpl = templates.find(t => t.id === selected);
                         onChange={e => setIncludeEdge(e.target.checked)}
                         className="w-4 h-4 rounded border-slate-300 text-blue-500 focus:ring-blue-500"
                     />
-                    <span className="text-sm text-slate-600 dark:text-slate-400">包含边界值/攻击数据</span>
+                    <span className="text-sm text-slate-600 dark:text-slate-400">Include boundary values and attack data</span>
                 </label>
 
                 {selTpl && (
                     <div className="flex items-center gap-1.5 text-xs text-slate-400 ml-auto">
-                        字段:
+                        Fields:
                         {selTpl.fields.map(f => (
                             <span key={f} className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400">
                                 {f}
@@ -167,36 +167,36 @@ const selTpl = templates.find(t => t.id === selected);
                         active:scale-[0.98] transition-all disabled:opacity-50"
                 >
                     {loading ? (
-                        <><Sparkles className="w-4 h-4 animate-spin" /> 生成中...</>
+                        <><Sparkles className="w-4 h-4 animate-spin" /> Generating...</>
                     ) : (
-                        <><PlayCircle className="w-4 h-4" /> 生成数据</>
+                        <><PlayCircle className="w-4 h-4" /> Generate data</>
                     )}
                 </button>
             </div>
 
             {isSampleTemplate && (
                 <div className="rounded-2xl border border-cyan-200 bg-cyan-50/70 p-4 dark:border-cyan-800/50 dark:bg-cyan-900/10">
-                    <p className="text-xs uppercase tracking-wide text-cyan-500">示例项目测试数据约定</p>
-                    <h3 className="mt-1 text-sm font-semibold text-slate-700 dark:text-slate-200">真实回归统一使用 `TEST_SAMPLE` 前缀</h3>
+                    <p className="text-xs uppercase tracking-wide text-cyan-500">Sample project test data conventions</p>
+                    <h3 className="mt-1 text-sm font-semibold text-slate-700 dark:text-slate-200">Use the `TEST_SAMPLE` prefix consistently for real regression tests</h3>
                     <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                        这些模板会自动生成可筛选、可回收的数据标识，适合工单、公告、停车合同、老人档案的新增/编辑/状态流转回归。
+                        These templates generate filterable, removable data identifiers for create, edit, and status transition tests of work orders, announcements, parking contracts, and senior profiles.
                     </p>
                 </div>
             )}
 
-            {/* ── 结果 ── */}
+            {/* Results*/}
             {result && (
                 <div className="card-hover-lift rounded-2xl border border-slate-200/60 bg-white/80 backdrop-blur-sm dark:border-slate-700/60 dark:bg-slate-800/60 overflow-hidden">
                     <div className="flex items-center justify-between px-5 py-3 border-b border-slate-200 dark:border-slate-700">
                         <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                            生成结果 ({result.length} 条)
+                            Generated results ( {result.length} records)
                         </span>
                         <div className="flex gap-2">
                             <button onClick={copyJSON} className="flex items-center gap-1 px-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 transition-colors">
-                                {copied ? <><Check className="w-3.5 h-3.5 text-green-500" /> 已复制</> : <><Copy className="w-3.5 h-3.5" /> 复制 JSON</>}
+                                {copied ? <><Check className="w-3.5 h-3.5 text-green-500" /> Copied</> : <><Copy className="w-3.5 h-3.5" /> Copy JSON</>}
                             </button>
                             <button onClick={downloadCSV} className="flex items-center gap-1 px-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 transition-colors">
-                                <Download className="w-3.5 h-3.5" /> 导出 CSV
+                                <Download className="w-3.5 h-3.5" /> Export CSV
                             </button>
                         </div>
                     </div>
@@ -211,7 +211,7 @@ const selTpl = templates.find(t => t.id === selected);
                                             <th key={k} className="px-4 py-2 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">{k}</th>
                                         ))}
                                         {result.some(r => (r as Record<string, unknown>)._edge) && (
-                                            <th className="px-4 py-2 text-left text-xs font-medium text-amber-500 uppercase">标记</th>
+                                            <th className="px-4 py-2 text-left text-xs font-medium text-amber-500 uppercase">Marker</th>
                                         )}
                                     </tr>
                                 </thead>
@@ -243,7 +243,7 @@ const selTpl = templates.find(t => t.id === selected);
                             </table>
                         </div>
                     ) : (
-                        <div className="text-center py-12 text-slate-400">暂无数据</div>
+                        <div className="text-center py-12 text-slate-400">No data yet</div>
                     )}
                 </div>
             )}

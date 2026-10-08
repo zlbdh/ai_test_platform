@@ -17,24 +17,24 @@ export interface FrontdoorTaskKindOption {
 export const TASK_KIND_OPTIONS: FrontdoorTaskKindOption[] = [
     {
         kind: 'general',
-        title: '通用编排',
-        description: '一句话发起综合测试编排，适合快速验证一条真实任务目标。',
-        targetLabel: '目标 URL（可选）',
-        placeholder: '比如：检查登录、下单和支付主链路',
+        title: "General orchestration",
+        description: "Start comprehensive test orchestration with one sentence to quickly validate a real task objective.",
+        targetLabel: "Target URL (optional)",
+        placeholder: "Example: Check the login, ordering, and payment workflows",
     },
     {
         kind: 'prototype',
-        title: '原型测试',
-        description: '输入 URL、文件或目录，统一生成证据、Findings 和门禁结论。',
-        targetLabel: '原型来源',
-        placeholder: '比如：D:\\prototype 或 https://example.com',
+        title: "Prototype testing",
+        description: "Provide a URL, file, or directory to generate evidence, findings, and a gate decision.",
+        targetLabel: "Prototype source",
+        placeholder: "Example: D:\\prototype or https://example.com",
     },
     {
         kind: 'exploration',
-        title: '探索测试',
-        description: '围绕目标页面进行探索发现，适合找断链、异常和未知问题。',
-        targetLabel: '目标 URL',
-        placeholder: '比如：探索订单异常、发现关键风险',
+        title: "Exploratory testing",
+        description: "Explore a target page to discover broken links, errors, and unknown issues.",
+        targetLabel: "Target URL",
+        placeholder: "Example: Explore order errors and identify critical risks",
     },
 ];
 
@@ -44,21 +44,21 @@ export function getTaskKindMeta(taskKind: FrontdoorTaskKind | string): Frontdoor
 
 export function statusMeta(status: string): { label: string; variant: 'success' | 'warning' | 'error' | 'info' | 'neutral' } {
     const normalized = String(status || '').toLowerCase();
-    if (['completed', 'success'].includes(normalized)) return { label: '已完成', variant: 'success' };
-    if (['failed', 'error'].includes(normalized)) return { label: '失败', variant: 'error' };
-    if (['cancelled', 'stopped'].includes(normalized)) return { label: '已停止', variant: 'neutral' };
+    if (['completed', 'success'].includes(normalized)) return { label: "Completed", variant: 'success' };
+    if (['failed', 'error'].includes(normalized)) return { label: "Failed", variant: 'error' };
+    if (['cancelled', 'stopped'].includes(normalized)) return { label: "Stopped", variant: 'neutral' };
     if (['parsing', 'planning', 'dispatching', 'executing', 'reporting', 'pending'].includes(normalized)) {
-        return { label: '执行中', variant: 'warning' };
+        return { label: "Running", variant: 'warning' };
     }
-    return { label: '未知', variant: 'info' };
+    return { label: "Unknown", variant: 'info' };
 }
 
 export function gateMeta(status: string): { label: string; variant: 'success' | 'warning' | 'error' | 'info' } {
     const normalized = String(status || '').toLowerCase();
-    if (normalized === 'failed') return { label: '有明确问题', variant: 'error' };
-    if (normalized === 'warning') return { label: '需人工确认', variant: 'warning' };
-    if (normalized === 'passed') return { label: '已验证通过', variant: 'success' };
-    return { label: '待判定', variant: 'info' };
+    if (normalized === 'failed') return { label: "Confirmed issues", variant: 'error' };
+    if (normalized === 'warning') return { label: "Human confirmation required", variant: 'warning' };
+    if (normalized === 'passed') return { label: "Verified", variant: 'success' };
+    return { label: "Pending decision", variant: 'info' };
 }
 
 export function isRunningStatus(status: string): boolean {
@@ -69,7 +69,7 @@ export function formatTimestamp(value?: string | null): string {
     if (!value) return '--';
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return String(value);
-    return date.toLocaleString('zh-CN', { hour12: false });
+    return date.toLocaleString('en-US', { hour12: false });
 }
 
 export function hasStaticUnprovable(gateSummary?: FrontdoorGateSummary | null): boolean {
@@ -89,29 +89,29 @@ export function verificationStateMeta(
     const normalized = String(verificationState?.status || '').toLowerCase();
     if (normalized === 'verified_passed') {
         return {
-            label: verificationState?.label || '已验证通过',
+            label: verificationState?.label || "Verified",
             variant: 'success',
-            summary: verificationState?.summary || '当前任务在现有上下文下已验证通过。',
+            summary: verificationState?.summary || "This task has been verified in the available context.",
         };
     }
     if (normalized === 'context_unprovable') {
         return {
-            label: verificationState?.label || '当前上下文无法证明',
+            label: verificationState?.label || "Not provable in the current context",
             variant: 'warning',
-            summary: verificationState?.summary || '当前仍存在静态原型或当前环境无法证明的点。',
+            summary: verificationState?.summary || "Some points remain unprovable from the static prototype or current environment.",
         };
     }
     if (normalized === 'issues_found') {
         return {
-            label: verificationState?.label || '有明确问题',
+            label: verificationState?.label || "Confirmed issues",
             variant: 'error',
-            summary: verificationState?.summary || '当前任务已发现明确问题。',
+            summary: verificationState?.summary || "This task has identified confirmed issues.",
         };
     }
     return {
-        label: verificationState?.label || '待判定',
+        label: verificationState?.label || "Pending decision",
         variant: 'info',
-        summary: verificationState?.summary || '当前任务还没有形成稳定结论。',
+        summary: verificationState?.summary || "This task does not yet have a stable conclusion.",
     };
 }
 
@@ -266,9 +266,9 @@ export function formatFindingSeveritySummary(summary: FrontdoorFindingSeveritySu
     if (summary.blocking > 0) parts.push(`blocking ${summary.blocking}`);
     if (summary.major > 0) parts.push(`major ${summary.major}`);
     if (summary.normal > 0) parts.push(`normal ${summary.normal}`);
-    if (summary.pending_confirmation > 0) parts.push(`待确认 ${summary.pending_confirmation}`);
-    if (summary.other > 0) parts.push(`其他 ${summary.other}`);
-    return parts.length > 0 ? parts.join(' / ') : '无 Findings';
+    if (summary.pending_confirmation > 0) parts.push(`Pending confirmation ${summary.pending_confirmation}`);
+    if (summary.other > 0) parts.push(`Other ${summary.other}`);
+    return parts.length > 0 ? parts.join(' / ') : "No findings";
 }
 
 export function buildMetricComparisonItems(

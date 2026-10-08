@@ -76,27 +76,27 @@ const CICDPage: React.FC = () => {
     const columns: DataTableColumn<TriggerRecord>[] = [
         { key: 'id', title: 'ID', width: '80px', render: (v) => <code className="text-xs font-mono">{String(v)}</code> },
         {
-            key: 'source', title: '来源', sortable: true, render: (v) => (
+            key: 'source', title: "Source", sortable: true, render: (v) => (
                 <span className="inline-flex items-center gap-1.5 text-sm">
                     <GitBranch className="w-3.5 h-3.5 text-slate-400" />{String(v)}
                 </span>
             )
         },
-        { key: 'ref', title: '分支/标签', sortable: true },
+        { key: 'ref', title: "Branch/tag", sortable: true },
         { key: 'commit', title: 'Commit', width: '90px', render: (v) => <code className="text-xs font-mono">{String(v).slice(0, 8)}</code> },
-        { key: 'status', title: '状态', sortable: true, render: (v) => statusBadge(String(v)) },
-        { key: 'test_count', title: '用例数', align: 'center' as const, sortable: true },
-        { key: 'passed_count', title: '通过', align: 'center' as const, render: (v) => <span className="text-emerald-500 font-medium">{String(v)}</span> },
-        { key: 'failed_count', title: '失败', align: 'center' as const, render: (v) => <span className={`font-medium ${Number(v) > 0 ? 'text-red-500' : 'text-slate-400'}`}>{String(v)}</span> },
-        { key: 'duration_ms', title: '耗时', sortable: true, align: 'right' as const, render: (v) => `${(Number(v) / 1000).toFixed(1)}s` },
-        { key: 'triggered_at', title: '时间', sortable: true, render: (v) => new Date(String(v)).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) },
+        { key: 'status', title: "Status", sortable: true, render: (v) => statusBadge(String(v)) },
+        { key: 'test_count', title: "Test cases", align: 'center' as const, sortable: true },
+        { key: 'passed_count', title: "Passed", align: 'center' as const, render: (v) => <span className="text-emerald-500 font-medium">{String(v)}</span> },
+        { key: 'failed_count', title: "Failed", align: 'center' as const, render: (v) => <span className={`font-medium ${Number(v) > 0 ? 'text-red-500' : 'text-slate-400'}`}>{String(v)}</span> },
+        { key: 'duration_ms', title: "Duration", sortable: true, align: 'right' as const, render: (v) => `${(Number(v) / 1000).toFixed(1)}s` },
+        { key: 'triggered_at', title: "Time", sortable: true, render: (v) => new Date(String(v)).toLocaleString('en-US', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) },
         {
-            key: 'report_actions', title: '报告', align: 'center' as const, render: (_v, record) => (
+            key: 'report_actions', title: "Report", align: 'center' as const, render: (_v, record) => (
                 <div className="flex items-center gap-1">
                     <a href={getJunitReportUrl(record.id)} className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600" title="JUnit XML" target="_blank" rel="noreferrer">
                         <FileText className="w-3.5 h-3.5" />
                     </a>
-                    <a href={getHtmlReportUrl(record.id)} className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600" title="HTML 报告" target="_blank" rel="noreferrer">
+                    <a href={getHtmlReportUrl(record.id)} className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600" title={"HTML report"} target="_blank" rel="noreferrer">
                         <Download className="w-3.5 h-3.5" />
                     </a>
                 </div>
@@ -113,7 +113,7 @@ const CICDPage: React.FC = () => {
     if (loading) {
         return (
             <div className="flex items-center justify-center h-64 text-slate-400">
-                <RefreshCw className="w-6 h-6 animate-spin mr-2" /> 加载中...
+                <RefreshCw className="w-6 h-6 animate-spin mr-2" /> Loading...
             </div>
         );
     }
@@ -122,11 +122,11 @@ const CICDPage: React.FC = () => {
         <div className="space-y-6 max-w-7xl mx-auto">
             <PageHeader
                 icon={<Webhook className="w-5 h-5" />}
-                title="CI/CD 集成管理"
-                description="配置 Webhook、查看触发历史、下载测试报告"
+                title={"CI/CD integration management"}
+                description={"Configure webhooks, view trigger history, and download test reports"}
                 accent="indigo"
                 actions={
-                    <button onClick={load} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition-colors" title="刷新">
+                    <button onClick={load} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition-colors" title={"Refresh"}>
                         <RefreshCw className="w-4 h-4" />
                     </button>
                 }
@@ -134,10 +134,10 @@ const CICDPage: React.FC = () => {
 
             {/* Stats */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <StatCard icon={<Activity className="w-5 h-5" />} label="总触发次数" value={totalTriggers} gradient="bg-gradient-to-br from-indigo-500 to-indigo-700" />
-                <StatCard icon={<CheckCircle2 className="w-5 h-5" />} label="成功" value={passedTotal} gradient="bg-gradient-to-br from-emerald-500 to-emerald-700" />
-                <StatCard icon={<XCircle className="w-5 h-5" />} label="失败" value={failedTotal} gradient="bg-gradient-to-br from-red-500 to-red-700" />
-                <StatCard icon={<Clock className="w-5 h-5" />} label="平均耗时" value={`${avgDuration}s`} gradient="bg-gradient-to-br from-amber-500 to-amber-700" />
+                <StatCard icon={<Activity className="w-5 h-5" />} label={"Total triggers"} value={totalTriggers} gradient="bg-gradient-to-br from-indigo-500 to-indigo-700" />
+                <StatCard icon={<CheckCircle2 className="w-5 h-5" />} label={"Success"} value={passedTotal} gradient="bg-gradient-to-br from-emerald-500 to-emerald-700" />
+                <StatCard icon={<XCircle className="w-5 h-5" />} label={"Failed"} value={failedTotal} gradient="bg-gradient-to-br from-red-500 to-red-700" />
+                <StatCard icon={<Clock className="w-5 h-5" />} label={"Average duration"} value={`${avgDuration}s`} gradient="bg-gradient-to-br from-amber-500 to-amber-700" />
             </div>
 
             <div className="grid lg:grid-cols-3 gap-6">
@@ -148,7 +148,7 @@ const CICDPage: React.FC = () => {
                         <div className="flex items-center justify-between">
                             <h3 className="text-sm font-semibold flex items-center gap-2 text-slate-700 dark:text-slate-200">
                                 <Settings2 className="w-4 h-4 text-indigo-500" />
-                                集成配置
+                                Integration configuration
                             </h3>
                             <button
                                 onClick={handleToggle}
@@ -159,8 +159,8 @@ const CICDPage: React.FC = () => {
                         </div>
 
                         <div className="text-xs text-slate-500 dark:text-slate-400 space-y-2">
-                            <div className="flex justify-between"><span>状态</span>{config?.enabled ? <Badge variant="success" size="sm">已启用</Badge> : <Badge variant="neutral" size="sm">已禁用</Badge>}</div>
-                            <div className="flex justify-between"><span>创建时间</span><span>{config?.created_at ? new Date(config.created_at).toLocaleDateString('zh-CN') : '-'}</span></div>
+                            <div className="flex justify-between"><span>Status</span>{config?.enabled ? <Badge variant="success" size="sm">Enabled</Badge> : <Badge variant="neutral" size="sm">Disabled</Badge>}</div>
+                            <div className="flex justify-between"><span>Created at</span><span>{config?.created_at ? new Date(config.created_at).toLocaleDateString('en-US') : '-'}</span></div>
                         </div>
                     </div>
 
@@ -182,11 +182,11 @@ const CICDPage: React.FC = () => {
                                 <code className="flex-1 text-xs bg-slate-50 dark:bg-slate-800 rounded-lg px-3 py-2 text-slate-600 dark:text-slate-300 truncate">
                                     {showSecret ? secret : config?.webhook_secret_masked || '****'}
                                 </code>
-                                <button onClick={handleRevealSecret} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400" title={showSecret ? '隐藏' : '显示'}>
+                                <button onClick={handleRevealSecret} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400" title={showSecret ? "Hide" : "Show"}>
                                     {showSecret ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                                 </button>
                                 {showSecret && (
-                                    <button onClick={handleCopySecret} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400" title="复制">
+                                    <button onClick={handleCopySecret} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400" title={"Copy"}>
                                         {copied ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
                                     </button>
                                 )}
@@ -198,7 +198,7 @@ const CICDPage: React.FC = () => {
                     <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 space-y-3">
                         <h3 className="text-sm font-semibold flex items-center gap-2 text-slate-700 dark:text-slate-200">
                             <Terminal className="w-4 h-4 text-emerald-500" />
-                            手动触发
+                            Trigger manually
                         </h3>
                         <div className="space-y-2">
                             <select
@@ -206,7 +206,7 @@ const CICDPage: React.FC = () => {
                                 onChange={e => setTriggerSource(e.target.value)}
                                 className="w-full text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500/30"
                             >
-                                <option value="manual">手动触发</option>
+                                <option value="manual">Trigger manually</option>
                                 <option value="jenkins">Jenkins</option>
                                 <option value="gitlab">GitLab CI</option>
                                 <option value="github">GitHub Actions</option>
@@ -215,7 +215,7 @@ const CICDPage: React.FC = () => {
                                 type="text"
                                 value={triggerRef}
                                 onChange={e => setTriggerRef(e.target.value)}
-                                placeholder="分支名 (例: main)"
+                                placeholder={"Branch name (for example, main)"}
                                 className="w-full text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500/30"
                             />
                             <button
@@ -224,7 +224,7 @@ const CICDPage: React.FC = () => {
                                 className="w-full flex items-center justify-center gap-2 rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-medium py-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {triggering ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
-                                {triggering ? '触发中...' : '触发测试'}
+                                {triggering ? "Triggering..." : "Trigger test"}
                             </button>
                         </div>
                     </div>
@@ -235,7 +235,7 @@ const CICDPage: React.FC = () => {
                             className="w-full p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
                             <h3 className="text-sm font-semibold flex items-center gap-2 text-slate-700 dark:text-slate-200">
                                 <Github className="w-4 h-4 text-slate-700 dark:text-white" />
-                                直连向导
+                                Direct connection guide
                             </h3>
                             <ChevronRight className={`w-3.5 h-3.5 text-slate-400 transition-transform ${wizardOpen ? 'rotate-90' : ''}`} />
                         </button>
@@ -243,7 +243,7 @@ const CICDPage: React.FC = () => {
                             <div className="border-t border-slate-200 dark:border-slate-800 p-4 space-y-4">
                                 {/* Step indicator */}
                                 <div className="flex items-center gap-2">
-                                    {['选择平台', '输入凭据', '配置工作流'].map((label, i) => (
+                                    {["Select platform", "Enter credentials", "Configure workflow"].map((label, i) => (
                                         <React.Fragment key={i}>
                                             <div className={`flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded-full transition ${wizardStep >= i
                                                 ? 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400'
@@ -283,19 +283,19 @@ const CICDPage: React.FC = () => {
                                                 className="w-full text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500/30 font-mono" />
                                         </div>
                                         <div>
-                                            <label className="text-[10px] text-slate-500 uppercase font-semibold tracking-wider">仓库</label>
+                                            <label className="text-[10px] text-slate-500 uppercase font-semibold tracking-wider">Repository</label>
                                             <input type="text" value={wizardRepo} onChange={e => setWizardRepo(e.target.value)}
                                                 placeholder={wizardPlatform === 'github' ? 'owner/repo' : 'group/project'}
                                                 className="w-full text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500/30 font-mono" />
                                         </div>
                                         <div>
-                                            <label className="text-[10px] text-slate-500 uppercase font-semibold tracking-wider">分支</label>
+                                            <label className="text-[10px] text-slate-500 uppercase font-semibold tracking-wider">Branch</label>
                                             <input type="text" value={wizardBranch} onChange={e => setWizardBranch(e.target.value)}
                                                 placeholder="main"
                                                 className="w-full text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500/30 font-mono" />
                                         </div>
                                         <div className="flex gap-2 pt-1">
-                                            <button onClick={() => setWizardStep(0)} className="flex-1 text-xs py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition">上一步</button>
+                                            <button onClick={() => setWizardStep(0)} className="flex-1 text-xs py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition">Back</button>
                                             <button onClick={() => {
                                                 // Generate workflow config
                                                 const webhookUrl = config?.webhook_url || 'https://your-server/api/ci/webhook';
@@ -338,7 +338,7 @@ ai_test:
                                                 /* eslint-enable no-useless-escape */
                                                 setWizardStep(2);
                                             }} disabled={!wizardToken || !wizardRepo}
-                                                className="flex-1 text-xs py-2 rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white font-medium transition disabled:opacity-50">下一步</button>
+                                                className="flex-1 text-xs py-2 rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white font-medium transition disabled:opacity-50">Next</button>
                                         </div>
                                     </div>
                                 )}
@@ -346,16 +346,16 @@ ai_test:
                                 {/* Step 2: Generated Config */}
                                 {wizardStep === 2 && (
                                     <div className="space-y-2">
-                                        <p className="text-[11px] text-slate-500">将以下配置添加到你的仓库 <code className="text-indigo-500">{wizardRepo}</code>:</p>
+                                        <p className="text-[11px] text-slate-500">Add the following configuration to your repository <code className="text-indigo-500">{wizardRepo}</code>:</p>
                                         <pre className="text-[11px] font-mono bg-slate-50 dark:bg-slate-800 rounded-lg p-3 overflow-auto max-h-40 text-slate-600 dark:text-slate-400 whitespace-pre-wrap">{wizardGenerated}</pre>
                                         <div className="flex gap-2">
-                                            <button onClick={() => setWizardStep(1)} className="flex-1 text-xs py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition">上一步</button>
+                                            <button onClick={() => setWizardStep(1)} className="flex-1 text-xs py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition">Back</button>
                                             <button onClick={() => { navigator.clipboard.writeText(wizardGenerated); }}
                                                 className="flex-1 flex items-center justify-center gap-1 text-xs py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white font-medium transition">
-                                                <Copy className="w-3 h-3" /> 复制配置
+                                                <Copy className="w-3 h-3" /> Copy configuration
                                             </button>
                                         </div>
-                                        <p className="text-[10px] text-slate-400">✅复制后粘贴到仓库即可完成集成</p>
+                                        <p className="text-[10px] text-slate-400">✅ Paste the copied configuration into your repository to complete integration</p>
                                     </div>
                                 )}
                             </div>
@@ -370,7 +370,7 @@ ai_test:
                         data={history}
                         rowKey="id"
                         pageSize={8}
-                        emptyText="暂无触发记录，请通过 Webhook 或手动触发测试"
+                        emptyText={"No trigger records yet. Start a test through a webhook or manual trigger."}
                     />
                 </div>
             </div>

@@ -315,7 +315,7 @@ async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
     const response = await fetch(url, options);
     if (!response.ok) {
         const text = await response.text().catch(() => response.statusText);
-        throw new Error(`请求失败 [${response.status}]: ${text}`);
+        throw new Error(`Request failed [${response.status}]: ${text}`);
     }
     return response.json() as Promise<T>;
 }

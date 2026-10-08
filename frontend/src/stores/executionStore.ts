@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 // ============================================================================
-// Execution Store — 会话 + 当前测试批次上下文
+// Execution store: sessions and current test batch context
 // ============================================================================
 
 const STORAGE_KEY = 'ai-test-execution-store';
@@ -49,7 +49,7 @@ function createSessionId() {
 }
 
 function createInitialSession(): SessionInfo {
-    return { id: createSessionId(), name: '会话 1', mode: 'chromium' };
+    return { id: createSessionId(), name: "Session 1", mode: 'chromium' };
 }
 
 function normalizePersistedState(raw: Partial<PersistedExecutionState> | null | undefined): PersistedExecutionState {
@@ -86,7 +86,7 @@ function loadPersistedState(): PersistedExecutionState {
             return normalizePersistedState(JSON.parse(saved) as Partial<PersistedExecutionState>);
         }
     } catch {
-        // 忽略损坏的持久化数据，回退到默认值
+        // Ignore corrupted persisted data and use defaults
     }
     return normalizePersistedState(null);
 }
@@ -121,7 +121,7 @@ export const useExecutionStore = create<ExecutionStoreState>((set, get) => ({
         sessionCounter++;
         const newSession: SessionInfo = {
             id: createSessionId(),
-            name: `会话 ${sessionCounter}`,
+            name: `Session ${sessionCounter}`,
             mode,
         };
         set((state) => {

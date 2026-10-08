@@ -153,7 +153,7 @@ export default function LegionExplorationCenter({
             setSessions(payload.sessions);
             markRefreshed();
         } catch (err) {
-            setError(err instanceof Error ? err.message : '探索会话加载失败');
+            setError(err instanceof Error ? err.message : "Failed to load exploration sessions");
         } finally {
             setLoading(false);
         }
@@ -189,7 +189,7 @@ export default function LegionExplorationCenter({
                 dismissed: dismissedPayload.count,
             });
         } catch (err) {
-            setError(err instanceof Error ? err.message : '人工复核队列加载失败');
+            setError(err instanceof Error ? err.message : "Failed to load human review queue");
         } finally {
             setQueueLoading(false);
         }
@@ -218,7 +218,7 @@ export default function LegionExplorationCenter({
                 onSelectFinding(findingPayload.findings[0].finding_id);
             }
         } catch (err) {
-            setError(err instanceof Error ? err.message : '探索详情加载失败');
+            setError(err instanceof Error ? err.message : "Failed to load exploration details");
         } finally {
             setDetailLoading(false);
         }
@@ -268,7 +268,7 @@ export default function LegionExplorationCenter({
             })
             .catch((err) => {
                 if (cancelled) return;
-                setError(err instanceof Error ? err.message : '探索发现详情加载失败');
+                setError(err instanceof Error ? err.message : "Failed to load exploration finding details");
             });
         return () => {
             cancelled = true;
@@ -290,7 +290,7 @@ export default function LegionExplorationCenter({
     const sessionColumns: DataTableColumn<ExplorationSession>[] = [
         {
             key: 'project_key',
-            title: '项目',
+            title: "Project",
             render: (_, record) => (
                 <div>
                     <div className="font-medium text-slate-900 dark:text-white">{record.project_key || 'platform'}</div>
@@ -298,25 +298,25 @@ export default function LegionExplorationCenter({
                 </div>
             ),
         },
-        { key: 'status', title: '状态' },
+        { key: 'status', title: "Status" },
         {
             key: 'risk_score',
-            title: '风险分',
+            title: "Risk score",
             render: (value) => Number(value || 0).toFixed(2),
         },
         {
             key: 'finding_count',
-            title: '发现数',
+            title: "Findings",
             render: (value) => String(value || 0),
         },
         {
             key: 'human_review_count',
-            title: '人工复核',
+            title: "Human review",
             render: (value) => String(value || 0),
         },
         {
             key: 'created_at',
-            title: '创建时间',
+            title: "Created at",
             render: (value) => formatDateTime(String(value || '')),
         },
     ];
@@ -324,17 +324,17 @@ export default function LegionExplorationCenter({
     const findingColumns: DataTableColumn<ExperienceFinding>[] = [
         {
             key: 'severity',
-            title: '严重级别',
+            title: "Severity",
             render: (value) => (
                 <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${SEVERITY_BADGE[String(value || 'low')] || SEVERITY_BADGE.low}`}>
                     {String(value || 'low')}
                 </span>
             ),
         },
-        { key: 'finding_type', title: '类型' },
+        { key: 'finding_type', title: "Type" },
         {
             key: 'review_status',
-            title: '复核状态',
+            title: "Review status",
             render: (value) => (
                 <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${REVIEW_BADGE[String(value || 'pending')] || REVIEW_BADGE.pending}`}>
                     {String(value || 'pending')}
@@ -343,7 +343,7 @@ export default function LegionExplorationCenter({
         },
         {
             key: 'title',
-            title: '发现',
+            title: "Finding",
             render: (_, record) => (
                 <div>
                     <div className="font-medium text-slate-900 dark:text-white">{record.title}</div>
@@ -355,7 +355,7 @@ export default function LegionExplorationCenter({
 
     const handleLaunch = async () => {
         if (!draft.targetUrl.trim() || !draft.charter.trim()) {
-            setError('请先填写目标 URL 和探索章程。');
+            setError("Enter a target URL and exploration charter first.");
             return;
         }
         setLaunching(true);
@@ -394,7 +394,7 @@ export default function LegionExplorationCenter({
             }));
             await Promise.all([refreshSessions(), refreshReviewQueue()]);
         } catch (err) {
-            setError(err instanceof Error ? err.message : '启动探索会话失败');
+            setError(err instanceof Error ? err.message : "Failed to start exploration session");
         } finally {
             setLaunching(false);
         }
@@ -402,7 +402,7 @@ export default function LegionExplorationCenter({
 
     const handleReview = async (decision: 'confirmed' | 'dismissed') => {
         if (!selectedFinding) {
-            setError('请先选择需要处理的探索发现。');
+            setError("Select an exploration finding to process first.");
             return;
         }
         setReviewing(decision);
@@ -431,7 +431,7 @@ export default function LegionExplorationCenter({
                 selectedSessionId ? refreshSessionDetail(selectedSessionId) : Promise.resolve(),
             ]);
         } catch (err) {
-            setError(err instanceof Error ? err.message : '人工复核提交失败');
+            setError(err instanceof Error ? err.message : "Failed to submit human review");
         } finally {
             setReviewing('');
         }
@@ -454,10 +454,10 @@ export default function LegionExplorationCenter({
     return (
         <div className="space-y-6">
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <SummaryCard label="探索会话" value={String(summary.totalSessions)} hint="当前查询范围内的探索性测试会话数量" icon={<Compass className="h-5 w-5" />} />
-                <SummaryCard label="高风险会话" value={String(summary.highRisk)} hint="风险分大于等于 0.8 的重点探索会话" icon={<AlertTriangle className="h-5 w-5" />} />
-                <SummaryCard label="待复核" value={String(summary.pending)} hint="需要人工处理且仍处于 pending 的探索发现数量" icon={<Eye className="h-5 w-5" />} />
-                <SummaryCard label="已确认 / 已驳回" value={`${summary.confirmed} / ${summary.dismissed}`} hint="人工已处理完成的探索发现最新结论" icon={<CheckCircle2 className="h-5 w-5" />} />
+                <SummaryCard label={"Exploration sessions"} value={String(summary.totalSessions)} hint={"Number of exploratory testing sessions in the current query scope"} icon={<Compass className="h-5 w-5" />} />
+                <SummaryCard label={"High-risk sessions"} value={String(summary.highRisk)} hint={"Priority exploration sessions with a risk score of at least 0.8"} icon={<AlertTriangle className="h-5 w-5" />} />
+                <SummaryCard label={"Pending review"} value={String(summary.pending)} hint={"Exploration findings that require human attention and remain pending"} icon={<Eye className="h-5 w-5" />} />
+                <SummaryCard label={"Confirmed / Rejected"} value={`${summary.confirmed} / ${summary.dismissed}`} hint={"Latest conclusions for findings reviewed by a person"} icon={<CheckCircle2 className="h-5 w-5" />} />
             </div>
 
             {error && (
@@ -469,8 +469,8 @@ export default function LegionExplorationCenter({
             <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                     <div>
-                        <div className="text-lg font-semibold text-slate-900 dark:text-white">探索会话</div>
-                        <div className="mt-1 text-sm text-slate-500 dark:text-slate-400">按测试章程启动探索性测试会话，形成结构化发现和证据包。</div>
+                        <div className="text-lg font-semibold text-slate-900 dark:text-white">Exploration sessions</div>
+                        <div className="mt-1 text-sm text-slate-500 dark:text-slate-400">Start an exploratory testing session from a test charter to produce structured findings and evidence packages.</div>
                     </div>
                     <button
                         type="button"
@@ -478,13 +478,13 @@ export default function LegionExplorationCenter({
                         className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
                     >
                         <Sparkles className="h-4 w-4" />
-                        启动探索会话
+                        Start exploration session
                     </button>
                 </div>
 
                 <div className="mt-4 grid gap-3 md:grid-cols-5">
                     <label className="text-sm text-slate-600 dark:text-slate-300">
-                        项目筛选
+                        Filter projects
                         <input
                             value={explorationFilters.projectKey}
                             onChange={(event) => setExplorationFilters({ projectKey: event.target.value })}
@@ -493,39 +493,39 @@ export default function LegionExplorationCenter({
                         />
                     </label>
                     <label className="text-sm text-slate-600 dark:text-slate-300">
-                        会话状态
+                        Session status
                         <select
                             value={explorationFilters.status}
                             onChange={(event) => setExplorationFilters({ status: event.target.value })}
                             className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
                         >
-                            <option value="">全部状态</option>
+                            <option value="">All statuses</option>
                             {['completed', 'stopped'].map((status) => (
                                 <option key={status} value={status}>{status}</option>
                             ))}
                         </select>
                     </label>
                     <label className="text-sm text-slate-600 dark:text-slate-300">
-                        严重级别
+                        Severity
                         <select
                             value={explorationFilters.severity}
                             onChange={(event) => setExplorationFilters({ severity: event.target.value })}
                             className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
                         >
-                            <option value="">全部级别</option>
+                            <option value="">All levels</option>
                             {['low', 'medium', 'high', 'critical'].map((severity) => (
                                 <option key={severity} value={severity}>{severity}</option>
                             ))}
                         </select>
                     </label>
                     <label className="text-sm text-slate-600 dark:text-slate-300">
-                        复核状态
+                        Review status
                         <select
                             value={explorationFilters.reviewStatus}
                             onChange={(event) => setExplorationFilters({ reviewStatus: event.target.value })}
                             className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
                         >
-                            <option value="">全部状态</option>
+                            <option value="">All statuses</option>
                             {['pending', 'confirmed', 'dismissed'].map((status) => (
                                 <option key={status} value={status}>{status}</option>
                             ))}
@@ -537,7 +537,7 @@ export default function LegionExplorationCenter({
                             checked={explorationFilters.reviewOnly}
                             onChange={(event) => setExplorationFilters({ reviewOnly: event.target.checked })}
                         />
-                        仅看人工复核
+                        Human review only
                     </label>
                 </div>
 
@@ -547,29 +547,29 @@ export default function LegionExplorationCenter({
                         data={sessions}
                         rowKey="session_id"
                         loading={loading}
-                        emptyText="暂无探索会话"
+                        emptyText={"No exploration sessions yet"}
                         activeRowKey={selectedSessionId}
                         onRowClick={(record) => onSelectSession(record.session_id)}
                     />
 
                     <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 dark:border-slate-700 dark:bg-slate-950/50">
                         <div className="flex items-center justify-between">
-                            <div className="text-base font-semibold text-slate-900 dark:text-white">会话详情</div>
+                            <div className="text-base font-semibold text-slate-900 dark:text-white">Session details</div>
                             {detailLoading && <Loader2 className="h-4 w-4 animate-spin text-slate-400" />}
                         </div>
                         {!sessionDetail ? (
-                            <div className="mt-4 text-sm text-slate-500 dark:text-slate-400">选择一个探索会话后，这里会展示章程、风险摘要和当前发现。</div>
+                            <div className="mt-4 text-sm text-slate-500 dark:text-slate-400">Select an exploration session to view its charter, risk summary, and current findings.</div>
                         ) : (
                             <div className="mt-4 space-y-4 text-sm text-slate-600 dark:text-slate-300">
                                 <div className="space-y-2">
                                     <div className="font-medium text-slate-900 dark:text-white">{sessionDetail.target_url}</div>
-                                    <div>项目：{sessionDetail.project_key || 'platform'}</div>
-                                    <div>章程：{sessionDetail.charter}</div>
-                                    <div>风险分：{sessionDetail.risk_score.toFixed(2)}</div>
-                                    <div>创建时间：{formatDateTime(sessionDetail.created_at)}</div>
+                                    <div>Project: {sessionDetail.project_key || 'platform'}</div>
+                                    <div>Charter: {sessionDetail.charter}</div>
+                                    <div>Risk score: {sessionDetail.risk_score.toFixed(2)}</div>
+                                    <div>Created at: {formatDateTime(sessionDetail.created_at)}</div>
                                 </div>
                                 <div>
-                                    <div className="text-xs uppercase tracking-[0.18em] text-slate-400">总结</div>
+                                    <div className="text-xs uppercase tracking-[0.18em] text-slate-400">Summary</div>
                                     <pre className="mt-2 overflow-auto rounded-xl bg-slate-900 p-3 text-xs text-slate-100">{JSON.stringify(sessionDetail.summary, null, 2)}</pre>
                                 </div>
                             </div>
@@ -581,18 +581,18 @@ export default function LegionExplorationCenter({
             <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     <div>
-                        <div className="text-lg font-semibold text-slate-900 dark:text-white">探索发现与人工复核</div>
-                        <div className="mt-1 text-sm text-slate-500 dark:text-slate-400">每条发现都带证据包、影响范围和 AI 置信度，可直接进入人工复核并沉淀最终结论。</div>
+                        <div className="text-lg font-semibold text-slate-900 dark:text-white">Exploration findings and human review</div>
+                        <div className="mt-1 text-sm text-slate-500 dark:text-slate-400">Each finding includes evidence, impact scope, and AI confidence. Review it to record a final conclusion.</div>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                         {selectedSessionId && (
                             <div className="rounded-xl bg-slate-100 px-3 py-2 text-sm text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                                当前会话：{selectedSessionId}
+                                Current session: {selectedSessionId}
                             </div>
                         )}
                         {selectedFindingId && (
                             <div className="rounded-xl bg-slate-100 px-3 py-2 text-sm text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                                当前发现：{selectedFindingId}
+                                Current finding: {selectedFindingId}
                             </div>
                         )}
                     </div>
@@ -600,30 +600,30 @@ export default function LegionExplorationCenter({
 
                 <div className="mt-4 grid gap-4 md:grid-cols-3">
                     <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 dark:border-amber-900/40 dark:bg-amber-950/20">
-                        <div className="text-xs uppercase tracking-[0.18em] text-amber-700/70 dark:text-amber-200/70">待复核队列</div>
+                        <div className="text-xs uppercase tracking-[0.18em] text-amber-700/70 dark:text-amber-200/70">Pending review queue</div>
                         <div className="mt-2 text-2xl font-semibold text-amber-800 dark:text-amber-100">{summary.pending}</div>
-                        <div className="mt-2 text-sm text-amber-800/80 dark:text-amber-200/80">需要人工确认后再沉淀最终判断的发现数。</div>
+                        <div className="mt-2 text-sm text-amber-800/80 dark:text-amber-200/80">Findings that require human confirmation before a final judgment is recorded.</div>
                     </div>
                     <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4 dark:border-emerald-900/40 dark:bg-emerald-950/20">
-                        <div className="text-xs uppercase tracking-[0.18em] text-emerald-700/70 dark:text-emerald-200/70">已确认</div>
+                        <div className="text-xs uppercase tracking-[0.18em] text-emerald-700/70 dark:text-emerald-200/70">Confirmed</div>
                         <div className="mt-2 text-2xl font-semibold text-emerald-800 dark:text-emerald-100">{summary.confirmed}</div>
-                        <div className="mt-2 text-sm text-emerald-800/80 dark:text-emerald-200/80">人工确认后保留下来的问题与风险。</div>
+                        <div className="mt-2 text-sm text-emerald-800/80 dark:text-emerald-200/80">Issues and risks retained after human confirmation.</div>
                     </div>
                     <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 dark:border-slate-700 dark:bg-slate-950/60">
-                        <div className="text-xs uppercase tracking-[0.18em] text-slate-500">已驳回</div>
+                        <div className="text-xs uppercase tracking-[0.18em] text-slate-500">Rejected</div>
                         <div className="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">{summary.dismissed}</div>
-                        <div className="mt-2 text-sm text-slate-500 dark:text-slate-400">人工判定无需继续跟进的发现。</div>
+                        <div className="mt-2 text-sm text-slate-500 dark:text-slate-400">Findings that a reviewer determined need no further action.</div>
                     </div>
                 </div>
 
                 <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50/80 p-4 dark:border-slate-700 dark:bg-slate-950/50">
                     <div className="flex items-center justify-between">
-                        <div className="text-sm font-medium text-slate-900 dark:text-white">待复核队列</div>
+                        <div className="text-sm font-medium text-slate-900 dark:text-white">Pending review queue</div>
                         {queueLoading && <Loader2 className="h-4 w-4 animate-spin text-slate-400" />}
                     </div>
                     <div className="mt-3 space-y-2">
                         {reviewQueueFindings.length === 0 ? (
-                            <div className="text-sm text-slate-500 dark:text-slate-400">当前范围内暂无待复核探索发现。</div>
+                            <div className="text-sm text-slate-500 dark:text-slate-400">No exploration findings await review in the current scope.</div>
                         ) : reviewQueueFindings.slice(0, 5).map((finding) => (
                             <button
                                 key={finding.finding_id}
@@ -656,15 +656,15 @@ export default function LegionExplorationCenter({
                         data={findings}
                         rowKey="finding_id"
                         loading={detailLoading}
-                        emptyText="暂无探索发现"
+                        emptyText={"No exploration findings yet"}
                         activeRowKey={selectedFindingId}
                         onRowClick={(record) => onSelectFinding(record.finding_id)}
                     />
 
                     <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 dark:border-slate-700 dark:bg-slate-950/50">
-                        <div className="text-base font-semibold text-slate-900 dark:text-white">发现详情</div>
+                        <div className="text-base font-semibold text-slate-900 dark:text-white">Finding details</div>
                         {!selectedFinding ? (
-                            <div className="mt-4 text-sm text-slate-500 dark:text-slate-400">选择一条发现后，这里会展示证据包、复现步骤、影响范围与人工复核动作。</div>
+                            <div className="mt-4 text-sm text-slate-500 dark:text-slate-400">Select a finding to view evidence, reproduction steps, impact scope, and review actions.</div>
                         ) : (
                             <div className="mt-4 space-y-4">
                                 <div className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
@@ -677,49 +677,49 @@ export default function LegionExplorationCenter({
                                         </span>
                                         {selectedFinding.requires_human_review && (
                                             <span className="inline-flex rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-200">
-                                                需人工复核
+                                                Human review required
                                             </span>
                                         )}
                                     </div>
                                     <div className="font-medium text-slate-900 dark:text-white">{selectedFinding.title}</div>
                                     <div>{selectedFinding.summary}</div>
-                                    <div>类型：{selectedFinding.finding_type}</div>
-                                    <div>置信度：{selectedFinding.confidence.toFixed(2)}</div>
-                                    <div>复核人：{selectedFinding.reviewed_by || '-'}</div>
-                                    <div>复核时间：{formatDateTime(selectedFinding.reviewed_at)}</div>
-                                    <div>复核备注：{selectedFinding.review_comment || '-'}</div>
+                                    <div>Type: {selectedFinding.finding_type}</div>
+                                    <div>Confidence: {selectedFinding.confidence.toFixed(2)}</div>
+                                    <div>Reviewer: {selectedFinding.reviewed_by || '-'}</div>
+                                    <div>Reviewed at: {formatDateTime(selectedFinding.reviewed_at)}</div>
+                                    <div>Review notes: {selectedFinding.review_comment || '-'}</div>
                                 </div>
                                 <div>
-                                    <div className="text-xs uppercase tracking-[0.18em] text-slate-400">复现步骤</div>
+                                    <div className="text-xs uppercase tracking-[0.18em] text-slate-400">Reproduction steps</div>
                                     <div className="mt-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
                                         {Array.isArray(selectedFinding.evidence?.reproduction_steps)
                                             ? (selectedFinding.evidence.reproduction_steps as unknown[]).map((item, index) => (
                                                 <div key={`${selectedFinding.finding_id}-step-${index}`}>{index + 1}. {String(item)}</div>
                                             ))
-                                            : '暂无复现步骤'}
+                                            : "No reproduction steps"}
                                     </div>
                                 </div>
                                 <div className="grid gap-4 md:grid-cols-2">
                                     <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
-                                        <div className="text-xs uppercase tracking-[0.18em] text-slate-400">影响范围</div>
+                                        <div className="text-xs uppercase tracking-[0.18em] text-slate-400">Impact scope</div>
                                         <div className="mt-2">{String(selectedFinding.evidence?.impact_scope || '-')}</div>
                                     </div>
                                     <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
-                                        <div className="text-xs uppercase tracking-[0.18em] text-slate-400">AI 置信度</div>
+                                        <div className="text-xs uppercase tracking-[0.18em] text-slate-400">AI confidence</div>
                                         <div className="mt-2">{String(selectedFinding.evidence?.ai_confidence ?? selectedFinding.confidence)}</div>
                                     </div>
                                 </div>
                                 <div>
-                                    <div className="text-xs uppercase tracking-[0.18em] text-slate-400">证据包</div>
+                                    <div className="text-xs uppercase tracking-[0.18em] text-slate-400">Evidence package</div>
                                     <pre className="mt-2 overflow-auto rounded-xl bg-slate-900 p-3 text-xs text-slate-100">{JSON.stringify(selectedFinding.evidence, null, 2)}</pre>
                                 </div>
                                 <label className="block text-sm text-slate-600 dark:text-slate-300">
-                                    复核备注
+                                    Review notes
                                     <textarea
                                         value={reviewComment}
                                         onChange={(event) => setReviewComment(event.target.value)}
                                         rows={4}
-                                        placeholder="可选：补充确认依据、驳回原因或后续跟进建议"
+                                        placeholder={"Optional: add confirmation evidence, rejection reasons, or follow-up suggestions"}
                                         className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
                                     />
                                 </label>
@@ -731,7 +731,7 @@ export default function LegionExplorationCenter({
                                         className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-emerald-500 disabled:opacity-50"
                                     >
                                         {reviewing === 'confirmed' ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-                                        确认问题
+                                        Confirm issue
                                     </button>
                                     <button
                                         type="button"
@@ -740,7 +740,7 @@ export default function LegionExplorationCenter({
                                         className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-700 disabled:opacity-50 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
                                     >
                                         {reviewing === 'dismissed' ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
-                                        驳回问题
+                                        Reject issue
                                     </button>
                                     {selectedFinding.review_status !== 'pending' && (
                                         <button
@@ -749,7 +749,7 @@ export default function LegionExplorationCenter({
                                             className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
                                         >
                                             <AlertTriangle className="h-4 w-4" />
-                                            回到控制中心重新生成发布风险评估
+                                            Return to the control center to regenerate the release risk assessment
                                         </button>
                                     )}
                                 </div>
@@ -764,20 +764,20 @@ export default function LegionExplorationCenter({
                     <div className="w-full max-w-2xl rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-700 dark:bg-slate-900">
                         <div className="flex items-center justify-between">
                             <div>
-                                <div className="text-lg font-semibold text-slate-900 dark:text-white">启动探索会话</div>
-                                <div className="mt-1 text-sm text-slate-500 dark:text-slate-400">提交后将通过命令网关创建新的探索 command run，并自动回填结构化发现。</div>
+                                <div className="text-lg font-semibold text-slate-900 dark:text-white">Start exploration session</div>
+                                <div className="mt-1 text-sm text-slate-500 dark:text-slate-400">Submitting creates a new exploration command run through the command gateway and automatically adds structured findings.</div>
                             </div>
                             <button
                                 type="button"
                                 onClick={() => setLaunchOpen(false)}
                                 className="rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                             >
-                                关闭
+                                Close
                             </button>
                         </div>
                         <div className="mt-5 grid gap-4">
                             <label className="text-sm text-slate-600 dark:text-slate-300">
-                                项目标识
+                                Project identifier
                                 <input
                                     value={draft.projectKey}
                                     onChange={(event) => setDraft((prev) => ({ ...prev, projectKey: event.target.value }))}
@@ -785,7 +785,7 @@ export default function LegionExplorationCenter({
                                 />
                             </label>
                             <label className="text-sm text-slate-600 dark:text-slate-300">
-                                执行分组
+                                Execution group
                                 <input
                                     value={draft.groupId}
                                     onChange={(event) => setDraft((prev) => ({ ...prev, groupId: event.target.value }))}
@@ -793,7 +793,7 @@ export default function LegionExplorationCenter({
                                 />
                             </label>
                             <label className="text-sm text-slate-600 dark:text-slate-300">
-                                目标 URL
+                                Target URL
                                 <input
                                     value={draft.targetUrl}
                                     onChange={(event) => setDraft((prev) => ({ ...prev, targetUrl: event.target.value }))}
@@ -802,7 +802,7 @@ export default function LegionExplorationCenter({
                                 />
                             </label>
                             <label className="text-sm text-slate-600 dark:text-slate-300">
-                                探索章程
+                                Exploration charter
                                 <textarea
                                     value={draft.charter}
                                     onChange={(event) => setDraft((prev) => ({ ...prev, charter: event.target.value }))}
@@ -814,7 +814,7 @@ export default function LegionExplorationCenter({
                         <div className="mt-6 flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-950/60 dark:text-slate-300">
                             <div className="flex items-center gap-2">
                                 <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                                探索会话产物会自动落到结构化 evidence 和人工复核队列里。
+                                Exploration results are automatically saved as structured evidence and added to the human review queue.
                             </div>
                             <button
                                 type="button"
@@ -823,7 +823,7 @@ export default function LegionExplorationCenter({
                                 className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 disabled:opacity-50 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
                             >
                                 {launching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                                提交探索命令
+                                Submit exploration command
                             </button>
                         </div>
                     </div>

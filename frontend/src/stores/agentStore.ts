@@ -2,15 +2,15 @@ import { create } from 'zustand';
 import { AgentType, AgentStat } from '../types';
 
 // ============================================================================
-// Agent Store — Agent 状态统计管理
+// Agent store: agent status statistics
 // ============================================================================
 
 const DEFAULT_AGENTS: AgentStat[] = [
-    { id: AgentType.PLANNER, name: 'Planner Agent', role: '测试策略规划', status: 'IDLE', tasksCompleted: 0, successRate: 100 },
-    { id: AgentType.UI, name: 'UI Agent', role: 'Web UI 自动化', status: 'IDLE', tasksCompleted: 0, successRate: 100 },
-    { id: AgentType.API, name: 'API Agent', role: 'API 接口测试', status: 'IDLE', tasksCompleted: 0, successRate: 100 },
-    { id: AgentType.DATA, name: 'Data Agent', role: '数据验证', status: 'IDLE', tasksCompleted: 0, successRate: 100 },
-    { id: AgentType.RCA, name: 'RCA Agent', role: '根因分析', status: 'IDLE', tasksCompleted: 0, successRate: 100 },
+    { id: AgentType.PLANNER, name: 'Planner Agent', role: "Test strategy planning", status: 'IDLE', tasksCompleted: 0, successRate: 100 },
+    { id: AgentType.UI, name: 'UI Agent', role: "Web UI automation", status: 'IDLE', tasksCompleted: 0, successRate: 100 },
+    { id: AgentType.API, name: 'API Agent', role: "API testing", status: 'IDLE', tasksCompleted: 0, successRate: 100 },
+    { id: AgentType.DATA, name: 'Data Agent', role: "Data validation", status: 'IDLE', tasksCompleted: 0, successRate: 100 },
+    { id: AgentType.RCA, name: 'RCA Agent', role: "Root cause analysis", status: 'IDLE', tasksCompleted: 0, successRate: 100 },
 ];
 
 interface AgentStoreState {

@@ -34,11 +34,11 @@ export interface TestStep {
     description: string;
     status: StepStatus;
     logs: string[];
-    action: string;           // 动作类型: goto, fill, click, assert, wait, key, hover, select, scroll, etc.
-    target: string;           // 操作目标: URL、元素描述、断言文本等
-    value?: string;           // 填写值（仅 fill 等动作需要）
-    priority?: string;        // 优先级: P0/P1/P2
-    scenario?: string;        // 所属场景名称
+    action: string;           // Action type: goto, fill, click, assert, wait, key, hover, select, scroll, etc.
+    target: string;           // Action target: URL, element description, assertion text, etc.
+    value?: string;           // Input value (only for actions such as fill)
+    priority?: string;        // Priority: P0/P1/P2
+    scenario?: string;        // Parent scenario name
     code?: string; // Display code (Playwright/Python)
     executableScript?: string; // Real JS for execution (Local only)
     duration?: number;

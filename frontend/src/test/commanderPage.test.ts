@@ -29,9 +29,9 @@ describe('CommanderPage bug summary helpers', () => {
                 bug_summary: [
                     {
                         test_type: 'security',
-                        title: '安全扫描',
+                        title: "Security scanning",
                         status: 'error',
-                        summary: '发现高危漏洞',
+                        summary: "High-severity vulnerability found",
                         execution_record_id: 'security_demo',
                     },
                 ],
@@ -39,7 +39,7 @@ describe('CommanderPage bug summary helpers', () => {
         });
 
         expect(items).toHaveLength(1);
-        expect(items[0].title).toBe('安全扫描');
+        expect(items[0].title).toBe("Security scanning");
         expect(items[0].execution_record_id).toBe('security_demo');
     });
 
@@ -50,15 +50,15 @@ describe('CommanderPage bug summary helpers', () => {
                     test_type: 'ui_e2e',
                     title: '',
                     status: 'error',
-                    summary: '登录按钮无法点击',
+                    summary: "The login button cannot be clicked",
                 },
             ],
             report: null,
         });
 
         expect(items).toHaveLength(1);
-        expect(items[0].title).toBe('UI 自动化');
-        expect(items[0].summary).toBe('登录按钮无法点击');
+        expect(items[0].title).toBe("UI automation");
+        expect(items[0].summary).toBe("The login button cannot be clicked");
     });
 
     it('should build execution center path for group and record deep link', () => {
@@ -76,15 +76,15 @@ describe('CommanderPage bug summary helpers', () => {
             bug_summary: [
                 {
                     test_type: 'security',
-                    title: '安全扫描',
+                    title: "Security scanning",
                     status: 'error',
-                    summary: '发现高危漏洞',
+                    summary: "High-severity vulnerability found",
                 },
             ],
             report: null,
         }, false);
 
-        expect(badges.map(item => item.label)).toEqual(['3 条测试线', '待生成报告', '1 个问题']);
+        expect(badges.map(item => item.label)).toEqual(["3 test tracks", "Report pending", "1 issue"]);
         expect(badges.map(item => item.tone)).toEqual(['neutral', 'amber', 'red']);
     });
 
@@ -119,9 +119,9 @@ describe('CommanderPage bug summary helpers', () => {
                 bug_summary: [
                     {
                         test_type: 'security',
-                        title: '安全扫描',
+                        title: "Security scanning",
                         status: 'error',
-                        summary: '发现问题',
+                        summary: "Issues found",
                     },
                 ],
                 report: {
@@ -180,15 +180,15 @@ describe('CommanderPage bug summary helpers', () => {
                 bug_summary: [
                     {
                         test_type: 'security',
-                        title: '安全扫描',
+                        title: "Security scanning",
                         status: 'error',
-                        summary: '发现高危漏洞',
+                        summary: "High-severity vulnerability found",
                     },
                     {
                         test_type: 'api_rest',
-                        title: 'API 测试',
+                        title: "API testing",
                         status: 'error',
-                        summary: '健康检查接口返回 500',
+                        summary: "The health endpoint returned 500",
                     },
                 ],
                 report: null,
@@ -198,9 +198,9 @@ describe('CommanderPage bug summary helpers', () => {
                 bug_summary: [
                     {
                         test_type: 'api_rest',
-                        title: 'API 测试',
+                        title: "API testing",
                         status: 'error',
-                        summary: '健康检查接口返回 500',
+                        summary: "The health endpoint returned 500",
                     },
                 ],
                 report: null,
@@ -210,8 +210,8 @@ describe('CommanderPage bug summary helpers', () => {
         expect(hotspots).toHaveLength(2);
         expect(hotspots[0]).toMatchObject({
             testType: 'api_rest',
-            title: 'API 测试',
-            summary: '健康检查接口返回 500',
+            title: "API testing",
+            summary: "The health endpoint returned 500",
             status: 'error',
             count: 2,
             missionIds: ['m1', 'm2'],
@@ -219,8 +219,8 @@ describe('CommanderPage bug summary helpers', () => {
         });
         expect(hotspots[1]).toMatchObject({
             testType: 'security',
-            title: '安全扫描',
-            summary: '发现高危漏洞',
+            title: "Security scanning",
+            summary: "High-severity vulnerability found",
             count: 1,
             missionIds: ['m1'],
             primaryMissionId: 'm1',
@@ -230,9 +230,9 @@ describe('CommanderPage bug summary helpers', () => {
     it('should build hotspot key using test type, title and summary', () => {
         expect(buildCommanderBugHotspotKey({
             test_type: 'api_rest',
-            title: 'API 测试',
-            summary: '健康检查接口返回 500',
-        })).toBe('api_rest::API 测试::健康检查接口返回 500');
+            title: "API testing",
+            summary: "The health endpoint returned 500",
+        })).toBe("api_rest::API testing::The health endpoint returned 500");
     });
 
     it('should filter missions by the selected hotspot key', () => {
@@ -242,9 +242,9 @@ describe('CommanderPage bug summary helpers', () => {
                 bug_summary: [
                     {
                         test_type: 'security',
-                        title: '安全扫描',
+                        title: "Security scanning",
                         status: 'error',
-                        summary: '发现高危漏洞',
+                        summary: "High-severity vulnerability found",
                     },
                 ],
                 report: null,
@@ -254,17 +254,17 @@ describe('CommanderPage bug summary helpers', () => {
                 bug_summary: [
                     {
                         test_type: 'api_rest',
-                        title: 'API 测试',
+                        title: "API testing",
                         status: 'error',
-                        summary: '健康检查接口返回 500',
+                        summary: "The health endpoint returned 500",
                     },
                 ],
                 report: null,
             },
         ] as never as Parameters<typeof filterCommanderMissionsByBugHotspot>[0];
 
-        expect(filterCommanderMissionsByBugHotspot(missions, 'security::安全扫描::发现高危漏洞').map(item => item.mission_id)).toEqual(['m1']);
-        expect(filterCommanderMissionsByBugHotspot(missions, 'api_rest::API 测试::健康检查接口返回 500').map(item => item.mission_id)).toEqual(['m2']);
+        expect(filterCommanderMissionsByBugHotspot(missions, "security::Security scanning::High-severity vulnerability found").map(item => item.mission_id)).toEqual(['m1']);
+        expect(filterCommanderMissionsByBugHotspot(missions, "api_rest::API testing::The health endpoint returned 500").map(item => item.mission_id)).toEqual(['m2']);
         expect(filterCommanderMissionsByBugHotspot(missions, null).map(item => item.mission_id)).toEqual(['m1', 'm2']);
     });
 
@@ -273,22 +273,22 @@ describe('CommanderPage bug summary helpers', () => {
             {
                 mission_id: 'm1',
                 execution_group_id: 'm1',
-                user_input: '测试登录流程',
+                user_input: "Test the login workflow",
                 created_at: '2026-03-17T10:00:00',
                 status: 'completed',
                 bug_summary: [
                     {
                         test_type: 'security',
-                        title: '安全扫描',
+                        title: "Security scanning",
                         status: 'error',
-                        summary: '发现高危漏洞',
+                        summary: "High-severity vulnerability found",
                         execution_record_id: 'record_security',
                     },
                     {
                         test_type: 'api_rest',
-                        title: 'API 测试',
+                        title: "API testing",
                         status: 'warning',
-                        summary: '接口响应过慢',
+                        summary: "API response is too slow",
                     },
                 ],
                 report: null,
@@ -296,15 +296,15 @@ describe('CommanderPage bug summary helpers', () => {
             {
                 mission_id: 'm2',
                 execution_group_id: 'm2',
-                user_input: '测试支付流程',
+                user_input: "Test the payment workflow",
                 created_at: '2026-03-17T09:00:00',
                 status: 'failed',
                 bug_summary: [
                     {
                         test_type: 'ui_e2e',
-                        title: 'UI 自动化',
+                        title: "UI automation",
                         status: 'recovered',
-                        summary: '弹窗遮挡已恢复',
+                        summary: "Dialog obstruction resolved",
                     },
                 ],
                 report: null,
@@ -323,26 +323,26 @@ describe('CommanderPage bug summary helpers', () => {
         expect(allItems).toHaveLength(3);
         expect(allItems[0]).toMatchObject({
             missionId: 'm1',
-            title: '安全扫描',
-            summary: '发现高危漏洞',
+            title: "Security scanning",
+            summary: "High-severity vulnerability found",
             severityKey: 'error',
             hasReport: true,
             executionRecordId: 'record_security',
         });
         expect(allItems[1]).toMatchObject({
             missionId: 'm1',
-            title: 'API 测试',
+            title: "API testing",
             severityKey: 'warning',
         });
         expect(allItems[2]).toMatchObject({
             missionId: 'm2',
-            title: 'UI 自动化',
+            title: "UI automation",
             severityKey: 'recovered',
             hasReport: false,
         });
 
-        expect(buildCommanderBugBoardItems(missions, reportMap, 'warning', 8).map(item => item.title)).toEqual(['API 测试']);
-        expect(buildCommanderBugBoardItems(missions, reportMap, 'recovered', 8).map(item => item.title)).toEqual(['UI 自动化']);
+        expect(buildCommanderBugBoardItems(missions, reportMap, 'warning', 8).map(item => item.title)).toEqual(["API testing"]);
+        expect(buildCommanderBugBoardItems(missions, reportMap, 'recovered', 8).map(item => item.title)).toEqual(["UI automation"]);
     });
 
     it('should collect unique mission ids from bug board items in order', () => {
@@ -398,9 +398,9 @@ describe('CommanderPage bug summary helpers', () => {
                 bug_summary: [
                     {
                         test_type: 'security',
-                        title: '安全扫描',
+                        title: "Security scanning",
                         status: 'error',
-                        summary: '发现问题',
+                        summary: "Issues found",
                     },
                 ],
                 report: null,
@@ -417,9 +417,9 @@ describe('CommanderPage bug summary helpers', () => {
                 bug_summary: [
                     {
                         test_type: 'api_rest',
-                        title: 'API 测试',
+                        title: "API testing",
                         status: 'warning',
-                        summary: '响应变慢',
+                        summary: "Response slowed down",
                     },
                 ],
                 report: null,
@@ -450,7 +450,7 @@ describe('CommanderPage bug summary helpers', () => {
             missionIds: ['m1', 'm2'],
         })).toMatchObject({
             tone: 'success',
-            message: '批量处理完成：新生成 1 份，已存在 2 份，失败 0 份。',
+            message: "Batch processing completed: generated 1, already existed 2, failed 0.",
             missionIds: ['m1', 'm2'],
             actionKind: 'focus_selected',
         });
@@ -462,14 +462,14 @@ describe('CommanderPage bug summary helpers', () => {
             missionIds: ['m3'],
         })).toMatchObject({
             tone: 'warning',
-            message: '问题清单处理完成：新生成 0 份，已存在 1 份，失败 1 份。',
+            message: "Issue list processing completed: generated 0, already existed 1, failed 1.",
             missionIds: ['m3'],
             actionKind: 'focus_selected',
         });
 
         expect(buildCommanderBatchActionFeedback('clear', { count: 3, missionIds: ['m1', 'm3'] })).toMatchObject({
             tone: 'info',
-            message: '已清空 3 条已选任务。',
+            message: "Cleared 3 selected tasks.",
             missionIds: ['m1', 'm3'],
             actionKind: 'restore_selected',
         });
@@ -505,9 +505,9 @@ describe('CommanderPage bug summary helpers', () => {
                 bug_summary: [
                     {
                         test_type: 'security',
-                        title: '安全扫描',
+                        title: "Security scanning",
                         status: 'error',
-                        summary: '发现问题',
+                        summary: "Issues found",
                     },
                 ],
                 report: null,
@@ -532,19 +532,19 @@ describe('CommanderPage bug summary helpers', () => {
         const missions = [
             {
                 mission_id: 'm_alpha',
-                user_input: '测试登录流程',
+                user_input: "Test the login workflow",
                 target_url: 'https://demo.example.com/login',
                 execution_group_id: 'm_alpha',
             },
             {
                 mission_id: 'm_beta',
-                user_input: '测试支付流程',
+                user_input: "Test the payment workflow",
                 target_url: 'https://demo.example.com/pay',
                 execution_group_id: 'm_beta',
             },
         ] as never as Parameters<typeof searchCommanderMissions>[0];
 
-        expect(searchCommanderMissions(missions, '登录').map(item => item.mission_id)).toEqual(['m_alpha']);
+        expect(searchCommanderMissions(missions, "Login").map(item => item.mission_id)).toEqual(['m_alpha']);
         expect(searchCommanderMissions(missions, 'm_beta').map(item => item.mission_id)).toEqual(['m_beta']);
         expect(searchCommanderMissions(missions, 'demo.example.com/pay').map(item => item.mission_id)).toEqual(['m_beta']);
     });
@@ -565,9 +565,9 @@ describe('CommanderPage bug summary helpers', () => {
                 bug_summary: [
                     {
                         test_type: 'security',
-                        title: '安全扫描',
+                        title: "Security scanning",
                         status: 'error',
-                        summary: '发现问题',
+                        summary: "Issues found",
                     },
                 ],
                 report: null,

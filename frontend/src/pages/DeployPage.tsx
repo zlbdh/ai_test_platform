@@ -64,15 +64,15 @@ const EMPTY_AUDIT_FILTER: AuditFilterState = {
 };
 
 const DEPLOY_AUDIT_ACTION_OPTIONS: Array<{ value: string; label: string }> = [
-    { value: '', label: '全部动作' },
-    { value: 'deploy_full_request', label: '提交审批' },
-    { value: 'deploy_approval_approve', label: '审批通过' },
-    { value: 'deploy_approval_reject', label: '审批驳回' },
-    { value: 'deploy_repo_full', label: '直接部署' },
-    { value: 'deploy_project_full', label: '全部直接部署' },
-    { value: 'deploy_job_cancel', label: '取消作业' },
-    { value: 'deploy_history_delete', label: '删除历史' },
-    { value: 'deploy_history_clear', label: '清空历史' },
+    { value: '', label: "All actions" },
+    { value: 'deploy_full_request', label: "Submit for approval" },
+    { value: 'deploy_approval_approve', label: "Approval granted" },
+    { value: 'deploy_approval_reject', label: "Approval rejected" },
+    { value: 'deploy_repo_full', label: "Direct deployment" },
+    { value: 'deploy_project_full', label: "Deploy all directly" },
+    { value: 'deploy_job_cancel', label: "Cancel job" },
+    { value: 'deploy_history_delete', label: "Delete history" },
+    { value: 'deploy_history_clear', label: "Clear history" },
 ];
 
 const formatEnvVars = (envVars?: Record<string, string>): string => {
@@ -85,7 +85,7 @@ const hasDeployContextContent = (ctx: DeployContext): boolean =>
 
 const formatDateTime = (value: string): string => {
     if (!value) return '-';
-    return new Date(value).toLocaleString('zh-CN', {
+    return new Date(value).toLocaleString('en-US', {
         month: '2-digit',
         day: '2-digit',
         hour: '2-digit',
@@ -95,23 +95,23 @@ const formatDateTime = (value: string): string => {
 
 const deployAuditActionLabel = (action: string): string => {
     const meta: Record<string, string> = {
-        deploy_project_add: '新增项目',
-        deploy_project_update: '更新项目',
-        deploy_project_delete: '删除项目',
-        deploy_project_token_update: '更新令牌',
-        deploy_repo_clone: '克隆仓库',
-        deploy_repo_install: '安装依赖',
-        deploy_repo_start: '启动服务',
-        deploy_repo_stop: '停止服务',
-        deploy_repo_full: '直接部署',
-        deploy_project_full: '全部直接部署',
-        deploy_full_request: '提交审批',
-        deploy_approval_approve: '审批通过',
-        deploy_approval_reject: '审批驳回',
-        deploy_job_cancel: '取消作业',
-        deploy_history_delete: '删除历史',
-        deploy_history_clear: '清空历史',
-        deploy_memory_clear: '清理记忆',
+        deploy_project_add: "Add project",
+        deploy_project_update: "Update project",
+        deploy_project_delete: "Delete project",
+        deploy_project_token_update: "Update token",
+        deploy_repo_clone: "Clone repository",
+        deploy_repo_install: "Install dependencies",
+        deploy_repo_start: "Start service",
+        deploy_repo_stop: "Stop service",
+        deploy_repo_full: "Direct deployment",
+        deploy_project_full: "Deploy all directly",
+        deploy_full_request: "Submit for approval",
+        deploy_approval_approve: "Approval granted",
+        deploy_approval_reject: "Approval rejected",
+        deploy_job_cancel: "Cancel job",
+        deploy_history_delete: "Delete history",
+        deploy_history_clear: "Clear history",
+        deploy_memory_clear: "Clear deployment memory",
     };
     return meta[action] || action;
 };
@@ -130,7 +130,7 @@ const getDeployAuditSummary = (log: DeployAuditLog): string => {
     const branch = typeof log.details.branch === 'string' ? log.details.branch : '';
     const jobId = typeof log.details.job_id === 'string' ? log.details.job_id : '';
     const recordId = typeof log.details.record_id === 'string' ? log.details.record_id : '';
-    const parts = [comment, branch ? `分支 ${branch}` : '', jobId ? `作业 ${jobId}` : '', recordId ? `记录 ${recordId}` : '']
+    const parts = [comment, branch ? `Branch ${branch}` : '', jobId ? `Job ${jobId}` : '', recordId ? `Record ${recordId}` : '']
         .filter(Boolean);
     return parts.join(' · ') || '-';
 };
@@ -208,7 +208,7 @@ const DeployPage: React.FC = () => {
     const [editInitialRepos, setEditInitialRepos] = useState<RepoFormItem[]>([]);
     const [editInitialToken, setEditInitialToken] = useState('');
 
-    // AI 分析状态
+    // AI analysis status
     const [aiLoading, setAiLoading] = useState<Record<string, boolean>>({});
     const [aiResult, setAiResult] = useState<AIAnalysis | null>(null);
     const [aiResultRepo, setAiResultRepo] = useState<{ pk: string; rid: string; label: string } | null>(null);
@@ -230,7 +230,7 @@ const DeployPage: React.FC = () => {
         comment: '',
     });
 
-    // 部署进度
+    // Deployment progress
     const [deployProgress, setDeployProgress] = useState<ProgressState>({
         open: false, repoLabel: '', steps: [], logs: [], finalStatus: '', finalMessage: '',
     });
@@ -377,7 +377,7 @@ const DeployPage: React.FC = () => {
         } catch (error) {
             setAuditLogs([]);
             setSelectedAuditLog(null);
-            setAuditError(error instanceof Error ? error.message : '部署审计加载失败');
+            setAuditError(error instanceof Error ? error.message : "Failed to load deployment audit");
         } finally {
             setAuditLoading(false);
         }
@@ -402,7 +402,7 @@ const DeployPage: React.FC = () => {
                 setAuditLogs([]);
                 setAuditError('');
                 setSelectedAuditLog(null);
-                setAuthError(storedToken ? '当前部署认证已失效，请重新登录。' : '');
+                setAuthError(storedToken ? "Deployment authentication has expired. Sign in again." : '');
                 setLoading(false);
                 return;
             }
@@ -416,7 +416,7 @@ const DeployPage: React.FC = () => {
                 setAuditLogs([]);
                 setAuditError('');
                 setSelectedAuditLog(null);
-                setAuthError('当前角色没有部署查看权限，可登录其他账号或联系管理员开通 deploy_view。');
+                setAuthError("Your role lacks deployment viewing permission. Sign in with another account or ask an administrator for deploy_view.");
                 setLoading(false);
                 return;
             }
@@ -430,7 +430,7 @@ const DeployPage: React.FC = () => {
             setAuditError('');
             setSelectedAuditLog(null);
             setAuthProfile(null);
-            setAuthError(error instanceof Error ? error.message : '部署认证状态校验失败');
+            setAuthError(error instanceof Error ? error.message : "Failed to verify deployment authentication");
             setLoading(false);
             return;
         }
@@ -455,7 +455,7 @@ const DeployPage: React.FC = () => {
             setAuditLogs([]);
             setAuditError('');
             setSelectedAuditLog(null);
-            setAuthError(error instanceof Error ? error.message : '部署数据加载失败');
+            setAuthError(error instanceof Error ? error.message : "Failed to load deployment data");
         }
         setLoading(false);
     }, [loadAuditLogs]);
@@ -476,7 +476,7 @@ const DeployPage: React.FC = () => {
 
     const handleAuthLogin = async () => {
         if (!authForm.username || !authForm.password) {
-            setAuthError('请输入用户名和密码');
+            setAuthError("Enter a username and password");
             return;
         }
         setAuthBusy(true);
@@ -487,14 +487,14 @@ const DeployPage: React.FC = () => {
             setAuthForm(prev => ({ ...prev, password: '' }));
             await load();
         } catch (error) {
-            setAuthError(error instanceof Error ? error.message : '登录失败');
+            setAuthError(error instanceof Error ? error.message : "Sign-in failed");
         }
         setAuthBusy(false);
     };
 
     const handleAttachToken = async () => {
         if (!authForm.token.trim()) {
-            setAuthError('请输入访问 token');
+            setAuthError("Enter an access token");
             return;
         }
         setAuthBusy(true);
@@ -505,7 +505,7 @@ const DeployPage: React.FC = () => {
             setAuthForm(prev => ({ ...prev, token: '' }));
             await load();
         } catch (error) {
-            setAuthError(error instanceof Error ? error.message : '保存 token 失败');
+            setAuthError(error instanceof Error ? error.message : "Failed to save token");
         }
         setAuthBusy(false);
     };
@@ -565,11 +565,11 @@ const DeployPage: React.FC = () => {
         });
     };
 
-    // ── 步骤元数据 ──
+    // Step metadata
     const STEP_META: Record<string, { label: string }> = {
-        clone: { label: '📥 克隆' },
-        install: { label: '📦 安装' },
-        start: { label: '🚀 启动' },
+        clone: { label: "📥 Clone" },
+        install: { label: "📦 Install" },
+        start: { label: "🚀 Start" },
     };
 
     const trackDeployRecord = useCallback((
@@ -583,9 +583,9 @@ const DeployPage: React.FC = () => {
             open: true,
             repoLabel: label,
             steps: [
-                { name: 'clone', label: '📥 克隆', status: 'pending', message: '', duration_ms: 0 },
-                { name: 'install', label: '📦 安装', status: 'pending', message: '', duration_ms: 0 },
-                { name: 'start', label: '🚀 启动', status: 'pending', message: '', duration_ms: 0 },
+                { name: 'clone', label: "📥 Clone", status: 'pending', message: '', duration_ms: 0 },
+                { name: 'install', label: "📦 Install", status: 'pending', message: '', duration_ms: 0 },
+                { name: 'start', label: "🚀 Start", status: 'pending', message: '', duration_ms: 0 },
             ],
             logs: [initialLog],
             finalStatus: '',
@@ -632,12 +632,12 @@ const DeployPage: React.FC = () => {
         setTimeout(() => clearInterval(poll), 600000);
     }, [load]);
 
-    // ── 直接部署 (轮询进度) ──
+    // Direct deployment with progress polling
     const startFullDeploy = async (pk: string, rid: string, label: string) => {
         const actionId = `${rid}_full`;
         setActionLoading(p => ({ ...p, [actionId]: true }));
 
-        // 发起部署 (后台执行, 返回 record_id)
+        // Start deployment in the background and return record_id.
         let recordId = '';
         try {
             const res = await fullDeployRepo(pk, rid);
@@ -645,11 +645,11 @@ const DeployPage: React.FC = () => {
         } catch { /* ignore */ }
 
         if (!recordId) {
-            setDeployProgress(p => ({ ...p, finalStatus: 'failed', finalMessage: '启动部署失败' }));
+            setDeployProgress(p => ({ ...p, finalStatus: 'failed', finalMessage: "Failed to start deployment" }));
             setActionLoading(p => ({ ...p, [actionId]: false }));
             return;
         }
-        trackDeployRecord(recordId, label, '🔄 直接部署已启动...', actionId);
+        trackDeployRecord(recordId, label, "🔄 Direct deployment started...", actionId);
     };
 
     const closeProgress = () => {
@@ -674,7 +674,7 @@ const DeployPage: React.FC = () => {
                 trackDeployRecord(
                     approval.record_id,
                     approval.repo_label || targetLabel,
-                    '✅ 审批已通过，部署任务已启动...',
+                    "✅ Approval granted; deployment task started...",
                 );
             }
 
@@ -683,7 +683,7 @@ const DeployPage: React.FC = () => {
         setActionLoading(p => ({ ...p, [actionId]: false }));
     };
 
-    // ── AI 分析配置 ──
+    // AI configuration analysis
     const handleAiAnalyze = async (pk: string, rid: string, label: string) => {
         const loadKey = `${pk}_${rid}_ai`;
         setAiLoading(p => ({ ...p, [loadKey]: true }));
@@ -704,7 +704,7 @@ const DeployPage: React.FC = () => {
                 });
             }
         } catch (e) {
-            setAiResult({ error: '请求失败', source: 'ai' } as AIAnalysis);
+            setAiResult({ error: "Request failed", source: 'ai' } as AIAnalysis);
             setAiResultRepo({ pk, rid, label });
             setDeployContext(EMPTY_DEPLOY_CONTEXT);
             setShowContext(false);
@@ -716,7 +716,7 @@ const DeployPage: React.FC = () => {
     const handleApplyAiConfig = async () => {
         if (!aiResultRepo || !aiResult || aiResult.error) return;
         const { pk, rid, label } = aiResultRepo;
-        // 如果有 pom 修改建议，标记用户确认应用
+        // Mark suggested pom changes for user confirmation.
         const ctxWithPom = {
             ...deployContext,
             ...(aiResult.suggested_changes?.length ? {
@@ -730,7 +730,7 @@ const DeployPage: React.FC = () => {
         startFullDeploy(pk, rid, label);
     };
 
-    // ── AI 二次确认 ──
+    // AI confirmation
     const handleAiRefine = async () => {
         if (!aiResultRepo || !aiResult || aiResult.error) return;
         const { pk, rid } = aiResultRepo;
@@ -772,7 +772,7 @@ const DeployPage: React.FC = () => {
     };
 
     const handleDelete = async (key: string, name: string) => {
-        if (!confirm(`确定删除项目「${name}」及其所有仓库？`)) return;
+        if (!confirm(`Delete project "${name}" and all its repositories?`)) return;
         await deleteProject(key);
         await load();
     };
@@ -790,7 +790,7 @@ const DeployPage: React.FC = () => {
         await load();
     };
     const handleClearHistory = async () => {
-        if (!confirm('确定清空全部部署历史？此操作不可恢复。')) return;
+        if (!confirm("Clear all deployment history? This cannot be undone.")) return;
         await clearHistory();
         await load();
     };
@@ -849,7 +849,7 @@ const DeployPage: React.FC = () => {
             focusApprovalRow(approval.id);
         } catch (error) {
             setLinkedApproval(null);
-            setAuditLinkedError(error instanceof Error ? error.message : '加载关联审批单失败');
+            setAuditLinkedError(error instanceof Error ? error.message : "Failed to load linked approval request");
         } finally {
             setAuditLinkedLoading('');
         }
@@ -867,7 +867,7 @@ const DeployPage: React.FC = () => {
             focusJobRow(job.id);
         } catch (error) {
             setLinkedJob(null);
-            setAuditLinkedError(error instanceof Error ? error.message : '加载关联作业失败');
+            setAuditLinkedError(error instanceof Error ? error.message : "Failed to load linked job");
         } finally {
             setAuditLinkedLoading('');
         }
@@ -875,7 +875,7 @@ const DeployPage: React.FC = () => {
 
     const handleCancelJob = async (job: DeployJob) => {
         if (!canAdmin) return;
-        if (!confirm(`确定取消作业「${job.id}」吗？`)) return;
+        if (!confirm(`Cancel job "${job.id}"?`)) return;
         const actionId = `job_cancel_${job.id}`;
         setActionLoading(prev => ({ ...prev, [actionId]: true }));
         try {
@@ -902,7 +902,7 @@ const DeployPage: React.FC = () => {
         try {
             const record = await getRecordDetail(recordId);
             if (!record?.id) {
-                throw new Error('未找到关联部署记录');
+                throw new Error("Linked deployment record not found");
             }
             setHistory(prev => {
                 const existingIndex = prev.findIndex(item => item.id === record.id);
@@ -917,10 +917,10 @@ const DeployPage: React.FC = () => {
             trackDeployRecord(
                 recordId,
                 record.repo_label || getDeployAuditTarget(selectedAuditLog),
-                '🔍 从审计详情打开部署记录...',
+                "🔍 Opening deployment record from audit details...",
             );
         } catch (error) {
-            setAuditLinkedError(error instanceof Error ? error.message : '加载关联部署记录失败');
+            setAuditLinkedError(error instanceof Error ? error.message : "Failed to load linked deployment record");
         } finally {
             setAuditLinkedLoading('');
         }
@@ -928,13 +928,13 @@ const DeployPage: React.FC = () => {
 
     // ── History columns ──
     const jobColumns: DataTableColumn<DeployJob>[] = [
-        { key: 'id', title: '作业', width: '120px', render: v => <code className="text-[11px] font-mono">{String(v)}</code> },
-        { key: 'repo_label', title: '目标', sortable: true, render: v => <span className="text-xs font-medium">{String(v) || '-'}</span> },
-        { key: 'action', title: '动作', render: v => <span className="text-xs">{actionLabel(String(v))}</span> },
-        { key: 'status', title: '状态', sortable: true, render: v => statusBadge(String(v)) },
+        { key: 'id', title: "Job", width: '120px', render: v => <code className="text-[11px] font-mono">{String(v)}</code> },
+        { key: 'repo_label', title: "Target", sortable: true, render: v => <span className="text-xs font-medium">{String(v) || '-'}</span> },
+        { key: 'action', title: "Action", render: v => <span className="text-xs">{actionLabel(String(v))}</span> },
+        { key: 'status', title: "Status", sortable: true, render: v => statusBadge(String(v)) },
         {
             key: 'message',
-            title: '说明',
+            title: "Description",
             render: (_v, row) => (
                 <div className="space-y-1">
                     <div className="text-xs text-slate-500 line-clamp-1" title={row.message || row.record_message || '-'}>
@@ -949,7 +949,7 @@ const DeployPage: React.FC = () => {
         },
         {
             key: 'created_at',
-            title: '创建时间',
+            title: "Created at",
             sortable: true,
             render: v => formatDateTime(String(v)),
         },
@@ -961,7 +961,7 @@ const DeployPage: React.FC = () => {
                 const actionId = `job_cancel_${row.id}`;
                 const cancelable = ['queued', 'running'].includes(row.status);
                 if (!cancelable) {
-                    return <span className="text-[11px] text-slate-400">{row.status === 'cancel_requested' ? '取消中' : '已结束'}</span>;
+                    return <span className="text-[11px] text-slate-400">{row.status === 'cancel_requested' ? "Canceling" : "Finished"}</span>;
                 }
                 return (
                     <button
@@ -969,12 +969,12 @@ const DeployPage: React.FC = () => {
                             event.stopPropagation();
                             handleCancelJob(row);
                         }}
-                        title="取消作业"
+                        title={"Cancel job"}
                         disabled={!canAdmin || !!actionLoading[actionId]}
                         className="inline-flex items-center gap-1 rounded-lg border border-red-200 dark:border-red-800 px-2 py-1 text-[11px] font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50"
                     >
                         {actionLoading[actionId] ? <Loader2 className="w-3 h-3 animate-spin" /> : <Square className="w-3 h-3" />}
-                        取消
+                        Cancel
                     </button>
                 );
             },
@@ -983,15 +983,15 @@ const DeployPage: React.FC = () => {
 
     const historyColumns: DataTableColumn<DeployRecord>[] = [
         { key: 'id', title: 'ID', width: '70px', render: (v) => <code className="text-xs font-mono">{String(v)}</code> },
-        { key: 'repo_label', title: '仓库', sortable: true, render: v => <span className="text-xs font-medium">{String(v) || '-'}</span> },
-        { key: 'action', title: '操作', render: v => <span className="text-xs">{actionLabel(String(v))}</span> },
-        { key: 'status', title: '状态', sortable: true, render: v => statusBadge(String(v)) },
-        { key: 'message', title: '消息', render: v => <span className="text-xs text-slate-500 line-clamp-1">{String(v)}</span> },
-        { key: 'duration_ms', title: '耗时', sortable: true, align: 'right' as const, render: v => `${(Number(v) / 1000).toFixed(1)}s` },
-        { key: 'started_at', title: '时间', sortable: true, render: v => new Date(String(v)).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) },
+        { key: 'repo_label', title: "Repository", sortable: true, render: v => <span className="text-xs font-medium">{String(v) || '-'}</span> },
+        { key: 'action', title: "Actions", render: v => <span className="text-xs">{actionLabel(String(v))}</span> },
+        { key: 'status', title: "Status", sortable: true, render: v => statusBadge(String(v)) },
+        { key: 'message', title: "Message", render: v => <span className="text-xs text-slate-500 line-clamp-1">{String(v)}</span> },
+        { key: 'duration_ms', title: "Duration", sortable: true, align: 'right' as const, render: v => `${(Number(v) / 1000).toFixed(1)}s` },
+        { key: 'started_at', title: "Time", sortable: true, render: v => new Date(String(v)).toLocaleString('en-US', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) },
         {
             key: '_actions' as any, title: '', width: '40px', render: (_v, row) => (
-                <button onClick={() => handleDeleteRecord(String((row as DeployRecord).id))} title="删除" disabled={!canAdmin}
+                <button onClick={() => handleDeleteRecord(String((row as DeployRecord).id))} title={"Delete"} disabled={!canAdmin}
                     className="p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-300 hover:text-red-500 transition-colors disabled:opacity-40">
                     <Trash2 className="w-3 h-3" />
                 </button>
@@ -1000,14 +1000,14 @@ const DeployPage: React.FC = () => {
     ];
 
     const approvalColumns: DataTableColumn<DeployApproval>[] = [
-        { key: 'id', title: '审批单', width: '120px', render: v => <code className="text-[11px] font-mono">{String(v)}</code> },
-        { key: 'repo_label', title: '目标', sortable: true, render: v => <span className="text-xs font-medium">{String(v) || '-'}</span> },
-        { key: 'action', title: '动作', render: v => <span className="text-xs">{actionLabel(String(v))}</span> },
-        { key: 'requested_by_name', title: '申请人', render: v => <span className="text-xs text-slate-500">{String(v) || '-'}</span> },
-        { key: 'status', title: '状态', sortable: true, render: v => statusBadge(String(v)) },
+        { key: 'id', title: "Approval request", width: '120px', render: v => <code className="text-[11px] font-mono">{String(v)}</code> },
+        { key: 'repo_label', title: "Target", sortable: true, render: v => <span className="text-xs font-medium">{String(v) || '-'}</span> },
+        { key: 'action', title: "Action", render: v => <span className="text-xs">{actionLabel(String(v))}</span> },
+        { key: 'requested_by_name', title: "Requested by", render: v => <span className="text-xs text-slate-500">{String(v) || '-'}</span> },
+        { key: 'status', title: "Status", sortable: true, render: v => statusBadge(String(v)) },
         {
             key: 'message',
-            title: '说明',
+            title: "Description",
             render: (_v, row) => (
                 <div className="space-y-1">
                     <div className="text-xs text-slate-500 line-clamp-1" title={row.review_comment || row.message}>
@@ -1022,9 +1022,9 @@ const DeployPage: React.FC = () => {
         },
         {
             key: 'requested_at',
-            title: '申请时间',
+            title: "Requested at",
             sortable: true,
-            render: v => new Date(String(v)).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }),
+            render: v => new Date(String(v)).toLocaleString('en-US', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }),
         },
         {
             key: '_actions' as any,
@@ -1035,21 +1035,21 @@ const DeployPage: React.FC = () => {
                     <div className="flex items-center justify-end gap-1">
                         <button
                             onClick={() => openApprovalDialog(row, 'approve')}
-                            title="批准"
+                            title={"Approve"}
                             className="p-1.5 rounded-lg border border-emerald-200 dark:border-emerald-800 text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
                         >
                             <CheckCircle2 className="w-3 h-3" />
                         </button>
                         <button
                             onClick={() => openApprovalDialog(row, 'reject')}
-                            title="驳回"
+                            title={"Reject"}
                             className="p-1.5 rounded-lg border border-red-200 dark:border-red-800 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                         >
                             <XCircle className="w-3 h-3" />
                         </button>
                     </div>
                 ) : (
-                    <span className="text-[11px] text-slate-400">{row.status === 'pending' ? '待审批' : '已处理'}</span>
+                    <span className="text-[11px] text-slate-400">{row.status === 'pending' ? "Awaiting approval" : "Processed"}</span>
                 )
             ),
         },
@@ -1058,36 +1058,36 @@ const DeployPage: React.FC = () => {
     const auditColumns: DataTableColumn<DeployAuditLog>[] = [
         {
             key: 'timestamp',
-            title: '时间',
+            title: "Time",
             sortable: true,
             width: '110px',
             render: v => <span className="text-xs text-slate-500">{formatDateTime(String(v))}</span>,
         },
         {
             key: 'action',
-            title: '动作',
+            title: "Action",
             render: v => <span className="text-xs font-medium text-slate-700 dark:text-slate-200">{deployAuditActionLabel(String(v))}</span>,
         },
         {
             key: 'project_key',
-            title: '项目',
+            title: "Project",
             sortable: true,
             render: v => <span className="text-xs text-cyan-600 dark:text-cyan-300">{String(v) || '-'}</span>,
         },
         {
             key: 'username',
-            title: '操作人',
+            title: "Operator",
             sortable: true,
             render: (_v, row) => <span className="text-xs text-slate-500">{row.username || row.user_id || '-'}</span>,
         },
         {
             key: 'resource_id',
-            title: '目标',
+            title: "Target",
             render: (_v, row) => <span className="text-xs font-medium text-slate-600 dark:text-slate-300">{getDeployAuditTarget(row)}</span>,
         },
         {
             key: 'details',
-            title: '摘要',
+            title: "Summary",
             render: (_v, row) => (
                 <div className="space-y-1">
                     <div className="text-xs text-slate-500 line-clamp-1" title={getDeployAuditSummary(row)}>
@@ -1132,24 +1132,24 @@ const DeployPage: React.FC = () => {
         : history;
 
     if (loading) {
-        return <div className="flex items-center justify-center h-64 text-slate-400"><RefreshCw className="w-6 h-6 animate-spin mr-2" /> 加载中...</div>;
+        return <div className="flex items-center justify-center h-64 text-slate-400"><RefreshCw className="w-6 h-6 animate-spin mr-2" /> Loading...</div>;
     }
 
     const mainContent = (
         <div className="space-y-6 max-w-7xl mx-auto">
             <PageHeader
                 icon={<Rocket className="w-5 h-5" />}
-                title="待测项目部署"
-                description="添加待测项目的 Git 仓库（前端/后端），支持直接部署或先 AI 分析配置后部署"
+                title={"Deploy projects for testing"}
+                description={"Add frontend and backend Git repositories for projects under test. Deploy directly or analyze the configuration with AI first."}
                 accent="cyan"
                 actions={
                     <div className="flex items-center gap-2">
                         <button onClick={handleAdd}
                             disabled={!canAdmin}
                             className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white text-xs font-semibold shadow-sm transition-all">
-                            <Plus className="w-3.5 h-3.5" /> 添加项目
+                            <Plus className="w-3.5 h-3.5" /> Add project
                         </button>
-                        <button onClick={load} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400" title="刷新">
+                        <button onClick={load} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400" title={"Refresh"}>
                             <RefreshCw className="w-4 h-4" />
                         </button>
                     </div>
@@ -1172,13 +1172,13 @@ const DeployPage: React.FC = () => {
                             {authProfile ? <ShieldCheck className="w-4 h-4" /> : <ShieldAlert className="w-4 h-4" />}
                         </div>
                         <div>
-                            <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">部署控制面认证</h3>
+                            <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">Deployment control authentication</h3>
                             <p className="text-[11px] text-slate-500 dark:text-slate-400">
                     {isDevBypassAuth
-                        ? '当前处于本地开发免登录模式，已自动附加开发用户权限，可直接验证部署链路。'
+                        ? "Local development mode bypasses sign-in and automatically attaches developer permissions so you can test the deployment flow."
                         : authProfile
-                            ? '当前已带认证访问部署接口，下面的权限状态来自当前角色。'
-                            : '部署接口已启用认证；先登录或粘贴 token，页面才会真正带权限访问。'}
+                            ? "Deployment requests are authenticated. The permissions below reflect your current role."
+                            : "Deployment authentication is enabled. Sign in or paste a token before this page can make authorized requests."}
                             </p>
                         </div>
                     </div>
@@ -1188,7 +1188,7 @@ const DeployPage: React.FC = () => {
                             disabled={authBusy}
                             className="px-3 py-1.5 rounded-lg border border-emerald-200 dark:border-emerald-800 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100/70 dark:hover:bg-emerald-900/20 transition-colors disabled:opacity-50"
                         >
-                            {authBusy ? '退出中...' : '退出认证'}
+                            {authBusy ? "Signing out..." : "Sign out"}
                         </button>
                     ) : null}
                 </div>
@@ -1203,24 +1203,24 @@ const DeployPage: React.FC = () => {
                                 </span>
                                 {isDevBypassAuth ? (
                                     <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-cyan-100 dark:bg-cyan-900/30 text-[11px] font-semibold text-cyan-700 dark:text-cyan-300">
-                                        开发免登录
+                                        Development sign-in bypass
                                     </span>
                                 ) : null}
                                 <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-cyan-100 dark:bg-cyan-900/30 text-[11px] font-semibold text-cyan-700 dark:text-cyan-300">
-                                    角色：{authProfile.role}
+                                    Role: {authProfile.role}
                                 </span>
                                 {authProfile.expires_at ? (
                                     <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                                        过期时间：{new Date(authProfile.expires_at).toLocaleString('zh-CN')}
+                                        Expires at: {new Date(authProfile.expires_at).toLocaleString('en-US')}
                                     </span>
                                 ) : null}
                             </div>
                             <div className="rounded-xl border border-white/80 dark:border-slate-700 bg-white/80 dark:bg-slate-900/50 px-3 py-3">
-                                <div className="text-[10px] uppercase tracking-wider text-slate-400">项目范围</div>
+                                <div className="text-[10px] uppercase tracking-wider text-slate-400">Project scope</div>
                                 <div className="mt-2 flex flex-wrap items-center gap-2">
                                     {canAdmin ? (
                                         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">
-                                            全部项目（管理员）
+                                            All projects (administrator)
                                         </span>
                                     ) : visibleProjectScopes.length > 0 ? (
                                         visibleProjectScopes.map(projectId => (
@@ -1233,17 +1233,17 @@ const DeployPage: React.FC = () => {
                                         ))
                                     ) : (
                                         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-[11px] font-semibold text-slate-500 dark:text-slate-300">
-                                            全部项目（未限制）
+                                            All projects (unrestricted)
                                         </span>
                                     )}
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                                 {[
-                                    { key: 'deploy_view', label: '可查看', enabled: canView },
-                                    { key: 'deploy_request', label: '可申请审批', enabled: canRequest },
-                                    { key: 'deploy_approve', label: '可审批', enabled: canApprove },
-                                    { key: 'admin', label: '可直接执行', enabled: canAdmin },
+                                    { key: 'deploy_view', label: "Can view", enabled: canView },
+                                    { key: 'deploy_request', label: "Can request approval", enabled: canRequest },
+                                    { key: 'deploy_approve', label: "Can approve", enabled: canApprove },
+                                    { key: 'admin', label: "Can execute directly", enabled: canAdmin },
                                 ].map(item => (
                                     <div key={item.key} className="rounded-xl border border-white/80 dark:border-slate-700 bg-white/80 dark:bg-slate-900/50 px-3 py-3">
                                         <div className="text-[10px] uppercase tracking-wider text-slate-400">{item.key}</div>
@@ -1257,18 +1257,18 @@ const DeployPage: React.FC = () => {
                     ) : (
                         <div className="grid lg:grid-cols-2 gap-4">
                             <div className="rounded-xl border border-white/80 dark:border-slate-700 bg-white/80 dark:bg-slate-900/50 p-4 space-y-3">
-                                <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">账号登录</div>
+                                <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Account sign-in</div>
                                 <input
                                     value={authForm.username}
                                     onChange={e => setAuthForm(prev => ({ ...prev, username: e.target.value }))}
-                                    placeholder="用户名"
+                                    placeholder={"Username"}
                                     className="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/70 outline-none focus:ring-2 focus:ring-cyan-500/30"
                                 />
                                 <input
                                     type="password"
                                     value={authForm.password}
                                     onChange={e => setAuthForm(prev => ({ ...prev, password: e.target.value }))}
-                                    placeholder="密码"
+                                    placeholder={"Password"}
                                     className="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/70 outline-none focus:ring-2 focus:ring-cyan-500/30"
                                 />
                                 <button
@@ -1276,17 +1276,17 @@ const DeployPage: React.FC = () => {
                                     disabled={authBusy}
                                     className="w-full px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-xs font-semibold hover:from-cyan-600 hover:to-blue-600 transition-all disabled:opacity-60"
                                 >
-                                    {authBusy ? '登录中...' : '登录部署控制面'}
+                                    {authBusy ? "Signing in..." : "Sign in to deployment control"}
                                 </button>
                             </div>
 
                             <div className="rounded-xl border border-white/80 dark:border-slate-700 bg-white/80 dark:bg-slate-900/50 p-4 space-y-3">
-                                <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">手动附加 Token</div>
+                                <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Attach token manually</div>
                                 <textarea
                                     value={authForm.token}
                                     onChange={e => setAuthForm(prev => ({ ...prev, token: e.target.value }))}
                                     rows={4}
-                                    placeholder="粘贴 /api/auth/login 返回的 token"
+                                    placeholder={"Paste the token returned by /api/auth/login"}
                                     className="w-full px-3 py-2 text-xs font-mono rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/70 outline-none focus:ring-2 focus:ring-cyan-500/30 resize-none"
                                 />
                                 <button
@@ -1294,7 +1294,7 @@ const DeployPage: React.FC = () => {
                                     disabled={authBusy}
                                     className="w-full px-4 py-2.5 rounded-xl border border-cyan-200 dark:border-cyan-800 text-cyan-700 dark:text-cyan-300 text-xs font-semibold hover:bg-cyan-100/70 dark:hover:bg-cyan-900/20 transition-colors disabled:opacity-60"
                                 >
-                                    {authBusy ? '校验中...' : '保存并校验 Token'}
+                                    {authBusy ? "Validating..." : "Save and validate token"}
                                 </button>
                             </div>
                         </div>
@@ -1311,25 +1311,25 @@ const DeployPage: React.FC = () => {
 
             {/* Stats */}
             <div className="grid grid-cols-2 lg:grid-cols-7 gap-4">
-                <StatCard icon={<Activity className="w-5 h-5" />} label="总部署次数" value={totalDeploys} gradient="bg-gradient-to-br from-cyan-500 to-cyan-700" />
-                <StatCard icon={<CheckCircle2 className="w-5 h-5" />} label="成功" value={successCount} gradient="bg-gradient-to-br from-emerald-500 to-emerald-700" />
-                <StatCard icon={<XCircle className="w-5 h-5" />} label="失败" value={failedCount} gradient="bg-gradient-to-br from-red-500 to-red-700" />
-                <StatCard icon={<Server className="w-5 h-5" />} label="运行中" value={runningCount} gradient="bg-gradient-to-br from-indigo-500 to-indigo-700" />
-                <StatCard icon={<Clock className="w-5 h-5" />} label="待审批" value={pendingApprovalCount} gradient="bg-gradient-to-br from-amber-500 to-orange-600" />
-                <StatCard icon={<Terminal className="w-5 h-5" />} label="活跃作业" value={activeJobCount} gradient="bg-gradient-to-br from-cyan-600 to-blue-700" />
-                <StatCard icon={<Users className="w-5 h-5" />} label="审计操作人" value={auditUserCount} gradient="bg-gradient-to-br from-slate-500 to-slate-700" />
+                <StatCard icon={<Activity className="w-5 h-5" />} label={"Total deployments"} value={totalDeploys} gradient="bg-gradient-to-br from-cyan-500 to-cyan-700" />
+                <StatCard icon={<CheckCircle2 className="w-5 h-5" />} label={"Success"} value={successCount} gradient="bg-gradient-to-br from-emerald-500 to-emerald-700" />
+                <StatCard icon={<XCircle className="w-5 h-5" />} label={"Failed"} value={failedCount} gradient="bg-gradient-to-br from-red-500 to-red-700" />
+                <StatCard icon={<Server className="w-5 h-5" />} label={"Running"} value={runningCount} gradient="bg-gradient-to-br from-indigo-500 to-indigo-700" />
+                <StatCard icon={<Clock className="w-5 h-5" />} label={"Awaiting approval"} value={pendingApprovalCount} gradient="bg-gradient-to-br from-amber-500 to-orange-600" />
+                <StatCard icon={<Terminal className="w-5 h-5" />} label={"Active jobs"} value={activeJobCount} gradient="bg-gradient-to-br from-cyan-600 to-blue-700" />
+                <StatCard icon={<Users className="w-5 h-5" />} label={"Audit operators"} value={auditUserCount} gradient="bg-gradient-to-br from-slate-500 to-slate-700" />
             </div>
 
             {/* Empty State */}
             {projects.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-16 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
                     <div className="p-4 rounded-2xl bg-cyan-100 dark:bg-cyan-900/30 text-cyan-500 mb-4"><FolderGit2 className="w-8 h-8" /></div>
-                    <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-1">暂无待测项目</h3>
-                    <p className="text-xs text-slate-400 mb-4">点击「添加项目」输入项目名称和 Git 仓库地址</p>
+                    <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-1">No projects to test yet</h3>
+                    <p className="text-xs text-slate-400 mb-4">Click Add project and enter a project name and Git repository URL</p>
                     <button onClick={handleAdd}
                         disabled={!canAdmin}
                         className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-xs font-semibold shadow-sm transition-all">
-                        <Plus className="w-3.5 h-3.5" /> 添加第一个项目
+                        <Plus className="w-3.5 h-3.5" /> Add your first project
                     </button>
                 </div>
             )}
@@ -1346,10 +1346,10 @@ const DeployPage: React.FC = () => {
                             <div>
                                 <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">{proj.name}</h3>
                                 <p className="text-[11px] text-slate-400">
-                                    {proj.repos.length} 个仓库
+                                    {proj.repos.length} repositories
                                     {proj.has_token
-                                        ? <span className="ml-2 inline-flex items-center gap-0.5 text-emerald-500"><Key className="w-2.5 h-2.5" />令牌已配置</span>
-                                        : <span className="ml-2 inline-flex items-center gap-0.5 text-amber-400"><Key className="w-2.5 h-2.5" />未配置令牌</span>
+                                        ? <span className="ml-2 inline-flex items-center gap-0.5 text-emerald-500"><Key className="w-2.5 h-2.5" />Token configured</span>
+                                        : <span className="ml-2 inline-flex items-center gap-0.5 text-amber-400"><Key className="w-2.5 h-2.5" />No token configured</span>
                                     }
                                 </p>
                             </div>
@@ -1359,22 +1359,22 @@ const DeployPage: React.FC = () => {
                                 disabled={!canRequest || !!actionLoading[`approval_all_${proj.key}`]}
                                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-300 text-[11px] font-semibold transition-all disabled:opacity-50">
                                 {actionLoading[`approval_all_${proj.key}`] ? <Loader2 className="w-3 h-3 animate-spin" /> : <Clock className="w-3 h-3" />}
-                                申请全部审批
+                                Request approval for all
                             </button>
                             <button onClick={() => doAction(`all_${proj.key}`, () => fullDeployAll(proj.key))}
                                 disabled={!canAdmin || !!actionLoading[`all_${proj.key}`]}
                                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white text-[11px] font-semibold transition-all disabled:opacity-50 shadow-sm">
                                 {actionLoading[`all_${proj.key}`] ? <Loader2 className="w-3 h-3 animate-spin" /> : <Rocket className="w-3 h-3" />}
-                                全部直接部署
+                                Deploy all directly
                             </button>
                             <button onClick={() => handleEdit(proj)}
                                 disabled={!canAdmin}
-                                className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition-colors" title="编辑">
+                                className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition-colors" title={"Edit"}>
                                 <Pencil className="w-3.5 h-3.5" />
                             </button>
                             <button onClick={() => handleDelete(proj.key, proj.name)}
                                 disabled={!canAdmin}
-                                className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 hover:text-red-500 transition-colors" title="删除">
+                                className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 hover:text-red-500 transition-colors" title={"Delete"}>
                                 <Trash2 className="w-3.5 h-3.5" />
                             </button>
                         </div>
@@ -1392,21 +1392,21 @@ const DeployPage: React.FC = () => {
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer"
                                             onClick={() => { setSelectedRepo({ pk: proj.key, rid: repo.id, label: repo.label }); refreshLogs(repo.id); }}>
-                                            <div className={`p-2 rounded-lg shrink-0 ${repo.label.includes('前端') || repo.label.toLowerCase().includes('front')
+                                            <div className={`p-2 rounded-lg shrink-0 ${(repo.label.includes('前端') || repo.label.includes("Frontend")) || repo.label.toLowerCase().includes('front')
                                                 ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600'
                                                 : 'bg-violet-100 dark:bg-violet-900/30 text-violet-600'
                                                 }`}>
-                                                {repo.label.includes('前端') || repo.label.toLowerCase().includes('front')
+                                                {(repo.label.includes('前端') || repo.label.includes("Frontend")) || repo.label.toLowerCase().includes('front')
                                                     ? <Globe className="w-4 h-4" />
                                                     : <Server className="w-4 h-4" />}
                                             </div>
                                             <div className="min-w-0 flex-1">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{repo.label || '默认'}</span>
+                                                    <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{repo.label || "Default"}</span>
                                                     {statusBadge(repo.status)}
                                                     {repo.has_memory && (
-                                                        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-gradient-to-r from-purple-100 to-fuchsia-100 dark:from-purple-900/30 dark:to-fuchsia-900/30 text-purple-600 dark:text-purple-400 text-[10px] font-semibold" title={`累计成功部署 ${repo.deploy_count || 0} 次`}>
-                                                            🧠 {(repo.deploy_count || 0) > 0 ? `×${repo.deploy_count}` : '记忆'}
+                                                        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-gradient-to-r from-purple-100 to-fuchsia-100 dark:from-purple-900/30 dark:to-fuchsia-900/30 text-purple-600 dark:text-purple-400 text-[10px] font-semibold" title={`Successful deployments: ${repo.deploy_count || 0} occurrences`}>
+                                                            🧠 {(repo.deploy_count || 0) > 0 ? `×${repo.deploy_count}` : "Deployment memory"}
                                                         </span>
                                                     )}
                                                     {repo.tech_stack && <span className="text-[10px] text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded max-w-[200px] truncate inline-block align-middle" title={repo.tech_stack}>{repo.tech_stack}</span>}
@@ -1428,39 +1428,39 @@ const DeployPage: React.FC = () => {
                                         {/* Repo Actions */}
                                         <div className="flex items-center gap-1.5 shrink-0 ml-3">
                                             <button onClick={() => handleRequestRepoApproval(proj.key, repo.id)}
-                                                disabled={!canRequest || isLoading('approval_request')} title="申请审批部署" aria-label="申请审批部署"
+                                                disabled={!canRequest || isLoading('approval_request')} title={"Request deployment approval"} aria-label={"Request deployment approval"}
                                                 className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-[11px] text-amber-600 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition disabled:opacity-50">
                                                 {isLoading('approval_request') ? <Loader2 className="w-3 h-3 animate-spin" /> : <Clock className="w-3 h-3" />}
                                             </button>
                                             <button onClick={() => startFullDeploy(proj.key, repo.id, repo.label)}
-                                                disabled={!canAdmin || isLoading('full')} title="直接部署" aria-label="直接部署"
+                                                disabled={!canAdmin || isLoading('full')} title={"Direct deployment"} aria-label={"Direct deployment"}
                                                 className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-800 text-[11px] text-cyan-600 dark:text-cyan-400 hover:bg-cyan-100 dark:hover:bg-cyan-900/40 transition disabled:opacity-50">
                                                 {isLoading('full') ? <Loader2 className="w-3 h-3 animate-spin" /> : <Rocket className="w-3 h-3" />}
                                             </button>
                                             <button onClick={() => doAction(aid('clone'), () => cloneRepo(proj.key, repo.id))}
-                                                disabled={!canAdmin || isLoading('clone')} title="克隆"
+                                                disabled={!canAdmin || isLoading('clone')} title={"Clone"}
                                                 className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition disabled:opacity-50">
                                                 {isLoading('clone') ? <Loader2 className="w-3 h-3 animate-spin" /> : <Download className="w-3 h-3" />}
                                             </button>
                                             <button onClick={() => handleAiAnalyze(proj.key, repo.id, repo.label)}
-                                                disabled={!canAdmin || !!aiLoading[`${proj.key}_${repo.id}_ai`]} title="AI分析配置" aria-label="AI分析配置"
+                                                disabled={!canAdmin || !!aiLoading[`${proj.key}_${repo.id}_ai`]} title={"Analyze configuration with AI"} aria-label={"Analyze configuration with AI"}
                                                 className="p-1.5 rounded-lg border border-violet-200 dark:border-violet-800 text-violet-500 hover:bg-violet-50 dark:hover:bg-violet-900/20 transition disabled:opacity-50">
                                                 {aiLoading[`${proj.key}_${repo.id}_ai`] ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
                                             </button>
                                             <button onClick={() => doAction(aid('install'), () => installRepo(proj.key, repo.id))}
-                                                disabled={!canAdmin || isLoading('install')} title="安装依赖"
+                                                disabled={!canAdmin || isLoading('install')} title={"Install dependencies"}
                                                 className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition disabled:opacity-50">
                                                 {isLoading('install') ? <Loader2 className="w-3 h-3 animate-spin" /> : <Package className="w-3 h-3" />}
                                             </button>
                                             {repo.status === 'running' ? (
                                                 <button onClick={() => doAction(aid('stop'), () => stopRepo(proj.key, repo.id))}
-                                                    disabled={!canAdmin || isLoading('stop')} title="停止"
+                                                    disabled={!canAdmin || isLoading('stop')} title={"Stop"}
                                                     className="p-1.5 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-500 hover:bg-red-100 transition disabled:opacity-50">
                                                     {isLoading('stop') ? <Loader2 className="w-3 h-3 animate-spin" /> : <Square className="w-3 h-3" />}
                                                 </button>
                                             ) : (
                                                 <button onClick={() => doAction(aid('start'), () => startRepo(proj.key, repo.id))}
-                                                    disabled={!canAdmin || isLoading('start')} title="启动"
+                                                    disabled={!canAdmin || isLoading('start')} title={"Start"}
                                                     className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 text-emerald-500 hover:bg-emerald-100 transition disabled:opacity-50">
                                                     {isLoading('start') ? <Loader2 className="w-3 h-3 animate-spin" /> : <Play className="w-3 h-3" />}
                                                 </button>
@@ -1480,19 +1480,19 @@ const DeployPage: React.FC = () => {
                     <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-slate-800">
                         <h3 className="text-sm font-semibold flex items-center gap-2 text-slate-700 dark:text-slate-200">
                             <Terminal className="w-4 h-4 text-cyan-500" />
-                            日志 — {selectedRepo.label}
+                            Logs — {selectedRepo.label}
                         </h3>
                         <div className="flex items-center gap-1.5">
-                            <button onClick={() => refreshLogs(selectedRepo.rid)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400" title="刷新">
+                            <button onClick={() => refreshLogs(selectedRepo.rid)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400" title={"Refresh"}>
                                 <RefreshCw className="w-3.5 h-3.5" />
                             </button>
-                            <button onClick={() => setSelectedRepo(null)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400" title="关闭">
+                            <button onClick={() => setSelectedRepo(null)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400" title={"Close"}>
                                 <X className="w-3.5 h-3.5" />
                             </button>
                         </div>
                     </div>
                     <div className="max-h-64 overflow-auto bg-slate-950 p-4 font-mono text-[11px] text-green-400 leading-relaxed">
-                        {logs.length === 0 ? <span className="text-slate-500">暂无日志</span> : logs.map((l, i) => (
+                        {logs.length === 0 ? <span className="text-slate-500">No logs yet</span> : logs.map((l, i) => (
                             <div key={i} className="whitespace-pre-wrap break-all">
                                 <span className="text-slate-600 mr-2 select-none">{String(i + 1).padStart(3, ' ')}</span>{l}
                             </div>
@@ -1505,29 +1505,29 @@ const DeployPage: React.FC = () => {
             <div ref={approvalSectionRef}>
                 <div className="flex items-center justify-between mb-3">
                     <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-amber-500" /> 部署审批
+                        <Clock className="w-4 h-4 text-amber-500" /> Deployment approvals
                     </h3>
                     <div className="flex items-center gap-2">
                         {approvalContextFilterId ? (
                             <div className="flex items-center gap-2 rounded-full bg-amber-50 dark:bg-amber-900/20 px-2.5 py-1">
                                 <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-300">
-                                    仅显示审批单 {approvalContextFilterId}
+                                    Showing only approval request {approvalContextFilterId}
                                 </span>
                                 <button
                                     onClick={clearApprovalContextFilter}
                                     className="text-[10px] font-semibold text-amber-500 hover:text-amber-700 dark:hover:text-amber-200"
                                 >
-                                    查看全部
+                                    View all
                                 </button>
                             </div>
                         ) : null}
                         {focusedApprovalId ? (
                             <span className="rounded-full bg-cyan-50 dark:bg-cyan-900/20 px-2.5 py-1 text-[10px] font-semibold text-cyan-600 dark:text-cyan-300">
-                                已定位审批单 {focusedApprovalId}
+                                Located approval request {focusedApprovalId}
                             </span>
                         ) : null}
                         <span className="text-[11px] text-slate-400">
-                            待审批 {pendingApprovalCount} 条
+                            Awaiting approval {pendingApprovalCount} requests
                         </span>
                     </div>
                 </div>
@@ -1536,7 +1536,7 @@ const DeployPage: React.FC = () => {
                     data={visibleApprovals}
                     rowKey="id"
                     pageSize={6}
-                    emptyText="暂无审批单"
+                    emptyText={"No approval requests yet"}
                     activeRowKey={focusedApprovalId || null}
                 />
             </div>
@@ -1544,29 +1544,29 @@ const DeployPage: React.FC = () => {
             <div ref={jobsSectionRef}>
                 <div className="flex items-center justify-between mb-3">
                     <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-2">
-                        <Activity className="w-4 h-4 text-cyan-500" /> 部署作业
+                        <Activity className="w-4 h-4 text-cyan-500" /> Deployment jobs
                     </h3>
                     <div className="flex items-center gap-2">
                         {jobContextFilterId ? (
                             <div className="flex items-center gap-2 rounded-full bg-cyan-50 dark:bg-cyan-900/20 px-2.5 py-1">
                                 <span className="text-[10px] font-semibold text-cyan-600 dark:text-cyan-300">
-                                    仅显示作业 {jobContextFilterId}
+                                    Showing only job {jobContextFilterId}
                                 </span>
                                 <button
                                     onClick={clearJobContextFilter}
                                     className="text-[10px] font-semibold text-cyan-500 hover:text-cyan-700 dark:hover:text-cyan-200"
                                 >
-                                    查看全部
+                                    View all
                                 </button>
                             </div>
                         ) : null}
                         {focusedJobId ? (
                             <span className="rounded-full bg-cyan-50 dark:bg-cyan-900/20 px-2.5 py-1 text-[10px] font-semibold text-cyan-600 dark:text-cyan-300">
-                                已定位作业 {focusedJobId}
+                                Located job {focusedJobId}
                             </span>
                         ) : null}
                         <span className="text-[11px] text-slate-400">
-                            活跃 {activeJobCount} 条
+                            Active {activeJobCount} requests
                         </span>
                     </div>
                 </div>
@@ -1575,7 +1575,7 @@ const DeployPage: React.FC = () => {
                     data={visibleJobs}
                     rowKey="id"
                     pageSize={6}
-                    emptyText="暂无部署作业"
+                    emptyText={"No deployment jobs yet"}
                     activeRowKey={focusedJobId || null}
                 />
             </div>
@@ -1583,18 +1583,18 @@ const DeployPage: React.FC = () => {
             <div>
                 <div className="flex items-center justify-between mb-3">
                     <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-2">
-                        <ShieldCheck className="w-4 h-4 text-slate-500" /> 部署审计
+                        <ShieldCheck className="w-4 h-4 text-slate-500" /> Deployment audit
                     </h3>
                     <span className="text-[11px] text-slate-400">
-                        最近 {auditLogs.length} 条
+                        Latest {auditLogs.length} entries
                     </span>
                 </div>
                 <div className="mb-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/50 px-4 py-3">
                     <div className="grid gap-3 lg:grid-cols-[1fr_1fr_1fr_auto]">
                         <label className="space-y-1">
-                            <span className="text-[10px] uppercase tracking-wider text-slate-400">动作</span>
+                            <span className="text-[10px] uppercase tracking-wider text-slate-400">Action</span>
                             <select
-                                aria-label="审计动作筛选"
+                                aria-label={"Filter audit actions"}
                                 value={auditDraft.action}
                                 onChange={(e) => setAuditDraft(prev => ({ ...prev, action: e.target.value }))}
                                 className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/70 px-3 py-2 text-xs text-slate-600 dark:text-slate-200 outline-none focus:ring-2 focus:ring-cyan-500/30"
@@ -1605,26 +1605,26 @@ const DeployPage: React.FC = () => {
                             </select>
                         </label>
                         <label className="space-y-1">
-                            <span className="text-[10px] uppercase tracking-wider text-slate-400">项目</span>
+                            <span className="text-[10px] uppercase tracking-wider text-slate-400">Project</span>
                             <select
-                                aria-label="审计项目筛选"
+                                aria-label={"Filter audit projects"}
                                 value={auditDraft.projectKey}
                                 onChange={(e) => setAuditDraft(prev => ({ ...prev, projectKey: e.target.value }))}
                                 className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/70 px-3 py-2 text-xs text-slate-600 dark:text-slate-200 outline-none focus:ring-2 focus:ring-cyan-500/30"
                             >
-                                <option value="">全部项目</option>
+                                <option value="">All projects</option>
                                 {auditProjectOptions.map(projectKey => (
                                     <option key={projectKey} value={projectKey}>{projectKey}</option>
                                 ))}
                             </select>
                         </label>
                         <label className="space-y-1">
-                            <span className="text-[10px] uppercase tracking-wider text-slate-400">操作人 ID</span>
+                            <span className="text-[10px] uppercase tracking-wider text-slate-400">Operator ID</span>
                             <input
-                                aria-label="审计操作人筛选"
+                                aria-label={"Filter audit operators"}
                                 value={auditDraft.userId}
                                 onChange={(e) => setAuditDraft(prev => ({ ...prev, userId: e.target.value }))}
-                                placeholder="例如：user-1"
+                                placeholder={"Example: user-1"}
                                 className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/70 px-3 py-2 text-xs text-slate-600 dark:text-slate-200 outline-none focus:ring-2 focus:ring-cyan-500/30"
                             />
                         </label>
@@ -1634,14 +1634,14 @@ const DeployPage: React.FC = () => {
                                 disabled={auditLoading}
                                 className="px-3 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-xs font-semibold hover:from-cyan-600 hover:to-blue-600 transition-all disabled:opacity-50"
                             >
-                                {auditLoading ? '筛选中...' : '筛选审计'}
+                                {auditLoading ? "Filtering..." : "Filter audit"}
                             </button>
                             <button
                                 onClick={handleResetAuditFilter}
                                 disabled={auditLoading}
                                 className="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
                             >
-                                重置
+                                Reset
                             </button>
                         </div>
                     </div>
@@ -1656,7 +1656,7 @@ const DeployPage: React.FC = () => {
                     data={auditLogs}
                     rowKey="log_id"
                     pageSize={6}
-                    emptyText="暂无审计记录"
+                    emptyText={"No audit records yet"}
                     loading={auditLoading}
                     onRowClick={setSelectedAuditLog}
                 />
@@ -1664,7 +1664,7 @@ const DeployPage: React.FC = () => {
                     <div className="mt-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/70 overflow-hidden">
                         <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800">
                             <div>
-                                <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-200">审计详情</h4>
+                                <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Audit details</h4>
                                 <p className="text-[11px] text-slate-400">
                                     {deployAuditActionLabel(selectedAuditLog.action)} · {formatDateTime(selectedAuditLog.timestamp)}
                                 </p>
@@ -1672,28 +1672,28 @@ const DeployPage: React.FC = () => {
                             <button
                                 onClick={() => setSelectedAuditLog(null)}
                                 className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                                title="关闭审计详情"
+                                title={"Close audit details"}
                             >
                                 <X className="w-4 h-4" />
                             </button>
                         </div>
                         <div className="grid gap-4 px-4 py-4 lg:grid-cols-4">
                             <div className="rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/50 px-3 py-3">
-                                <div className="text-[10px] uppercase tracking-wider text-slate-400">项目</div>
+                                <div className="text-[10px] uppercase tracking-wider text-slate-400">Project</div>
                                 <div className="mt-1 text-xs font-semibold text-cyan-600 dark:text-cyan-300">{selectedAuditLog.project_key || '-'}</div>
                             </div>
                             <div className="rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/50 px-3 py-3">
-                                <div className="text-[10px] uppercase tracking-wider text-slate-400">操作人</div>
+                                <div className="text-[10px] uppercase tracking-wider text-slate-400">Operator</div>
                                 <div className="mt-1 text-xs font-semibold text-slate-600 dark:text-slate-200">{selectedAuditLog.username || selectedAuditLog.user_id || '-'}</div>
                                 <div className="text-[10px] text-slate-400 mt-1">{selectedAuditLog.user_id || '-'}</div>
                             </div>
                             <div className="rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/50 px-3 py-3">
-                                <div className="text-[10px] uppercase tracking-wider text-slate-400">资源</div>
+                                <div className="text-[10px] uppercase tracking-wider text-slate-400">Resource</div>
                                 <div className="mt-1 text-xs font-semibold text-slate-600 dark:text-slate-200">{selectedAuditLog.resource_type || '-'}</div>
                                 <div className="text-[10px] text-slate-400 mt-1">{selectedAuditLog.resource_id || '-'}</div>
                             </div>
                             <div className="rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/50 px-3 py-3">
-                                <div className="text-[10px] uppercase tracking-wider text-slate-400">来源 IP</div>
+                                <div className="text-[10px] uppercase tracking-wider text-slate-400">Source IP</div>
                                 <div className="mt-1 text-xs font-semibold text-slate-600 dark:text-slate-200">{selectedAuditLog.ip_address || '-'}</div>
                             </div>
                         </div>
@@ -1702,9 +1702,9 @@ const DeployPage: React.FC = () => {
                                 <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/40 px-4 py-3">
                                     <div className="flex flex-wrap items-start justify-between gap-3">
                                         <div>
-                                            <div className="text-[10px] uppercase tracking-wider text-slate-400">关联对象</div>
+                                            <div className="text-[10px] uppercase tracking-wider text-slate-400">Linked objects</div>
                                             <div className="mt-1 text-xs text-slate-500">
-                                                从审计记录直接联动审批单、部署作业和部署记录。
+                                                Open approval requests, deployment jobs, and deployment records directly from the audit record.
                                             </div>
                                         </div>
                                         <div className="flex flex-wrap gap-2">
@@ -1715,7 +1715,7 @@ const DeployPage: React.FC = () => {
                                                     className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 dark:border-emerald-800 px-3 py-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors disabled:opacity-50"
                                                 >
                                                     {auditLinkedLoading === 'approval' ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
-                                                    查看审批单
+                                                    View approval request
                                                 </button>
                                             ) : null}
                                             {auditLinkedResources.jobId ? (
@@ -1725,7 +1725,7 @@ const DeployPage: React.FC = () => {
                                                     className="inline-flex items-center gap-1.5 rounded-lg border border-cyan-200 dark:border-cyan-800 px-3 py-1.5 text-xs font-semibold text-cyan-600 dark:text-cyan-300 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-colors disabled:opacity-50"
                                                 >
                                                     {auditLinkedLoading === 'job' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Activity className="w-3 h-3" />}
-                                                    查看作业
+                                                    View job
                                                 </button>
                                             ) : null}
                                             {auditLinkedResources.recordId ? (
@@ -1735,7 +1735,7 @@ const DeployPage: React.FC = () => {
                                                     className="inline-flex items-center gap-1.5 rounded-lg border border-violet-200 dark:border-violet-800 px-3 py-1.5 text-xs font-semibold text-violet-600 dark:text-violet-300 hover:bg-violet-50 dark:hover:bg-violet-900/20 transition-colors disabled:opacity-50"
                                                 >
                                                     {auditLinkedLoading === 'record' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Terminal className="w-3 h-3" />}
-                                                    打开部署记录
+                                                    Open deployment record
                                                 </button>
                                             ) : null}
                                         </div>
@@ -1743,19 +1743,19 @@ const DeployPage: React.FC = () => {
                                     <div className="mt-3 grid gap-3 md:grid-cols-3">
                                         {auditLinkedResources.approvalId ? (
                                             <div className="rounded-lg border border-slate-200/70 dark:border-slate-700/70 bg-white/80 dark:bg-slate-950/40 px-3 py-2">
-                                                <div className="text-[10px] uppercase tracking-wider text-slate-400">审批单 ID</div>
+                                                <div className="text-[10px] uppercase tracking-wider text-slate-400">Approval request ID</div>
                                                 <div className="mt-1 text-xs font-mono text-slate-600 dark:text-slate-200">{auditLinkedResources.approvalId}</div>
                                             </div>
                                         ) : null}
                                         {auditLinkedResources.jobId ? (
                                             <div className="rounded-lg border border-slate-200/70 dark:border-slate-700/70 bg-white/80 dark:bg-slate-950/40 px-3 py-2">
-                                                <div className="text-[10px] uppercase tracking-wider text-slate-400">作业 ID</div>
+                                                <div className="text-[10px] uppercase tracking-wider text-slate-400">Job ID</div>
                                                 <div className="mt-1 text-xs font-mono text-slate-600 dark:text-slate-200">{auditLinkedResources.jobId}</div>
                                             </div>
                                         ) : null}
                                         {auditLinkedResources.recordId ? (
                                             <div className="rounded-lg border border-slate-200/70 dark:border-slate-700/70 bg-white/80 dark:bg-slate-950/40 px-3 py-2">
-                                                <div className="text-[10px] uppercase tracking-wider text-slate-400">记录 ID</div>
+                                                <div className="text-[10px] uppercase tracking-wider text-slate-400">Record ID</div>
                                                 <div className="mt-1 text-xs font-mono text-slate-600 dark:text-slate-200">{auditLinkedResources.recordId}</div>
                                             </div>
                                         ) : null}
@@ -1773,7 +1773,7 @@ const DeployPage: React.FC = () => {
                                 <div className="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50/70 dark:bg-emerald-900/10 px-4 py-3">
                                     <div className="flex flex-wrap items-start justify-between gap-3">
                                         <div>
-                                            <div className="text-[10px] uppercase tracking-wider text-emerald-500">关联审批单</div>
+                                            <div className="text-[10px] uppercase tracking-wider text-emerald-500">Linked approval request</div>
                                             <div className="mt-1 text-sm font-semibold text-emerald-700 dark:text-emerald-300">{linkedApproval.repo_label || linkedApproval.project_key || '-'}</div>
                                         </div>
                                         <div className="flex items-center gap-2">
@@ -1781,13 +1781,13 @@ const DeployPage: React.FC = () => {
                                                 onClick={() => applyApprovalContextFilter(linkedApproval.id)}
                                                 className="rounded-lg border border-emerald-200 dark:border-emerald-700 px-2.5 py-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-300 hover:bg-emerald-100/70 dark:hover:bg-emerald-900/20 transition-colors"
                                             >
-                                                筛选审批上下文
+                                                Filter approval context
                                             </button>
                                             <button
                                                 onClick={() => focusApprovalRow(linkedApproval.id)}
                                                 className="rounded-lg border border-emerald-200 dark:border-emerald-700 px-2.5 py-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-300 hover:bg-emerald-100/70 dark:hover:bg-emerald-900/20 transition-colors"
                                             >
-                                                定位到审批列表
+                                                Go to approval list
                                             </button>
                                             <code className="rounded bg-white/80 dark:bg-slate-950/40 px-2 py-1 text-[11px] font-mono text-emerald-700 dark:text-emerald-200">{linkedApproval.id}</code>
                                             {statusBadge(linkedApproval.status)}
@@ -1795,15 +1795,15 @@ const DeployPage: React.FC = () => {
                                     </div>
                                     <div className="mt-3 grid gap-3 md:grid-cols-3">
                                         <div>
-                                            <div className="text-[10px] uppercase tracking-wider text-emerald-500/70">申请人</div>
+                                            <div className="text-[10px] uppercase tracking-wider text-emerald-500/70">Requested by</div>
                                             <div className="mt-1 text-xs text-slate-600 dark:text-slate-200">{linkedApproval.requested_by_name || linkedApproval.requested_by || '-'}</div>
                                         </div>
                                         <div>
-                                            <div className="text-[10px] uppercase tracking-wider text-emerald-500/70">审批人</div>
-                                            <div className="mt-1 text-xs text-slate-600 dark:text-slate-200">{linkedApproval.reviewed_by_name || linkedApproval.reviewed_by || '待审批'}</div>
+                                            <div className="text-[10px] uppercase tracking-wider text-emerald-500/70">Approver</div>
+                                            <div className="mt-1 text-xs text-slate-600 dark:text-slate-200">{linkedApproval.reviewed_by_name || linkedApproval.reviewed_by || "Awaiting approval"}</div>
                                         </div>
                                         <div>
-                                            <div className="text-[10px] uppercase tracking-wider text-emerald-500/70">部署记录</div>
+                                            <div className="text-[10px] uppercase tracking-wider text-emerald-500/70">Deployment record</div>
                                             <div className="mt-1 flex flex-wrap items-center gap-2">
                                                 <code className="text-[11px] font-mono text-slate-600 dark:text-slate-200">{linkedApproval.record_id || '-'}</code>
                                                 {linkedApproval.record_status ? statusBadge(linkedApproval.record_status) : null}
@@ -1823,7 +1823,7 @@ const DeployPage: React.FC = () => {
                                 <div className="rounded-xl border border-cyan-200 dark:border-cyan-800 bg-cyan-50/70 dark:bg-cyan-900/10 px-4 py-3">
                                     <div className="flex flex-wrap items-start justify-between gap-3">
                                         <div>
-                                            <div className="text-[10px] uppercase tracking-wider text-cyan-500">关联作业</div>
+                                            <div className="text-[10px] uppercase tracking-wider text-cyan-500">Linked job</div>
                                             <div className="mt-1 text-sm font-semibold text-cyan-700 dark:text-cyan-300">{linkedJob.repo_label || linkedJob.project_key || '-'}</div>
                                         </div>
                                         <div className="flex items-center gap-2">
@@ -1831,13 +1831,13 @@ const DeployPage: React.FC = () => {
                                                 onClick={() => applyJobContextFilter(linkedJob.id)}
                                                 className="rounded-lg border border-cyan-200 dark:border-cyan-700 px-2.5 py-1 text-[11px] font-semibold text-cyan-600 dark:text-cyan-300 hover:bg-cyan-100/70 dark:hover:bg-cyan-900/20 transition-colors"
                                             >
-                                                筛选作业上下文
+                                                Filter job context
                                             </button>
                                             <button
                                                 onClick={() => focusJobRow(linkedJob.id)}
                                                 className="rounded-lg border border-cyan-200 dark:border-cyan-700 px-2.5 py-1 text-[11px] font-semibold text-cyan-600 dark:text-cyan-300 hover:bg-cyan-100/70 dark:hover:bg-cyan-900/20 transition-colors"
                                             >
-                                                定位到作业列表
+                                                Go to job list
                                             </button>
                                             {['queued', 'running'].includes(linkedJob.status) ? (
                                                 <button
@@ -1845,7 +1845,7 @@ const DeployPage: React.FC = () => {
                                                     disabled={!canAdmin || !!actionLoading[`job_cancel_${linkedJob.id}`]}
                                                     className="rounded-lg border border-red-200 dark:border-red-700 px-2.5 py-1 text-[11px] font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50"
                                                 >
-                                                    {actionLoading[`job_cancel_${linkedJob.id}`] ? '取消中...' : '取消作业'}
+                                                    {actionLoading[`job_cancel_${linkedJob.id}`] ? "Canceling..." : "Cancel job"}
                                                 </button>
                                             ) : null}
                                             {linkedJob.record_id ? (
@@ -1853,7 +1853,7 @@ const DeployPage: React.FC = () => {
                                                     onClick={() => applyHistoryContextFilter(linkedJob.record_id)}
                                                     className="rounded-lg border border-cyan-200 dark:border-cyan-700 px-2.5 py-1 text-[11px] font-semibold text-cyan-600 dark:text-cyan-300 hover:bg-cyan-100/70 dark:hover:bg-cyan-900/20 transition-colors"
                                                 >
-                                                    筛选部署上下文
+                                                    Filter deployment context
                                                 </button>
                                             ) : null}
                                             {linkedJob.record_id ? (
@@ -1861,7 +1861,7 @@ const DeployPage: React.FC = () => {
                                                     onClick={() => focusHistoryRow(linkedJob.record_id)}
                                                     className="rounded-lg border border-cyan-200 dark:border-cyan-700 px-2.5 py-1 text-[11px] font-semibold text-cyan-600 dark:text-cyan-300 hover:bg-cyan-100/70 dark:hover:bg-cyan-900/20 transition-colors"
                                                 >
-                                                    定位到部署历史
+                                                    Go to deployment history
                                                 </button>
                                             ) : null}
                                             <code className="rounded bg-white/80 dark:bg-slate-950/40 px-2 py-1 text-[11px] font-mono text-cyan-700 dark:text-cyan-200">{linkedJob.id}</code>
@@ -1870,15 +1870,15 @@ const DeployPage: React.FC = () => {
                                     </div>
                                     <div className="mt-3 grid gap-3 md:grid-cols-3">
                                         <div>
-                                            <div className="text-[10px] uppercase tracking-wider text-cyan-500/70">动作</div>
+                                            <div className="text-[10px] uppercase tracking-wider text-cyan-500/70">Action</div>
                                             <div className="mt-1 text-xs text-slate-600 dark:text-slate-200">{actionLabel(linkedJob.action)}</div>
                                         </div>
                                         <div>
-                                            <div className="text-[10px] uppercase tracking-wider text-cyan-500/70">分支</div>
+                                            <div className="text-[10px] uppercase tracking-wider text-cyan-500/70">Branch</div>
                                             <div className="mt-1 text-xs text-slate-600 dark:text-slate-200">{linkedJob.branch || '-'}</div>
                                         </div>
                                         <div>
-                                            <div className="text-[10px] uppercase tracking-wider text-cyan-500/70">部署记录</div>
+                                            <div className="text-[10px] uppercase tracking-wider text-cyan-500/70">Deployment record</div>
                                             <div className="mt-1 flex flex-wrap items-center gap-2">
                                                 <code className="text-[11px] font-mono text-slate-600 dark:text-slate-200">{linkedJob.record_id || '-'}</code>
                                                 {linkedJob.record_status ? statusBadge(linkedJob.record_status) : null}
@@ -1894,7 +1894,7 @@ const DeployPage: React.FC = () => {
                             </div>
                         ) : null}
                         <div className="px-4 pb-4">
-                            <div className="mb-2 text-[10px] uppercase tracking-wider text-slate-400">原始详情</div>
+                            <div className="mb-2 text-[10px] uppercase tracking-wider text-slate-400">Raw details</div>
                             <pre className="max-h-64 overflow-auto rounded-xl bg-slate-950 px-4 py-3 text-[11px] leading-relaxed text-slate-200">
                                 {formatAuditDetails(selectedAuditLog.details)}
                             </pre>
@@ -1908,31 +1908,31 @@ const DeployPage: React.FC = () => {
                 <div ref={historySectionRef}>
                     <div className="flex items-center justify-between mb-3">
                         <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-2">
-                            <Clock className="w-4 h-4 text-slate-400" /> 部署历史
+                            <Clock className="w-4 h-4 text-slate-400" /> Deployment history
                         </h3>
                         <div className="flex items-center gap-2">
                             {historyContextFilterId ? (
                                 <div className="flex items-center gap-2 rounded-full bg-amber-50 dark:bg-amber-900/20 px-2.5 py-1">
                                     <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-300">
-                                        仅显示记录 {historyContextFilterId}
+                                        Showing only record {historyContextFilterId}
                                     </span>
                                     <button
                                         onClick={clearHistoryContextFilter}
                                         className="text-[10px] font-semibold text-amber-500 hover:text-amber-700 dark:hover:text-amber-200"
                                     >
-                                        查看全部
+                                        View all
                                     </button>
                                 </div>
                             ) : null}
                             {focusedHistoryId ? (
                                 <span className="rounded-full bg-cyan-50 dark:bg-cyan-900/20 px-2.5 py-1 text-[10px] font-semibold text-cyan-600 dark:text-cyan-300">
-                                    已定位记录 {focusedHistoryId}
+                                    Located record {focusedHistoryId}
                                 </span>
                             ) : null}
                             <button onClick={handleClearHistory}
                                 disabled={!canAdmin}
                                 className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium border border-red-200 dark:border-red-800 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
-                                <Trash2 className="w-3 h-3" /> 清空全部
+                                <Trash2 className="w-3 h-3" /> Clear all
                             </button>
                         </div>
                     </div>
@@ -1941,7 +1941,7 @@ const DeployPage: React.FC = () => {
                         data={visibleHistory}
                         rowKey="id"
                         pageSize={8}
-                        emptyText="暂无记录"
+                        emptyText={"No records yet"}
                         activeRowKey={focusedHistoryId || null}
                     />
                 </div>
@@ -1954,38 +1954,38 @@ const DeployPage: React.FC = () => {
                 initialToken={editInitialToken}
             />
 
-            {/* AI 分析配置弹窗 */}
+            {/* AI configuration analysis dialog*/}
             {aiResult && aiResultRepo && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 overflow-y-auto flex justify-center py-8 px-4 animate-in fade-in duration-300" onClick={closeAiDialog}>
                     <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-2xl shadow-2xl shadow-black/20 dark:shadow-black/50 border border-slate-200/80 dark:border-slate-700/80 w-full max-w-xl flex flex-col overflow-hidden my-auto" onClick={e => e.stopPropagation()}
                         style={{ animation: 'fadeInScale .2s ease-out', maxHeight: 'calc(100vh - 4rem)' }}>
-                        {/* 渐变标题栏 */}
+                        {/* Gradient title bar*/}
                         <div className="bg-gradient-to-r from-violet-500 via-purple-500 to-indigo-500 px-6 py-4 flex items-center justify-between">
                             <h3 className="text-white text-sm font-bold flex items-center gap-2">
                                 <Sparkles className="w-4 h-4" />
-                                AI分析配置 · {aiResultRepo.label}
+                                AI configuration analysis · {aiResultRepo.label}
                             </h3>
                             <button onClick={closeAiDialog} className="text-white/70 hover:text-white transition">
                                 <X className="w-4 h-4" />
                             </button>
                         </div>
 
-                        {/* 记忆提示条 */}
+                        {/* Deployment memory notice*/}
                         {aiResult.has_memory && (
                             <div className="mx-5 mt-4 px-3 py-2 rounded-lg bg-gradient-to-r from-purple-50 to-fuchsia-50 dark:from-purple-900/20 dark:to-fuchsia-900/20 border border-purple-200/50 dark:border-purple-700/30 flex items-center gap-2">
                                 <span className="text-base">🧠</span>
                                 <div className="text-[11px] text-purple-600 dark:text-purple-400">
-                                    <span className="font-semibold">部署记忆已激活</span>
+                                    <span className="font-semibold">Deployment memory is active</span>
                                     <span className="text-purple-400 dark:text-purple-500 ml-1.5">
-                                        · 累计 {aiResult.deploy_count || 0} 次成功部署
-                                        {aiResult.last_success && ` · 上次: ${new Date(aiResult.last_success).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}`}
+                                        · Total {aiResult.deploy_count || 0} successful deployments
+                                        {aiResult.last_success && ` · Last: ${new Date(aiResult.last_success).toLocaleString('en-US', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}`}
                                     </span>
                                 </div>
                             </div>
                         )}
 
                         <div className="mx-5 mt-4 rounded-lg border border-sky-200/70 dark:border-sky-800/40 bg-sky-50/80 dark:bg-sky-900/10 px-3 py-2.5 text-[11px] leading-relaxed text-sky-700 dark:text-sky-300">
-                            当前步骤只生成并校对部署配置，不会立即执行部署。点击右下角「应用配置并部署」后，才会开始克隆、安装和启动。
+                            This step only generates and reviews deployment configuration. Cloning, installation, and startup begin only after you click Apply configuration and deploy.
                         </div>
 
                         <div className="flex-1 overflow-y-auto">
@@ -1996,10 +1996,10 @@ const DeployPage: React.FC = () => {
                                 </div>
                             ) : (
                                 <div className="p-5 space-y-5">
-                                    {/* 信心度 + 技术栈 */}
+                                    {/* Confidence and technology stack*/}
                                     <div className="flex items-start gap-4">
                                         <div className="flex-1 min-w-0">
-                                            <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">技术栈</label>
+                                            <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Technology stack</label>
                                             <input value={aiEditForm.tech_stack} onChange={e => setAiEditForm(p => ({ ...p, tech_stack: e.target.value }))}
                                                 className="w-full mt-1 px-3 py-2 text-sm font-semibold rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 outline-none transition" />
                                         </div>
@@ -2011,41 +2011,41 @@ const DeployPage: React.FC = () => {
                                                 }}>
                                                 {((aiResult.confidence || 0) * 100).toFixed(0)}%
                                             </div>
-                                            <span className="text-[9px] text-slate-400 mt-0.5 block">信心度</span>
+                                            <span className="text-[9px] text-slate-400 mt-0.5 block">Confidence</span>
                                         </div>
                                     </div>
 
-                                    {/* 命令配置 — 可编辑 */}
+                                    {/* Editable command configuration*/}
                                     <div className="space-y-3">
-                                        <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">部署命令</div>
-                                        {([['install_cmd', '📦 安装命令'], ['start_cmd', '▶️ 启动命令'], ['build_cmd', '🔨 构建命令']] as const).map(([key, label]) => (
+                                        <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Deployment commands</div>
+                                        {([['install_cmd', "📦 Install command"], ['start_cmd', "▶️ Start command"], ['build_cmd', "🔨 Build command"]] as const).map(([key, label]) => (
                                             <div key={key}>
                                                 <label className="text-[11px] text-slate-500 mb-1 block">{label}</label>
                                                 <input value={(aiEditForm as any)[key]} onChange={e => setAiEditForm(p => ({ ...p, [key]: e.target.value }))}
                                                     className="w-full px-3 py-2 text-xs font-mono rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 outline-none transition"
-                                                    placeholder="留空则不配置" />
+                                                    placeholder={"Leave blank to omit"} />
                                             </div>
                                         ))}
                                         <div>
-                                            <label className="text-[11px] text-slate-500 mb-1 block">🔌 端口</label>
+                                            <label className="text-[11px] text-slate-500 mb-1 block">🔌 Port</label>
                                             <input type="number" value={aiEditForm.port || ''} onChange={e => setAiEditForm(p => ({ ...p, port: parseInt(e.target.value) || 0 }))}
                                                 className="w-24 px-3 py-2 text-xs font-mono rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 outline-none transition"
-                                                placeholder="端口" />
+                                                placeholder={"Port"} />
                                         </div>
                                     </div>
 
-                                    {/* 注意事项 */}
+                                    {/* Notes*/}
                                     {aiResult.notes && (
                                         <div className="rounded-xl bg-amber-50/80 dark:bg-amber-900/10 border border-amber-200/60 dark:border-amber-800/40 p-4">
-                                            <div className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-1.5">💡 AI 建议</div>
+                                            <div className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-1.5">💡 AI suggestions</div>
                                             <p className="text-xs text-amber-700 dark:text-amber-300 leading-relaxed max-h-28 overflow-y-auto">{aiResult.notes}</p>
                                         </div>
                                     )}
 
-                                    {/* pom.xml 修改建议 */}
+                                    {/* Suggested pom.xml changes*/}
                                     {aiResult.suggested_changes && aiResult.suggested_changes.length > 0 && (
                                         <div className="rounded-xl bg-violet-50/80 dark:bg-violet-900/10 border border-violet-200/60 dark:border-violet-800/40 p-4">
-                                            <div className="text-[10px] font-semibold text-violet-600 dark:text-violet-400 uppercase tracking-wider mb-2">🔧 代码修改建议（部署前自动应用）</div>
+                                            <div className="text-[10px] font-semibold text-violet-600 dark:text-violet-400 uppercase tracking-wider mb-2">🔧 Suggested code changes (applied automatically before deployment)</div>
                                             <div className="space-y-2">
                                                 {aiResult.suggested_changes.map((ch, i) => (
                                                     <div key={i} className="flex items-start gap-2 text-xs">
@@ -2057,19 +2057,19 @@ const DeployPage: React.FC = () => {
                                                     </div>
                                                 ))}
                                             </div>
-                                            <p className="text-[10px] text-violet-500/70 mt-2 italic">点击「应用配置并部署」后会先应用以上修改，再开始部署</p>
+                                            <p className="text-[10px] text-violet-500/70 mt-2 italic">Apply configuration and deploy applies these changes before starting deployment</p>
                                         </div>
                                     )}
 
-                                    {/* 环境变量 */}
+                                    {/* Environment variables*/}
                                     {aiResult.effective_env_vars && Object.keys(aiResult.effective_env_vars).length > 0 && (
                                         <div className="rounded-xl bg-emerald-50/80 dark:bg-emerald-900/10 border border-emerald-200/60 dark:border-emerald-800/40 p-4">
                                             <div className="flex items-center justify-between gap-3 mb-2">
                                                 <div>
-                                                    <div className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">当前生效环境变量</div>
+                                                    <div className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Currently active environment variables</div>
                                                     <div className="text-[10px] text-emerald-500/80 mt-1">
-                                                        来源: {aiResult.effective_env_source || '当前部署目录'}
-                                                        {' · '}不填写补充信息时，本次和下次部署默认沿用这里
+                                                        Source: {aiResult.effective_env_source || "Current deployment directory"}
+                                                        {' · '} Used by default for this and future deployments when no supplemental values are entered
                                                     </div>
                                                 </div>
                                                 <button
@@ -2080,7 +2080,7 @@ const DeployPage: React.FC = () => {
                                                     }}
                                                     className="px-3 py-1.5 rounded-lg border border-emerald-200 dark:border-emerald-700 text-[10px] font-semibold text-emerald-600 dark:text-emerald-300 hover:bg-emerald-100/70 dark:hover:bg-emerald-900/30 transition-colors"
                                                 >
-                                                    载入到补充信息
+                                                    Load into supplemental settings
                                                 </button>
                                             </div>
                                             <div className="space-y-1 max-h-24 overflow-y-auto">
@@ -2097,8 +2097,8 @@ const DeployPage: React.FC = () => {
                                         <div className="rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/50 p-4">
                                             <div className="flex items-center justify-between gap-3 mb-2">
                                                 <div>
-                                                    <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">AI 环境变量建议</div>
-                                                    <div className="text-[10px] text-slate-400 mt-1">仅供参考，不会自动生效；只有写入补充信息后才会参与后续部署</div>
+                                                    <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">AI environment variable suggestions</div>
+                                                    <div className="text-[10px] text-slate-400 mt-1">For reference only. Suggestions affect future deployments only after you add them to supplemental settings.</div>
                                                 </div>
                                                 <button
                                                     type="button"
@@ -2108,7 +2108,7 @@ const DeployPage: React.FC = () => {
                                                     }}
                                                     className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-[10px] font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                                                 >
-                                                    用建议覆盖补充信息
+                                                    Replace supplemental settings with suggestions
                                                 </button>
                                             </div>
                                             <div className="space-y-1 max-h-24 overflow-y-auto">
@@ -2121,31 +2121,31 @@ const DeployPage: React.FC = () => {
                                         </div>
                                     )}
 
-                                    {/* ── 部署上下文（折叠式） ── */}
+                                    {/* Collapsible deployment context*/}
                                     {showContext && (
                                         <div className="rounded-xl bg-sky-50/60 dark:bg-sky-900/10 border border-sky-200/60 dark:border-sky-800/40 p-4 space-y-3">
-                                            <div className="text-[10px] font-semibold text-sky-600 dark:text-sky-400 uppercase tracking-wider">📋 部署上下文</div>
+                                            <div className="text-[10px] font-semibold text-sky-600 dark:text-sky-400 uppercase tracking-wider">📋 Deployment context</div>
                                             <div className="text-[11px] text-sky-700/80 dark:text-sky-300/80 leading-relaxed">
-                                                {aiResult.env_apply_behavior || '留空则沿用当前生效环境变量；填写的 KEY=VALUE 会增量合并到现有 .env，并在下次、下下次部署继续生效。'}
+                                                {aiResult.env_apply_behavior || "Leave blank to keep active environment variables. Entered KEY=VALUE pairs are merged into the existing .env and remain effective for subsequent deployments."}
                                             </div>
                                             <div>
-                                                <label className="text-[11px] text-slate-500 mb-1 block">🖥 目标服务器</label>
+                                                <label className="text-[11px] text-slate-500 mb-1 block">🖥 Target server</label>
                                                 <input value={deployContext.server_address}
                                                     onChange={e => setDeployContext(p => ({ ...p, server_address: e.target.value }))}
                                                     className="w-full px-3 py-2 text-xs font-mono rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 focus:ring-2 focus:ring-sky-500/30 focus:border-sky-400 outline-none transition"
-                                                    placeholder="例: 192.168.1.100 或 deploy.example.com" />
+                                                    placeholder={"Example: 192.168.1.100 or deploy.example.com"} />
                                             </div>
                                             <div>
-                                                <label className="text-[11px] text-slate-500 mb-1 block">🗄 数据库连接</label>
+                                                <label className="text-[11px] text-slate-500 mb-1 block">🗄 Database connection</label>
                                                 <input value={deployContext.db_connection}
                                                     onChange={e => setDeployContext(p => ({ ...p, db_connection: e.target.value }))}
                                                     className="w-full px-3 py-2 text-xs font-mono rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 focus:ring-2 focus:ring-sky-500/30 focus:border-sky-400 outline-none transition"
-                                                    placeholder="例: mysql://root:pwd@localhost:3306/mydb" />
+                                                    placeholder={"Example: mysql://root:pwd@localhost:3306/mydb"} />
                                             </div>
                                             <div>
-                                                <label className="text-[11px] text-slate-500 mb-1 block">🔑 环境变量 (每行 KEY=VALUE)</label>
+                                                <label className="text-[11px] text-slate-500 mb-1 block">🔑 Environment variables (one KEY=VALUE per line)</label>
                                                 {deployContext.env_vars && (
-                                                    <div className="mb-1 text-[10px] text-sky-600 dark:text-sky-300">当前保存的是“下次开始要覆盖/补充的值”，不会清空未填写的现有环境变量。</div>
+                                                    <div className="mb-1 text-[10px] text-sky-600 dark:text-sky-300">Saved values override or supplement variables starting with the next deployment. Existing variables not listed here are preserved.</div>
                                                 )}
                                                 <textarea value={deployContext.env_vars}
                                                     onChange={e => setDeployContext(p => ({ ...p, env_vars: e.target.value }))}
@@ -2154,12 +2154,12 @@ const DeployPage: React.FC = () => {
                                                     placeholder={"REDIS_HOST=127.0.0.1\nNACOS_SERVER=localhost:8848"} />
                                             </div>
                                             <div>
-                                                <label className="text-[11px] text-slate-500 mb-1 block">📝 其他备注</label>
+                                                <label className="text-[11px] text-slate-500 mb-1 block">📝 Other notes</label>
                                                 <textarea value={deployContext.user_notes}
                                                     onChange={e => setDeployContext(p => ({ ...p, user_notes: e.target.value }))}
                                                     className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 focus:ring-2 focus:ring-sky-500/30 focus:border-sky-400 outline-none transition resize-y min-h-[40px]"
                                                     rows={2}
-                                                    placeholder="例: 需要先启动 Nacos 和 Redis" />
+                                                    placeholder={"Example: Start Nacos and Redis first"} />
                                             </div>
                                         </div>
                                     )}
@@ -2167,7 +2167,7 @@ const DeployPage: React.FC = () => {
                             )}
                         </div>
 
-                        {/* 底部操作栏 — 4 按钮 */}
+                        {/* Bottom action bar with four buttons*/}
                         {!aiResult.error && (
                             <div className="px-5 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
                                 <div className="flex gap-2 flex-wrap">
@@ -2176,26 +2176,26 @@ const DeployPage: React.FC = () => {
                                             ? 'bg-sky-50 border-sky-300 text-sky-600 dark:bg-sky-900/20 dark:border-sky-700 dark:text-sky-400'
                                             : 'border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'
                                             }`}>
-                                        💬 {showContext ? '收起信息' : '补充信息'}
+                                        💬 {showContext ? "Hide supplemental settings" : "Supplemental settings"}
                                     </button>
                                     {showContext && (
                                         <button onClick={handleAiRefine} disabled={aiRefining}
                                             className="flex items-center gap-1.5 px-4 py-2.5 bg-gradient-to-r from-sky-500 to-blue-500 hover:from-sky-600 hover:to-blue-600 disabled:opacity-50 text-white text-xs font-semibold rounded-xl shadow-lg shadow-sky-500/20 transition-all active:scale-[0.98]">
-                                            {aiRefining ? '🔄 正在重新分析...' : '🤖 重新分析'}
+                                            {aiRefining ? "🔄 Analyzing again..." : "🤖 Analyze again"}
                                         </button>
                                     )}
                                     <div className="flex-1" />
                                     <button onClick={handleApplyAiConfig}
                                         className="flex items-center gap-1.5 px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white text-xs font-semibold rounded-xl shadow-lg shadow-emerald-500/20 transition-all active:scale-[0.98]">
-                                        🚀 应用配置并部署
+                                        🚀 Apply configuration and deploy
                                     </button>
                                     <button onClick={closeAiDialog}
                                         className="px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-500 hover:bg-white dark:hover:bg-slate-800 transition-colors">
-                                        取消
+                                        Cancel
                                     </button>
                                 </div>
                                 {aiResult.source === 'ai_refined' && (
-                                    <div className="mt-2 px-1 text-[10px] text-emerald-500 font-medium">✨ 已根据补充信息优化分析配置</div>
+                                    <div className="mt-2 px-1 text-[10px] text-emerald-500 font-medium">✨ Analysis configuration updated using supplemental settings</div>
                                 )}
                             </div>
                         )}

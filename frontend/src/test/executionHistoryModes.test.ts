@@ -3,36 +3,36 @@ import { describe, expect, it } from 'vitest';
 import { resolveFocusedGroupPage, resolveFocusedRecordId } from '../components/ExecutionHistory';
 
 const MODE_LABELS = {
-    commander: '军团中心',
+    commander: "Agent hub",
     smart: 'Smart Agent',
     quick: 'Quick Plan',
-    api_rest: 'API 测试',
-    api_graphql: 'GraphQL 测试',
-    performance: '性能测试',
-    security: '安全扫描',
-    accessibility: '无障碍测试',
-    i18n: 'i18n 测试',
-    compliance: '合规审计',
-    database: '数据库测试',
-    api_workbench: 'API 工作台',
-    graphql: 'GraphQL 测试',
-    grpc: 'gRPC 测试',
-    websocket: 'WebSocket 测试',
-    chaos: '混沌测试',
-    mobile: '移动端测试',
+    api_rest: "API testing",
+    api_graphql: "GraphQL testing",
+    performance: "Performance testing",
+    security: "Security scanning",
+    accessibility: "Accessibility testing",
+    i18n: "Internationalization testing",
+    compliance: "Compliance audit",
+    database: "Database testing",
+    api_workbench: "API workbench",
+    graphql: "GraphQL testing",
+    grpc: "gRPC testing",
+    websocket: "WebSocket testing",
+    chaos: "Chaos testing",
+    mobile: "Mobile testing",
 };
 
 describe('ExecutionHistory mode labels', () => {
     it('should cover newly grouped specialized modes', () => {
-        expect(MODE_LABELS.commander).toBe('军团中心');
-        expect(MODE_LABELS.api_rest).toBe('API 测试');
-        expect(MODE_LABELS.api_graphql).toBe('GraphQL 测试');
-        expect(MODE_LABELS.api_workbench).toBe('API 工作台');
-        expect(MODE_LABELS.graphql).toBe('GraphQL 测试');
-        expect(MODE_LABELS.grpc).toBe('gRPC 测试');
-        expect(MODE_LABELS.websocket).toBe('WebSocket 测试');
-        expect(MODE_LABELS.chaos).toBe('混沌测试');
-        expect(MODE_LABELS.mobile).toBe('移动端测试');
+        expect(MODE_LABELS.commander).toBe("Agent hub");
+        expect(MODE_LABELS.api_rest).toBe("API testing");
+        expect(MODE_LABELS.api_graphql).toBe("GraphQL testing");
+        expect(MODE_LABELS.api_workbench).toBe("API workbench");
+        expect(MODE_LABELS.graphql).toBe("GraphQL testing");
+        expect(MODE_LABELS.grpc).toBe("gRPC testing");
+        expect(MODE_LABELS.websocket).toBe("WebSocket testing");
+        expect(MODE_LABELS.chaos).toBe("Chaos testing");
+        expect(MODE_LABELS.mobile).toBe("Mobile testing");
     });
 
     it('should resolve focused group page from query target', () => {

@@ -35,7 +35,7 @@ const runI18nTest = async (url: string, locales: string[], payload: ExecutionCon
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             url,
-            locale: locales[0] || 'zh-CN',
+            locale: locales[0] || 'en-US',
             ...payload,
         }),
     });
@@ -62,7 +62,7 @@ const impactBadge = (impact: string) => {
 // ============================================================================
 const I18nA11yPage: React.FC = () => {
     const [url, setUrl] = useState('');
-    const [locales, setLocales] = useState('zh-CN,en-US,ja-JP');
+    const [locales, setLocales] = useState('en-US');
     const [activeTab, setActiveTab] = useState('i18n');
     const [i18nResult, setI18nResult] = useState<{ issues: I18nIssue[]; score: number } | null>(null);
     const [a11yResult, setA11yResult] = useState<{ violations: A11yViolation[]; score: number; passes: number } | null>(null);
@@ -76,7 +76,7 @@ const I18nA11yPage: React.FC = () => {
             const r = await runI18nTest(
                 url,
                 locales.split(',').map(l => l.trim()),
-                ensureExecutionContextPayload('国际化专项测试', { targetUrl: url })
+                ensureExecutionContextPayload("Internationalization test suite", { targetUrl: url })
             );
             setI18nResult(r);
         } catch { /* */ }
@@ -89,7 +89,7 @@ const I18nA11yPage: React.FC = () => {
         try {
             const r = await runA11yAudit(
                 url,
-                ensureExecutionContextPayload('无障碍专项测试', { targetUrl: url })
+                ensureExecutionContextPayload("Accessibility test suite", { targetUrl: url })
             );
             setA11yResult(r);
         } catch { /* */ }
@@ -98,12 +98,12 @@ const I18nA11yPage: React.FC = () => {
 
     return (
         <div className="space-y-6 max-w-7xl mx-auto">
-            <ExecutionBatchBanner standaloneHint="这里的国际化和无障碍检查也会进入执行中心；如果当前没有测试批次，首次执行时会自动创建专项测试批次。" />
+            <ExecutionBatchBanner standaloneHint={"Internationalization and accessibility checks also appear in the execution center. The first run creates a specialized test batch if none is active."} />
 
             <PageHeader
                 icon={<Languages className="w-5 h-5" />}
-                title="国际化 & 无障碍测试"
-                description="多语言 (i18n) 内容检测 + WCAG 无障碍审计"
+                title={"Internationalization and accessibility testing"}
+                description={"Multilingual content checks (i18n) and WCAG accessibility audits"}
                 accent="sky"
             />
 
@@ -111,12 +111,12 @@ const I18nA11yPage: React.FC = () => {
             <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
                 <div className="grid md:grid-cols-4 gap-3 items-end">
                     <div className="md:col-span-2 space-y-1">
-                        <label className="block text-[10px] font-medium uppercase tracking-wider text-slate-400">目标 URL</label>
+                        <label className="block text-[10px] font-medium uppercase tracking-wider text-slate-400">Target URL</label>
                         <input type="url" value={url} onChange={e => setUrl(e.target.value)} placeholder="https://example.com" className="w-full text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 outline-none focus:ring-2 focus:ring-sky-500/30" />
                     </div>
                     <div className="space-y-1">
-                        <label className="block text-[10px] font-medium uppercase tracking-wider text-slate-400">语言列表</label>
-                        <input type="text" value={locales} onChange={e => setLocales(e.target.value)} placeholder="zh-CN,en-US" className="w-full text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 outline-none focus:ring-2 focus:ring-sky-500/30" />
+                        <label className="block text-[10px] font-medium uppercase tracking-wider text-slate-400">Languages</label>
+                        <input type="text" value={locales} onChange={e => setLocales(e.target.value)} placeholder="en-US, es-US, fr-CA" className="w-full text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 outline-none focus:ring-2 focus:ring-sky-500/30" />
                     </div>
                     <div className="flex gap-2">
                         <button onClick={handleI18n} disabled={loadingI18n || !url} className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-sky-500 hover:bg-sky-600 text-white text-xs font-medium py-2 transition-colors disabled:opacity-50">
@@ -136,8 +136,8 @@ const I18nA11yPage: React.FC = () => {
                 activeKey={activeTab}
                 onChange={setActiveTab}
                 items={[
-                    { key: 'i18n', label: `国际化 ${i18nResult ? `(${i18nResult.issues.length})` : ''}`, content: <></> },
-                    { key: 'a11y', label: `无障碍 ${a11yResult ? `(${a11yResult.violations.length})` : ''}`, content: <></> },
+                    { key: 'i18n', label: `Internationalization ${i18nResult ? `(${i18nResult.issues.length})` : ''}`, content: <></> },
+                    { key: 'a11y', label: `Accessibility ${a11yResult ? `(${a11yResult.violations.length})` : ''}`, content: <></> },
                 ]}
                 variant="underline"
             />
@@ -147,9 +147,9 @@ const I18nA11yPage: React.FC = () => {
                     {i18nResult && (
                         <div className="flex items-center gap-3 mb-4">
                             <Badge variant={i18nResult.score >= 80 ? 'success' : i18nResult.score >= 50 ? 'warning' : 'error'} size="sm">
-                                i18n 得分: {i18nResult.score}/100
+                                i18n score: {i18nResult.score}/100
                             </Badge>
-                            <Badge variant="neutral" size="sm">{i18nResult.issues.length} 个问题</Badge>
+                            <Badge variant="neutral" size="sm">{i18nResult.issues.length} issues</Badge>
                         </div>
                     )}
                     {i18nResult?.issues.map((issue, i) => (
@@ -168,7 +168,7 @@ const I18nA11yPage: React.FC = () => {
                     {!i18nResult && (
                         <div className="rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 p-12 text-center">
                             <Globe className="w-10 h-10 text-sky-300 dark:text-sky-700 mx-auto mb-3" />
-                            <p className="text-sm text-slate-500">输入 URL 并点击 "i18n" 开始多语言检测</p>
+                            <p className="text-sm text-slate-500">Enter a URL and click i18n to start multilingual checks</p>
                         </div>
                     )}
                 </div>
@@ -179,10 +179,10 @@ const I18nA11yPage: React.FC = () => {
                     {a11yResult && (
                         <div className="flex items-center gap-3 mb-4">
                             <Badge variant={a11yResult.score >= 80 ? 'success' : a11yResult.score >= 50 ? 'warning' : 'error'} size="sm">
-                                WCAG 得分: {a11yResult.score}/100
+                                WCAG score: {a11yResult.score}/100
                             </Badge>
-                            <Badge variant="success" size="sm">{a11yResult.passes} 通过</Badge>
-                            <Badge variant="error" size="sm">{a11yResult.violations.length} 违规</Badge>
+                            <Badge variant="success" size="sm">{a11yResult.passes} Passed</Badge>
+                            <Badge variant="error" size="sm">{a11yResult.violations.length} violations</Badge>
                         </div>
                     )}
                     {a11yResult?.violations.map((v, i) => (
@@ -190,7 +190,7 @@ const I18nA11yPage: React.FC = () => {
                             <div className="flex items-center gap-2 mb-1.5">
                                 <code className="text-[10px] text-slate-400 font-mono">{v.id}</code>
                                 {impactBadge(v.impact)}
-                                <Badge variant="neutral" size="sm">{v.nodes} 节点</Badge>
+                                <Badge variant="neutral" size="sm">{v.nodes} nodes</Badge>
                             </div>
                             <p className="text-xs font-medium text-slate-700 dark:text-slate-200">{v.description}</p>
                             <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{v.help}</p>
@@ -199,7 +199,7 @@ const I18nA11yPage: React.FC = () => {
                     {!a11yResult && (
                         <div className="rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 p-12 text-center">
                             <Accessibility className="w-10 h-10 text-violet-300 dark:text-violet-700 mx-auto mb-3" />
-                            <p className="text-sm text-slate-500">输入 URL 并点击 "WCAG" 开始无障碍审计</p>
+                            <p className="text-sm text-slate-500">Enter a URL and click WCAG to start an accessibility audit</p>
                         </div>
                     )}
                 </div>

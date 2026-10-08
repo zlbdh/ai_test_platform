@@ -10,10 +10,10 @@ const OrchestratorPage: React.FC = () => {
     const { aiSettings } = useAISettingsStore();
     const navigate = useNavigate();
 
-    // 从全局 store 读取会话列表 — 跨页面持久化
+    // Read the session list from the global store to persist across pages.
     const { sessions, activeSessionId, addSession, removeSession, setActiveSession } = useExecutionStore();
 
-    // 初始化 activeSessionId（首次渲染时）
+    // Initialize activeSessionId on the first render.
     React.useEffect(() => {
         if (!activeSessionId && sessions.length > 0) {
             setActiveSession(sessions[0].id);
@@ -59,16 +59,16 @@ const OrchestratorPage: React.FC = () => {
                     <button
                         onClick={() => handleAddSession('chromium')}
                         className="flex items-center gap-1 px-3 py-2 text-sm text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 dark:text-slate-400 dark:hover:bg-slate-700/50 rounded-lg transition-colors whitespace-nowrap"
-                        title="新建沙箱测试"
+                        title={"New sandbox test"}
                     >
-                        <Plus size={16} /> 沙箱实例
+                        <Plus size={16} /> Sandbox instance
                     </button>
                     <button
                         onClick={() => handleAddSession('real')}
                         className="flex items-center gap-1 px-3 py-2 text-sm text-amber-600 hover:bg-amber-50 dark:text-amber-500 dark:hover:bg-amber-500/10 rounded-lg transition-colors whitespace-nowrap"
-                        title="连接本机正在运行的 Chrome 进行测试 (9222端口)"
+                        title={"Connect to Chrome running on this computer for testing (port 9222)"}
                     >
-                        <MonitorSmartphone size={16} /> 本机实例
+                        <MonitorSmartphone size={16} /> Local instance
                     </button>
                 </div>
             </div>

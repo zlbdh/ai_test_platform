@@ -40,7 +40,7 @@ describe('deployAuthService', () => {
         localStorage.clear();
     });
 
-    it('登录后会保存 token 并拉取当前用户权限', async () => {
+    it("saves the token and fetches current user permissions after login", async () => {
         mockFetch
             .mockResolvedValueOnce(mockResponse({
                 status: 'success',
@@ -78,7 +78,7 @@ describe('deployAuthService', () => {
         );
     });
 
-    it('附加 token 时会校验并推导管理员权限', async () => {
+    it("validates and derives administrator permissions when attaching a token", async () => {
         mockFetch.mockResolvedValueOnce(mockResponse({
             status: 'success',
             user: {
@@ -97,7 +97,7 @@ describe('deployAuthService', () => {
         expect(getStoredDeployAuthToken()).toBe('manual-token');
     });
 
-    it('请求头会自动注入 Bearer token', () => {
+    it("automatically adds the Bearer token to request headers", () => {
         localStorage.setItem('deploy_control_auth', JSON.stringify({ token: 'demo-token' }));
 
         const headers = getDeployAuthHeaders({ 'Content-Type': 'application/json' });
@@ -106,7 +106,7 @@ describe('deployAuthService', () => {
         expect(headers.get('Content-Type')).toBe('application/json');
     });
 
-    it('登出会提交 token 并清空本地会话', async () => {
+    it("submits the token and clears the local session on logout", async () => {
         localStorage.setItem('deploy_control_auth', JSON.stringify({ token: 'demo-token' }));
         mockFetch.mockResolvedValueOnce(mockResponse({ status: 'success' }));
 
@@ -122,7 +122,7 @@ describe('deployAuthService', () => {
         );
     });
 
-    it('清空会话后不再保留 token', () => {
+    it("retains no token after clearing the session", () => {
         localStorage.setItem('deploy_control_auth', JSON.stringify({ token: 'demo-token' }));
         clearDeployAuthSession();
         expect(getStoredDeployAuthToken()).toBe('');

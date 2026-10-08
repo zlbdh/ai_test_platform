@@ -2,11 +2,11 @@ import { create } from 'zustand';
 import type { MissionResult, MissionLog } from '../services/commanderService';
 
 // ============================================================================
-// Commander Store — Commander 执行状态持久化
+// Commander store: persist Commander execution state
 // ============================================================================
 
 interface CommanderStoreState {
-    // 执行状态
+    // Execution state
     isRunning: boolean;
     activeMission: MissionResult | null;
     streamLogs: MissionLog[];

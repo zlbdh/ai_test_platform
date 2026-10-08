@@ -400,7 +400,7 @@ export interface PlatformRemediationResponse {
 }
 
 // ============================================================================
-// 统一请求工具 — 内置超时控制与错误格式化
+// Shared request helper with timeout handling and error formatting
 // ============================================================================
 const DEFAULT_TIMEOUT_MS = 30_000;
 
@@ -416,12 +416,12 @@ async function fetchWithTimeout(
         const response = await fetch(url, { ...options, signal: controller.signal });
         if (!response.ok) {
             const errorText = await response.text().catch(() => response.statusText);
-            throw new Error(`API 请求失败 [${response.status}]: ${errorText}`);
+            throw new Error(`API request failed [${response.status}]: ${errorText}`);
         }
         return response;
     } catch (error: unknown) {
         if (error instanceof DOMException && error.name === 'AbortError') {
-            throw new Error(`请求超时 (${timeoutMs / 1000}s): ${url}`);
+            throw new Error(`Request timed out (${timeoutMs / 1000}s): ${url}`);
         }
         throw error;
     } finally {
@@ -430,7 +430,7 @@ async function fetchWithTimeout(
 }
 
 /**
- * 启动执行
+ * Start execution
  */
 export const startExecution = async (
     task: string,
@@ -468,7 +468,7 @@ export const startExecution = async (
 };
 
 /**
- * 获取单条执行记录详情（含完整日志）
+ * Get a single execution record, including complete logs
  */
 export const getExecutionDetail = async (taskId: string): Promise<ExecutionDetailResponse> => {
     const response = await fetchWithTimeout(`${API_ENDPOINTS.history.list}/${taskId}`);
@@ -476,7 +476,7 @@ export const getExecutionDetail = async (taskId: string): Promise<ExecutionDetai
 };
 
 /**
- * 停止执行
+ * Stop execution
  */
 export const stopExecution = async (sessionId: string = 'default_session'): Promise<{ status: string }> => {
     await fetchWithTimeout(API_ENDPOINTS.stop(sessionId), { method: 'POST' });
@@ -503,7 +503,7 @@ export const suspendExecution = async (sessionId: string = 'default_session', re
 };
 
 /**
- * 健康检查
+ * Health check
  */
 export const checkBackendHealth = async (): Promise<boolean> => {
     try {
@@ -549,7 +549,7 @@ export const generateTestPlanWithCoverage = async (
                 execution_mode: executionMode,
                 interaction_policy: interactionPolicy,
             })
-        }, 360_000); // LLM 计划生成可能较慢（长上下文规划场景），放宽到 360s
+        }, 360_000); // LLM planning with long context can be slow; allow up to 360 seconds
 
         const data = await response.json();
 
@@ -557,7 +557,7 @@ export const generateTestPlanWithCoverage = async (
             throw new Error(data.message || 'Plan generation failed');
         }
 
-        // 将后端格式转换为前端 TestStep 格式
+        // Convert the backend format to the frontend TestStep format
         const steps = (data.steps || []).map((step: PlanStep, index: number) => ({
             id: `step-${index + 1}`,
             agent: 'PLANNER' as const,
@@ -610,7 +610,7 @@ export const getExecutionHistory = async (limit: number = 100): Promise<HistoryR
         const response = await fetch(API_ENDPOINTS.history.list);
         if (!response.ok) return [];
         const data = await response.json();
-        // 兼容新旧格式
+        // Support both current and legacy formats
         return Array.isArray(data) ? data : (data.items || []);
     } catch {
         return [];
@@ -720,7 +720,7 @@ export const quarantinePlatformShadowDbs = async (
 };
 
 // ============================================================================
-// Dashboard 统计聚合 — 基于 history 数据在前端计算
+// Aggregate dashboard statistics on the frontend using history data
 // ============================================================================
 export interface DashboardStats {
     todayExecutions: number;
@@ -744,7 +744,7 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
     const now = new Date();
     const todayStr = now.toISOString().slice(0, 10);
 
-    // 今日记录
+    // Today's records
     const todayRecords = records.filter(r => {
         const d = r.created_at || r.timestamp || '';
         return d.slice(0, 10) === todayStr;
@@ -754,11 +754,11 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
     const todaySuccessRate = todayExecutions > 0 ? Math.round((todaySuccessCount / todayExecutions) * 100) : 0;
     const todayDefects = todayRecords.filter(r => (r as Record<string, unknown>).error_count && ((r as Record<string, unknown>).error_count as number) > 0).reduce((s, r) => s + (((r as Record<string, unknown>).error_count as number) || 0), 0);
 
-    // 平均耗时
+    // Average duration
     const durations = records.filter(r => (r as Record<string, unknown>).duration_ms && ((r as Record<string, unknown>).duration_ms as number) > 0).map(r => (r as Record<string, unknown>).duration_ms as number);
     const avgDurationMs = durations.length > 0 ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length) : 0;
 
-    // 7 天趋势
+    // Seven-day trend
     const trend7Days: DashboardStats['trend7Days'] = [];
     for (let i = 6; i >= 0; i--) {
         const d = new Date(now);
@@ -773,7 +773,7 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
         });
     }
 
-    // 类型分布
+    // Type distribution
     const typeCounts: Record<string, number> = {};
     for (const r of records) {
         const mode = ((r as Record<string, unknown>).mode as string) || 'other';

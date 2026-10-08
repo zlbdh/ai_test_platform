@@ -97,12 +97,12 @@ import DeployPage from '../pages/DeployPage';
 
 const sampleProject = {
     key: 'demo',
-    name: '示例项目',
+    name: "Sample project",
     has_token: true,
     repos: [
         {
             id: 'repo-1',
-            label: '后端服务',
+            label: "Backend service",
             repo_url: 'https://git.example.com/team/backend.git',
             tech_stack: 'FastAPI',
             local_dir: 'D:/deploy/backend',
@@ -125,10 +125,10 @@ const sampleHistory = [
         id: 'record-1',
         project_key: 'demo',
         repo_id: 'repo-1',
-        repo_label: '后端服务',
+        repo_label: "Backend service",
         action: 'full',
         status: 'success',
-        message: '部署成功',
+        message: "Deployment succeeded",
         started_at: '2026-03-23T09:00:00',
         finished_at: '2026-03-23T09:05:00',
         duration_ms: 300000,
@@ -138,10 +138,10 @@ const sampleHistory = [
         id: 'record-2',
         project_key: 'demo',
         repo_id: 'repo-2',
-        repo_label: '前端门户',
+        repo_label: "Frontend portal",
         action: 'full',
         status: 'failed',
-        message: '部署失败',
+        message: "Deployment failed",
         started_at: '2026-03-23T09:10:00',
         finished_at: '2026-03-23T09:15:00',
         duration_ms: 300000,
@@ -155,12 +155,12 @@ const sampleApprovals = [
         action: 'full',
         project_key: 'demo',
         repo_id: 'repo-1',
-        repo_label: '后端服务',
+        repo_label: "Backend service",
         branch: 'main',
         status: 'pending',
-        message: '等待审批',
+        message: "Awaiting approval",
         requested_by: 'tester-1',
-        requested_by_name: '测试同学',
+        requested_by_name: "Test operator",
         requested_at: '2026-03-23T10:00:00',
         reviewed_by: '',
         reviewed_by_name: '',
@@ -174,12 +174,12 @@ const sampleApprovals = [
         action: 'full',
         project_key: 'demo',
         repo_id: 'repo-2',
-        repo_label: '前端门户',
+        repo_label: "Frontend portal",
         branch: 'release-ui',
         status: 'pending',
-        message: '等待前端审批',
+        message: "Awaiting frontend approval",
         requested_by: 'tester-2',
-        requested_by_name: '前端测试',
+        requested_by_name: "Frontend test",
         requested_at: '2026-03-23T10:30:00',
         reviewed_by: '',
         reviewed_by_name: '',
@@ -196,32 +196,32 @@ const sampleJobs = [
         action: 'full',
         project_key: 'demo',
         repo_id: 'repo-1',
-        repo_label: '后端服务',
+        repo_label: "Backend service",
         record_id: 'record-9',
         branch: 'release/2026-03',
         status: 'running',
-        message: '正在发布后端服务',
+        message: "Deploying the backend service",
         created_at: '2026-03-23T10:10:00',
         started_at: '2026-03-23T10:11:00',
         finished_at: '',
         record_status: 'running',
-        record_message: '发布中',
+        record_message: "Deploying",
     },
     {
         id: 'job-2',
         action: 'full',
         project_key: 'demo',
         repo_id: 'repo-2',
-        repo_label: '前端门户',
+        repo_label: "Frontend portal",
         record_id: 'record-2',
         branch: 'release-ui',
         status: 'success',
-        message: '前端发布完成',
+        message: "Frontend deployment completed",
         created_at: '2026-03-23T10:12:00',
         started_at: '2026-03-23T10:13:00',
         finished_at: '2026-03-23T10:16:00',
         record_status: 'success',
-        record_message: '发布成功',
+        record_message: "Release succeeded",
     },
 ];
 
@@ -236,8 +236,8 @@ const sampleAuditLogs = [
         project_key: 'demo',
         details: {
             project_key: 'demo',
-            repo_label: '后端服务',
-            comment: '窗口已确认',
+            repo_label: "Backend service",
+            comment: "Window confirmed",
             record_id: 'record-approved',
         },
         timestamp: '2026-03-23T10:05:00',
@@ -257,7 +257,7 @@ const filteredAuditLogs = [
         details: {
             project_key: 'demo',
             job_id: 'job-9',
-            comment: '人工终止',
+            comment: "Manually stopped",
             record_id: 'record-9',
         },
         timestamp: '2026-03-23T10:15:00',
@@ -270,16 +270,16 @@ const sampleJobDetail = {
     action: 'full',
     project_key: 'demo',
     repo_id: 'repo-1',
-    repo_label: '后端服务',
+    repo_label: "Backend service",
     record_id: 'record-9',
     branch: 'release/2026-03',
     status: 'cancelled',
-    message: '人工终止部署',
+    message: "Manually stop deployment",
     created_at: '2026-03-23T10:10:00',
     started_at: '2026-03-23T10:11:00',
     finished_at: '2026-03-23T10:15:00',
     record_status: 'cancelled',
-    record_message: '部署已取消',
+    record_message: "Deployment canceled",
 };
 
 function makeProfile(overrides: Partial<{
@@ -307,7 +307,7 @@ function makeProfile(overrides: Partial<{
 
 async function waitForDeployPageReady() {
     await waitFor(() => {
-        expect(screen.queryByText('加载中...')).not.toBeInTheDocument();
+        expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
     });
 }
 
@@ -347,7 +347,7 @@ describe('DeployPage', () => {
         deployServiceMocks.cancelDeployJob.mockResolvedValue({
             ...sampleJobDetail,
             status: 'cancel_requested',
-            message: '已提交取消请求',
+            message: "Cancellation request submitted",
         });
 
         authServiceMocks.fetchDeployAuthProfile.mockResolvedValue(null);
@@ -358,19 +358,19 @@ describe('DeployPage', () => {
         vi.stubGlobal('confirm', vi.fn(() => true));
     });
 
-    it('未登录时展示认证入口并禁用管理动作', async () => {
+    it("shows authentication and disables management actions when signed out", async () => {
         render(<DeployPage />);
         await waitForDeployPageReady();
 
-        expect(screen.getByText('部署控制面认证')).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: '登录部署控制面' })).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: '保存并校验 Token' })).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: '添加项目' })).toBeDisabled();
-        expect(screen.getByRole('button', { name: '添加第一个项目' })).toBeDisabled();
+        expect(screen.getByText("Deployment control authentication")).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: "Sign in to deployment control" })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: "Save and validate token" })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: "Add project" })).toBeDisabled();
+        expect(screen.getByRole('button', { name: "Add your first project" })).toBeDisabled();
         expect(deployServiceMocks.getProjects).not.toHaveBeenCalled();
     });
 
-    it('开发免登录旁路开启时，无 token 也会直接加载部署面板', async () => {
+    it("loads the deployment panel without a token when the development authentication bypass is enabled", async () => {
         authServiceMocks.fetchDeployAuthProfile.mockResolvedValue(makeProfile({
             token: '',
         }));
@@ -382,15 +382,15 @@ describe('DeployPage', () => {
 
         render(<DeployPage />);
 
-        expect(await screen.findByText('示例项目')).toBeInTheDocument();
-        expect(screen.getByText('开发免登录')).toBeInTheDocument();
-        expect(screen.getByText('当前处于本地开发免登录模式，已自动附加开发用户权限，可直接验证部署链路。')).toBeInTheDocument();
-        expect(screen.queryByRole('button', { name: '登录部署控制面' })).not.toBeInTheDocument();
-        expect(screen.queryByRole('button', { name: '退出认证' })).not.toBeInTheDocument();
-        expect(screen.getByRole('button', { name: '添加项目' })).toBeEnabled();
+        expect(await screen.findByText("Sample project")).toBeInTheDocument();
+        expect(screen.getByText("Development sign-in bypass")).toBeInTheDocument();
+        expect(screen.getByText("Local development mode bypasses sign-in and automatically attaches developer permissions so you can test the deployment flow.")).toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: "Sign in to deployment control" })).not.toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: "Sign out" })).not.toBeInTheDocument();
+        expect(screen.getByRole('button', { name: "Add project" })).toBeEnabled();
     });
 
-    it('无部署查看权限时给出明确提示且不拉取部署数据', async () => {
+    it("shows a clear permission message without fetching deployment data when viewing is denied", async () => {
         authServiceMocks.state.storedToken = 'viewer-token';
         authServiceMocks.fetchDeployAuthProfile.mockResolvedValue(makeProfile({
             username: 'viewer-user',
@@ -402,14 +402,14 @@ describe('DeployPage', () => {
 
         render(<DeployPage />);
 
-        expect(await screen.findByText('当前角色没有部署查看权限，可登录其他账号或联系管理员开通 deploy_view。')).toBeInTheDocument();
-        expect(screen.getByText('角色：viewer')).toBeInTheDocument();
+        expect(await screen.findByText("Your role lacks deployment viewing permission. Sign in with another account or ask an administrator for deploy_view.")).toBeInTheDocument();
+        expect(screen.getByText("Role: viewer")).toBeInTheDocument();
         expect(deployServiceMocks.getProjects).not.toHaveBeenCalled();
         expect(deployServiceMocks.getDeployHistory).not.toHaveBeenCalled();
         expect(deployServiceMocks.listDeployApprovals).not.toHaveBeenCalled();
     });
 
-    it('只读权限可查看项目，但不能申请或直接执行部署', async () => {
+    it("allows read-only users to view projects but not request or directly execute deployments", async () => {
         authServiceMocks.state.storedToken = 'tester-token';
         authServiceMocks.fetchDeployAuthProfile.mockResolvedValue(makeProfile({
             username: 'tester-user',
@@ -425,21 +425,21 @@ describe('DeployPage', () => {
 
         render(<DeployPage />);
 
-        expect(await screen.findByText('示例项目')).toBeInTheDocument();
-        expect(await screen.findByText('部署历史')).toBeInTheDocument();
-        expect(screen.getByText('部署作业')).toBeInTheDocument();
-        expect(screen.getByText('部署审计')).toBeInTheDocument();
-        expect(screen.getByText('项目范围')).toBeInTheDocument();
+        expect(await screen.findByText("Sample project")).toBeInTheDocument();
+        expect(await screen.findByText("Deployment history")).toBeInTheDocument();
+        expect(screen.getByText("Deployment jobs")).toBeInTheDocument();
+        expect(screen.getByText("Deployment audit")).toBeInTheDocument();
+        expect(screen.getByText("Project scope")).toBeInTheDocument();
         expect(screen.getAllByText('demo').length).toBeGreaterThan(0);
-        expect(screen.getByRole('button', { name: '添加项目' })).toBeDisabled();
-        expect(screen.getByRole('button', { name: '申请全部审批' })).toBeDisabled();
-        expect(screen.getByRole('button', { name: '全部直接部署' })).toBeDisabled();
-        expect(screen.getByRole('button', { name: '申请审批部署' })).toBeDisabled();
-        expect(screen.getByRole('button', { name: '直接部署' })).toBeDisabled();
-        expect(screen.getByRole('button', { name: '清空全部' })).toBeDisabled();
+        expect(screen.getByRole('button', { name: "Add project" })).toBeDisabled();
+        expect(screen.getByRole('button', { name: "Request approval for all" })).toBeDisabled();
+        expect(screen.getByRole('button', { name: "Deploy all directly" })).toBeDisabled();
+        expect(screen.getByRole('button', { name: "Request deployment approval" })).toBeDisabled();
+        expect(screen.getByRole('button', { name: "Direct deployment" })).toBeDisabled();
+        expect(screen.getByRole('button', { name: "Clear all" })).toBeDisabled();
     });
 
-    it('管理员权限下展示审批动作并开放部署控制按钮', async () => {
+    it("shows approval actions and deployment controls for administrators", async () => {
         authServiceMocks.state.storedToken = 'admin-token';
         authServiceMocks.fetchDeployAuthProfile.mockResolvedValue(makeProfile({
             username: 'release-admin',
@@ -453,22 +453,22 @@ describe('DeployPage', () => {
 
         render(<DeployPage />);
 
-        expect(await screen.findByText('示例项目')).toBeInTheDocument();
-        expect(screen.getByText('角色：admin')).toBeInTheDocument();
-        expect(screen.getByText('全部项目（管理员）')).toBeInTheDocument();
-        expect(screen.getByText('活跃作业')).toBeInTheDocument();
-        expect(screen.getAllByText('审批通过').length).toBeGreaterThan(0);
-        expect(screen.getByText(/窗口已确认/)).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: '添加项目' })).toBeEnabled();
-        expect(screen.getByRole('button', { name: '申请全部审批' })).toBeEnabled();
-        expect(screen.getByRole('button', { name: '全部直接部署' })).toBeEnabled();
-        expect(screen.getByRole('button', { name: '申请审批部署' })).toBeEnabled();
-        expect(screen.getByRole('button', { name: '直接部署' })).toBeEnabled();
-        expect(screen.getAllByTitle('批准').length).toBeGreaterThan(0);
-        expect(screen.getAllByTitle('驳回').length).toBeGreaterThan(0);
+        expect(await screen.findByText("Sample project")).toBeInTheDocument();
+        expect(screen.getByText("Role: admin")).toBeInTheDocument();
+        expect(screen.getByText("All projects (administrator)")).toBeInTheDocument();
+        expect(screen.getByText("Active jobs")).toBeInTheDocument();
+        expect(screen.getAllByText("Approval granted").length).toBeGreaterThan(0);
+        expect(screen.getByText(/Window confirmed/)).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: "Add project" })).toBeEnabled();
+        expect(screen.getByRole('button', { name: "Request approval for all" })).toBeEnabled();
+        expect(screen.getByRole('button', { name: "Deploy all directly" })).toBeEnabled();
+        expect(screen.getByRole('button', { name: "Request deployment approval" })).toBeEnabled();
+        expect(screen.getByRole('button', { name: "Direct deployment" })).toBeEnabled();
+        expect(screen.getAllByTitle("Approve").length).toBeGreaterThan(0);
+        expect(screen.getAllByTitle("Reject").length).toBeGreaterThan(0);
     });
 
-    it('批准审批后会启动部署跟踪并展示进度面板', async () => {
+    it("starts deployment tracking and shows progress after approval", async () => {
         authServiceMocks.state.storedToken = 'admin-token';
         authServiceMocks.fetchDeployAuthProfile.mockResolvedValue(makeProfile({
             username: 'release-admin',
@@ -482,44 +482,44 @@ describe('DeployPage', () => {
         deployServiceMocks.approveDeployApproval.mockResolvedValue({
             ...sampleApprovals[0],
             status: 'approved',
-            review_comment: '窗口已确认',
+            review_comment: "Window confirmed",
             record_id: 'record-approved',
         });
         deployServiceMocks.getRecordDetail.mockResolvedValue({
             ...sampleHistory[0],
             id: 'record-approved',
             status: 'success',
-            message: '部署成功',
-            logs: ['✅ 审批已通过，部署任务已启动...', '✅ 部署完成'],
+            message: "Deployment succeeded",
+            logs: ["✅ Approval granted; deployment task started...", "✅ Deployment completed"],
             steps: [
-                { name: 'clone', status: 'success', message: '仓库已克隆', duration_ms: 1000, logs: [] },
-                { name: 'install', status: 'success', message: '依赖安装完成', duration_ms: 2000, logs: [] },
-                { name: 'start', status: 'success', message: '服务启动完成', duration_ms: 1000, logs: [] },
+                { name: 'clone', status: 'success', message: "Repository cloned", duration_ms: 1000, logs: [] },
+                { name: 'install', status: 'success', message: "Dependencies installed", duration_ms: 2000, logs: [] },
+                { name: 'start', status: 'success', message: "Service started", duration_ms: 1000, logs: [] },
             ],
         });
 
         render(<DeployPage />);
 
-        expect(await screen.findByText('示例项目')).toBeInTheDocument();
+        expect(await screen.findByText("Sample project")).toBeInTheDocument();
 
-        fireEvent.click(screen.getAllByTitle('批准')[0]);
-        expect(await screen.findByText('Approve deployment')).toBeInTheDocument();
+        fireEvent.click(screen.getAllByTitle("Approve")[0]);
+        expect(await screen.findByText("Approve deployment")).toBeInTheDocument();
 
-        fireEvent.change(screen.getByPlaceholderText('Example: The deployment window is confirmed. Proceed.'), {
-            target: { value: '窗口已确认' },
+        fireEvent.change(screen.getByPlaceholderText("Example: The deployment window is confirmed. Proceed."), {
+            target: { value: "Window confirmed" },
         });
         vi.useFakeTimers();
         try {
-            fireEvent.click(screen.getByRole('button', { name: 'Confirm approval' }));
+            fireEvent.click(screen.getByRole('button', { name: "Confirm approval" }));
 
             await act(async () => {
                 await Promise.resolve();
                 await Promise.resolve();
             });
 
-            expect(deployServiceMocks.approveDeployApproval).toHaveBeenCalledWith('approval-1', '窗口已确认');
-            expect(screen.getByText('Direct deployment · 后端服务')).toBeInTheDocument();
-            expect(screen.getByText('✅ 审批已通过，部署任务已启动...')).toBeInTheDocument();
+            expect(deployServiceMocks.approveDeployApproval).toHaveBeenCalledWith('approval-1', "Window confirmed");
+            expect(screen.getByText("Direct deployment · Backend service")).toBeInTheDocument();
+            expect(screen.getByText("✅ Approval granted; deployment task started...")).toBeInTheDocument();
 
             await act(async () => {
                 await vi.advanceTimersByTimeAsync(2000);
@@ -527,13 +527,13 @@ describe('DeployPage', () => {
             });
 
             expect(deployServiceMocks.getRecordDetail).toHaveBeenCalledWith('record-approved');
-            expect(screen.getByText('✅ 部署完成')).toBeInTheDocument();
+            expect(screen.getByText("✅ Deployment completed")).toBeInTheDocument();
         } finally {
             vi.useRealTimers();
         }
     });
 
-    it('支持筛选部署审计并查看详情', async () => {
+    it("supports filtering deployment audits and viewing details", async () => {
         authServiceMocks.state.storedToken = 'admin-token';
         authServiceMocks.fetchDeployAuthProfile.mockResolvedValue(makeProfile({
             username: 'release-admin',
@@ -549,16 +549,16 @@ describe('DeployPage', () => {
 
         render(<DeployPage />);
 
-        expect(await screen.findByText('部署审计')).toBeInTheDocument();
-        expect(screen.getAllByText('审批通过').length).toBeGreaterThan(0);
+        expect(await screen.findByText("Deployment audit")).toBeInTheDocument();
+        expect(screen.getAllByText("Approval granted").length).toBeGreaterThan(0);
 
-        fireEvent.change(screen.getByLabelText('审计动作筛选'), {
+        fireEvent.change(screen.getByLabelText("Filter audit actions"), {
             target: { value: 'deploy_job_cancel' },
         });
-        fireEvent.change(screen.getByLabelText('审计操作人筛选'), {
+        fireEvent.change(screen.getByLabelText("Filter audit operators"), {
             target: { value: 'user-2' },
         });
-        fireEvent.click(screen.getByRole('button', { name: '筛选审计' }));
+        fireEvent.click(screen.getByRole('button', { name: "Filter audit" }));
 
         await waitFor(() => {
             expect(deployServiceMocks.listDeployAuditLogs).toHaveBeenLastCalledWith({
@@ -572,13 +572,13 @@ describe('DeployPage', () => {
         expect(await screen.findByText('release-operator')).toBeInTheDocument();
         fireEvent.click(screen.getByText('release-operator'));
 
-        expect(await screen.findByText('审计详情')).toBeInTheDocument();
+        expect(await screen.findByText("Audit details")).toBeInTheDocument();
         expect(screen.getAllByText('release-operator').length).toBeGreaterThan(0);
         expect(screen.getAllByText('job-9').length).toBeGreaterThan(0);
-        expect(screen.getAllByText(/人工终止/).length).toBeGreaterThan(0);
+        expect(screen.getAllByText(/Manually stopped/).length).toBeGreaterThan(0);
     });
 
-    it('支持从审计详情联动审批单、作业和部署记录', async () => {
+    it("links audit details to approval requests, jobs, and deployment records", async () => {
         authServiceMocks.state.storedToken = 'admin-token';
         authServiceMocks.fetchDeployAuthProfile.mockResolvedValue(makeProfile({
             username: 'release-admin',
@@ -595,8 +595,8 @@ describe('DeployPage', () => {
         deployServiceMocks.getDeployApprovalDetail.mockResolvedValue({
             ...sampleApprovals[0],
             status: 'approved',
-            reviewed_by_name: '发布负责人',
-            review_comment: '窗口已确认',
+            reviewed_by_name: "Release owner",
+            review_comment: "Window confirmed",
             record_id: 'record-approved',
             record_status: 'success',
         });
@@ -605,52 +605,52 @@ describe('DeployPage', () => {
             ...sampleHistory[0],
             id: 'record-9',
             status: 'cancelled',
-            message: '部署已取消',
-            logs: ['🔍 从审计详情打开部署记录...', '⏹ 已取消'],
+            message: "Deployment canceled",
+            logs: ["🔍 Opening deployment record from audit details...", "⏹ Canceled"],
             steps: [
-                { name: 'clone', status: 'success', message: '仓库已克隆', duration_ms: 1000, logs: [] },
-                { name: 'install', status: 'success', message: '依赖安装完成', duration_ms: 1000, logs: [] },
-                { name: 'start', status: 'skipped', message: '任务已取消', duration_ms: 0, logs: [] },
+                { name: 'clone', status: 'success', message: "Repository cloned", duration_ms: 1000, logs: [] },
+                { name: 'install', status: 'success', message: "Dependencies installed", duration_ms: 1000, logs: [] },
+                { name: 'start', status: 'skipped', message: "Task canceled", duration_ms: 0, logs: [] },
             ],
         });
 
         render(<DeployPage />);
 
-        expect(await screen.findByText('部署审计')).toBeInTheDocument();
+        expect(await screen.findByText("Deployment audit")).toBeInTheDocument();
 
-        fireEvent.click(screen.getByText(/窗口已确认/));
-        expect(await screen.findByText('审计详情')).toBeInTheDocument();
-        fireEvent.click(screen.getByRole('button', { name: '查看审批单' }));
+        fireEvent.click(screen.getByText(/Window confirmed/));
+        expect(await screen.findByText("Audit details")).toBeInTheDocument();
+        fireEvent.click(screen.getByRole('button', { name: "View approval request" }));
 
         await waitFor(() => {
             expect(deployServiceMocks.getDeployApprovalDetail).toHaveBeenCalledWith('approval-1');
         });
-        expect(await screen.findByText('关联审批单')).toBeInTheDocument();
-        expect(screen.getByText('发布负责人')).toBeInTheDocument();
-        expect(screen.getByText('已定位审批单 approval-1')).toBeInTheDocument();
-        fireEvent.click(screen.getByRole('button', { name: '筛选审批上下文' }));
-        expect(await screen.findByText(/仅显示审批单/)).toBeInTheDocument();
+        expect(await screen.findByText("Linked approval request")).toBeInTheDocument();
+        expect(screen.getByText("Release owner")).toBeInTheDocument();
+        expect(screen.getByText("Located approval request approval-1")).toBeInTheDocument();
+        fireEvent.click(screen.getByRole('button', { name: "Filter approval context" }));
+        expect(await screen.findByText(/Showing only approval request/)).toBeInTheDocument();
         expect(screen.queryByText('approval-2')).not.toBeInTheDocument();
 
-        fireEvent.click(screen.getByText(/人工终止/));
-        fireEvent.click(screen.getByRole('button', { name: '查看作业' }));
+        fireEvent.click(screen.getByText(/Manually stopped/));
+        fireEvent.click(screen.getByRole('button', { name: "View job" }));
 
         await waitFor(() => {
             expect(deployServiceMocks.getDeployJobDetail).toHaveBeenCalledWith('job-9');
         });
-        expect(await screen.findByText('关联作业')).toBeInTheDocument();
-        expect(screen.getAllByText('人工终止部署').length).toBeGreaterThan(0);
-        expect(screen.getByText('已定位作业 job-9')).toBeInTheDocument();
-        fireEvent.click(screen.getByRole('button', { name: '筛选作业上下文' }));
-        expect(await screen.findByText(/仅显示作业/)).toBeInTheDocument();
+        expect(await screen.findByText("Linked job")).toBeInTheDocument();
+        expect(screen.getAllByText("Manually stop deployment").length).toBeGreaterThan(0);
+        expect(screen.getByText("Located job job-9")).toBeInTheDocument();
+        fireEvent.click(screen.getByRole('button', { name: "Filter job context" }));
+        expect(await screen.findByText(/Showing only job/)).toBeInTheDocument();
         expect(screen.queryByText('job-2')).not.toBeInTheDocument();
-        fireEvent.click(screen.getByRole('button', { name: '筛选部署上下文' }));
-        expect(await screen.findByText(/仅显示记录/)).toBeInTheDocument();
+        fireEvent.click(screen.getByRole('button', { name: "Filter deployment context" }));
+        expect(await screen.findByText(/Showing only record/)).toBeInTheDocument();
         expect(screen.queryByText('record-2')).not.toBeInTheDocument();
 
         vi.useFakeTimers();
         try {
-            fireEvent.click(screen.getByRole('button', { name: '打开部署记录' }));
+            fireEvent.click(screen.getByRole('button', { name: "Open deployment record" }));
 
             await act(async () => {
                 await Promise.resolve();
@@ -658,22 +658,22 @@ describe('DeployPage', () => {
             });
 
             expect(deployServiceMocks.getRecordDetail).toHaveBeenCalledWith('record-9');
-            expect(screen.getByText('Direct deployment · 后端服务')).toBeInTheDocument();
-            expect(screen.getByText('🔍 从审计详情打开部署记录...')).toBeInTheDocument();
-            expect(screen.getByText('已定位记录 record-9')).toBeInTheDocument();
+            expect(screen.getByText("Direct deployment · Backend service")).toBeInTheDocument();
+            expect(screen.getByText("🔍 Opening deployment record from audit details...")).toBeInTheDocument();
+            expect(screen.getByText("Located record record-9")).toBeInTheDocument();
 
             await act(async () => {
                 await vi.advanceTimersByTimeAsync(2000);
                 await Promise.resolve();
             });
 
-            expect(screen.getByText('部署已取消')).toBeInTheDocument();
+            expect(screen.getByText("Deployment canceled")).toBeInTheDocument();
         } finally {
             vi.useRealTimers();
         }
     });
 
-    it('支持从作业列表取消运行中的部署作业', async () => {
+    it("supports canceling a running deployment from the job list", async () => {
         authServiceMocks.state.storedToken = 'admin-token';
         authServiceMocks.fetchDeployAuthProfile.mockResolvedValue(makeProfile({
             username: 'release-admin',
@@ -684,24 +684,24 @@ describe('DeployPage', () => {
         deployServiceMocks.listDeployApprovals.mockResolvedValue(sampleApprovals);
         deployServiceMocks.listDeployJobs
             .mockResolvedValueOnce(sampleJobs)
-            .mockResolvedValue([{ ...sampleJobs[0], status: 'cancel_requested', message: '已提交取消请求' }, sampleJobs[1]]);
+            .mockResolvedValue([{ ...sampleJobs[0], status: 'cancel_requested', message: "Cancellation request submitted" }, sampleJobs[1]]);
         deployServiceMocks.listDeployAuditLogs.mockResolvedValue(sampleAuditLogs);
         deployServiceMocks.cancelDeployJob.mockResolvedValue({
             ...sampleJobs[0],
             status: 'cancel_requested',
-            message: '已提交取消请求',
+            message: "Cancellation request submitted",
         });
 
         render(<DeployPage />);
 
-        expect(await screen.findByText('部署作业')).toBeInTheDocument();
-        fireEvent.click(screen.getByTitle('取消作业'));
+        expect(await screen.findByText("Deployment jobs")).toBeInTheDocument();
+        fireEvent.click(screen.getByTitle("Cancel job"));
 
         await waitFor(() => {
             expect(deployServiceMocks.cancelDeployJob).toHaveBeenCalledWith('job-9');
         });
         await waitFor(() => {
-            expect(screen.getAllByText('取消中').length).toBeGreaterThan(0);
+            expect(screen.getAllByText("Canceling").length).toBeGreaterThan(0);
         });
     });
 });

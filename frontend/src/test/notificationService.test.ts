@@ -69,7 +69,7 @@ describe('notificationService.ts', () => {
                 platform_ready: false,
                 ready: true,
                 summary: 'ok',
-                supported_commands: ['状态'],
+                supported_commands: ["Status"],
                 latest_event: null,
                 latest_successful_event: null,
                 latest_external_successful_event: null,
@@ -92,7 +92,7 @@ describe('notificationService.ts', () => {
                 attempted: true,
                 success: false,
                 issue: 'connect_error',
-                summary: '公网回调地址回探失败：ConnectionError',
+                summary: "Public callback probe failed: ConnectionError",
                 status_code: null,
                 content_type: '',
                 response_excerpt: '',
@@ -119,7 +119,7 @@ describe('notificationService.ts', () => {
                     attempted: true,
                     success: false,
                     issue: 'connect_error',
-                    summary: '公网回调地址回探失败：ConnectionError',
+                    summary: "Public callback probe failed: ConnectionError",
                     status_code: null,
                     content_type: '',
                     response_excerpt: '',
@@ -132,7 +132,7 @@ describe('notificationService.ts', () => {
                         attempted: true,
                         success: false,
                         issue: 'connect_error',
-                        summary: '公网回调地址回探失败：ConnectionError',
+                        summary: "Public callback probe failed: ConnectionError",
                         status_code: null,
                         content_type: '',
                         response_excerpt: '',
@@ -141,8 +141,8 @@ describe('notificationService.ts', () => {
                         created_at: '2026-03-18 13:00:00',
                     },
                 ],
-                summary: '公网回调地址回探失败：ConnectionError',
-                supported_commands: ['状态'],
+                summary: "Public callback probe failed: ConnectionError",
+                supported_commands: ["Status"],
                 latest_event: null,
                 latest_successful_event: null,
                 latest_external_successful_event: null,
@@ -177,7 +177,7 @@ describe('notificationService.ts', () => {
                 label: 'message',
                 ok: true,
                 status_code: 200,
-                command_response: '📡 军团状态',
+                command_response: "📡 Agent status",
                 delivery: { configured: 1, delivered: 1, failed: 0 },
             },
             overview: {
@@ -196,7 +196,7 @@ describe('notificationService.ts', () => {
                 platform_ready: true,
                 ready: true,
                 summary: 'ok',
-                supported_commands: ['状态'],
+                supported_commands: ["Status"],
                 latest_event: null,
                 latest_successful_event: null,
                 latest_external_successful_event: null,
@@ -218,8 +218,8 @@ describe('notificationService.ts', () => {
     it('should simulate commander chatops command', async () => {
         mockFetch.mockResolvedValue(mockResponse({
             status: 'success',
-            result: { response: '🟢 军团状态：6/6 Agent 在线' },
-            delivery: { configured: 1, delivered: 1, failed: 0, message: '发送成功' },
+            result: { response: "🟢 Agent status: 6/6 agents online" },
+            delivery: { configured: 1, delivered: 1, failed: 0, message: "Sent successfully" },
             overview: {
                 channel: 'notification_platform',
                 event_endpoint: '/api/commander/notification_platform/events',
@@ -235,8 +235,8 @@ describe('notificationService.ts', () => {
                 external_connected: false,
                 platform_ready: false,
                 ready: false,
-                summary: '需要配置事件订阅 token',
-                supported_commands: ['状态'],
+                summary: "An event subscription token must be configured",
+                supported_commands: ["Status"],
                 latest_event: null,
                 latest_successful_event: null,
                 latest_external_successful_event: null,
@@ -245,13 +245,13 @@ describe('notificationService.ts', () => {
             },
         }));
 
-        const result = await simulateCommanderChatOps({ message: '状态', deliver: true });
+        const result = await simulateCommanderChatOps({ message: "Status", deliver: true });
 
         const [url, options] = mockFetch.mock.calls[0];
         expect(url).toContain('/api/commander/chatops/simulate');
         expect(options.method).toBe('POST');
-        expect(JSON.parse(options.body)).toEqual({ message: '状态', deliver: true });
-        expect(result.result.response).toContain('军团状态');
+        expect(JSON.parse(options.body)).toEqual({ message: "Status", deliver: true });
+        expect(result.result.response).toContain("Agent status");
     });
 
     it('should configure commander chatops token', async () => {
@@ -276,7 +276,7 @@ describe('notificationService.ts', () => {
                 platform_ready: false,
                 ready: false,
                 summary: 'ok',
-                supported_commands: ['状态'],
+                supported_commands: ["Status"],
                 latest_event: null,
                 latest_successful_event: null,
                 latest_external_successful_event: null,
@@ -316,7 +316,7 @@ describe('notificationService.ts', () => {
                 platform_ready: true,
                 ready: false,
                 summary: 'ok',
-                supported_commands: ['状态'],
+                supported_commands: ["Status"],
                 latest_event: null,
                 latest_successful_event: null,
                 latest_external_successful_event: null,
@@ -342,7 +342,7 @@ describe('notificationService.ts', () => {
             app_id_masked: 'cli...bot',
             validation: {
                 ok: true,
-                message: '应用机器人凭据校验通过，已成功获取 tenant_access_token。',
+                message: "Application bot credentials verified; tenant_access_token obtained successfully.",
                 status_code: 200,
                 app_id_masked: 'cli...bot',
             },
@@ -359,7 +359,7 @@ describe('notificationService.ts', () => {
                 app_bot_check: {
                     id: 1,
                     success: true,
-                    message: '应用机器人凭据校验通过，已成功获取 tenant_access_token。',
+                    message: "Application bot credentials verified; tenant_access_token obtained successfully.",
                     status_code: 200,
                     source: 'config_save',
                     app_id_masked: 'cli...bot',
@@ -376,8 +376,8 @@ describe('notificationService.ts', () => {
                 platform_ready: true,
                 direct_chat_ready: false,
                 ready: false,
-                summary: 'Webhook 通知和公网回调都已打通，但当前仍未配置通知平台应用机器人（App Bot）；群成员直接发消息还不会自动回流到平台。',
-                supported_commands: ['状态'],
+                summary: "Webhook notifications and public callbacks work, but no notification platform application bot is configured. Group messages do not yet flow back automatically.",
+                supported_commands: ["Status"],
                 latest_event: null,
                 latest_successful_event: null,
                 latest_external_successful_event: null,
@@ -401,7 +401,7 @@ describe('notificationService.ts', () => {
             status: 'success',
             validation: {
                 ok: true,
-                message: '应用机器人凭据校验通过，已成功获取 tenant_access_token。',
+                message: "Application bot credentials verified; tenant_access_token obtained successfully.",
                 status_code: 200,
                 app_id_masked: 'cli...bot',
             },
@@ -418,7 +418,7 @@ describe('notificationService.ts', () => {
                 app_bot_check: {
                     id: 2,
                     success: true,
-                    message: '应用机器人凭据校验通过，已成功获取 tenant_access_token。',
+                    message: "Application bot credentials verified; tenant_access_token obtained successfully.",
                     status_code: 200,
                     source: 'manual_self_check',
                     app_id_masked: 'cli...bot',
@@ -436,7 +436,7 @@ describe('notificationService.ts', () => {
                 direct_chat_ready: false,
                 ready: false,
                 summary: 'ok',
-                supported_commands: ['状态'],
+                supported_commands: ["Status"],
                 latest_event: null,
                 latest_successful_event: null,
                 latest_external_successful_event: null,
@@ -474,7 +474,7 @@ describe('notificationService.ts', () => {
                 platform_ready: true,
                 ready: false,
                 summary: 'ok',
-                supported_commands: ['状态'],
+                supported_commands: ["Status"],
                 latest_event: null,
                 latest_successful_event: null,
                 latest_external_successful_event: null,
@@ -528,7 +528,7 @@ describe('notificationService.ts', () => {
     });
 
     it('should test webhook', async () => {
-        mockFetch.mockResolvedValue(mockResponse({ success: true, message: '发送成功' }));
+        mockFetch.mockResolvedValue(mockResponse({ success: true, message: "Sent successfully" }));
 
         const result = await testNotificationWebhook('wh_1');
 
@@ -544,16 +544,16 @@ describe('notificationService.ts', () => {
             attempted: 1,
             delivered: 1,
             failed: 0,
-            results: [{ id: 'wh_1', name: 'ops', success: true, status_code: 200, message: '发送成功' }],
-            summary: '已完成 1 个启用通道的告警演练，成功 1 个，失败 0 个。',
+            results: [{ id: 'wh_1', name: 'ops', success: true, status_code: 200, message: "Sent successfully" }],
+            summary: "Alert drill completed for 1 enabled channel: 1 succeeded, 0 failed.",
         }));
 
-        const result = await drillNotificationWebhooks({ title: '平台告警演练' });
+        const result = await drillNotificationWebhooks({ title: "Platform alert drill" });
 
         const [url, options] = mockFetch.mock.calls[0];
         expect(url).toContain('/api/notify/drill');
         expect(options.method).toBe('POST');
-        expect(JSON.parse(options.body)).toEqual({ title: '平台告警演练' });
+        expect(JSON.parse(options.body)).toEqual({ title: "Platform alert drill" });
         expect(result.delivered).toBe(1);
     });
 

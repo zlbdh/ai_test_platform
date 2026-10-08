@@ -41,8 +41,8 @@ interface MockConfigPanelProps {
 vi.mock('../components/TestConfigPanel', () => ({
     default: ({ setRequirement, probeMode, setProbeMode, onGeneratePlan }: MockConfigPanelProps) => (
         <div>
-            <button onClick={() => setRequirement('登录流程测试')}>填写需求</button>
-            <button onClick={() => setProbeMode?.(!probeMode)}>切换探针</button>
+            <button onClick={() => setRequirement("Login workflow test")}>Enter requirements</button>
+            <button onClick={() => setProbeMode?.(!probeMode)}>Switch probe</button>
             <button onClick={onGeneratePlan}>Generate plan</button>
         </div>
     ),
@@ -104,7 +104,7 @@ describe('TestOrchestrator', () => {
         {
             id: 'step-1',
             agent: AgentType.PLANNER,
-            description: '登录: 打开页面',
+            description: "Login: Open the page",
             status: StepStatus.PENDING,
             logs: [],
             action: 'goto',
@@ -113,7 +113,7 @@ describe('TestOrchestrator', () => {
         {
             id: 'step-2',
             agent: AgentType.PLANNER,
-            description: '登录: 点击提交',
+            description: "Login: Click submit",
             status: StepStatus.PENDING,
             logs: [],
             action: 'click',
@@ -155,11 +155,11 @@ describe('TestOrchestrator', () => {
             />
         );
 
-        fireEvent.click(screen.getByText('填写需求'));
+        fireEvent.click(screen.getByText("Enter requirements"));
         fireEvent.click(screen.getByText("Generate plan"));
 
         await waitFor(() => {
-            expect(mockGenerateTestPlanWithCoverage).toHaveBeenCalledWith('登录流程测试', '', 'default', 'default');
+            expect(mockGenerateTestPlanWithCoverage).toHaveBeenCalledWith("Login workflow test", '', 'default', 'default');
         });
         expect(screen.getByTestId('step-statuses')).toHaveTextContent('0:pending|1:pending');
 
@@ -235,8 +235,8 @@ describe('TestOrchestrator', () => {
     it('prefers task_display helper when backend returns display title', () => {
         expect(resolveTaskDisplayText('??????? Wave0 ???????', 'https://example.com/login'))
             .toBe('https://example.com/login');
-        expect(resolveTaskDisplayText('正常中文任务', ''))
-            .toBe('正常中文任务');
+        expect(resolveTaskDisplayText("Valid task title", ''))
+            .toBe("Valid task title");
         expect(resolveTaskDisplayText('', ''))
             .toBe('');
     });
@@ -257,19 +257,19 @@ describe('TestOrchestrator', () => {
             />
         );
 
-        fireEvent.click(screen.getByText('填写需求'));
-        fireEvent.click(screen.getByText('切换探针'));
+        fireEvent.click(screen.getByText("Enter requirements"));
+        fireEvent.click(screen.getByText("Switch probe"));
         fireEvent.click(screen.getByText("Generate plan"));
 
         await waitFor(() => {
-            expect(mockGenerateTestPlanWithCoverage).toHaveBeenCalledWith('登录流程测试', '', 'probe', 'read_only');
+            expect(mockGenerateTestPlanWithCoverage).toHaveBeenCalledWith("Login workflow test", '', 'probe', 'read_only');
         });
 
         fireEvent.click(screen.getByText("Execution plan"));
 
         await waitFor(() => {
             expect(mockStartExecution).toHaveBeenCalledWith(
-                expect.stringContaining('登录流程测试'),
+                expect.stringContaining("Login workflow test"),
                 true,
                 true,
                 '',

@@ -58,19 +58,19 @@ interface ImportedScenarioResult {
 }
 
 const STATUS_MAP: Record<string, { icon: React.ReactNode; label: string; color: string }> = {
-    draft: { icon: <Edit3 className="w-3.5 h-3.5" />, label: '草稿', color: 'text-slate-500 bg-slate-100 dark:bg-slate-700' },
-    completed: { icon: <CheckCircle2 className="w-3.5 h-3.5" />, label: '通过', color: 'text-emerald-600 bg-emerald-100 dark:bg-emerald-500/20' },
-    failed: { icon: <XCircle className="w-3.5 h-3.5" />, label: '失败', color: 'text-red-600 bg-red-100 dark:bg-red-500/20' },
-    running: { icon: <Clock className="w-3.5 h-3.5 animate-spin" />, label: '执行中', color: 'text-blue-600 bg-blue-100 dark:bg-blue-500/20' },
+    draft: { icon: <Edit3 className="w-3.5 h-3.5" />, label: "Draft", color: 'text-slate-500 bg-slate-100 dark:bg-slate-700' },
+    completed: { icon: <CheckCircle2 className="w-3.5 h-3.5" />, label: "Passed", color: 'text-emerald-600 bg-emerald-100 dark:bg-emerald-500/20' },
+    failed: { icon: <XCircle className="w-3.5 h-3.5" />, label: "Failed", color: 'text-red-600 bg-red-100 dark:bg-red-500/20' },
+    running: { icon: <Clock className="w-3.5 h-3.5 animate-spin" />, label: "Running", color: 'text-blue-600 bg-blue-100 dark:bg-blue-500/20' },
 };
 
 const EMPTY_STEP: Step = { name: '', url: '', instruction: '', mode: 'smart', timeout: 60, on_failure: 'stop' };
 
 const playbookSummaryText = (result: ImportedScenarioResult) => {
     if (result.playbook_id === 'sample-platform-prototype') {
-        return `已导入 ${result.imported_count} 条原型场景，覆盖登录、15 个业务模块以及跨模块主链路，可继续补充真实环境后执行。`;
+        return `Imported ${result.imported_count} prototype scenarios covering login, 15 business modules, and cross-module workflows. Add the real environment details before running them.`;
     }
-    return `已导入 ${result.imported_count} 条场景，覆盖 Wave 0 到 Wave 4，可直接逐条执行或二次编辑。`;
+    return `Imported ${result.imported_count} scenarios covering Wave 0 through Wave 4. Run them individually or edit them first.`;
 };
 
 const ScenarioPage: React.FC = () => {
@@ -99,7 +99,7 @@ const ScenarioPage: React.FC = () => {
     const startCreate = () => {
         setEditing({
             name: '', description: '', tags: '',
-            steps: [{ ...EMPTY_STEP, name: '步骤 1' }],
+            steps: [{ ...EMPTY_STEP, name: "Step 1" }],
         });
         setExecResult(null);
     };
@@ -156,7 +156,7 @@ const ScenarioPage: React.FC = () => {
         if (!editing) return;
         setEditing({
             ...editing,
-            steps: [...editing.steps, { ...EMPTY_STEP, name: `步骤 ${editing.steps.length + 1}` }],
+            steps: [...editing.steps, { ...EMPTY_STEP, name: `Step ${editing.steps.length + 1}` }],
         });
     };
 
@@ -197,16 +197,16 @@ const ScenarioPage: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            {/* 标题 */}
+            {/* Title*/}
             <div className="flex items-center justify-between">
                 <div>
                     <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
                         <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-600 text-white">
                             <Workflow className="w-5 h-5" />
                         </div>
-                        E2E 场景链
+                        E2E scenario chains
                     </h2>
-                    <p className="text-slate-500 mt-2 text-sm">串接多个测试步骤，构建端到端测试场景</p>
+                    <p className="text-slate-500 mt-2 text-sm">Connect multiple test steps to build end-to-end scenarios</p>
                 </div>
                 <div className="flex items-center gap-2">
                     <button
@@ -215,7 +215,7 @@ const ScenarioPage: React.FC = () => {
                         className="flex items-center gap-2 px-4 py-2 rounded-xl border border-violet-200 bg-violet-50 text-violet-700 text-sm font-medium transition-all hover:bg-violet-100 disabled:opacity-50 dark:border-violet-800/50 dark:bg-violet-900/20 dark:text-violet-200 dark:hover:bg-violet-900/30"
                     >
                         {importingPlaybook ? <RefreshCw className="w-4 h-4 animate-spin" /> : <BookOpen className="w-4 h-4" />}
-                        {importingPlaybook ? '导入中...' : '导入示例项目场景包'}
+                        {importingPlaybook ? "Importing..." : "Import sample project scenarios"}
                     </button>
                     <button
                         onClick={() => void importPlaybook('sample-platform-prototype')}
@@ -223,10 +223,10 @@ const ScenarioPage: React.FC = () => {
                         className="flex items-center gap-2 px-4 py-2 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 text-sm font-medium transition-all hover:bg-blue-100 disabled:opacity-50 dark:border-blue-800/50 dark:bg-blue-900/20 dark:text-blue-200 dark:hover:bg-blue-900/30"
                     >
                         {importingPlaybook ? <RefreshCw className="w-4 h-4 animate-spin" /> : <BookOpen className="w-4 h-4" />}
-                        {importingPlaybook ? '导入中...' : '导入大平台原型场景包'}
+                        {importingPlaybook ? "Importing..." : "Import platform prototype scenarios"}
                     </button>
                     <button onClick={startCreate} className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white rounded-xl text-sm font-medium shadow-md hover:shadow-lg active:scale-[0.98] transition-all">
-                        <Plus className="w-4 h-4" /> 新建场景
+                        <Plus className="w-4 h-4" /> New scenario
                     </button>
                 </div>
             </div>
@@ -235,16 +235,16 @@ const ScenarioPage: React.FC = () => {
                 <div className="rounded-2xl border border-violet-200 bg-violet-50/70 p-5 dark:border-violet-800/50 dark:bg-violet-900/10">
                     <div className="flex items-start justify-between gap-4">
                         <div>
-                            <p className="text-xs uppercase tracking-wide text-violet-500">项目场景包</p>
+                            <p className="text-xs uppercase tracking-wide text-violet-500">Project scenario package</p>
                             <h3 className="text-base font-semibold text-slate-800 dark:text-slate-200">
-                                {importResult.playbook_title || importResult.playbook_name || importResult.project_name || '项目场景包'}
+                                {importResult.playbook_title || importResult.playbook_name || importResult.project_name || "Project scenario package"}
                             </h3>
                             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                                 {playbookSummaryText(importResult)}
                             </p>
                         </div>
                         <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-violet-700 shadow-sm dark:bg-slate-800 dark:text-violet-200">
-                            命名规范：[角色]-[模块]-[场景]-[环境]
+                            Naming convention: [role]-[module]-[scenario]-[environment]
                         </span>
                     </div>
                     <div className="mt-4 grid gap-2 md:grid-cols-2">
@@ -252,7 +252,7 @@ const ScenarioPage: React.FC = () => {
                             <div key={item.id} className="rounded-xl border border-violet-100 bg-white/80 p-3 dark:border-violet-900/40 dark:bg-slate-800/60">
                                 <div className="flex items-center justify-between gap-3">
                                     <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{item.name}</p>
-                                    <span className="text-xs text-slate-400">{item.stepCount} 步</span>
+                                    <span className="text-xs text-slate-400">{item.stepCount} steps</span>
                                 </div>
                                 <div className="mt-2 flex gap-1.5 flex-wrap">
                                     {item.tags.map(tag => (
@@ -267,50 +267,50 @@ const ScenarioPage: React.FC = () => {
                 </div>
             )}
 
-            {/* 编辑器 */}
+            {/* Editor*/}
             {editing && (
                 <div className="rounded-2xl border-2 border-violet-300 dark:border-violet-500/40 bg-white dark:bg-slate-800 p-6 space-y-4 shadow-lg">
                     <div className="flex items-center justify-between">
                         <h3 className="text-base font-semibold text-slate-800 dark:text-slate-200">
-                            {editing.id ? '编辑场景' : '新建场景'}
+                            {editing.id ? "Edit scenario" : "New scenario"}
                         </h3>
                         <div className="flex gap-2">
                             <button onClick={() => setEditing(null)} className="px-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400">
                                 <X className="w-3.5 h-3.5" />
                             </button>
                             <button onClick={saveScenario} className="px-4 py-1.5 text-xs bg-violet-500 text-white rounded-lg hover:bg-violet-600 flex items-center gap-1">
-                                <Save className="w-3.5 h-3.5" /> 保存
+                                <Save className="w-3.5 h-3.5" /> Save
                             </button>
                         </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="text-xs text-slate-500 mb-1 block">场景名称 *</label>
+                            <label className="text-xs text-slate-500 mb-1 block">Scenario name *</label>
                             <input value={editing.name} onChange={e => setEditing({ ...editing, name: e.target.value })}
                                 className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200"
-                                placeholder="如：完整登录-下单流程" />
+                                placeholder={"Example: Complete login and checkout workflow"} />
                         </div>
                         <div>
-                            <label className="text-xs text-slate-500 mb-1 block">标签（逗号分隔）</label>
+                            <label className="text-xs text-slate-500 mb-1 block">Tags (comma-separated)</label>
                             <input value={editing.tags} onChange={e => setEditing({ ...editing, tags: e.target.value })}
                                 className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200"
-                                placeholder="回归, 冒烟, P0" />
+                                placeholder={"regression, smoke, P0"} />
                         </div>
                     </div>
                     <div>
-                        <label className="text-xs text-slate-500 mb-1 block">描述</label>
+                        <label className="text-xs text-slate-500 mb-1 block">Description</label>
                         <input value={editing.description} onChange={e => setEditing({ ...editing, description: e.target.value })}
                             className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200"
-                            placeholder="场景说明..." />
+                            placeholder={"Scenario description..."} />
                     </div>
 
-                    {/* 步骤列表 */}
+                    {/* Step list*/}
                     <div className="space-y-3">
                         <div className="flex items-center justify-between">
-                            <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase">测试步骤 ({editing.steps.length})</span>
+                            <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase">Test steps ( {editing.steps.length})</span>
                             <button onClick={addStep} className="text-xs text-violet-500 hover:text-violet-600 flex items-center gap-1">
-                                <Plus className="w-3 h-3" /> 添加步骤
+                                <Plus className="w-3 h-3" /> Add step
                             </button>
                         </div>
 
@@ -325,12 +325,12 @@ const ScenarioPage: React.FC = () => {
                                     <span className="w-6 h-6 rounded-full bg-violet-100 dark:bg-violet-500/20 text-violet-600 dark:text-violet-400 text-xs font-bold flex items-center justify-center">{i + 1}</span>
                                     <input value={step.name} onChange={e => updateStep(i, 'name', e.target.value)}
                                         className="flex-1 px-2 py-1 text-sm rounded border border-transparent focus:border-violet-300 bg-transparent text-slate-800 dark:text-slate-200 font-medium"
-                                        placeholder="步骤名称" />
+                                        placeholder={"Step name"} />
                                     <select value={step.on_failure} onChange={e => updateStep(i, 'on_failure', e.target.value)}
                                         className="px-2 py-1 text-[11px] rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-400">
-                                        <option value="stop">失败停止</option>
-                                        <option value="skip">跳过后续</option>
-                                        <option value="continue">继续</option>
+                                        <option value="stop">Stop on failure</option>
+                                        <option value="skip">Skip remaining steps</option>
+                                        <option value="continue">Continue</option>
                                     </select>
                                     {editing.steps.length > 1 && (
                                         <button onClick={() => removeStep(i)} className="text-red-400 hover:text-red-500">
@@ -341,10 +341,10 @@ const ScenarioPage: React.FC = () => {
                                 <div className="grid grid-cols-3 gap-3">
                                     <input value={step.url} onChange={e => updateStep(i, 'url', e.target.value)}
                                         className="px-2 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300"
-                                        placeholder="目标 URL" />
+                                        placeholder={"Target URL"} />
                                     <input value={step.instruction} onChange={e => updateStep(i, 'instruction', e.target.value)}
                                         className="col-span-2 px-2 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300"
-                                        placeholder="测试指令，如 '搜索AI然后验证结果'" />
+                                        placeholder={"Test instruction, such as 'Search for AI and verify the results'"} />
                                 </div>
                             </div>
                         ))}
@@ -352,11 +352,11 @@ const ScenarioPage: React.FC = () => {
                 </div>
             )}
 
-            {/* 场景列表 */}
+            {/*Scenario list*/}
             {scenarios.length === 0 && !editing ? (
                 <div className="text-center py-16 text-slate-400">
                     <GitBranch className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                    <p className="text-sm">暂无场景，点击「新建场景」开始</p>
+                    <p className="text-sm">No scenarios yet. Click "New scenario" to get started.</p>
                 </div>
             ) : (
                 <div className="space-y-3">
@@ -370,7 +370,7 @@ const ScenarioPage: React.FC = () => {
                                             {st.icon} {st.label}
                                         </span>
                                         <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">{sc.name}</h4>
-                                        <span className="text-xs text-slate-400">{sc.stepCount} 步</span>
+                                        <span className="text-xs text-slate-400">{sc.stepCount} steps</span>
                                         {sc.tags.map(t => (
                                             <span key={t} className="px-1.5 py-0.5 text-[10px] rounded bg-slate-100 dark:bg-slate-700 text-slate-500">{t}</span>
                                         ))}
@@ -385,7 +385,7 @@ const ScenarioPage: React.FC = () => {
                                             disabled={executing === sc.id}
                                             className="flex items-center gap-1 px-3 py-1.5 text-xs bg-violet-500 text-white rounded-lg hover:bg-violet-600 disabled:opacity-50 transition-all"
                                         >
-                                            <Play className="w-3 h-3" /> {executing === sc.id ? '执行中...' : '执行'}
+                                            <Play className="w-3 h-3" /> {executing === sc.id ? "Running..." : "Run"}
                                         </button>
                                         <button onClick={() => deleteScenario(sc.id)} className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 text-slate-400 hover:text-red-500">
                                             <Trash2 className="w-3.5 h-3.5" />
@@ -401,21 +401,21 @@ const ScenarioPage: React.FC = () => {
                 </div>
             )}
 
-            {/* 执行结果 */}
+            {/*Execution results*/}
             {execResult && (
                 <div className={`rounded-2xl border p-5 ${execResult.status === 'completed' ? 'border-emerald-200 bg-emerald-50/50 dark:border-emerald-500/30 dark:bg-emerald-500/5' : 'border-red-200 bg-red-50/50 dark:border-red-500/30 dark:bg-red-500/5'}`}>
                     <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
                         {execResult.status === 'completed'
-                            ? <><CheckCircle2 className="w-4 h-4 text-emerald-500" /> 场景执行通过</>
-                            : <><XCircle className="w-4 h-4 text-red-500" /> 场景执行失败</>
+                            ? <><CheckCircle2 className="w-4 h-4 text-emerald-500" /> Scenario passed</>
+                            : <><XCircle className="w-4 h-4 text-red-500" /> Scenario failed</>
                         }
                     </h4>
                     <div className="grid grid-cols-4 gap-3 mb-3">
                         {[
-                            { label: '总步骤', value: execResult.total_steps },
-                            { label: '已执行', value: execResult.executed },
-                            { label: '通过', value: execResult.passed },
-                            { label: '失败', value: execResult.failed },
+                            { label: "Total steps", value: execResult.total_steps },
+                            { label: "Executed", value: execResult.executed },
+                            { label: "Passed", value: execResult.passed },
+                            { label: "Failed", value: execResult.failed },
                         ].map(m => (
                             <div key={m.label} className="text-center p-2 bg-white dark:bg-slate-800 rounded-lg">
                                 <div className="text-lg font-bold text-slate-800 dark:text-slate-200">{String(m.value)}</div>

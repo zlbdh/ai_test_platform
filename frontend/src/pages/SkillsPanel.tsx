@@ -6,7 +6,7 @@ import {
 } from '../components/icons';
 import { API_BASE_URL } from '../config';
 
-// ── 类型 ────────────────────────────────────────────────────
+// Types
 
 interface SkillSummary {
     skill_id: string;
@@ -41,7 +41,7 @@ const TYPE_COLOR: Record<string, string> = {
     api_rest: 'from-amber-500/10 to-yellow-500/10 text-amber-600 dark:text-amber-400',
 };
 
-// ── 主组件 ──────────────────────────────────────────────────
+// Main component
 
 const SkillsPanel: React.FC = () => {
     const [skills, setSkills] = useState<SkillSummary[]>([]);
@@ -60,9 +60,9 @@ const SkillsPanel: React.FC = () => {
             .then(d => setSkills(d.skills || []))
             .catch((e) => {
                 if (e.name === 'AbortError') {
-                    setError('后端服务连接超时，请确认服务已启动');
+                    setError("Backend connection timed out. Make sure the service is running.");
                 } else {
-                    setError(`获取技能列表失败: ${e.message}`);
+                    setError(`Failed to load skills: ${e.message}`);
                 }
             })
             .finally(() => { clearTimeout(timer); setLoading(false); });
@@ -96,7 +96,7 @@ const SkillsPanel: React.FC = () => {
         return (
             <div className="flex flex-col items-center justify-center h-64 gap-3">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
-                <p className="text-sm text-slate-400">加载技能列表...</p>
+                <p className="text-sm text-slate-400">Loading skills...</p>
             </div>
         );
     }
@@ -110,7 +110,7 @@ const SkillsPanel: React.FC = () => {
                 <p className="text-sm text-slate-500 dark:text-slate-400">{error}</p>
                 <button onClick={fetchSkills}
                     className="px-4 py-2 rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium transition-colors">
-                    重试
+                    Retry
                 </button>
             </div>
         );
@@ -125,9 +125,9 @@ const SkillsPanel: React.FC = () => {
                         <Wrench className="w-5 h-5" />
                     </div>
                     <div>
-                        <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">技能武器库</h2>
+                        <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">Skill library</h2>
                         <p className="text-sm text-slate-500 dark:text-slate-400">
-                            {skills.length} 个技能包已装备 · 点击展开查看测试策略
+                            {skills.length} skill packages loaded. Expand one to view its testing strategy.
                         </p>
                     </div>
                 </div>
@@ -157,7 +157,7 @@ const SkillsPanel: React.FC = () => {
                                         <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">{skill.name}</h3>
                                         {skill.has_strategy && (
                                             <span className="flex items-center gap-1 px-2 py-0.5 text-[10px] bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full font-medium">
-                                                <CheckCircle2 className="w-3 h-3" /> 策略就绪
+                                                <CheckCircle2 className="w-3 h-3" /> Strategy ready
                                             </span>
                                         )}
                                     </div>
@@ -168,7 +168,7 @@ const SkillsPanel: React.FC = () => {
                                         {skill.test_type.replace('_', ' ')}
                                     </span>
                                     <span className="px-2.5 py-1 text-xs bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-lg">
-                                        → {skill.target_squad || '通用'}
+                                        → {skill.target_squad || "General"}
                                     </span>
                                     <div className="text-slate-400">
                                         {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -185,7 +185,7 @@ const SkillsPanel: React.FC = () => {
                                             {detail.tags && detail.tags.length > 0 && (
                                                 <div>
                                                     <div className="text-xs font-medium text-slate-500 mb-1.5 flex items-center gap-1">
-                                                        <Target className="w-3 h-3" /> 标签
+                                                        <Target className="w-3 h-3" /> Tags
                                                     </div>
                                                     <div className="flex flex-wrap gap-1">
                                                         {detail.tags.map(tag => (
@@ -198,7 +198,7 @@ const SkillsPanel: React.FC = () => {
                                             )}
                                             {detail.preconditions && detail.preconditions.length > 0 && (
                                                 <div>
-                                                    <div className="text-xs font-medium text-slate-500 mb-1.5">📋 前置条件</div>
+                                                    <div className="text-xs font-medium text-slate-500 mb-1.5">📋 Prerequisites</div>
                                                     <ul className="space-y-1">
                                                         {detail.preconditions.map((p, i) => (
                                                             <li key={i} className="text-xs text-slate-600 dark:text-slate-400 flex items-start gap-1.5">
@@ -213,11 +213,11 @@ const SkillsPanel: React.FC = () => {
                                         {/* Strategy Preview */}
                                         <div className="lg:col-span-2">
                                             <div className="text-xs font-medium text-slate-500 mb-1.5 flex items-center gap-1">
-                                                <BookOpen className="w-3 h-3" /> 测试策略
+                                                <BookOpen className="w-3 h-3" /> Testing strategy
                                             </div>
                                             <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 p-3 max-h-64 overflow-y-auto">
                                                 <pre className="text-xs text-slate-700 dark:text-slate-300 whitespace-pre-wrap font-mono leading-relaxed">
-                                                    {detail.strategy_text || '暂无策略文档'}
+                                                    {detail.strategy_text || "No strategy documentation"}
                                                 </pre>
                                             </div>
                                         </div>

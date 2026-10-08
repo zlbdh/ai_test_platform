@@ -1,5 +1,5 @@
 /**
- * Requirement Parsing Service — 对接后端 /api/requirement/* 接口
+ * Requirement parsing service for backend /api/requirement/* endpoints
  */
 import { API_ENDPOINTS } from '../config';
 
@@ -270,7 +270,7 @@ export const analyzeRequirementDocument = async (
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content, title, references }),
     });
-    if (!res.ok) throw new Error('解析失败');
+    if (!res.ok) throw new Error("Parsing failed");
     const data = await res.json();
     return data;
 };
@@ -288,7 +288,7 @@ export const parseRequirementUpload = async (file: File, title: string = ''): Pr
         method: 'POST',
         body: formData,
     });
-    if (!res.ok) throw new Error('文件解析失败');
+    if (!res.ok) throw new Error("File parsing failed");
     return res.json();
 };
 
@@ -302,12 +302,12 @@ export const generateTestsFromRequirement = async (
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content, title, references }),
     });
-    if (!res.ok) throw new Error('生成失败');
+    if (!res.ok) throw new Error("Generation failed");
     return res.json();
 };
 
 export const fetchRequirementPlaybook = async (playbookId: string): Promise<RequirementPlaybook> => {
     const res = await fetch(API_ENDPOINTS.requirement.playbook(playbookId));
-    if (!res.ok) throw new Error('加载回归包失败');
+    if (!res.ok) throw new Error("Failed to load regression package");
     return res.json();
 };

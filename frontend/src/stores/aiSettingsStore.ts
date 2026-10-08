@@ -3,7 +3,7 @@ import { AISettings, AIProvider } from '../types';
 import { DEFAULT_AI_SETTINGS, normalizeAISettings } from '../config/aiModelConfig';
 
 // ============================================================================
-// AI Settings Store — AI 配置管理 + localStorage 持久化
+// AI settings store: AI configuration and localStorage persistence
 // ============================================================================
 
 const STORAGE_KEY = 'ai-test-ai-settings';

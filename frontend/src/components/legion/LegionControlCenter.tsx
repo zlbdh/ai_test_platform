@@ -142,32 +142,32 @@ function getReviewImpact(assessment?: ReleaseRiskAssessment | null): 'pending' |
 function formatBlockerLabel(blocker: ReleaseRiskBlocker): string {
     switch (blocker.type) {
     case 'human_review_pending':
-        return '待人工复核，禁止自动发布';
+        return "Pending human review; automatic release is prohibited";
     case 'confirmed_issue_requires_manual_release':
-        return '已确认问题，需人工放行';
+        return "Confirmed issue; human authorization is required";
     case 'human_review_required':
-        return '命中历史人工复核阻断，需人工判断';
+        return "Blocked by a historical human review; human judgment is required";
     case 'required_tests_failed':
-        return '所需测试尚未全部通过，禁止自动发布';
+        return "Required tests have not all passed; automatic release is prohibited";
     case 'production_requires_manual_approval':
-        return '生产环境发布必须保留人工批准';
+        return "Production releases must retain human approval";
     default:
-        return String(blocker.message || blocker.title || blocker.type || '未知阻断项');
+        return String(blocker.message || blocker.title || blocker.type || "Unknown blocker");
     }
 }
 
 function formatAutoReleaseLabel(assessment?: ReleaseRiskAssessment | null): string {
     if (assessment?.auto_release_eligible) {
-        return '复核通过，可自动发布';
+        return "Review passed; automatic release is allowed";
     }
     const impact = getReviewImpact(assessment);
     if (impact === 'pending') {
-        return '待复核，禁止自动发布';
+        return "Pending review; automatic release is prohibited";
     }
     if (impact === 'confirmed') {
-        return '已确认问题，需人工放行';
+        return "Confirmed issue; human authorization is required";
     }
-    return '需人工批准';
+    return "Human approval required";
 }
 
 function isProductionEnvironment(environment?: string): boolean {
@@ -175,27 +175,27 @@ function isProductionEnvironment(environment?: string): boolean {
 }
 
 function formatDeployActionHint(assessment?: ReleaseRiskAssessment | null): string {
-    if (!assessment) return '请先选择一条发布风险评估。';
+    if (!assessment) return "Select a release risk assessment first.";
     if (isProductionEnvironment(assessment.environment || assessment.input?.environment)) {
-        return '仅允许创建待审批发布申请';
+        return "Only a release request pending approval may be created";
     }
     if (getReviewImpact(assessment)) {
-        return '当前仅允许人工审批发布';
+        return "Only manually approved releases are currently allowed";
     }
     if (assessment.auto_release_eligible) {
-        return '允许自动发布';
+        return "Automatic release allowed";
     }
-    return '当前会创建待审批发布申请';
+    return "A release request pending approval will be created";
 }
 
 function formatReleaseDecisionLabel(decision?: string): string {
     if (decision === 'auto_executed') {
-        return '已自动创建并执行受控发布';
+        return "Controlled release created and executed automatically";
     }
     if (decision === 'approval_created') {
-        return '已创建待审批发布申请';
+        return "Release request created and awaiting approval";
     }
-    return '受控发布已提交';
+    return "Controlled release submitted";
 }
 
 function extractNestedEntityId(resultPayload: unknown, nestedKey: string, idKey: string): string {
@@ -443,7 +443,7 @@ export default function LegionControlCenter({
             setPendingBindingCode(bindingPayload.pending_code);
             markRefreshed();
         } catch (err) {
-            setError(err instanceof Error ? err.message : '控制中心加载失败');
+            setError(err instanceof Error ? err.message : "Failed to load control center");
         } finally {
             setLoading(false);
         }
@@ -456,7 +456,7 @@ export default function LegionControlCenter({
             setBinding(payload.binding);
             setPendingBindingCode(payload.pending_code);
         } catch (err) {
-            setError(err instanceof Error ? err.message : '通知平台绑定信息加载失败');
+            setError(err instanceof Error ? err.message : "Failed to load notification platform bindings");
         } finally {
             setBindingLoading(false);
         }
@@ -483,7 +483,7 @@ export default function LegionControlCenter({
                 setRunDetail(payload);
             })
             .catch((err) => {
-                setError(err instanceof Error ? err.message : '命令详情加载失败');
+                setError(err instanceof Error ? err.message : "Failed to load command details");
             })
             .finally(() => setDetailLoading(false));
     }, [selectedRunId]);
@@ -495,7 +495,7 @@ export default function LegionControlCenter({
         }
         getReleaseRiskAssessment(selectedAssessmentId)
             .then((payload) => setAssessmentDetail(payload))
-            .catch((err) => setError(err instanceof Error ? err.message : '风险评估详情加载失败'));
+            .catch((err) => setError(err instanceof Error ? err.message : "Failed to load risk assessment details"));
     }, [selectedAssessmentId]);
 
     useEffect(() => {
@@ -525,7 +525,7 @@ export default function LegionControlCenter({
             })
             .catch((err) => {
                 if (cancelled) return;
-                setError(err instanceof Error ? err.message : '关联证据加载失败');
+                setError(err instanceof Error ? err.message : "Failed to load linked evidence");
                 setLinkedRunFindings([]);
                 setLinkedRunAssessment(null);
             })
@@ -635,7 +635,7 @@ export default function LegionControlCenter({
             setBinding(payload.binding);
             setPendingBindingCode(payload.pending_code);
         } catch (err) {
-            setError(err instanceof Error ? err.message : '生成绑定码失败');
+            setError(err instanceof Error ? err.message : "Failed to generate binding code");
         } finally {
             setBindingMutating('');
         }
@@ -643,7 +643,7 @@ export default function LegionControlCenter({
 
     const openReleaseDeployDialog = (assessment?: ReleaseRiskAssessment | null) => {
         if (!assessment) {
-            setError('请先选择一条发布风险评估。');
+            setError("Select a release risk assessment first.");
             return;
         }
         setReleaseDeployDraft({
@@ -666,7 +666,7 @@ export default function LegionControlCenter({
             setBinding(null);
             setPendingBindingCode(payload.pending_code);
         } catch (err) {
-            setError(err instanceof Error ? err.message : '撤销通知平台绑定失败');
+            setError(err instanceof Error ? err.message : "Failed to revoke notification platform binding");
         } finally {
             setBindingMutating('');
         }
@@ -675,7 +675,7 @@ export default function LegionControlCenter({
     const runColumns: DataTableColumn<CommandRun>[] = [
         {
             key: 'command_id',
-            title: '命令',
+            title: "Command",
             render: (_, record) => (
                 <div>
                     <div className="font-medium text-slate-900 dark:text-white">{record.command_id}</div>
@@ -685,12 +685,12 @@ export default function LegionControlCenter({
         },
         {
             key: 'project_key',
-            title: '项目',
-            render: (value) => <span>{String(value || '平台级')}</span>,
+            title: "Project",
+            render: (value) => <span>{String(value || "Platform-wide")}</span>,
         },
         {
             key: 'source',
-            title: '来源',
+            title: "Source",
             render: (value) => (
                 <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-200">
                     {String(value || '-')}
@@ -699,7 +699,7 @@ export default function LegionControlCenter({
         },
         {
             key: 'status',
-            title: '运行状态',
+            title: "Runtime status",
             render: (value) => (
                 <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${toneClass(String(value || ''), STATUS_BADGE)}`}>
                     {String(value || '-')}
@@ -708,7 +708,7 @@ export default function LegionControlCenter({
         },
         {
             key: 'approval_status',
-            title: '审批',
+            title: "Approval",
             render: (value) => (
                 <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${toneClass(String(value || ''), STATUS_BADGE)}`}>
                     {String(value || '-')}
@@ -717,7 +717,7 @@ export default function LegionControlCenter({
         },
         {
             key: 'risk_level',
-            title: '风险',
+            title: "Risk",
             render: (value) => (
                 <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${toneClass(String(value || ''), RISK_BADGE)}`}>
                     {String(value || '-')}
@@ -726,17 +726,17 @@ export default function LegionControlCenter({
         },
         {
             key: 'created_at',
-            title: '创建时间',
+            title: "Created at",
             render: (value) => formatDateTime(String(value || '')),
         },
     ];
 
     const assessmentColumns: DataTableColumn<ReleaseRiskAssessment>[] = [
-        { key: 'project_key', title: '项目' },
-        { key: 'environment', title: '环境' },
+        { key: 'project_key', title: "Project" },
+        { key: 'environment', title: "Environment" },
         {
             key: 'release_risk',
-            title: '发布风险',
+            title: "Release risk",
             render: (value) => (
                 <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${toneClass(String(value || ''), RISK_BADGE)}`}>
                     {String(value || '-')}
@@ -745,29 +745,29 @@ export default function LegionControlCenter({
         },
         {
             key: 'auto_release_eligible',
-            title: '自动发布资格',
+            title: "Automatic release eligibility",
             render: (value) => Boolean(value)
-                ? <span className="inline-flex rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-200">可自动发布</span>
-                : <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-200">需人工放行</span>,
+                ? <span className="inline-flex rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-200">Eligible for automatic release</span>
+                : <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-200">Human authorization required</span>,
         },
         {
             key: 'review_summary',
-            title: '复核摘要',
+            title: "Review summary",
             render: (_, record) => {
                 const summary = getReviewSummary(record);
                 if (!summary) {
-                    return <span className="text-xs text-slate-400">历史记录</span>;
+                    return <span className="text-xs text-slate-400">History</span>;
                 }
                 return (
                     <span className="text-xs text-slate-500 dark:text-slate-400">
-                        待 {summary.pending} / 确 {summary.confirmed} / 驳 {summary.dismissed}
+                        Pending {summary.pending} / Confirmed {summary.confirmed} / Rejected {summary.dismissed}
                     </span>
                 );
             },
         },
         {
             key: 'created_at',
-            title: '评估时间',
+            title: "Assessment time",
             render: (value) => formatDateTime(String(value || '')),
         },
     ];
@@ -778,18 +778,18 @@ export default function LegionControlCenter({
         setError('');
         try {
             if (decision === 'approve') {
-                const payload = await approveRun(runDetail.run_id, reviewComment || '批准执行', true);
+                const payload = await approveRun(runDetail.run_id, reviewComment || "Approve execution", true);
                 setRunDetail(payload.run);
                 onSelectRun(payload.run.run_id);
             } else {
-                const payload = await rejectRun(runDetail.run_id, reviewComment || '人工驳回');
+                const payload = await rejectRun(runDetail.run_id, reviewComment || "Reject manually");
                 setRunDetail(payload.run);
                 onSelectRun(payload.run.run_id);
             }
             setReviewComment('');
             await refresh();
         } catch (err) {
-            setError(err instanceof Error ? err.message : '审批操作失败');
+            setError(err instanceof Error ? err.message : "Approval action failed");
         } finally {
             setReviewing('');
         }
@@ -797,11 +797,11 @@ export default function LegionControlCenter({
 
     const handleCreateAssessment = async () => {
         if (!assessmentDraft.sessionId) {
-            setError('请先选择一个探索会话，再生成发布风险评估。');
+            setError("Select an exploration session before generating a release risk assessment.");
             return;
         }
         if (!assessmentDraft.projectKey.trim()) {
-            setError('请先补充项目标识。');
+            setError("Enter a project identifier first.");
             return;
         }
         setSubmittingAssessment(true);
@@ -825,7 +825,7 @@ export default function LegionControlCenter({
             setAssessmentOpen(false);
             await refresh();
         } catch (err) {
-            setError(err instanceof Error ? err.message : '生成风险评估失败');
+            setError(err instanceof Error ? err.message : "Failed to generate risk assessment");
         } finally {
             setSubmittingAssessment(false);
         }
@@ -833,15 +833,15 @@ export default function LegionControlCenter({
 
     const handleCreateReleaseDeploy = async () => {
         if (!releaseDeployDraft.assessmentId) {
-            setError('请先选择一条发布风险评估。');
+            setError("Select a release risk assessment first.");
             return;
         }
         if (!releaseDeployDraft.projectKey.trim()) {
-            setError('当前评估缺少项目标识，无法发起发布。');
+            setError("This assessment has no project identifier, so a release cannot be started.");
             return;
         }
         if (releaseDeployDraft.targetType === 'repo' && !releaseDeployDraft.repoId.trim()) {
-            setError('仓库发布需要填写 repo_id。');
+            setError("A repository release requires repo_id.");
             return;
         }
 
@@ -867,7 +867,7 @@ export default function LegionControlCenter({
             setReleaseDeployOpen(false);
             await refresh();
         } catch (err) {
-            setError(err instanceof Error ? err.message : '发起受控发布失败');
+            setError(err instanceof Error ? err.message : "Failed to start controlled release");
         } finally {
             setSubmittingReleaseDeploy(false);
         }
@@ -875,11 +875,11 @@ export default function LegionControlCenter({
 
     const handleExecuteControlledCommand = async () => {
         if (!selectedLaunchCommand) {
-            setError('当前没有可执行的受控命令。');
+            setError("No controlled commands are currently executable.");
             return;
         }
         if (selectedLaunchCommand.requires_confirmation && !commandConfirm) {
-            setError(`命令 ${selectedLaunchCommand.command_id} 为高风险动作，请先勾选显式确认。`);
+            setError(`Command ${selectedLaunchCommand.command_id} is a high-risk action. Select the explicit confirmation checkbox first.`);
             return;
         }
 
@@ -902,7 +902,7 @@ export default function LegionControlCenter({
             setCommandOpen(false);
             await refresh();
         } catch (err) {
-            setError(err instanceof Error ? err.message : '发起受控命令失败');
+            setError(err instanceof Error ? err.message : "Failed to start controlled command");
         } finally {
             setSubmittingCommand(false);
         }
@@ -911,19 +911,19 @@ export default function LegionControlCenter({
     return (
         <div className="space-y-6">
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
-                <SummaryCard label="待审批命令" value={String(summary.pending)} hint="需要人工批准后才能继续执行的写动作" icon={<Clock className="h-5 w-5" />} />
-                <SummaryCard label="运行中命令" value={String(summary.running)} hint="正在执行中的受控命令运行" icon={<Loader2 className="h-5 w-5" />} />
-                <SummaryCard label="失败命令" value={String(summary.failed)} hint="需要排查或重新决策的运行记录" icon={<XCircle className="h-5 w-5" />} />
-                <SummaryCard label="最近评估" value={String(summary.assessments)} hint="最近生成的发布风险评估数量" icon={<Shield className="h-5 w-5" />} />
-                <SummaryCard label="可自动发布" value={String(summary.autoRelease)} hint="满足低风险非生产自动发布条件的评估" icon={<Sparkles className="h-5 w-5" />} />
-                <SummaryCard label="通知平台命令" value={String(summary.notification_platformRuns)} hint="当前列表里由通知平台入口触发的命令运行数量" icon={<CheckCircle2 className="h-5 w-5" />} />
+                <SummaryCard label={"Commands awaiting approval"} value={String(summary.pending)} hint={"Write actions that require human approval before execution can continue"} icon={<Clock className="h-5 w-5" />} />
+                <SummaryCard label={"Running commands"} value={String(summary.running)} hint={"Controlled command runs currently in progress"} icon={<Loader2 className="h-5 w-5" />} />
+                <SummaryCard label={"Failed commands"} value={String(summary.failed)} hint={"Runs that require investigation or a new decision"} icon={<XCircle className="h-5 w-5" />} />
+                <SummaryCard label={"Recent assessments"} value={String(summary.assessments)} hint={"Number of recently generated release risk assessments"} icon={<Shield className="h-5 w-5" />} />
+                <SummaryCard label={"Eligible for automatic release"} value={String(summary.autoRelease)} hint={"Assessments eligible for low-risk, nonproduction automatic release"} icon={<Sparkles className="h-5 w-5" />} />
+                <SummaryCard label={"Notification platform commands"} value={String(summary.notification_platformRuns)} hint={"Command runs in this list initiated from the notification platform"} icon={<CheckCircle2 className="h-5 w-5" />} />
             </div>
 
             <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div>
-                        <div className="text-lg font-semibold text-slate-900 dark:text-white">我的通知平台绑定</div>
-                        <div className="mt-1 text-sm text-slate-500 dark:text-slate-400">在 Legion 里生成一次性绑定码，再去通知平台发送“绑定 &lt;code&gt;”，后续通知平台命令就会归因到当前平台账号。</div>
+                        <div className="text-lg font-semibold text-slate-900 dark:text-white">My notification platform bindings</div>
+                        <div className="mt-1 text-sm text-slate-500 dark:text-slate-400">Generate a one-time binding code in Legion, then send "bind &lt;code&gt;" on the notification platform. Subsequent commands will be attributed to your current platform account.</div>
                     </div>
                     <button
                         type="button"
@@ -931,7 +931,7 @@ export default function LegionControlCenter({
                         className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
                     >
                         <Loader2 className={`h-4 w-4 ${bindingLoading ? 'animate-spin' : ''}`} />
-                        刷新绑定状态
+                        Refresh binding status
                     </button>
                 </div>
 
@@ -939,29 +939,29 @@ export default function LegionControlCenter({
                     <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 dark:border-slate-700 dark:bg-slate-950/50">
                         <div className="flex flex-wrap items-center gap-2">
                             <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${binding ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-200' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200'}`}>
-                                {binding ? '已绑定' : '未绑定'}
+                                {binding ? "Bound" : "Not bound"}
                             </span>
                             <span className="text-sm text-slate-500 dark:text-slate-400">
-                                {binding ? `通知平台身份 ${binding.notification_platform_open_id}` : '当前通知平台身份尚未绑定到平台账号'}
+                                {binding ? `Notification platform identity ${binding.notification_platform_open_id}` : "This notification platform identity is not bound to a platform account"}
                             </span>
                         </div>
                         <div className="mt-4 space-y-2 text-sm text-slate-600 dark:text-slate-300">
-                            <div>平台账号：{binding?.username || profile.username}</div>
-                            <div>当前聊天：{binding?.chat_id || '尚未记录'}</div>
-                            <div>最近触达：{formatDateTime(binding?.last_seen_at || '')}</div>
-                            <div>绑定时间：{formatDateTime(binding?.bound_at || '')}</div>
+                            <div>Platform account: {binding?.username || profile.username}</div>
+                            <div>Current chat: {binding?.chat_id || "Not recorded"}</div>
+                            <div>Last contact: {formatDateTime(binding?.last_seen_at || '')}</div>
+                            <div>Bound at: {formatDateTime(binding?.bound_at || '')}</div>
                         </div>
                     </div>
 
                     <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 dark:border-slate-700 dark:bg-slate-950/50">
-                        <div className="text-sm font-medium text-slate-900 dark:text-white">一次性绑定码</div>
+                        <div className="text-sm font-medium text-slate-900 dark:text-white">One-time binding code</div>
                         {!pendingBindingCode ? (
-                            <div className="mt-3 text-sm text-slate-500 dark:text-slate-400">当前没有待使用绑定码，可直接生成新的 10 分钟有效绑定码。</div>
+                            <div className="mt-3 text-sm text-slate-500 dark:text-slate-400">No unused binding code is available. Generate a new code valid for 10 minutes.</div>
                         ) : (
                             <div className="mt-3 space-y-2 text-sm text-slate-600 dark:text-slate-300">
                                 <div className="rounded-xl bg-slate-900 px-3 py-2 font-mono text-slate-100">{pendingBindingCode.code}</div>
-                                <div>状态：{pendingBindingCode.status}</div>
-                                <div>有效期至：{formatDateTime(pendingBindingCode.expires_at)}</div>
+                                <div>Status: {pendingBindingCode.status}</div>
+                                <div>Expires at: {formatDateTime(pendingBindingCode.expires_at)}</div>
                             </div>
                         )}
                         <div className="mt-4 flex flex-wrap gap-2">
@@ -972,7 +972,7 @@ export default function LegionControlCenter({
                                 className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-slate-700 disabled:opacity-50 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
                             >
                                 {bindingMutating === 'issue' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Shield className="h-4 w-4" />}
-                                生成绑定码
+                                Generate binding code
                             </button>
                             <button
                                 type="button"
@@ -981,7 +981,7 @@ export default function LegionControlCenter({
                                 className="inline-flex items-center gap-2 rounded-xl border border-rose-200 px-3 py-2 text-sm text-rose-700 transition hover:bg-rose-50 disabled:opacity-50 dark:border-rose-900/40 dark:text-rose-200 dark:hover:bg-rose-950/20"
                             >
                                 {bindingMutating === 'revoke' ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
-                                撤销绑定
+                                Revoke binding
                             </button>
                         </div>
                     </div>
@@ -997,8 +997,8 @@ export default function LegionControlCenter({
             <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                     <div>
-                        <div className="text-lg font-semibold text-slate-900 dark:text-white">命令运行与审批</div>
-                        <div className="mt-1 text-sm text-slate-500 dark:text-slate-400">所有 Web 写动作都统一落到命令运行记录，再由审批与审计驱动后续执行。</div>
+                        <div className="text-lg font-semibold text-slate-900 dark:text-white">Command runs and approvals</div>
+                        <div className="mt-1 text-sm text-slate-500 dark:text-slate-400">All web write actions create command run records. Approval and auditing determine subsequent execution.</div>
                     </div>
                     <div className="flex flex-wrap gap-2">
                         <button
@@ -1007,7 +1007,7 @@ export default function LegionControlCenter({
                             className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
                         >
                             <PlayCircle className="h-4 w-4" />
-                            发起受控命令
+                            Start controlled command
                         </button>
                         <button
                             type="button"
@@ -1015,27 +1015,27 @@ export default function LegionControlCenter({
                             className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
                         >
                             <Loader2 className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-                            刷新控制中心
+                            Refresh control center
                         </button>
                     </div>
                 </div>
 
                 <div className="mt-4 grid gap-3 md:grid-cols-5">
                     <label className="text-sm text-slate-600 dark:text-slate-300">
-                        命令筛选
+                        Filter commands
                         <select
                             value={commandRunFilters.commandId}
                             onChange={(event) => setCommandRunFilters({ commandId: event.target.value })}
                             className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
                         >
-                            <option value="">全部命令</option>
+                            <option value="">All commands</option>
                             {commands.map((item) => (
                                 <option key={item.command_id} value={item.command_id}>{item.command_id}</option>
                             ))}
                         </select>
                     </label>
                     <label className="text-sm text-slate-600 dark:text-slate-300">
-                        项目筛选
+                        Filter projects
                         <input
                             value={commandRunFilters.projectKey}
                             onChange={(event) => setCommandRunFilters({ projectKey: event.target.value })}
@@ -1044,39 +1044,39 @@ export default function LegionControlCenter({
                         />
                     </label>
                     <label className="text-sm text-slate-600 dark:text-slate-300">
-                        运行状态
+                        Runtime status
                         <select
                             value={commandRunFilters.status}
                             onChange={(event) => setCommandRunFilters({ status: event.target.value })}
                             className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
                         >
-                            <option value="">全部状态</option>
+                            <option value="">All statuses</option>
                             {['created', 'running', 'approval_pending', 'approved_pending_execution', 'succeeded', 'failed', 'rejected'].map((status) => (
                                 <option key={status} value={status}>{status}</option>
                             ))}
                         </select>
                     </label>
                     <label className="text-sm text-slate-600 dark:text-slate-300">
-                        审批状态
+                        Approval status
                         <select
                             value={commandRunFilters.approvalStatus}
                             onChange={(event) => setCommandRunFilters({ approvalStatus: event.target.value })}
                             className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
                         >
-                            <option value="">全部审批</option>
+                            <option value="">All approvals</option>
                             {['not_required', 'pending', 'approved', 'rejected'].map((status) => (
                                 <option key={status} value={status}>{status}</option>
                             ))}
                         </select>
                     </label>
                     <label className="text-sm text-slate-600 dark:text-slate-300">
-                        来源筛选
+                        Filter sources
                         <select
                             value={commandRunFilters.source}
                             onChange={(event) => setCommandRunFilters({ source: event.target.value })}
                             className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
                         >
-                            <option value="">全部来源</option>
+                            <option value="">All sources</option>
                             {['web', 'notification_platform', 'simulation'].map((source) => (
                                 <option key={source} value={source}>{source}</option>
                             ))}
@@ -1090,42 +1090,42 @@ export default function LegionControlCenter({
                         data={runs}
                         rowKey="run_id"
                         loading={loading}
-                        emptyText="暂无命令运行记录"
+                        emptyText={"No command runs yet"}
                         activeRowKey={selectedRunId}
                         onRowClick={(record) => onSelectRun(record.run_id)}
                     />
 
                     <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 dark:border-slate-700 dark:bg-slate-950/50">
                         <div className="flex items-center justify-between">
-                            <div className="text-base font-semibold text-slate-900 dark:text-white">命令详情</div>
+                            <div className="text-base font-semibold text-slate-900 dark:text-white">Command details</div>
                             {detailLoading && <Loader2 className="h-4 w-4 animate-spin text-slate-400" />}
                         </div>
                         {!runDetail ? (
-                            <div className="mt-4 text-sm text-slate-500 dark:text-slate-400">选择一条命令运行后，这里会展示参数、审批状态、结果与错误详情。</div>
+                            <div className="mt-4 text-sm text-slate-500 dark:text-slate-400">Select a command run to view its parameters, approval status, results, and error details.</div>
                         ) : (
                             <div className="mt-4 space-y-4">
                                 <div className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
                                     <div className="font-medium text-slate-900 dark:text-white">{runDetail.command_id}</div>
-                                    <div>项目：{runDetail.project_key || '平台级'}</div>
-                                    <div>请求人：{runDetail.requester_id || '-'}</div>
-                                    <div>发起渠道：{runDetail.source || '-'}</div>
-                                    <div>创建时间：{formatDateTime(runDetail.created_at)}</div>
-                                    <div>风险：<span className={`rounded-full px-2 py-0.5 text-xs font-medium ${toneClass(runDetail.risk_level, RISK_BADGE)}`}>{runDetail.risk_level}</span></div>
-                                    <div>审批：<span className={`rounded-full px-2 py-0.5 text-xs font-medium ${toneClass(runDetail.approval_status, STATUS_BADGE)}`}>{runDetail.approval_status}</span></div>
+                                    <div>Project: {runDetail.project_key || "Platform-wide"}</div>
+                                    <div>Requested by: {runDetail.requester_id || '-'}</div>
+                                    <div>Request channel: {runDetail.source || '-'}</div>
+                                    <div>Created at: {formatDateTime(runDetail.created_at)}</div>
+                                    <div>Risk:<span className={`rounded-full px-2 py-0.5 text-xs font-medium ${toneClass(runDetail.risk_level, RISK_BADGE)}`}>{runDetail.risk_level}</span></div>
+                                    <div>Approval:<span className={`rounded-full px-2 py-0.5 text-xs font-medium ${toneClass(runDetail.approval_status, STATUS_BADGE)}`}>{runDetail.approval_status}</span></div>
                                 </div>
 
                                 {runDetail.source_context && Object.keys(runDetail.source_context).length > 0 && (
                                     <div>
-                                        <div className="text-xs uppercase tracking-[0.18em] text-slate-400">来源上下文</div>
+                                        <div className="text-xs uppercase tracking-[0.18em] text-slate-400">Source context</div>
                                         <div className="mt-2 grid gap-3 md:grid-cols-2">
                                             <div className="rounded-xl border border-slate-200 bg-white p-3 text-sm dark:border-slate-800 dark:bg-slate-950">
-                                                <div>渠道：{String(runDetail.source_context.channel || runDetail.source || '-')}</div>
-                                                <div>通知平台用户：{String(runDetail.source_context.from_user || '-')}</div>
-                                                <div>chat_id：{String(runDetail.source_context.chat_id || '-')}</div>
-                                                <div>绑定状态：{String(runDetail.source_context.binding_status || '-')}</div>
+                                                <div>Channel: {String(runDetail.source_context.channel || runDetail.source || '-')}</div>
+                                                <div>Notification platform user: {String(runDetail.source_context.from_user || '-')}</div>
+                                                <div>chat_id: {String(runDetail.source_context.chat_id || '-')}</div>
+                                                <div>Binding status: {String(runDetail.source_context.binding_status || '-')}</div>
                                             </div>
                                             <div className="rounded-xl border border-slate-200 bg-white p-3 text-sm dark:border-slate-800 dark:bg-slate-950">
-                                                <div className="text-xs uppercase tracking-[0.18em] text-slate-400">原始消息摘要</div>
+                                                <div className="text-xs uppercase tracking-[0.18em] text-slate-400">Original message summary</div>
                                                 <div className="mt-2 whitespace-pre-wrap break-all text-slate-700 dark:text-slate-200">
                                                     {String(runDetail.source_context.raw_message || '-')}
                                                 </div>
@@ -1135,30 +1135,30 @@ export default function LegionControlCenter({
                                 )}
 
                                 <div>
-                                    <div className="text-xs uppercase tracking-[0.18em] text-slate-400">参数</div>
+                                    <div className="text-xs uppercase tracking-[0.18em] text-slate-400">Parameters</div>
                                     <pre className="mt-2 overflow-auto rounded-xl bg-slate-900 p-3 text-xs text-slate-100">{JSON.stringify(runDetail.arguments, null, 2)}</pre>
                                 </div>
 
                                 {Boolean(runDetail.result) && (
                                     <div>
-                                        <div className="text-xs uppercase tracking-[0.18em] text-slate-400">结果</div>
+                                        <div className="text-xs uppercase tracking-[0.18em] text-slate-400">Result</div>
                                         <pre className="mt-2 overflow-auto rounded-xl bg-slate-900 p-3 text-xs text-slate-100">{JSON.stringify(runDetail.result, null, 2)}</pre>
                                     </div>
                                 )}
                                 {Boolean(runDetail.error) && (
                                     <div>
-                                        <div className="text-xs uppercase tracking-[0.18em] text-slate-400">错误</div>
+                                        <div className="text-xs uppercase tracking-[0.18em] text-slate-400">Error</div>
                                         <pre className="mt-2 overflow-auto rounded-xl bg-slate-900 p-3 text-xs text-red-200">{JSON.stringify(runDetail.error, null, 2)}</pre>
                                     </div>
                                 )}
 
                                 {(linkedEvidenceLoading || linkedRunFindings.length > 0 || linkedRunAssessment) && (
                                     <div>
-                                        <div className="text-xs uppercase tracking-[0.18em] text-slate-400">关联证据摘要</div>
+                                        <div className="text-xs uppercase tracking-[0.18em] text-slate-400">Linked evidence summary</div>
                                         {linkedEvidenceLoading ? (
                                             <div className="mt-2 inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400">
                                                 <Loader2 className="h-4 w-4 animate-spin" />
-                                                正在加载关联探索发现与风险结论...
+                                                Loading linked exploration findings and risk conclusions...
                                             </div>
                                         ) : (
                                             <div className="mt-2 space-y-3">
@@ -1166,8 +1166,8 @@ export default function LegionControlCenter({
                                                     <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
                                                         <div className="flex flex-wrap items-center justify-between gap-2">
                                                             <div>
-                                                                <div className="text-sm font-medium text-slate-900 dark:text-white">探索发现</div>
-                                                                <div className="mt-1 text-xs text-slate-400">共 {linkedRunFindings.length} 条关联发现，优先展示最需要人工关注的证据。</div>
+                                                                <div className="text-sm font-medium text-slate-900 dark:text-white">Exploration findings</div>
+                                                                <div className="mt-1 text-xs text-slate-400">Total: {linkedRunFindings.length} linked findings, with evidence requiring human attention shown first.</div>
                                                             </div>
                                                             <div className="flex flex-wrap items-center gap-2">
                                                                 {extractSessionIdFromRun(runDetail) && (
@@ -1180,7 +1180,7 @@ export default function LegionControlCenter({
                                                                         className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
                                                                     >
                                                                         <PlayCircle className="h-4 w-4" />
-                                                                        查看探索发现
+                                                                        View exploration findings
                                                                     </button>
                                                                 )}
                                                                 {extractSessionIdFromRun(runDetail) && primaryLinkedFinding && (
@@ -1194,7 +1194,7 @@ export default function LegionControlCenter({
                                                                         className="inline-flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 transition hover:bg-amber-100 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200 dark:hover:bg-amber-950/30"
                                                                     >
                                                                         <AlertTriangle className="h-4 w-4" />
-                                                                        进入人工复核
+                                                                        Open human review
                                                                     </button>
                                                                 )}
                                                             </div>
@@ -1211,17 +1211,17 @@ export default function LegionControlCenter({
                                                                         </span>
                                                                         {finding.requires_human_review && (
                                                                             <span className="inline-flex rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-200">
-                                                                                需人工复核
+                                                                                Human review required
                                                                             </span>
                                                                         )}
                                                                         <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-200">
-                                                                            复核 {finding.review_status || 'pending'}
+                                                                            Review {finding.review_status || 'pending'}
                                                                         </span>
                                                                     </div>
                                                                     <div className="mt-2 font-medium text-slate-900 dark:text-white">{finding.title}</div>
                                                                     <div className="mt-1 text-slate-600 dark:text-slate-300">{finding.summary}</div>
                                                                     <div className="mt-2 text-xs text-slate-400">
-                                                                        置信度 {Math.round((finding.confidence || 0) * 100)}%
+                                                                        Confidence {Math.round((finding.confidence || 0) * 100)}%
                                                                     </div>
                                                                 </div>
                                                             ))}
@@ -1233,8 +1233,8 @@ export default function LegionControlCenter({
                                                     <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
                                                         <div className="flex flex-wrap items-center justify-between gap-2">
                                                             <div>
-                                                                <div className="text-sm font-medium text-slate-900 dark:text-white">发布风险结论</div>
-                                                                <div className="mt-1 text-xs text-slate-400">结合探索发现与策略命中结果给出当前命令关联的发布判断。</div>
+                                                                <div className="text-sm font-medium text-slate-900 dark:text-white">Release risk conclusion</div>
+                                                                <div className="mt-1 text-xs text-slate-400">The release decision associated with this command combines exploration findings with policy matches.</div>
                                                             </div>
                                                             <div className="flex flex-wrap items-center gap-2">
                                                                 <button
@@ -1243,7 +1243,7 @@ export default function LegionControlCenter({
                                                                     className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-3 py-2 text-xs font-medium text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
                                                                 >
                                                                     <PlayCircle className="h-4 w-4" />
-                                                                    按当前评估发起发布
+                                                                    Start release using this assessment
                                                                 </button>
                                                                 <button
                                                                     type="button"
@@ -1254,20 +1254,20 @@ export default function LegionControlCenter({
                                                                     className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
                                                                 >
                                                                     <Shield className="h-4 w-4" />
-                                                                    查看风险评估
+                                                                    View risk assessment
                                                                 </button>
                                                             </div>
                                                         </div>
                                                         <div className="mt-3 flex flex-wrap items-center gap-2">
                                                             <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${toneClass(linkedRunAssessment.release_risk, RISK_BADGE)}`}>
-                                                                发布风险 {linkedRunAssessment.release_risk}
+                                                                Release risk {linkedRunAssessment.release_risk}
                                                             </span>
                                                             <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${linkedRunAssessment.auto_release_eligible ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-200' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200'}`}>
                                                                 {formatAutoReleaseLabel(linkedRunAssessment)}
                                                             </span>
                                                             {linkedAssessmentReviewImpact && (
                                                                 <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${linkedAssessmentReviewImpact === 'pending' ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-200' : 'bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-200'}`}>
-                                                                    {linkedAssessmentReviewImpact === 'pending' ? '待复核阻断' : '已确认问题阻断'}
+                                                                    {linkedAssessmentReviewImpact === 'pending' ? "Blocked pending review" : "Blocked by confirmed issues"}
                                                                 </span>
                                                             )}
                                                             <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-200">
@@ -1276,15 +1276,15 @@ export default function LegionControlCenter({
                                                         </div>
                                                         {linkedAssessmentReviewSummary && (
                                                             <div className="mt-3 text-xs text-slate-500 dark:text-slate-400">
-                                                                复核摘要：
-                                                                {' '}待 {linkedAssessmentReviewSummary.pending}
-                                                                {' '}/ 确 {linkedAssessmentReviewSummary.confirmed}
-                                                                {' '}/ 驳 {linkedAssessmentReviewSummary.dismissed}
-                                                                {' '}/ 生效 {linkedAssessmentReviewSummary.effective}
+                                                                Review summary:
+                                                                {' '} Pending {linkedAssessmentReviewSummary.pending}
+                                                                {' '} / Confirmed {linkedAssessmentReviewSummary.confirmed}
+                                                                {' '} / Rejected {linkedAssessmentReviewSummary.dismissed}
+                                                                {' '} / Effective {linkedAssessmentReviewSummary.effective}
                                                             </div>
                                                         )}
                                                         <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-950/60 dark:text-slate-300">
-                                                            当前发布策略：{formatDeployActionHint(linkedRunAssessment)}
+                                                            Current release policy: {formatDeployActionHint(linkedRunAssessment)}
                                                         </div>
                                                         {linkedRunAssessment.blockers.length > 0 && (
                                                             <div className="mt-3 space-y-2">
@@ -1306,15 +1306,15 @@ export default function LegionControlCenter({
                                     <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 dark:border-slate-700 dark:bg-slate-950/50">
                                         <div className="flex flex-wrap items-center justify-between gap-2">
                                             <div>
-                                                <div className="text-sm font-medium text-slate-900 dark:text-white">受控发布结果</div>
-                                                <div className="mt-1 text-xs text-slate-400">当前命令已把发布风险评估衔接到了 Deploy 审批与作业链路。</div>
+                                                <div className="text-sm font-medium text-slate-900 dark:text-white">Controlled release result</div>
+                                                <div className="mt-1 text-xs text-slate-400">This command has connected the release risk assessment to Deploy approvals and jobs.</div>
                                             </div>
                                             <a
                                                 href="/deploy"
                                                 className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
                                             >
                                                 <Shield className="h-4 w-4" />
-                                                前往部署控制台
+                                                Open deployment console
                                             </a>
                                         </div>
                                         <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -1322,7 +1322,7 @@ export default function LegionControlCenter({
                                                 {formatReleaseDecisionLabel(linkedReleaseDeployResult.release_decision)}
                                             </span>
                                             <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-200">
-                                                {linkedReleaseDeployResult.deploy_target.target_type === 'repo' ? '仓库发布' : '项目全量发布'}
+                                                {linkedReleaseDeployResult.deploy_target.target_type === 'repo' ? "Repository release" : "Full project release"}
                                             </span>
                                         </div>
                                         <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -1339,7 +1339,7 @@ export default function LegionControlCenter({
                                                 <div className="mt-2 font-medium text-slate-900 dark:text-white">{linkedReleaseDeployResult.job_id || '-'}</div>
                                             </div>
                                             <div className="rounded-xl border border-slate-200 bg-white p-3 text-sm dark:border-slate-800 dark:bg-slate-950">
-                                                <div className="text-xs uppercase tracking-[0.18em] text-slate-400">目标</div>
+                                                <div className="text-xs uppercase tracking-[0.18em] text-slate-400">Target</div>
                                                 <div className="mt-2 font-medium text-slate-900 dark:text-white">
                                                     {linkedReleaseDeployResult.deploy_target.repo_id || linkedReleaseDeployResult.deploy_target.project_key || '-'}
                                                 </div>
@@ -1355,7 +1355,7 @@ export default function LegionControlCenter({
                                         className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
                                     >
                                         <PlayCircle className="h-4 w-4" />
-                                        打开关联探索会话
+                                        Open linked exploration session
                                     </button>
                                 )}
 
@@ -1363,12 +1363,12 @@ export default function LegionControlCenter({
                                     <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/40 dark:bg-amber-950/20">
                                         <div className="flex items-center gap-2 text-sm font-medium text-amber-800 dark:text-amber-200">
                                             <Filter className="h-4 w-4" />
-                                            当前命令正在等待审批
+                                            This command is awaiting approval
                                         </div>
                                         <textarea
                                             value={reviewComment}
                                             onChange={(event) => setReviewComment(event.target.value)}
-                                            placeholder="填写审批备注或驳回原因"
+                                            placeholder={"Enter an approval note or rejection reason"}
                                             className="mt-3 min-h-[84px] w-full rounded-xl border border-amber-200 bg-white px-3 py-2 text-sm dark:border-amber-800 dark:bg-slate-950"
                                         />
                                         <div className="mt-3 flex flex-wrap gap-2">
@@ -1379,7 +1379,7 @@ export default function LegionControlCenter({
                                                 className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:opacity-50"
                                             >
                                                 {reviewing === 'approve' ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-                                                批准执行
+                                                Approve execution
                                             </button>
                                             <button
                                                 type="button"
@@ -1388,7 +1388,7 @@ export default function LegionControlCenter({
                                                 className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-rose-700 disabled:opacity-50"
                                             >
                                                 {reviewing === 'reject' ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
-                                                驳回命令
+                                                Reject command
                                             </button>
                                         </div>
                                     </div>
@@ -1402,8 +1402,8 @@ export default function LegionControlCenter({
             <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     <div>
-                        <div className="text-lg font-semibold text-slate-900 dark:text-white">发布风险评估</div>
-                        <div className="mt-1 text-sm text-slate-500 dark:text-slate-400">基于探索性测试发现生成业务风险、体验风险和自动发布资格结论。</div>
+                        <div className="text-lg font-semibold text-slate-900 dark:text-white">Release risk assessment</div>
+                        <div className="mt-1 text-sm text-slate-500 dark:text-slate-400">Assess business risk, experience risk, and automatic release eligibility from exploratory testing findings.</div>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                         {assessmentDetail && (
@@ -1413,7 +1413,7 @@ export default function LegionControlCenter({
                                 className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
                             >
                                 <Sparkles className="h-4 w-4" />
-                                按当前评估发起发布
+                                Start release using this assessment
                             </button>
                         )}
                         <button
@@ -1429,7 +1429,7 @@ export default function LegionControlCenter({
                             className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
                         >
                             <PlayCircle className="h-4 w-4" />
-                            生成发布风险评估
+                            Generate release risk assessment
                         </button>
                     </div>
                 </div>
@@ -1440,7 +1440,7 @@ export default function LegionControlCenter({
                         data={assessments}
                         rowKey="assessment_id"
                         loading={loading}
-                        emptyText="暂无发布风险评估"
+                        emptyText={"No release risk assessments yet"}
                         activeRowKey={selectedAssessmentId}
                         onRowClick={(record) => {
                             const relatedSessionId = record.input?.exploration_session_ids?.[0] || '';
@@ -1452,42 +1452,42 @@ export default function LegionControlCenter({
                     />
 
                     <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 dark:border-slate-700 dark:bg-slate-950/50">
-                        <div className="text-base font-semibold text-slate-900 dark:text-white">评估详情</div>
+                        <div className="text-base font-semibold text-slate-900 dark:text-white">Assessment details</div>
                         {!assessmentDetail ? (
-                            <div className="mt-4 text-sm text-slate-500 dark:text-slate-400">选择一条评估记录后，这里会显示 blockers、证据和自动发布资格。</div>
+                            <div className="mt-4 text-sm text-slate-500 dark:text-slate-400">Select an assessment to view blockers, evidence, and automatic release eligibility.</div>
                         ) : (
                             <div className="mt-4 space-y-4">
                                 <div className="flex flex-wrap items-center gap-2">
                                     <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${toneClass(assessmentDetail.release_risk, RISK_BADGE)}`}>
-                                        发布风险 {assessmentDetail.release_risk}
+                                        Release risk {assessmentDetail.release_risk}
                                     </span>
                                     <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${assessmentDetail.auto_release_eligible ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-200' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200'}`}>
                                         {formatAutoReleaseLabel(assessmentDetail)}
                                     </span>
                                     {getReviewImpact(assessmentDetail) && (
                                         <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${getReviewImpact(assessmentDetail) === 'pending' ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-200' : 'bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-200'}`}>
-                                            {getReviewImpact(assessmentDetail) === 'pending' ? '待复核阻断' : '已确认问题阻断'}
+                                            {getReviewImpact(assessmentDetail) === 'pending' ? "Blocked pending review" : "Blocked by confirmed issues"}
                                         </span>
                                     )}
                                 </div>
 
                                 <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                                     <div className="rounded-xl border border-slate-200 bg-white p-3 text-sm dark:border-slate-800 dark:bg-slate-950">
-                                        <div className="text-xs uppercase tracking-[0.18em] text-slate-400">业务风险</div>
+                                        <div className="text-xs uppercase tracking-[0.18em] text-slate-400">Business risk</div>
                                         <div className="mt-2 font-medium text-slate-900 dark:text-white">{assessmentDetail.business_risk}</div>
                                     </div>
                                     <div className="rounded-xl border border-slate-200 bg-white p-3 text-sm dark:border-slate-800 dark:bg-slate-950">
-                                        <div className="text-xs uppercase tracking-[0.18em] text-slate-400">体验风险</div>
+                                        <div className="text-xs uppercase tracking-[0.18em] text-slate-400">Experience risk</div>
                                         <div className="mt-2 font-medium text-slate-900 dark:text-white">{assessmentDetail.ux_risk}</div>
                                     </div>
                                     <div className="rounded-xl border border-slate-200 bg-white p-3 text-sm dark:border-slate-800 dark:bg-slate-950">
-                                        <div className="text-xs uppercase tracking-[0.18em] text-slate-400">待复核 / 已确认</div>
+                                        <div className="text-xs uppercase tracking-[0.18em] text-slate-400">Pending review / Confirmed</div>
                                         <div className="mt-2 font-medium text-slate-900 dark:text-white">
                                             {assessmentDetailReviewSummary ? `${assessmentDetailReviewSummary.pending} / ${assessmentDetailReviewSummary.confirmed}` : '-'}
                                         </div>
                                     </div>
                                     <div className="rounded-xl border border-slate-200 bg-white p-3 text-sm dark:border-slate-800 dark:bg-slate-950">
-                                        <div className="text-xs uppercase tracking-[0.18em] text-slate-400">已驳回 / 生效</div>
+                                        <div className="text-xs uppercase tracking-[0.18em] text-slate-400">Rejected / Effective</div>
                                         <div className="mt-2 font-medium text-slate-900 dark:text-white">
                                             {assessmentDetailReviewSummary ? `${assessmentDetailReviewSummary.dismissed} / ${assessmentDetailReviewSummary.effective}` : '-'}
                                         </div>
@@ -1495,14 +1495,14 @@ export default function LegionControlCenter({
                                 </div>
 
                                 <div className="rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300">
-                                    当前发布策略：{formatDeployActionHint(assessmentDetail)}
+                                    Current release policy: {formatDeployActionHint(assessmentDetail)}
                                 </div>
 
                                 <div>
                                     <div className="text-xs uppercase tracking-[0.18em] text-slate-400">Blockers</div>
                                     {assessmentDetail.blockers.length === 0 ? (
                                         <div className="mt-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-950/20 dark:text-emerald-200">
-                                            当前评估没有命中阻断项。
+                                            This assessment has no matching blockers.
                                         </div>
                                     ) : (
                                         <div className="mt-2 space-y-2">
@@ -1516,13 +1516,13 @@ export default function LegionControlCenter({
                                 </div>
 
                                 <div>
-                                    <div className="text-xs uppercase tracking-[0.18em] text-slate-400">证据摘要</div>
+                                    <div className="text-xs uppercase tracking-[0.18em] text-slate-400">Evidence summary</div>
                                     <pre className="mt-2 overflow-auto rounded-xl bg-slate-900 p-3 text-xs text-slate-100">{JSON.stringify(assessmentDetail.evidence, null, 2)}</pre>
                                 </div>
 
                                 <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950">
                                     <div className="text-sm text-slate-600 dark:text-slate-300">
-                                        受控发布会复用 Deploy 审批与作业链路，并保留完整命令运行、审批和审计痕迹。
+                                        Controlled releases reuse Deploy approvals and jobs while retaining complete command run, approval, and audit records.
                                     </div>
                                     <div className="flex flex-wrap items-center gap-2">
                                         <button
@@ -1531,14 +1531,14 @@ export default function LegionControlCenter({
                                             className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
                                         >
                                             <PlayCircle className="h-4 w-4" />
-                                            按当前评估发起发布
+                                            Start release using this assessment
                                         </button>
                                         <a
                                             href="/deploy"
                                             className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
                                         >
                                             <Shield className="h-4 w-4" />
-                                            打开部署控制台
+                                            Open deployment console
                                         </a>
                                     </div>
                                 </div>
@@ -1552,33 +1552,33 @@ export default function LegionControlCenter({
                 <div
                     role="dialog"
                     aria-modal="true"
-                    aria-label="受控命令发起器"
+                    aria-label={"Controlled command launcher"}
                     className="fixed inset-0 z-40 flex items-center justify-center bg-slate-950/50 px-4"
                 >
                     <div className="w-full max-w-3xl rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-700 dark:bg-slate-900">
                         <div className="flex items-center justify-between">
                             <div>
-                                <div className="text-lg font-semibold text-slate-900 dark:text-white">发起受控命令</div>
-                                <div className="mt-1 text-sm text-slate-500 dark:text-slate-400">按命令网关元数据发起 Web 侧受控命令，所有动作都会生成对应的 command run。</div>
+                                <div className="text-lg font-semibold text-slate-900 dark:text-white">Start controlled command</div>
+                                <div className="mt-1 text-sm text-slate-500 dark:text-slate-400">Launch controlled web commands using command gateway metadata. Each action creates a corresponding command run.</div>
                             </div>
                             <button
                                 type="button"
                                 onClick={() => setCommandOpen(false)}
                                 className="rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                             >
-                                关闭
+                                Close
                             </button>
                         </div>
 
                         {!selectedLaunchCommand ? (
                             <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200">
-                                当前账号没有可执行的受控命令。
+                                This account has no executable controlled commands.
                             </div>
                         ) : (
                             <>
                                 <div className="mt-5 grid gap-4 md:grid-cols-2">
                                     <label className="text-sm text-slate-600 dark:text-slate-300">
-                                        命令
+                                        Command
                                         <select
                                             value={selectedLaunchCommand.command_id}
                                             onChange={(event) => setSelectedCommandIdForLaunch(event.target.value)}
@@ -1590,10 +1590,10 @@ export default function LegionControlCenter({
                                         </select>
                                     </label>
                                     <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-950/60 dark:text-slate-300">
-                                        <div>风险：<span className={`rounded-full px-2 py-0.5 text-xs font-medium ${toneClass(selectedLaunchCommand.risk_level, RISK_BADGE)}`}>{selectedLaunchCommand.risk_level}</span></div>
-                                        <div className="mt-1">权限：{selectedLaunchCommand.permission}</div>
-                                        <div className="mt-1">环境：{selectedLaunchCommand.env_scope} · 项目域：{selectedLaunchCommand.project_scope}</div>
-                                        <div className="mt-1">审批：{selectedLaunchCommand.approval_required ? '需要审批' : '无需审批'} · 确认：{selectedLaunchCommand.requires_confirmation ? '显式确认' : '无需确认'}</div>
+                                        <div>Risk:<span className={`rounded-full px-2 py-0.5 text-xs font-medium ${toneClass(selectedLaunchCommand.risk_level, RISK_BADGE)}`}>{selectedLaunchCommand.risk_level}</span></div>
+                                        <div className="mt-1">Permission: {selectedLaunchCommand.permission}</div>
+                                        <div className="mt-1">Environment: {selectedLaunchCommand.env_scope} · Project scope: {selectedLaunchCommand.project_scope}</div>
+                                        <div className="mt-1">Approval: {selectedLaunchCommand.approval_required ? "Approval required" : "No approval required"} · Confirmation: {selectedLaunchCommand.requires_confirmation ? "Explicit confirmation" : "No confirmation required"}</div>
                                     </div>
                                 </div>
 
@@ -1605,7 +1605,7 @@ export default function LegionControlCenter({
                                 <div className="mt-5 grid gap-4 md:grid-cols-2">
                                     {selectedLaunchCommand.arguments.length === 0 ? (
                                         <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-950/60 dark:text-slate-400 md:col-span-2">
-                                            当前命令不需要额外参数，可直接提交。
+                                            This command requires no additional parameters and can be submitted directly.
                                         </div>
                                     ) : selectedLaunchCommand.arguments.map((argument) => {
                                         const rawValue = commandArgumentDrafts[argument.name];
@@ -1650,7 +1650,7 @@ export default function LegionControlCenter({
                                                     />
                                                 )}
                                                 <div className="mt-1 text-xs text-slate-400">
-                                                    {argument.description || '未提供说明'} · 类型 {argument.type}
+                                                    {argument.description || "No description provided"} · Type {argument.type}
                                                 </div>
                                             </label>
                                         );
@@ -1664,14 +1664,14 @@ export default function LegionControlCenter({
                                             checked={commandConfirm}
                                             onChange={(event) => setCommandConfirm(event.target.checked)}
                                         />
-                                        我已确认这是高风险动作，允许通过命令网关继续执行
+                                        I confirm this is a high-risk action and authorize execution through the command gateway
                                     </label>
                                 )}
 
                                 <div className="mt-6 flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-950/60 dark:text-slate-300">
                                     <div>
-                                        提交后会生成新的 command run。
-                                        {selectedLaunchCommand.approval_required ? ' 如果命中审批策略，会先进入待审批状态。' : ''}
+                                        Submitting creates a new command run.
+                                        {selectedLaunchCommand.approval_required ? " If an approval policy applies, the run first enters the pending approval state." : ''}
                                     </div>
                                     <button
                                         type="button"
@@ -1680,7 +1680,7 @@ export default function LegionControlCenter({
                                         className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 disabled:opacity-50 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
                                     >
                                         {submittingCommand ? <Loader2 className="h-4 w-4 animate-spin" /> : <PlayCircle className="h-4 w-4" />}
-                                        提交命令
+                                        Submit command
                                     </button>
                                 </div>
                             </>
@@ -1693,26 +1693,26 @@ export default function LegionControlCenter({
                 <div
                     role="dialog"
                     aria-modal="true"
-                    aria-label="发布风险评估对话框"
+                    aria-label={"Release risk assessment dialog"}
                     className="fixed inset-0 z-40 flex items-center justify-center bg-slate-950/50 px-4"
                 >
                     <div className="w-full max-w-2xl rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-700 dark:bg-slate-900">
                         <div className="flex items-center justify-between">
                             <div>
-                                <div className="text-lg font-semibold text-slate-900 dark:text-white">生成发布风险评估</div>
-                                <div className="mt-1 text-sm text-slate-500 dark:text-slate-400">写动作会统一走命令网关并生成对应的 command run。</div>
+                                <div className="text-lg font-semibold text-slate-900 dark:text-white">Generate release risk assessment</div>
+                                <div className="mt-1 text-sm text-slate-500 dark:text-slate-400">Write actions go through the command gateway and create corresponding command runs.</div>
                             </div>
                             <button
                                 type="button"
                                 onClick={() => setAssessmentOpen(false)}
                                 className="rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                             >
-                                关闭
+                                Close
                             </button>
                         </div>
                         <div className="mt-5 grid gap-4 md:grid-cols-2">
                             <label className="text-sm text-slate-600 dark:text-slate-300">
-                                关联探索会话
+                                Linked exploration session
                                 <select
                                     value={assessmentDraft.sessionId}
                                     onChange={(event) => {
@@ -1726,7 +1726,7 @@ export default function LegionControlCenter({
                                     }}
                                     className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
                                 >
-                                    <option value="">请选择探索会话</option>
+                                    <option value="">Select an exploration session</option>
                                     {sessions.map((item) => (
                                         <option key={item.session_id} value={item.session_id}>
                                             {item.project_key || 'platform'} · {item.target_url}
@@ -1735,7 +1735,7 @@ export default function LegionControlCenter({
                                 </select>
                             </label>
                             <label className="text-sm text-slate-600 dark:text-slate-300">
-                                项目标识
+                                Project identifier
                                 <input
                                     value={assessmentDraft.projectKey}
                                     onChange={(event) => setAssessmentDraft((prev) => ({ ...prev, projectKey: event.target.value }))}
@@ -1743,7 +1743,7 @@ export default function LegionControlCenter({
                                 />
                             </label>
                             <label className="text-sm text-slate-600 dark:text-slate-300">
-                                目标环境
+                                Target environment
                                 <select
                                     value={assessmentDraft.environment}
                                     onChange={(event) => setAssessmentDraft((prev) => ({ ...prev, environment: event.target.value }))}
@@ -1760,10 +1760,10 @@ export default function LegionControlCenter({
                                     checked={assessmentDraft.requiredTestsPassed}
                                     onChange={(event) => setAssessmentDraft((prev) => ({ ...prev, requiredTestsPassed: event.target.checked }))}
                                 />
-                                所需测试已全部通过
+                                All required tests have passed
                             </label>
                             <label className="md:col-span-2 text-sm text-slate-600 dark:text-slate-300">
-                                变更摘要
+                                Change summary
                                 <textarea
                                     value={assessmentDraft.changeSummary}
                                     onChange={(event) => setAssessmentDraft((prev) => ({ ...prev, changeSummary: event.target.value }))}
@@ -1775,7 +1775,7 @@ export default function LegionControlCenter({
                         <div className="mt-6 flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-950/60 dark:text-slate-300">
                             <div className="flex items-center gap-2">
                                 <AlertTriangle className="h-4 w-4 text-amber-500" />
-                                当前阶段只生成风险结论，不会真的执行自动发布。
+                                This step only generates a risk conclusion. It does not execute an automatic release.
                             </div>
                             <button
                                 type="button"
@@ -1784,7 +1784,7 @@ export default function LegionControlCenter({
                                 className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 disabled:opacity-50 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
                             >
                                 {submittingAssessment ? <Loader2 className="h-4 w-4 animate-spin" /> : <Shield className="h-4 w-4" />}
-                                提交命令并评估
+                                Submit command and assess
                             </button>
                         </div>
                     </div>
@@ -1795,21 +1795,21 @@ export default function LegionControlCenter({
                 <div
                     role="dialog"
                     aria-modal="true"
-                    aria-label="受控发布对话框"
+                    aria-label={"Controlled release dialog"}
                     className="fixed inset-0 z-40 flex items-center justify-center bg-slate-950/50 px-4"
                 >
                     <div className="w-full max-w-2xl rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-700 dark:bg-slate-900">
                         <div className="flex items-center justify-between">
                             <div>
-                                <div className="text-lg font-semibold text-slate-900 dark:text-white">按当前评估发起发布</div>
-                                <div className="mt-1 text-sm text-slate-500 dark:text-slate-400">写动作会统一走命令网关，再复用现有 Deploy 审批与作业调度链路。</div>
+                                <div className="text-lg font-semibold text-slate-900 dark:text-white">Start release using this assessment</div>
+                                <div className="mt-1 text-sm text-slate-500 dark:text-slate-400">Write actions go through the command gateway and reuse the existing Deploy approval and job scheduling flow.</div>
                             </div>
                             <button
                                 type="button"
                                 onClick={() => setReleaseDeployOpen(false)}
                                 className="rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                             >
-                                关闭
+                                Close
                             </button>
                         </div>
                         <div className="mt-5 grid gap-4 md:grid-cols-2">
@@ -1822,7 +1822,7 @@ export default function LegionControlCenter({
                                 />
                             </label>
                             <label className="text-sm text-slate-600 dark:text-slate-300">
-                                项目标识
+                                Project identifier
                                 <input
                                     value={releaseDeployDraft.projectKey}
                                     readOnly
@@ -1830,7 +1830,7 @@ export default function LegionControlCenter({
                                 />
                             </label>
                             <label className="text-sm text-slate-600 dark:text-slate-300">
-                                目标环境
+                                Target environment
                                 <input
                                     value={releaseDeployDraft.environment}
                                     readOnly
@@ -1838,7 +1838,7 @@ export default function LegionControlCenter({
                                 />
                             </label>
                             <label className="text-sm text-slate-600 dark:text-slate-300">
-                                发布目标
+                                Release target
                                 <select
                                     value={releaseDeployDraft.targetType}
                                     onChange={(event) => setReleaseDeployDraft((prev) => ({
@@ -1847,8 +1847,8 @@ export default function LegionControlCenter({
                                     }))}
                                     className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
                                 >
-                                    <option value="repo">仓库发布</option>
-                                    <option value="project">项目全量发布</option>
+                                    <option value="repo">Repository release</option>
+                                    <option value="project">Full project release</option>
                                 </select>
                             </label>
                             {releaseDeployDraft.targetType === 'repo' && (
@@ -1859,7 +1859,7 @@ export default function LegionControlCenter({
                                             aria-label="repo_id"
                                             value={releaseDeployDraft.repoId}
                                             onChange={(event) => setReleaseDeployDraft((prev) => ({ ...prev, repoId: event.target.value }))}
-                                            placeholder="例如 frontend-web"
+                                            placeholder={"Example: frontend-web"}
                                             className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
                                         />
                                     </label>
@@ -1869,20 +1869,20 @@ export default function LegionControlCenter({
                                             aria-label="branch"
                                             value={releaseDeployDraft.branch}
                                             onChange={(event) => setReleaseDeployDraft((prev) => ({ ...prev, branch: event.target.value }))}
-                                            placeholder="可选，例如 main"
+                                            placeholder={"Optional, for example: main"}
                                             className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
                                         />
                                     </label>
                                 </>
                             )}
                             <label className="md:col-span-2 text-sm text-slate-600 dark:text-slate-300">
-                                发布备注
+                                Release notes
                                 <textarea
-                                    aria-label="发布备注"
+                                    aria-label={"Release notes"}
                                     value={releaseDeployDraft.comment}
                                     onChange={(event) => setReleaseDeployDraft((prev) => ({ ...prev, comment: event.target.value }))}
                                     rows={4}
-                                    placeholder="可选：补充发布背景、策略依据或人工说明"
+                                    placeholder={"Optional: add release context, policy rationale, or reviewer notes"}
                                     className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
                                 />
                             </label>
@@ -1890,7 +1890,7 @@ export default function LegionControlCenter({
                         <div className="mt-6 flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-950/60 dark:text-slate-300">
                             <div className="flex items-center gap-2">
                                 <AlertTriangle className="h-4 w-4 text-amber-500" />
-                                当前发布策略：{formatDeployActionHint(releaseDeployAssessment)}
+                                Current release policy: {formatDeployActionHint(releaseDeployAssessment)}
                             </div>
                             <button
                                 type="button"
@@ -1899,7 +1899,7 @@ export default function LegionControlCenter({
                                 className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 disabled:opacity-50 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
                             >
                                 {submittingReleaseDeploy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                                提交受控发布
+                                Submit controlled release
                             </button>
                         </div>
                     </div>
