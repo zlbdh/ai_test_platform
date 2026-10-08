@@ -1,16 +1,16 @@
-# 数据一致性策略
+# Data consistency strategy
 
-这是后端测试技能模板，用于数据层和接口层的一致性校验。
+This backend testing skill template checks consistency between the data and API layers.
 
-## 当前用途
+## Current uses
 
-- 验证接口返回、数据库落库、异步任务与报表之间的一致性
-- 适合执行中心、部署治理和数据类专项测试
+- Verify consistency across API responses, persisted database data, asynchronous tasks, and reports
+- Use for the execution center, deployment governance, and specialized data tests
 
-## 关注点
+## Areas to check
 
-- 主键与关联约束
-- 读写一致性
-- 异常回滚
-- 多源数据对账
+- Primary keys and relational constraints
+- Read/write consistency
+- Rollback after errors
+- Reconciliation across data sources
 

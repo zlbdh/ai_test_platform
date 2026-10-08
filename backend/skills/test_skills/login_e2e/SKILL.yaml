@@ -1,10 +1,10 @@
 name: login-e2e
-description: "登录流程端到端测试，覆盖正常/异常/边界场景"
+description: "End-to-end login tests covering normal, error, and boundary scenarios"
 version: "1.0"
 test_type: ui_e2e
 target_squad: ui_squad
 tags: [authentication, critical-path, login]
 preconditions:
-  - "目标系统有登录页面"
-  - "有可用的测试账号"
-  - "登录页可通过浏览器访问"
+  - "The target system has a login page"
+  - "A test account is available"
+  - "The login page is accessible in a browser"

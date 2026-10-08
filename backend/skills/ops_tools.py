@@ -1,6 +1,6 @@
 """
-运维诊断工具
-用于日志分析、错误诊断、网络监控等
+Operations diagnostic tools
+For log analysis, error diagnosis, network monitoring, and related tasks
 """
 from typing import Dict, Any, List, Optional
 from langchain_core.tools import tool
@@ -13,54 +13,54 @@ from skills.knowledge_tools import search_similar_bugs
 @tool
 def read_log_file(log_path: str, lines: int = 100, search_keyword: Optional[str] = None) -> List[str]:
     """
-    读取日志文件
-    
+    Read a log file
+
     Args:
-        log_path: 日志文件路径
-        lines: 读取的行数（从末尾开始）
-        search_keyword: 可选，搜索关键词
-        
+        log_path: Log file path
+        lines: Number of lines to read from the end
+        search_keyword: Optional search keyword
+
     Returns:
-        日志行列表
+        List of log lines
     """
     try:
         if not os.path.exists(log_path):
-            return [f"日志文件不存在: {log_path}"]
-        
+            return [f"Log file does not exist: {log_path}"]
+
         with open(log_path, 'r', encoding='utf-8') as f:
             all_lines = f.readlines()
-        
-        # 获取最后 N 行
+
+        # Get the last N lines
         recent_lines = all_lines[-lines:] if len(all_lines) > lines else all_lines
-        
-        # 如果有关键词，进行过滤
+
+        # Filter by keyword if one is provided
         if search_keyword:
             filtered_lines = [line for line in recent_lines if search_keyword.lower() in line.lower()]
             return filtered_lines
-        
+
         return recent_lines
     except Exception as e:
-        return [f"读取日志失败: {str(e)}"]
+        return [f"Failed to read the log: {str(e)}"]
 
 
 @tool
 def search_errors_in_log(log_path: str, time_range_minutes: int = 10) -> List[Dict[str, Any]]:
     """
-    在日志中搜索错误
-    
+    Search logs for errors
+
     Args:
-        log_path: 日志文件路径
-        time_range_minutes: 时间范围（分钟）
-        
+        log_path: Log file path
+        time_range_minutes: Time range in minutes
+
     Returns:
-        错误信息列表
+        List of error messages
     """
     try:
         log_lines = read_log_file.invoke({"log_path": log_path, "lines": 1000})
-        
+
         errors = []
         error_keywords = ["error", "exception", "failed", "failure", "crash", "timeout"]
-        
+
         for line in log_lines:
             line_lower = line.lower()
             if any(keyword in line_lower for keyword in error_keywords):
@@ -69,7 +69,7 @@ def search_errors_in_log(log_path: str, time_range_minutes: int = 10) -> List[Di
                     "timestamp": datetime.now().isoformat(),
                     "severity": "error"
                 })
-        
+
         return errors
     except Exception as e:
         return [{"error": str(e)}]
@@ -78,14 +78,14 @@ def search_errors_in_log(log_path: str, time_range_minutes: int = 10) -> List[Di
 @tool
 def diagnose_error(error_message: str, log_path: Optional[str] = None) -> Dict[str, Any]:
     """
-    诊断错误（分析错误类型和可能原因）
-    
+    Diagnose an error (analyze its type and possible causes)
+
     Args:
-        error_message: 错误消息
-        log_path: 可选，日志文件路径
-        
+        error_message: Error message
+        log_path: Optional log file path
+
     Returns:
-        诊断结果
+        Diagnostic result
     """
     diagnosis = {
         "error_message": error_message,
@@ -93,60 +93,60 @@ def diagnose_error(error_message: str, log_path: Optional[str] = None) -> Dict[s
         "suggested_fixes": [],
         "severity": "unknown"
     }
-    
+
     error_lower = error_message.lower()
-    
-    # 根据错误消息类型进行诊断
+
+    # Diagnose based on the error message type
     if "null pointer" in error_lower or "nullreference" in error_lower:
-        diagnosis["possible_causes"].append("空指针异常：对象未初始化")
-        diagnosis["suggested_fixes"].append("检查对象初始化逻辑")
+        diagnosis["possible_causes"].append("Null pointer exception: object not initialized")
+        diagnosis["suggested_fixes"].append("Check object initialization logic")
         diagnosis["severity"] = "high"
     elif "timeout" in error_lower:
-        diagnosis["possible_causes"].append("超时：网络延迟或服务响应慢")
-        diagnosis["suggested_fixes"].append("检查网络连接和服务性能")
+        diagnosis["possible_causes"].append("Timeout: network latency or slow service response")
+        diagnosis["suggested_fixes"].append("Check network connectivity and service performance")
         diagnosis["severity"] = "medium"
     elif "connection refused" in error_lower or "connection reset" in error_lower:
-        diagnosis["possible_causes"].append("连接被拒绝：服务可能未启动或端口被占用")
-        diagnosis["suggested_fixes"].append("检查服务状态和端口占用情况")
+        diagnosis["possible_causes"].append("Connection refused: the service may not be running or the port may be occupied")
+        diagnosis["suggested_fixes"].append("Check service status and port usage")
         diagnosis["severity"] = "high"
     elif "404" in error_message or "not found" in error_lower:
-        diagnosis["possible_causes"].append("资源未找到：URL 路径错误或资源不存在")
-        diagnosis["suggested_fixes"].append("检查 URL 路径和资源是否存在")
+        diagnosis["possible_causes"].append("Resource not found: incorrect URL path or missing resource")
+        diagnosis["suggested_fixes"].append("Check the URL path and whether the resource exists")
         diagnosis["severity"] = "low"
     elif "500" in error_message or "internal server error" in error_lower:
-        diagnosis["possible_causes"].append("服务器内部错误：代码异常或配置问题")
-        diagnosis["suggested_fixes"].append("查看服务器日志，检查代码逻辑")
+        diagnosis["possible_causes"].append("Internal server error: code exception or configuration problem")
+        diagnosis["suggested_fixes"].append("Review server logs and check the code logic")
         diagnosis["severity"] = "high"
     elif "permission denied" in error_lower or "unauthorized" in error_lower:
-        diagnosis["possible_causes"].append("权限不足：认证失败或缺少权限")
-        diagnosis["suggested_fixes"].append("检查认证信息和权限配置")
+        diagnosis["possible_causes"].append("Insufficient permissions: authentication failed or permissions are missing")
+        diagnosis["suggested_fixes"].append("Check credentials and permission settings")
         diagnosis["severity"] = "medium"
-    
-    # 如果提供了日志路径，尝试从日志中获取更多信息
+
+    # If a log path is provided, try to obtain more information from the logs
     if log_path:
         errors = search_errors_in_log.invoke({"log_path": log_path})
         if errors:
-            diagnosis["related_logs"] = errors[:5]  # 最近 5 条相关日志
-    
+            diagnosis["related_logs"] = errors[:5]  # The five most recent related log entries
+
     return diagnosis
 
 
 @tool
 def check_service_health(service_url: str) -> Dict[str, Any]:
     """
-    检查服务健康状态
-    
+    Check service health
+
     Args:
-        service_url: 服务 URL（如健康检查端点）
-        
+        service_url: Service URL (such as a health check endpoint)
+
     Returns:
-        健康状态
+        Health status
     """
     try:
         import requests
-        
+
         response = requests.get(service_url, timeout=5)
-        
+
         return {
             "service_url": service_url,
             "status_code": response.status_code,
@@ -164,29 +164,29 @@ def check_service_health(service_url: str) -> Dict[str, Any]:
 @tool
 def analyze_performance_metrics(log_path: str, metric_type: str = "response_time") -> Dict[str, Any]:
     """
-    分析性能指标
-    
+    Analyze performance metrics
+
     Args:
-        log_path: 日志文件路径
-        metric_type: 指标类型 (response_time, memory, cpu)
-        
+        log_path: Log file path
+        metric_type: Metric type (response_time, memory, cpu)
+
     Returns:
-        性能分析结果
+        Performance analysis result
     """
     try:
         log_lines = read_log_file.invoke({"log_path": log_path, "lines": 1000})
-        
-        # 简单的性能分析（实际应该使用更专业的工具）
+
+        # Basic performance analysis (a production implementation should use specialized tools)
         if metric_type == "response_time":
             response_times = []
             for line in log_lines:
                 if "response_time" in line.lower() or "duration" in line.lower():
-                    # 尝试提取数字（简化处理）
+                    # Try to extract numbers (simplified)
                     import re
                     numbers = re.findall(r'\d+\.?\d*', line)
                     if numbers:
                         response_times.append(float(numbers[0]))
-            
+
             if response_times:
                 return {
                     "metric_type": metric_type,
@@ -195,10 +195,10 @@ def analyze_performance_metrics(log_path: str, metric_type: str = "response_time
                     "min": min(response_times),
                     "count": len(response_times)
                 }
-        
+
         return {
             "metric_type": metric_type,
-            "message": "未找到相关性能指标"
+            "message": "No relevant performance metrics found"
         }
     except Exception as e:
         return {"error": str(e)}
@@ -207,49 +207,49 @@ def analyze_performance_metrics(log_path: str, metric_type: str = "response_time
 @tool
 def git_blame(file_path: str, line_number: Optional[int] = None) -> Dict[str, Any]:
     """
-    查看代码修改历史（Git blame）
-    
+    View code change history (Git blame)
+
     Args:
-        file_path: 文件路径（相对于 Git 仓库根目录）
-        line_number: 可选，指定行号
-        
+        file_path: File path relative to the Git repository root
+        line_number: Optional line number
+
     Returns:
-        Git blame 结果
+        Git blame results
     """
     try:
         import git
-        
+
         repo_path = Config.GIT_REPO_PATH
         repo = git.Repo(repo_path)
-        
+
         if line_number:
-            # 查看特定行的 blame
+            # Get blame for a specific line
             blame_info = repo.git.blame("-L", f"{line_number},{line_number}", file_path)
         else:
-            # 查看整个文件的 blame
+            # Get blame for the entire file
             blame_info = repo.git.blame(file_path)
-        
-        # 解析 blame 信息
+
+        # Parse blame information
         lines = blame_info.split('\n')
         blame_data = []
-        
-        for line in lines[:20]:  # 限制返回前20行
+
+        for line in lines[:20]:  # Limit results to the first 20 lines
             if line.strip():
-                # 简化解析（实际应该使用更完善的解析逻辑）
+                # Simplified parsing (a production implementation should use more complete parsing logic)
                 parts = line.split(' ', 3)
                 if len(parts) >= 4:
                     commit_hash = parts[0]
                     author = parts[1] if len(parts) > 1 else "unknown"
                     date = parts[2] if len(parts) > 2 else "unknown"
                     code = parts[3] if len(parts) > 3 else ""
-                    
+
                     blame_data.append({
                         "commit": commit_hash,
                         "author": author,
                         "date": date,
-                        "code": code[:100]  # 截断代码
+                        "code": code[:100]  # Truncate code
                     })
-        
+
         return {
             "status": "success",
             "file_path": file_path,
@@ -260,7 +260,7 @@ def git_blame(file_path: str, line_number: Optional[int] = None) -> Dict[str, An
     except ImportError:
         return {
             "status": "error",
-            "error": "GitPython 未安装，请运行: pip install gitpython"
+            "error": "GitPython is not installed; run: pip install gitpython"
         }
     except Exception as e:
         return {
@@ -270,18 +270,18 @@ def git_blame(file_path: str, line_number: Optional[int] = None) -> Dict[str, An
 
 
 @tool
-def correlate_logs_with_code(error_message: str, log_path: Optional[str] = None, 
+def correlate_logs_with_code(error_message: str, log_path: Optional[str] = None,
                              file_path: Optional[str] = None) -> Dict[str, Any]:
     """
-    关联日志和代码变更
-    
+    Correlate logs and code changes
+
     Args:
-        error_message: 错误消息
-        log_path: 日志文件路径
-        file_path: 可选，相关代码文件路径
-        
+        error_message: Error message
+        log_path: Log file path
+        file_path: Optional path to the related code file
+
     Returns:
-        关联分析结果
+        Correlation analysis results
     """
     try:
         correlation = {
@@ -290,33 +290,33 @@ def correlate_logs_with_code(error_message: str, log_path: Optional[str] = None,
             "code_analysis": None,
             "correlation": None
         }
-        
-        # 分析日志
+
+        # Analyze logs
         if log_path:
             errors = search_errors_in_log.invoke({"log_path": log_path})
             correlation["log_analysis"] = {
                 "errors_found": len(errors),
                 "recent_errors": errors[:5]
             }
-        
-        # 分析代码（如果提供了文件路径）
+
+        # Analyze code if a file path is provided
         if file_path:
             blame_result = git_blame.invoke({"file_path": file_path})
             correlation["code_analysis"] = blame_result
-        
-        # 关联分析
-        # 尝试从错误消息中提取文件名和行号
+
+        # Correlation analysis
+        # Try to extract the file name and line number from the error message
         import re
         file_match = re.search(r'([\w/]+\.(java|py|js|ts|go))', error_message)
         line_match = re.search(r'line (\d+)', error_message, re.IGNORECASE)
-        
+
         if file_match or line_match:
             correlation["correlation"] = {
                 "extracted_file": file_match.group(1) if file_match else None,
                 "extracted_line": int(line_match.group(1)) if line_match else None,
                 "confidence": "medium"
             }
-        
+
         return correlation
     except Exception as e:
         return {
@@ -328,51 +328,51 @@ def correlate_logs_with_code(error_message: str, log_path: Optional[str] = None,
 @tool
 def diagnose_error_with_history(error_message: str, log_path: Optional[str] = None) -> Dict[str, Any]:
     """
-    诊断错误（增强版：使用 Vector DB 检索相似历史错误）
-    
+    Diagnose an error (enhanced: retrieve similar historical errors from the vector database)
+
     Args:
-        error_message: 错误消息
-        log_path: 可选，日志文件路径
-        
+        error_message: Error message
+        log_path: Optional log file path
+
     Returns:
-        诊断结果（包含相似历史错误）
+        Diagnostic result including similar historical errors
     """
-    # 先进行基础诊断
+    # Perform basic diagnosis first
     diagnosis = diagnose_error.invoke({
         "error_message": error_message,
         "log_path": log_path
     })
-    
-    # 从 Vector DB 检索相似的历史 Bug
+
+    # Retrieve similar historical bugs from the vector database
     try:
         similar_bugs = search_similar_bugs.invoke({
             "error_message": error_message,
             "n_results": 3
         })
-        
+
         if similar_bugs and len(similar_bugs) > 0:
             diagnosis["similar_bugs"] = similar_bugs
             diagnosis["has_historical_reference"] = True
-            
-            # 如果找到相似的历史 Bug，添加解决建议
+
+            # Add remediation suggestions if similar historical bugs are found
             if similar_bugs[0].get("metadata"):
                 metadata = similar_bugs[0]["metadata"]
                 if metadata.get("solution"):
-                    diagnosis["suggested_fixes"].append(f"历史类似问题解决方案: {metadata['solution']}")
+                    diagnosis["suggested_fixes"].append(f"Solution to a similar historical issue: {metadata['solution']}")
     except Exception as e:
         diagnosis["vector_db_error"] = str(e)
-    
+
     return diagnosis
 
 
-# 工具列表
+# Tool list
 OPS_TOOLS = [
     read_log_file,
     search_errors_in_log,
     diagnose_error,
-    diagnose_error_with_history,  # 新增
+    diagnose_error_with_history,  # Added
     check_service_health,
     analyze_performance_metrics,
-    git_blame,  # 新增
-    correlate_logs_with_code,  # 新增
+    git_blame,  # Added
+    correlate_logs_with_code,  # Added
 ]

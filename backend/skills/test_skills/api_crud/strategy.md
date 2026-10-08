@@ -1,16 +1,16 @@
-# API CRUD 策略
+# API CRUD strategy
 
-这是后端测试技能模板，不是仓库级工作流。
+This is a backend testing skill template, not a repository-level workflow.
 
-## 当前用途
+## Current uses
 
-- 用于描述典型增删改查接口的测试关注点
-- 可复用到 API workbench、批量执行或专项测试设计
+- Describe testing concerns for typical create, read, update, and delete APIs
+- Reuse in the API workbench, batch execution, or specialized test design
 
-## 关注点
+## Areas to check
 
-- 鉴权与上下文
-- 输入校验与错误码
-- 创建、查询、更新、删除的状态迁移
-- 幂等性与回滚
+- Authorization and context
+- Input validation and error codes
+- State transitions for create, read, update, and delete operations
+- Idempotency and rollback
 

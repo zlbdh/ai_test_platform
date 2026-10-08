@@ -1,16 +1,16 @@
-# 表单校验策略
+# Form validation strategy
 
-这是 UI 与接口联动场景下的通用技能模板。
+This general-purpose skill template covers linked UI and API behavior.
 
-## 当前用途
+## Current uses
 
-- 覆盖前端输入限制、后端字段约束和错误提示联动
-- 适用于基础编排和专项表单测试
+- Cover frontend input restrictions, backend field constraints, and related error messages
+- Use for basic orchestration and specialized form tests
 
-## 关注点
+## Areas to check
 
-- 必填、长度、格式、边界值
-- 国际化提示
-- 前后端校验一致性
-- 非法输入下的恢复路径
+- Required fields, length, format, and boundary values
+- Localized messages
+- Consistency between frontend and backend validation
+- Recovery paths after invalid input
 

@@ -1,6 +1,6 @@
 """
-API 测试工具
-用于接口测试、参数生成、安全扫描等
+API testing tools
+For API testing, parameter generation, security scanning, and related tasks
 """
 from typing import Dict, Any, List, Optional
 from langchain_core.tools import tool
@@ -11,24 +11,24 @@ from skills.schemathesis_integration import fuzz_with_schemathesis
 
 
 @tool
-def call_api(method: str, endpoint: str, params: Optional[Dict] = None, 
+def call_api(method: str, endpoint: str, params: Optional[Dict] = None,
               headers: Optional[Dict] = None, body: Optional[Dict] = None) -> Dict[str, Any]:
     """
-    调用 API 接口
-    
+    Call an API endpoint
+
     Args:
-        method: HTTP 方法 (GET, POST, PUT, DELETE)
-        endpoint: API 端点路径
-        params: URL 参数
-        headers: 请求头
-        body: 请求体
-        
+        method: HTTP method (GET, POST, PUT, DELETE)
+        endpoint: API endpoint path
+        params: URL parameters
+        headers: Request headers
+        body: Request body
+
     Returns:
-        API 响应结果
+        API response result
     """
     try:
         url = f"{Config.API_BASE_URL}{endpoint}"
-        
+
         response = requests.request(
             method=method.upper(),
             url=url,
@@ -37,7 +37,7 @@ def call_api(method: str, endpoint: str, params: Optional[Dict] = None,
             json=body,
             timeout=Config.API_TIMEOUT
         )
-        
+
         return {
             "status_code": response.status_code,
             "headers": dict(response.headers),
@@ -51,22 +51,22 @@ def call_api(method: str, endpoint: str, params: Optional[Dict] = None,
 @tool
 def parse_swagger(swagger_url: str) -> Dict[str, Any]:
     """
-    解析 Swagger/OpenAPI 文档
-    
+    Parse a Swagger/OpenAPI document
+
     Args:
-        swagger_url: Swagger JSON 文档的 URL
-        
+        swagger_url: URL of the Swagger JSON document
+
     Returns:
-        解析后的 API 信息
+        Parsed API information
     """
     try:
         response = requests.get(swagger_url, timeout=Config.API_TIMEOUT)
         swagger_doc = response.json()
-        
-        # 提取所有端点
+
+        # Extract all endpoints
         endpoints = []
         paths = swagger_doc.get("paths", {})
-        
+
         for path, methods in paths.items():
             for method, details in methods.items():
                 endpoints.append({
@@ -77,7 +77,7 @@ def parse_swagger(swagger_url: str) -> Dict[str, Any]:
                     "requestBody": details.get("requestBody", {}),
                     "responses": details.get("responses", {})
                 })
-        
+
         return {
             "info": swagger_doc.get("info", {}),
             "endpoints": endpoints,
@@ -90,30 +90,30 @@ def parse_swagger(swagger_url: str) -> Dict[str, Any]:
 @tool
 def generate_test_data(data_type: str, count: int = 1, include_boundary: bool = True) -> List[Dict[str, Any]]:
     """
-    生成测试数据（正常值、边界值、异常值）- 增强版
-    
+    Generate test data (normal, boundary, and invalid values) - enhanced version
+
     Args:
-        data_type: 数据类型 (email, phone, number, string, sql_injection, xss, integer, float, date, url)
-        count: 生成数量
-        include_boundary: 是否包含边界值
-        
+        data_type: Data type (email, phone, number, string, sql_injection, xss, integer, float, date, url)
+        count: Number to generate
+        include_boundary: Whether to include boundary values
+
     Returns:
-        生成的测试数据列表
+        List of generated test data
     """
     test_data = []
-    
+
     for i in range(count):
         if data_type == "email":
             test_data.append({"value": f"test{i}@example.com", "type": "normal"})
             test_data.append({"value": "invalid-email", "type": "invalid"})
             test_data.append({"value": f"test+{i}@example.co.uk", "type": "normal"})
             if include_boundary:
-                test_data.append({"value": "a" * 250 + "@example.com", "type": "boundary"})  # 超长邮箱
+                test_data.append({"value": "a" * 250 + "@example.com", "type": "boundary"})  # Overly long email address
         elif data_type == "phone":
             test_data.append({"value": f"1380013800{i}", "type": "normal"})
             test_data.append({"value": "abc", "type": "invalid"})
             if include_boundary:
-                test_data.append({"value": "1" * 20, "type": "boundary"})  # 超长号码
+                test_data.append({"value": "1" * 20, "type": "boundary"})  # Overly long phone number
         elif data_type == "number" or data_type == "integer":
             test_data.append({"value": 100, "type": "normal"})
             if include_boundary:
@@ -130,8 +130,8 @@ def generate_test_data(data_type: str, count: int = 1, include_boundary: bool = 
         elif data_type == "string":
             test_data.append({"value": f"test_string_{i}", "type": "normal"})
             if include_boundary:
-                test_data.append({"value": "", "type": "boundary"})  # 空字符串
-                test_data.append({"value": "A" * 10000, "type": "boundary"})  # 超长字符串
+                test_data.append({"value": "", "type": "boundary"})  # Empty string
+                test_data.append({"value": "A" * 10000, "type": "boundary"})  # Overly long string
                 test_data.append({"value": "测试中文", "type": "normal"})  # Unicode
         elif data_type == "sql_injection":
             test_data.append({"value": "1' OR '1'='1", "type": "attack"})
@@ -154,27 +154,27 @@ def generate_test_data(data_type: str, count: int = 1, include_boundary: bool = 
                 test_data.append({"value": "javascript:alert(1)", "type": "attack"})
         else:
             test_data.append({"value": f"test_string_{i}", "type": "normal"})
-    
-    return test_data[:count * (3 if include_boundary else 2)]  # 返回正常值、边界值和异常值
+
+    return test_data[:count * (3 if include_boundary else 2)]  # Return normal, boundary, and invalid values
 
 
 @tool
 def fuzz_api(endpoint: str, method: str = "POST", base_params: Optional[Dict] = None) -> List[Dict[str, Any]]:
     """
-    对 API 进行模糊测试（Fuzzing）
-    
+    Perform API fuzz testing
+
     Args:
-        endpoint: API 端点
-        method: HTTP 方法
-        base_params: 基础参数
-        
+        endpoint: API endpoint
+        method: HTTP method
+        base_params: Base parameters
+
     Returns:
-        模糊测试结果列表
+        List of fuzz testing results
     """
     results = []
     base_params = base_params or {}
-    
-    # 生成各种攻击载荷
+
+    # Generate various attack payloads
     attack_payloads = [
         {"type": "sql_injection", "value": "1' OR '1'='1"},
         {"type": "xss", "value": "<script>alert(1)</script>"},
@@ -183,7 +183,7 @@ def fuzz_api(endpoint: str, method: str = "POST", base_params: Optional[Dict] = 
         {"type": "null_byte", "value": "\x00"},
         {"type": "overflow", "value": "A" * 10000},
     ]
-    
+
     for payload in attack_payloads:
         test_params = {**base_params, "test_field": payload["value"]}
         result = call_api.invoke({
@@ -191,76 +191,76 @@ def fuzz_api(endpoint: str, method: str = "POST", base_params: Optional[Dict] = 
             "endpoint": endpoint,
             "body": test_params
         })
-        
+
         results.append({
             "payload_type": payload["type"],
             "payload": payload["value"],
             "response": result,
             "vulnerable": result.get("status_code", 0) == 200 and "error" not in str(result).lower()
         })
-    
+
     return results
 
 
 @tool
 def check_auth(endpoint: str, method: str = "GET", requires_auth: bool = True) -> Dict[str, Any]:
     """
-    检查接口是否需要认证
-    
+    Check whether an endpoint requires authentication
+
     Args:
-        endpoint: API 端点
-        method: HTTP 方法
-        requires_auth: 是否应该需要认证
-        
+        endpoint: API endpoint
+        method: HTTP method
+        requires_auth: Whether authentication should be required
+
     Returns:
-        认证检查结果
+        Authentication check result
     """
-    # 不带 token 的请求
+    # Request without a token
     response_no_auth = call_api.invoke({
         "method": method,
         "endpoint": endpoint
     })
-    
-    # 带无效 token 的请求
+
+    # Request with an invalid token
     response_invalid_auth = call_api.invoke({
         "method": method,
         "endpoint": endpoint,
         "headers": {"Authorization": "Bearer invalid_token"}
     })
-    
+
     no_auth_status = response_no_auth.get("status_code", 0)
     invalid_auth_status = response_invalid_auth.get("status_code", 0)
-    
-    # 判断是否存在认证漏洞
+
+    # Determine whether an authentication vulnerability exists
     is_vulnerable = False
     if requires_auth:
-        # 如果应该需要认证，但未认证也能访问，则存在漏洞
+        # Access without authentication is a vulnerability when authentication is required
         if no_auth_status == 200:
             is_vulnerable = True
-    
+
     return {
         "endpoint": endpoint,
         "requires_auth": requires_auth,
         "no_auth_status": no_auth_status,
         "invalid_auth_status": invalid_auth_status,
         "is_vulnerable": is_vulnerable,
-        "vulnerability": "认证绕过漏洞" if is_vulnerable else "正常"
+        "vulnerability": "Authentication bypass vulnerability" if is_vulnerable else "Normal"
     }
 
 
 @tool
-def fuzz_with_schemathesis_tool(swagger_url: str, endpoint: Optional[str] = None, 
+def fuzz_with_schemathesis_tool(swagger_url: str, endpoint: Optional[str] = None,
                                  max_test_cases: int = 50) -> Dict[str, Any]:
     """
-    使用 Schemathesis 进行 API 模糊测试（工具包装）
-    
+    Run API fuzz tests with Schemathesis (tool wrapper)
+
     Args:
-        swagger_url: Swagger 文档 URL
-        endpoint: 可选，指定端点
-        max_test_cases: 最大测试用例数
-        
+        swagger_url: Swagger document URL
+        endpoint: Optional specific endpoint
+        max_test_cases: Maximum test case count
+
     Returns:
-        模糊测试结果
+        Fuzz testing results
     """
     return fuzz_with_schemathesis.invoke({
         "swagger_url": swagger_url,
@@ -272,38 +272,38 @@ def fuzz_with_schemathesis_tool(swagger_url: str, endpoint: Optional[str] = None
 @tool
 def assert_response_schema(response: Dict[str, Any], expected_schema: Dict[str, Any]) -> Dict[str, Any]:
     """
-    基于 JSON Schema 验证响应
-    
+    Validate a response against JSON Schema
+
     Args:
-        response: API 响应（包含 status_code, body 等）
-        expected_schema: 期望的 JSON Schema
-        
+        response: API response (including status_code, body, and other fields)
+        expected_schema: Expected JSON Schema
+
     Returns:
-        验证结果
+        Validation result
     """
     try:
         from jsonschema import validate, ValidationError
-        
+
         body = response.get("body", {})
-        
+
         try:
             validate(instance=body, schema=expected_schema)
             return {
                 "status": "success",
                 "valid": True,
-                "message": "响应符合 Schema"
+                "message": "Response conforms to the schema"
             }
         except ValidationError as e:
             return {
                 "status": "error",
                 "valid": False,
-                "message": f"响应不符合 Schema: {str(e)}",
+                "message": f"Response does not conform to the schema: {str(e)}",
                 "validation_error": str(e)
             }
     except ImportError:
         return {
             "status": "error",
-            "error": "jsonschema 未安装，请运行: pip install jsonschema"
+            "error": "jsonschema is not installed; run: pip install jsonschema"
         }
     except Exception as e:
         return {
@@ -312,13 +312,13 @@ def assert_response_schema(response: Dict[str, Any], expected_schema: Dict[str, 
         }
 
 
-# 工具列表
+# Tool list
 API_TOOLS = [
     call_api,
     parse_swagger,
     generate_test_data,
     fuzz_api,
-    fuzz_with_schemathesis_tool,  # 新增
+    fuzz_with_schemathesis_tool,  # Added
     check_auth,
-    assert_response_schema,  # 新增
+    assert_response_schema,  # Added
 ]

@@ -1,6 +1,6 @@
 """
-Text-to-SQL 转换器
-使用 LLM 将自然语言转换为 SQL 查询
+Text-to-SQL converter
+Use an LLM to convert natural language into SQL queries
 """
 from typing import Dict, Any, Optional
 from langchain_core.tools import tool
@@ -12,7 +12,7 @@ from core.prompts import TEXT_TO_SQL_PROMPT, EXPLAIN_SQL_PROMPT
 
 
 def _get_llm():
-    """获取 LLM 实例"""
+    """Get an LLM instance"""
     return get_llm(fake_responses=[
         "SELECT * FROM orders WHERE user_id = 1 AND status = 'paid'",
         "SELECT COUNT(*) FROM users WHERE created_at > '2024-01-01'",
@@ -23,32 +23,32 @@ def _get_llm():
 @tool
 def query_db_natural_language(natural_language_query: str, table_schema: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """
-    将自然语言查询转换为 SQL
-    
+    Convert a natural-language query to SQL
+
     Args:
-        natural_language_query: 自然语言查询（如"查询张三的订单状态"）
-        table_schema: 可选，表结构信息（帮助生成更准确的 SQL）
-        
+        natural_language_query: Natural-language query (such as "Get Zhang San's order status")
+        table_schema: Optional table schema information (helps generate more accurate SQL)
+
     Returns:
-        包含 SQL 查询的字典
+        Dictionary containing the SQL query
     """
     try:
         llm = _get_llm()
-        
-        # 构建提示
+
+        # Build the prompt
         schema_info = ""
         if table_schema:
-            schema_info = f"\n\n表结构信息：\n{table_schema}"
-        
+            schema_info = f"\n\nTable schema information:\n{table_schema}"
+
         prompt = ChatPromptTemplate.from_template(TEXT_TO_SQL_PROMPT)
-        
+
         chain = prompt | llm | StrOutputParser()
         sql_query = chain.invoke({
             "query": natural_language_query,
             "schema_info": schema_info
         })
-        
-        # 清理 SQL（移除可能的 markdown 代码块）
+
+        # Clean the SQL by removing any Markdown fences
         sql_query = sql_query.strip()
         if sql_query.startswith("```sql"):
             sql_query = sql_query[6:]
@@ -57,7 +57,7 @@ def query_db_natural_language(natural_language_query: str, table_schema: Optiona
         if sql_query.endswith("```"):
             sql_query = sql_query[:-3]
         sql_query = sql_query.strip()
-        
+
         return {
             "status": "success",
             "natural_language": natural_language_query,
@@ -75,22 +75,22 @@ def query_db_natural_language(natural_language_query: str, table_schema: Optiona
 @tool
 def explain_sql(sql_query: str) -> Dict[str, Any]:
     """
-    解释 SQL 查询的含义
-    
+    Explain the meaning of an SQL query
+
     Args:
-        sql_query: SQL 查询语句
-        
+        sql_query: SQL query statement
+
     Returns:
-        SQL 的自然语言解释
+        Natural-language explanation of the SQL
     """
     try:
         llm = _get_llm()
-        
+
         prompt = ChatPromptTemplate.from_template(EXPLAIN_SQL_PROMPT)
-        
+
         chain = prompt | llm | StrOutputParser()
         explanation = chain.invoke({"sql": sql_query})
-        
+
         return {
             "status": "success",
             "sql": sql_query,
@@ -106,32 +106,32 @@ def explain_sql(sql_query: str) -> Dict[str, Any]:
 @tool
 def validate_sql(sql_query: str) -> Dict[str, Any]:
     """
-    验证 SQL 查询的语法
-    
+    Validate SQL query syntax
+
     Args:
-        sql_query: SQL 查询语句
-        
+        sql_query: SQL query statement
+
     Returns:
-        验证结果
+        Validation result
     """
     try:
-        # 简单的 SQL 验证（实际应该使用更专业的 SQL 解析器）
+        # Basic SQL validation (a production implementation should use a dedicated SQL parser)
         sql_upper = sql_query.upper().strip()
-        
-        # 检查基本 SQL 关键字
+
+        # Check for basic SQL keywords
         valid_keywords = ["SELECT", "INSERT", "UPDATE", "DELETE", "FROM", "WHERE", "JOIN"]
         has_keyword = any(keyword in sql_upper for keyword in valid_keywords)
-        
-        # 检查是否有危险的 SQL 操作（在测试环境中）
+
+        # Check for dangerous SQL operations (in the test environment)
         dangerous_keywords = ["DROP", "TRUNCATE", "ALTER", "CREATE", "GRANT", "REVOKE"]
         has_dangerous = any(keyword in sql_upper for keyword in dangerous_keywords)
-        
+
         return {
             "status": "success",
             "sql": sql_query,
             "is_valid": has_keyword and not has_dangerous,
             "has_dangerous_operations": has_dangerous,
-            "warnings": ["包含危险操作，建议检查"] if has_dangerous else []
+            "warnings": ["Contains dangerous operations; review recommended"] if has_dangerous else []
         }
     except Exception as e:
         return {
@@ -140,7 +140,7 @@ def validate_sql(sql_query: str) -> Dict[str, Any]:
         }
 
 
-# 工具列表
+# Tool list
 TEXT_TO_SQL_TOOLS = [
     query_db_natural_language,
     explain_sql,

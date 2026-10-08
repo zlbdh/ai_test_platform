@@ -1,9 +1,9 @@
 name: security-scan
-description: "Web 安全扫描，覆盖 OWASP Top 10 常见漏洞"
+description: "Web security scanning covering common OWASP Top 10 vulnerabilities"
 version: "1.0"
 test_type: security
 target_squad: sec_squad
 tags: [security, xss, injection, owasp]
 preconditions:
-  - "目标为 Web 应用"
-  - "有合法授权进行安全测试"
+  - "The target is a web application"
+  - "Security testing is legally authorized"

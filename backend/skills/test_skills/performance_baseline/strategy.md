@@ -1,16 +1,16 @@
-# 性能基线策略
+# Performance baseline strategy
 
-这是性能类专项测试模板。
+This template supports specialized performance tests.
 
-## 当前用途
+## Current uses
 
-- 定义接口、页面或批量执行的基线指标
-- 为 `performance_runner` 和性能工作台提供检查清单
+- Define baseline metrics for APIs, pages, or batch execution
+- Provide a checklist for `performance_runner` and the performance workbench
 
-## 关注点
+## Areas to check
 
-- 响应时间和吞吐
-- 并发与资源使用
-- 退化阈值
-- 报告留痕
+- Response time and throughput
+- Concurrency and resource use
+- Degradation thresholds
+- Report evidence
 

@@ -1,9 +1,9 @@
 name: performance-baseline
-description: "性能基线测试，建立响应时间和吞吐量基准"
+description: "Performance baseline testing to establish response time and throughput benchmarks"
 version: "1.0"
 test_type: performance
 target_squad: perf_squad
 tags: [performance, baseline, load, response-time]
 preconditions:
-  - "目标系统可通过 HTTP 访问"
-  - "有明确的性能指标要求"
+  - "The target system is accessible over HTTP"
+  - "Performance requirements are clearly defined"

@@ -1,16 +1,16 @@
-# 登录 E2E 策略
+# Login E2E strategy
 
-这是针对认证链路的端到端测试模板。
+This template provides end-to-end testing for authentication flows.
 
-## 当前用途
+## Current uses
 
-- 验证登录、退出、会话续期、权限切换和预认证跳转
-- 可配合 `SessionState`、cookies、auth 数据使用
+- Verify login, logout, session renewal, permission changes, and preauthentication redirects
+- Use with `SessionState`, cookies, and authentication data
 
-## 关注点
+## Areas to check
 
-- 成功登录与失败登录
-- 多角色权限
-- 会话过期
-- 预认证和回跳
+- Successful and failed login
+- Permissions across roles
+- Session expiration
+- Preauthentication and return redirects
 

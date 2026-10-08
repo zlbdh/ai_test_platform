@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 UI Tools (Agent Browser Version)
-使用 agent-browser CLI 统一管理浏览器交互，不再独立维护 Playwright 会话。
+Manage browser interactions centrally through the agent-browser CLI without maintaining a separate Playwright session.
 """
 from typing import Dict, Any, List, Optional
 from langchain_core.tools import tool
@@ -10,33 +10,33 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# 全局开启 Vision Mode 标识 (保留接口兼容性)
-VISION_MODE_ENABLED = True 
+# Global Vision Mode flag (retained for interface compatibility)
+VISION_MODE_ENABLED = True
 
 async def get_page(url: str = None, session_id: str = "default"):
     """
-    兼容性接口：确保浏览器已启动并导航。
-    返回 (None, None) 因为不再暴露 raw page 对象。
+    Compatibility interface: ensure the browser has launched and navigated.
+    Return (None, None) because the raw page object is no longer exposed.
     """
     if url:
         await execute_browser_command("open", [url], session_id)
     else:
-        # 如果没有 URL，只需确保 launch
+        # If there is no URL, only ensure the browser has launched
         await execute_browser_command("launch", [], session_id)
     return None, None
 
 @tool
 async def navigate(url: str, session_id: str = "default") -> Dict[str, Any]:
     """
-    访问指定 URL
+    Navigate to the specified URL
     """
     return await execute_browser_command("open", [url], session_id)
 
 @tool
 async def click_element(selector: str, session_id: str = "default") -> Dict[str, Any]:
     """
-    点击元素
-    selector: 可以是 CSS 选择器，也可以是 Ref ID (如 @e12)
+    Click an element
+    selector: A CSS selector or reference ID (such as @e12)
     """
     # agent-browser click [selector]
     return await execute_browser_command("click", [selector], session_id)
@@ -44,66 +44,66 @@ async def click_element(selector: str, session_id: str = "default") -> Dict[str,
 @tool
 async def fill_input(selector: str, text: str, session_id: str = "default") -> Dict[str, Any]:
     """
-    填写输入框
+    Fill an input field
     """
     return await execute_browser_command("fill", [selector, text], session_id)
 
 @tool
 async def get_element_text(selector: str, session_id: str = "default") -> Dict[str, Any]:
     """
-    获取元素文本
-    注: agent-browser CLI 没有直接的 'get-text' 命令暴露在顶层，
-    但可以通过 evaluate 或 get-by-text 的副作用获得。
-    暂时使用 evaluate 获取。
+    Get element text
+    Note: the agent-browser CLI does not expose a top-level 'get-text' command,
+    but text can be obtained through evaluate or the side effects of get-by-text.
+    Use evaluate for now.
     """
     # JS: document.querySelector('...').innerText
-    # 但我们不知道它是不是 Ref。如果是 @e12，agent-browser 处理不了 document.querySelector('@e12')
-    
-    # 策略：如果是 @Ref，尚不支持 direct text via CLI easily unless we map refs internally.
-    # 查阅 actions.js: handleGetText, handleInnerText
+    # The selector may be a reference. For @e12, agent-browser cannot handle document.querySelector('@e12')
+
+    # Strategy: for @Ref, direct text access through the CLI requires an internal reference mapping.
+    # See actions.js: handleGetText, handleInnerText
     # agent-browser command: "innertext" action
-    # CLI 映射: agent-browser innertext [selector]
-    # 假设我们通过通用 'execute_command' 接口调用 action
-    
-    # 由于 CLI 参数解析是 `action arg1 arg2`，我们需要确认 `innertext` 是否被 CLI parser 支持
-    # 简单调用 internal action
+    # CLI mapping: agent-browser innertext [selector]
+    # Assume actions are called through the general 'execute_command' interface
+
+    # The CLI parses `action arg1 arg2`; confirm that its parser supports `innertext`
+    # Call the internal action directly
     return await execute_browser_command("innertext", [selector], session_id)
 
 @tool
 async def take_screenshot(session_id: str = "default") -> Dict[str, Any]:
     """
-    截图
+    Take a screenshot
     """
     return await execute_browser_command("screenshot", [], session_id)
 
 @tool
 async def get_interactable_elements(session_id: str = "default") -> Dict[str, Any]:
     """
-    获取页面可交互元素 (Snapshot with Refs)
+    Get interactive page elements (snapshot with references)
     """
-    # 对应 agent-browser snapshot
+    # Corresponds to agent-browser snapshot
     result = await execute_browser_command("snapshot", [], session_id)
-    
-    # 格式化返回值以匹配 UIAgent 期望的结构
-    # BrowserSkills 返回 {snapshot: tree, refs: {...}}
-    # UIAgent 期望 {elements: [], refs: []}
-    
+
+    # Format the return value to match the structure expected by UIAgent
+    # BrowserSkills returns {snapshot: tree, refs: {...}}
+    # UIAgent expects {elements: [], refs: []}
+
     if result.get("status") == "error":
         return {"status": "error", "error": result.get("error")}
-        
-    data = result.get("result", result) # 兼容可能的嵌套
-    
-    # 转换 Refs 字典为 List
+
+    data = result.get("result", result) # Support potentially nested results
+
+    # Convert the references dictionary to a list
     refs_list = []
     raw_refs = data.get("refs", {})
     if raw_refs:
         for k, v in raw_refs.items():
             refs_list.append({
                 "index": k,
-                "tagName": v.get("role", "element"), # 简化
+                "tagName": v.get("role", "element"), # Simplified
                 "text": v.get("name", "")
             })
-            
+
     return {
         "status": "success",
         "refs": refs_list,
@@ -114,27 +114,27 @@ async def get_interactable_elements(session_id: str = "default") -> Dict[str, An
 @tool
 async def wait_for_element(selector: str, timeout: int = 5000, session_id: str = "default") -> Dict[str, Any]:
     """
-    等待元素出现
+    Wait for an element to appear
     """
     # agent-browser wait [selector]
-    # CLI 传参可能不支持 kwargs timeout
-    # 尝试: agent-browser wait selector
+    # CLI arguments may not support the timeout keyword argument
+    # Try: agent-browser wait selector
     return await execute_browser_command("wait", [selector], session_id)
 
 @tool
 async def go_back(session_id: str = "default") -> Dict[str, Any]:
-    """后退"""
+    """Go back"""
     return await execute_browser_command("back", [], session_id)
 
 @tool
 async def refresh_page(session_id: str = "default") -> Dict[str, Any]:
-    """刷新"""
+    """Refresh"""
     return await execute_browser_command("reload", [], session_id)
 
-# 兼容性函数 (非 Tool)
+# Compatibility functions (not tools)
 async def extract_dom_structure(session_id: str = "default") -> Dict[str, Any]:
     """
-    获取 DOM 结构 (Async)
+    Get the DOM structure (async)
     """
     # Simply call the snapshot command
     res = await execute_browser_command("snapshot", [], session_id)
@@ -145,7 +145,7 @@ async def extract_dom_structure(session_id: str = "default") -> Dict[str, Any]:
 @tool
 async def get_dom_snapshot(session_id: str = "default") -> Dict[str, Any]:
     """
-    获取 DOM 快照 (Tool Version)
+    Get a DOM snapshot (tool version)
     """
     res = await execute_browser_command("snapshot", [], session_id)
     if res.get("status") == "success":
@@ -157,7 +157,7 @@ async def get_dom_snapshot(session_id: str = "default") -> Dict[str, Any]:
         }
     return {"error": res.get("error")}
 
-# 导出工具列表
+# Export the tool list
 UI_TOOLS = [
     navigate,
     click_element,

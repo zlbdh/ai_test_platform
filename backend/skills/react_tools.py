@@ -33,42 +33,42 @@ async def tool_db_query(sql, context=None):
 
 async def tool_fill(page, target, value, context=None):
     if context: value = resolve_variables(value, context)
-    
+
     # Simple check if target is selector
     selector = target if target.startswith(("#", ".", "//")) else None
-    
+
     if not selector:
          html = await get_clean_html(page)
          selector = await find_selector(html, target)
-         
+
     try:
-        # A. 优先方案 (Text-Based)
-        # 尝试使用 Playwright 的标准选择器进行操作。速度最快。
+        # A. Preferred approach (text-based)
+        # Try standard Playwright selectors for the fastest interaction.
         await page.locator(selector).fill(str(value))
         return f"Filled '{value}' into {target} ({selector})"
     except Exception as e:
-        # B. 兜底方案 (Visual Self-Healing)
-        # 如果标准操作失败（找不到元素/超时），触发视觉自愈。
-        # print("常规填充失败，调用 AI 视觉识别...") 
+        # B. Fallback approach (visual self-healing)
+        # Trigger visual healing if the standard action fails (element not found or timeout).
+        # print("Standard fill failed; calling AI visual recognition...")
         try:
-             # 1. 调用 SoM 分析，获取元素在视觉上的 ID
+             # 1. Call SoM analysis to get the element's visual ID
              som_id = await analyze_with_som(page, target)
              if som_id:
-                 # 2. 使用视觉 ID 反向定位元素并操作
+                 # 2. Use the visual ID to locate and interact with the element
                  await page.fill(f'[data-som-id="{som_id}"]', str(value))
                  return f"Visual Fill Success (SoM ID: {som_id})"
         except Exception:
             pass  # SoM fallback failed
-        # C. 彻底失败
+        # C. All attempts failed
         return f"Failed to fill {target}: {str(e)[:100]}"
 
 async def tool_click(page, target):
     selector = target if target.startswith(("#", ".", "//")) else None
-    
+
     if not selector:
          html = await get_clean_html(page)
          selector = await find_selector(html, target)
-         
+
          # Fallback check immediately if selector is empty (meaning pure text search failed)
          if not selector:
              try:
@@ -78,10 +78,10 @@ async def tool_click(page, target):
                      return f"Visual Click Success (SoM ID: {som_id})"
              except Exception:
                  pass  # SoM click fallback failed
-    
+
     # Special fix for Baidu search button if applicable
     if selector == "#kw" and "百度" in target: selector = "#su"
-    
+
     try:
         await page.locator(selector).click(timeout=3000)
         return f"Clicked {target} ({selector})"
@@ -100,7 +100,7 @@ async def tool_assert(page, target):
     await asyncio.sleep(1)
     if target.lower() == 'title':
         return f"Page Title is: {await page.title()}"
-    
+
     page_text = await page.inner_text("body")
     if target.lower() in page_text.lower():
         return f"Assertion Passed: Found '{target}' in page."
@@ -114,7 +114,7 @@ async def tool_extract(page, var_name, selector, context):
             if not val: val = await page.locator(selector).first.inner_text()
         else:
             val = "Not Found"
-        
+
         context[var_name] = val
         return f"Extracted {var_name} = {val}"
     except Exception as e:
@@ -124,14 +124,14 @@ async def tool_api_call(method, url, value=None, context=None):
     if context:
         url = resolve_variables(url, context)
         if value: value = resolve_variables(value, context)
-        
+
     json_body = None
     if method in ['POST', 'PUT'] and value and value.strip().startswith('{'):
         try:
             json_body = json.loads(value)
         except json.JSONDecodeError:
             pass  # Not valid JSON, will use as raw value
-            
+
     res = http_request(method, url, json_body=json_body)
     return str(res)
 
@@ -141,7 +141,7 @@ async def tool_visual_check(page, snapshot_name):
     """
     if not snapshot_name:
         return "Error: Snapshot name is required for visual check."
-    
+
     result = await assert_visual_snapshot(page, snapshot_name)
     # Return full dict to be handled by agent
     return result
@@ -150,7 +150,7 @@ async def tool_ask_human(reason):
     from core.shared import SharedBrowserState
 
     SharedBrowserState.set_signal("PAUSED", reason=reason)
-    
+
     # Return a message that will be logged
     return f"🚨 Requesting Human Help: {reason}. System PAUSED_FOR_USER."
 
@@ -159,16 +159,16 @@ async def tool_verify_db(table, condition, expected_count=None):
     res = snapshot_db(table, condition)
     if res['status'] == 'error':
         return f"DB Verification Error: {res['error']}"
-        
+
     count = res.get('count', 0)
     data = res.get('data', [])
-    
+
     if expected_count is not None:
         if count == int(expected_count):
              return f"DB Verification PASSED. Found {count} records in {table} where {condition}."
         else:
              return f"DB Verification FAILED. Expected {expected_count}, found {count}. Data: {data[:3]}"
-             
+
     return f"DB Query Result: Found {count} records. Data: {data[:3]}..."
 
 async def tool_backup_db(table_name="all"):

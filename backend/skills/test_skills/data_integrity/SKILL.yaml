@@ -1,9 +1,9 @@
 name: data-integrity
-description: "数据完整性验证，检查数据库一致性和约束"
+description: "Data integrity validation checking database consistency and constraints"
 version: "1.0"
 test_type: database
 target_squad: data_squad
 tags: [database, integrity, consistency, sql]
 preconditions:
-  - "有数据库连接权限"
-  - "了解数据表结构"
+  - "Database connection permission is available"
+  - "The database table structure is known"

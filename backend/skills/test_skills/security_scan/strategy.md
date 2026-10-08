@@ -1,16 +1,16 @@
-# 安全扫描策略
+# Security scanning strategy
 
-这是安全测试技能模板。
+This is a security testing skill template.
 
-## 当前用途
+## Current uses
 
-- 指导常见安全探测、接口扫描和结果分级
-- 适用于 `security_scanner`、发布风险评估和专项安全页
+- Guide common security probes, API scans, and result classification
+- Use with `security_scanner`, release risk assessment, and the specialized security page
 
-## 关注点
+## Areas to check
 
-- 输入攻击面
-- 认证与授权
-- 敏感信息暴露
-- 风险等级与修复建议
+- Input attack surfaces
+- Authentication and authorization
+- Sensitive information exposure
+- Risk severity and remediation recommendations
 

@@ -1,7 +1,7 @@
 """
-数据测试工具
-用于数据库验证、数据一致性检查等
-统一使用 core.db_tools (SQLite / SQLAlchemy) 而非 pymysql
+Data testing tools
+For database validation, data consistency checks, and related tasks
+Use core.db_tools (SQLite / SQLAlchemy) consistently instead of pymysql
 """
 from typing import Dict, Any, List, Optional
 from langchain_core.tools import tool
@@ -13,23 +13,23 @@ from skills.text_to_sql import query_db_natural_language
 @tool
 def execute_query(query: str, params: Optional[Dict] = None) -> List[Dict[str, Any]]:
     """
-    执行 SQL 查询
+    Execute an SQL query
 
     Args:
-        query: SQL 查询语句
-        params: 查询参数（保留接口兼容，当前未启用参数化）
+        query: SQL query statement
+        params: Query parameters (retained for interface compatibility; parameterization is not currently enabled)
 
     Returns:
-        查询结果
+        Query results
     """
     try:
         result = execute_sql(query)
         if result.get("status") == "error":
             return [{"error": result.get("error") or result.get("message", "Unknown error")}]
-        # SELECT 查询返回 data 列表
+        # SELECT queries return the data list
         if "data" in result:
             return result["data"]
-        # INSERT/UPDATE/DELETE 返回 affected_rows
+        # INSERT/UPDATE/DELETE return affected_rows
         return [{"affected_rows": result.get("affected_rows", 0)}]
     except Exception as e:
         return [{"error": str(e)}]
@@ -38,15 +38,15 @@ def execute_query(query: str, params: Optional[Dict] = None) -> List[Dict[str, A
 @tool
 def verify_data_consistency(table: str, condition: str, expected_count: int) -> Dict[str, Any]:
     """
-    验证数据一致性
+    Validate data consistency
 
     Args:
-        table: 表名
-        condition: WHERE 条件
-        expected_count: 期望的记录数
+        table: Table name
+        condition: WHERE condition
+        expected_count: Expected record count
 
     Returns:
-        验证结果
+        Validation result
     """
     try:
         query = f"SELECT COUNT(*) as count FROM {table} WHERE {condition}"
@@ -65,7 +65,7 @@ def verify_data_consistency(table: str, condition: str, expected_count: int) -> 
             "expected_count": expected_count,
             "actual_count": actual_count,
             "is_consistent": is_consistent,
-            "status": "一致" if is_consistent else "不一致"
+            "status": "consistent" if is_consistent else "inconsistent"
         }
     except Exception as e:
         return {"status": "error", "error": str(e)}
@@ -74,16 +74,16 @@ def verify_data_consistency(table: str, condition: str, expected_count: int) -> 
 @tool
 def check_table_exists(table: str) -> bool:
     """
-    检查表是否存在
+    Check whether a table exists
 
     Args:
-        table: 表名
+        table: Table name
 
     Returns:
-        表是否存在
+        Whether the table exists
     """
     try:
-        # SQLite 兼容：查询 sqlite_master
+        # SQLite compatibility: query sqlite_master
         query = f"SELECT name FROM sqlite_master WHERE type='table' AND name='{table}'"
         result = execute_sql(query)
         if result.get("status") == "error":
@@ -96,16 +96,16 @@ def check_table_exists(table: str) -> bool:
 @tool
 def get_table_schema(table: str) -> List[Dict[str, Any]]:
     """
-    获取表结构
+    Get the table schema
 
     Args:
-        table: 表名
+        table: Table name
 
     Returns:
-        表结构信息
+        Table schema information
     """
     try:
-        # SQLite 兼容：使用 PRAGMA table_info
+        # SQLite compatibility: use PRAGMA table_info
         query = f"PRAGMA table_info({table})"
         result = execute_sql(query)
         if result.get("status") == "error":
@@ -118,14 +118,14 @@ def get_table_schema(table: str) -> List[Dict[str, Any]]:
 @tool
 def cleanup_test_data(table: str, condition: str) -> Dict[str, Any]:
     """
-    清理测试数据
+    Clean up test data
 
     Args:
-        table: 表名
-        condition: WHERE 条件
+        table: Table name
+        condition: WHERE condition
 
     Returns:
-        清理结果
+        Cleanup result
     """
     try:
         query = f"DELETE FROM {table} WHERE {condition}"
@@ -146,15 +146,15 @@ def cleanup_test_data(table: str, condition: str) -> Dict[str, Any]:
 @tool
 def verify_transaction(table: str, transaction_id: str, expected_status: str) -> Dict[str, Any]:
     """
-    验证事务状态（如下单后订单状态）
+    Validate transaction status (such as an order's status after placement)
 
     Args:
-        table: 表名（如 orders）
-        transaction_id: 事务 ID（如 order_id）
-        expected_status: 期望的状态（如 'paid', 'pending'）
+        table: Table name (such as orders)
+        transaction_id: Transaction ID (such as order_id)
+        expected_status: Expected status (such as 'paid' or 'pending')
 
     Returns:
-        验证结果
+        Validation result
     """
     try:
         query = f"SELECT * FROM {table} WHERE id = '{transaction_id}'"
@@ -167,7 +167,7 @@ def verify_transaction(table: str, transaction_id: str, expected_status: str) ->
         if not data:
             return {
                 "status": "error",
-                "message": f"未找到 ID 为 {transaction_id} 的记录"
+                "message": f"No record found with ID {transaction_id}"
             }
 
         record = data[0]
@@ -188,17 +188,17 @@ def verify_transaction(table: str, transaction_id: str, expected_status: str) ->
 @tool
 def query_db_natural_language_tool(natural_language_query: str, table_schema: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """
-    使用自然语言查询数据库（Text-to-SQL）
+    Query the database using natural language (Text-to-SQL)
 
     Args:
-        natural_language_query: 自然语言查询（如"查询张三的订单状态"）
-        table_schema: 可选，表结构信息
+        natural_language_query: Natural-language query (such as "Get Zhang San's order status")
+        table_schema: Optional table schema information
 
     Returns:
-        查询结果
+        Query results
     """
     try:
-        # 转换为 SQL
+        # Convert to SQL
         sql_result = query_db_natural_language.invoke({
             "natural_language_query": natural_language_query,
             "table_schema": table_schema
@@ -209,7 +209,7 @@ def query_db_natural_language_tool(natural_language_query: str, table_schema: Op
 
         sql_query = sql_result.get("sql", "")
 
-        # 执行 SQL
+        # Execute SQL
         query_result = execute_sql(sql_query)
         if query_result.get("status") == "error":
             return {"status": "error", "error": query_result.get("error"), "sql": sql_query}
@@ -231,7 +231,7 @@ def query_db_natural_language_tool(natural_language_query: str, table_schema: Op
         }
 
 
-# 工具列表
+# Tool list
 DATA_TOOLS = [
     execute_query,
     query_db_natural_language_tool,
