@@ -1,6 +1,6 @@
 """
-QA 工作流 - LangGraph 主流程
-协调各个 Agent 执行测试任务
+QA workflow - main LangGraph flow
+Coordinate agents to execute testing tasks
 """
 import logging
 from typing import Dict, Any, List, TypedDict, Annotated, Literal
@@ -23,11 +23,11 @@ from workflows.subgraphs import get_subgraph
 
 
 class QAWorkflow:
-    """QA 平台工作流"""
+    """QA platform workflow"""
     
     def __init__(self):
-        """初始化 QA 工作流"""
-        # 初始化 Agents
+        """Initialize the QA workflow"""
+        # Initialize agents
         self.master_agent = MasterAgent()
         self.ui_agent = UIAgent()
         self.api_agent = APIAgent()
@@ -36,14 +36,14 @@ class QAWorkflow:
         self.rca_agent = RCAAgent()
         self.inspector = InspectorAgent()
         
-        # 初始化图
+        # Initialize the graph
         self.graph = self._build_graph()
     
     def _build_graph(self) -> StateGraph:
-        """构建 LangGraph"""
+        """Build the LangGraph"""
         workflow = StateGraph(QAState)
         
-        # 添加节点
+        # Add nodes
         workflow.add_node("plan_test", self._plan_test_node)
         workflow.add_node("ui_test", self._ui_test_node)
         workflow.add_node("api_test", self._api_test_node)
@@ -53,10 +53,10 @@ class QAWorkflow:
         workflow.add_node("rca_analysis", self._rca_analysis_node)
         workflow.add_node("generate_report", self._generate_report_node)
 
-        # 设置入口点
+        # Set the entry point
         workflow.set_entry_point("plan_test")
 
-        # 添加边（基于计划动态路由）
+        # Add edges with dynamic routing based on the plan
         workflow.add_conditional_edges(
             "plan_test",
             self._route_after_planning,
@@ -69,11 +69,11 @@ class QAWorkflow:
             }
         )
 
-        # ui_test / api_test 完成后先经过 inspect 节点审查
+        # Review completed ui_test / api_test results in the inspect node
         workflow.add_edge("ui_test", "inspect")
         workflow.add_edge("api_test", "inspect")
 
-        # inspect 节点后根据审查结果路由
+        # Route after the inspect node based on the review result
         workflow.add_conditional_edges(
             "inspect",
             self._route_after_inspect,
@@ -97,21 +97,21 @@ class QAWorkflow:
         
         return workflow.compile()
     
-    # ================= 节点函数 =================
+    # ================= Node functions =================
     
     def _plan_test_node(self, state: QAState) -> QAState:
-        """规划测试节点"""
-        logger.info("[Workflow] 正在规划测试任务...")
+        """Test planning node"""
+        logger.info("[Workflow] Planning the test task...")
         scenario = state.get("test_scenario", "")
         
-        # 调用 Master Agent 规划任务
+        # Call the Master Agent to plan the task
         plan = self.master_agent.plan_test(scenario)
         
-        # 更新状态
+        # Update state
         state["task_description"] = plan.get("plan_text", "")
         state["current_step"] = "planning"
         
-        # 确定执行顺序
+        # Determine execution order
         steps = []
         agents = plan.get("required_agents", [])
         
@@ -124,32 +124,32 @@ class QAWorkflow:
         if "ops_agent" in agents:
             steps.append("ops_analysis")
         
-        # 保存计划步骤用于路由
-        # 注意：这里我们使用一个临时的 metadata 字段，实际应该在 State 定义中添加
-        state["planned_steps"] = steps  # 需要在 QAState 中添加此字段或使用 safe get
+        # Save planned steps for routing
+        # Note: this uses a temporary metadata field that should be added to the State definition
+        state["planned_steps"] = steps  # Add this field to QAState or use a safe get
         
         return state
     
     def _ui_test_node(self, state: QAState) -> QAState:
-        """UI 测试节点"""
-        logger.info("[Workflow] 执行 UI 测试...")
+        """UI testing node"""
+        logger.info("[Workflow] Run UI tests...")
         scenario = state.get("test_scenario", "")
         
         try:
-            # 调用 UI Agent
-            # 这里调用 process_request 方法，它内部处理了任务分解和执行
-            # 注意：实际调用可能需要根据 UIAgent 的接口调整
+            # Call the UI Agent
+            # Call process_request, which handles task decomposition and execution internally
+            # Note: the actual call may need adjustment to match the UIAgent interface
             result = self.ui_agent.run(state)
             
-            # 记录结果
+            # Record results
             if "ui_results" not in state:
                 state["ui_results"] = []
             
-            # 这里的 result 可能是整个 state，也可能是部分结果，根据 UIAgent 实现
-            # 假设 UIAgent.run 更新了 state 并返回
+            # Depending on the UIAgent implementation, result may contain the entire state or a partial result
+            # Assume UIAgent.run updates and returns state
             
             if state.get("ui_results") and any(r.get("status") == "error" for r in state["ui_results"]):
-                state["errors"].append({"step": "ui_test", "error": "UI 测试包含失败步骤"})
+                state["errors"].append({"step": "ui_test", "error": "UI tests contain failed steps"})
             
             state["completed_steps"].append("ui_test")
             
@@ -160,15 +160,15 @@ class QAWorkflow:
         return state
     
     def _api_test_node(self, state: QAState) -> QAState:
-        """API 测试节点"""
-        logger.info("[Workflow] 执行 API 测试...")
+        """API testing node"""
+        logger.info("[Workflow] Run API tests...")
         scenario = state.get("test_scenario", "")
         
         try:
-            # 调用 API Agent
+            # Call the API Agent
             result = self.api_agent.execute_test(scenario)
             
-            # 记录结果
+            # Record results
             if "api_results" not in state:
                 state["api_results"] = []
             state["api_results"].append(result)
@@ -186,13 +186,13 @@ class QAWorkflow:
         return state
     
     def _inspect_node(self, state: QAState) -> QAState:
-        """Inspector 视觉质检节点 — 审查 ui_test/api_test 的执行结果截图"""
-        logger.info("[Workflow] Inspector 视觉质检...")
+        """Inspector visual quality node — review screenshots from ui_test/api_test execution"""
+        logger.info("[Workflow] Inspector visual quality review...")
 
         if "inspection_results" not in state:
             state["inspection_results"] = []
 
-        # 收集最近一轮测试产生的截图结果
+        # Collect screenshots from the latest round of tests
         results_to_inspect = []
         for r in state.get("ui_results", []):
             if isinstance(r, dict) and r.get("screenshot"):
@@ -202,7 +202,7 @@ class QAWorkflow:
                 results_to_inspect.append(r)
 
         if not results_to_inspect:
-            logger.info("[Workflow] Inspector: 无截图可审查，跳过")
+            logger.info("[Workflow] Inspector: No screenshots to review; skipping")
             return state
 
         for result in results_to_inspect:
@@ -227,14 +227,14 @@ class QAWorkflow:
                 state["inspection_results"].append(inspection_record)
 
                 if not inspection.passed:
-                    error_msg = f"Inspector 驳回: {inspection.reason}"
+                    error_msg = f"Inspector rejected: {inspection.reason}"
                     if inspection.anomalies:
-                        error_msg += f" | 异常: {', '.join(inspection.anomalies)}"
+                        error_msg += f" | Anomalies: {', '.join(inspection.anomalies)}"
                     state["errors"].append({"step": "inspect", "error": error_msg})
                     logger.warning(f"[Workflow] {error_msg}")
 
             except Exception as e:
-                logger.warning(f"[Workflow] Inspector 审查异常 (auto-passing): {e}")
+                logger.warning(f"[Workflow] Inspector review error (auto-passing): {e}")
                 state["inspection_results"].append({
                     "step": result.get("step_desc", "unknown"),
                     "passed": True,
@@ -246,15 +246,15 @@ class QAWorkflow:
         return state
 
     def _data_verification_node(self, state: QAState) -> QAState:
-        """数据验证节点"""
-        logger.info("[Workflow] 执行数据验证...")
+        """Data validation node"""
+        logger.info("[Workflow] Run data validation...")
         scenario = state.get("test_scenario", "")
         
         try:
-            # 调用 Data Agent
+            # Call the Data Agent
             result = self.data_agent.execute_test(scenario)
             
-            # 记录结果
+            # Record results
             if "data_results" not in state:
                 state["data_results"] = []
             state["data_results"].append(result)
@@ -272,15 +272,15 @@ class QAWorkflow:
         return state
     
     def _ops_analysis_node(self, state: QAState) -> QAState:
-        """运维分析节点"""
-        logger.info("[Workflow] 执行运维分析...")
+        """Operations analysis node"""
+        logger.info("[Workflow] Run operations analysis...")
         
-        # 只有在有错误或显式要求时才执行 Ops 分析
+        # Run Ops analysis only when errors exist or it is explicitly requested
         if not state.get("errors") and "ops_analysis" not in state.get("planned_steps", []):
             return state
             
         try:
-            # 收集之前的错误
+            # Collect previous errors
             errors = state.get("errors", [])
             log_path = Config.LOG_FILE_PATH
             
@@ -289,12 +289,12 @@ class QAWorkflow:
                 diagnosis = self.ops_agent.diagnose_error(str(error.get("error", "")), log_path)
                 results.append(diagnosis)
             
-            # 如果没有显式错误但被要求运行，则分析最近的日志
+            # If analysis is requested without explicit errors, analyze the latest logs
             if not errors:
                 analysis = self.ops_agent.analyze_logs(log_path)
                 results.append(analysis)
             
-            # 记录结果
+            # Record results
             if "ops_results" not in state:
                 state["ops_results"] = []
             state["ops_results"].extend(results)
@@ -302,23 +302,23 @@ class QAWorkflow:
             state["completed_steps"].append("ops_analysis")
             
         except Exception as e:
-            state["warnings"].append(f"Ops 分析失败: {str(e)}")
+            state["warnings"].append(f"Ops analysis failed: {str(e)}")
         
         return state
         
     def _rca_analysis_node(self, state: QAState) -> QAState:
-        """根因分析节点"""
-        logger.info("[Workflow] 执行根因分析...")
+        """Root cause analysis node"""
+        logger.info("[Workflow] Run root cause analysis...")
         errors = state.get("errors", [])
         
         if not errors:
             return state
             
         try:
-            # 使用 RCA Agent 生成报告
+            # Use the RCA Agent to generate a report
             report = self.rca_agent.generate_root_cause_report(errors, Config.LOG_FILE_PATH)
             
-            # 记录结果（作为特殊的 ops result）
+            # Record the result as a special ops result
             if "ops_results" not in state:
                 state["ops_results"] = []
             
@@ -327,32 +327,32 @@ class QAWorkflow:
                 "report": report
             })
             
-            # 如果找到根因，添加到 final_report 的建议中（将在 generate_report 节点处理）
+            # If a root cause is found, add it to final_report recommendations in the generate_report node
             
         except Exception as e:
-            state["warnings"].append(f"RCA 分析失败: {str(e)}")
+            state["warnings"].append(f"RCA analysis failed: {str(e)}")
             
         return state
     
     def _generate_report_node(self, state: QAState) -> QAState:
-        """生成报告节点"""
-        logger.info("[Workflow] 生成测试报告...")
+        """Report generation node"""
+        logger.info("[Workflow] Generate the test report...")
         
         report = self.master_agent.generate_report(state)
         state["final_report"] = report
         
         return state
     
-    # ================= 路由函数 =================
+    # ================= Routing functions =================
     
     def _route_after_planning(self, state: QAState) -> Literal["ui", "api", "data", "ops", "end"]:
-        """规划后的路由"""
+        """Route after planning"""
         planned_steps = state.get("planned_steps", [])
         
         if not planned_steps:
             return "end"
             
-        # 简单的顺序路由：UI -> API -> Data -> Ops
+        # Simple sequential routing: UI -> API -> Data -> Ops
         if "ui_test" in planned_steps:
             return "ui"
         elif "api_test" in planned_steps:
@@ -365,8 +365,8 @@ class QAWorkflow:
             return "end"
     
     def _route_after_inspect(self, state: QAState) -> Literal["next", "data", "ops", "rca", "end"]:
-        """inspect 节点后的路由：驳回 → RCA，通过 → 继续下一步"""
-        # 如果 Inspector 发现异常（errors 中有 inspect 来源的错误），触发 RCA
+        """Route after inspection: rejection → RCA; approval → next step"""
+        # Trigger RCA if Inspector detects anomalies (errors contains an inspect error)
         inspect_errors = [e for e in state.get("errors", []) if e.get("step") == "inspect"]
         if inspect_errors:
             has_rca = any(
@@ -376,11 +376,11 @@ class QAWorkflow:
             if not has_rca:
                 return "rca"
 
-        # 正常流程：根据最近完成的测试步骤决定下一步
+        # Normal flow: choose the next step based on the most recently completed test step
         completed = state.get("completed_steps", [])
         planned = state.get("planned_steps", [])
 
-        # 找到最近完成的测试步骤（ui_test 或 api_test）
+        # Find the most recently completed test step (ui_test or api_test)
         last_test = ""
         for step in reversed(completed):
             if step in ("ui_test", "api_test"):
@@ -403,14 +403,14 @@ class QAWorkflow:
         return "end"
 
     def _route_after_step(self, state: QAState) -> Literal["next", "data", "ops", "rca", "end"]:
-        """步骤后的路由"""
+        """Route after a step"""
         current_step = state.get("completed_steps", [])[-1] if state.get("completed_steps") else ""
         failed_steps = state.get("failed_steps", [])
         
-        # 如果当前步骤失败，触发 RCA
+        # Trigger RCA if the current step failed
         if current_step in failed_steps or (state.get("errors") and len(state["errors"]) > 0):
-            # 只有当还没做过 RCA 时才做
-            # 简单的检查方式：看 ops_results 中是否有 rca_report
+            # Run RCA only if it has not already run
+            # Simple check: look for rca_report in ops_results
             has_rca = False
             if state.get("ops_results"):
                 for res in state["ops_results"]:
@@ -421,7 +421,7 @@ class QAWorkflow:
             if not has_rca:
                 return "rca"
         
-        # 正常流程路由
+        # Normal flow routing
         planned_steps = state.get("planned_steps", [])
         
         if current_step == "ui_test":
@@ -446,13 +446,13 @@ class QAWorkflow:
     
     def run(self, test_scenario: str) -> Dict[str, Any]:
         """
-        运行 QA 工作流
+        Run the QA workflow
         
         Args:
-            test_scenario: 测试场景
+            test_scenario: Test scenario
             
         Returns:
-            执行结果
+            Execution result
         """
         initial_state: QAState = {
             "test_scenario": test_scenario,
@@ -477,11 +477,11 @@ class QAWorkflow:
         final_state = self.graph.invoke(initial_state)
         return final_state.get("final_report", {})
 
-# 全局实例
+# Global instance
 _qa_workflow = None
 
 def get_qa_workflow() -> QAWorkflow:
-    """获取 QA 工作流单例"""
+    """Get the QA workflow singleton"""
     global _qa_workflow
     if _qa_workflow is None:
         _qa_workflow = QAWorkflow()

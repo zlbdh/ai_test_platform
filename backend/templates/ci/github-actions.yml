@@ -1,10 +1,10 @@
 # ============================================================================
-# AI Test Platform — GitHub Actions 模板
+# AI Test Platform — GitHub Actions template
 #
-# 使用方法:
-# 1. 将此文件复制到你的项目 .github/workflows/ 目录
-# 2. 配置 AITEST_API_URL secret（你的平台地址）
-# 3. 推送代码后自动触发 AI 测试
+# Usage:
+# 1. Copy this file to your project's .github/workflows/ directory
+# 2. Configure the AITEST_API_URL secret with your platform URL
+# 3. Automatically run AI tests when code is pushed
 # ============================================================================
 
 name: AI Test
@@ -14,57 +14,57 @@ on:
     branches: [main, develop]
   pull_request:
     branches: [main]
-  # 支持手动触发
+  # Support manual execution
   workflow_dispatch:
     inputs:
       test_url:
-        description: '测试目标 URL'
+        description: 'Test target URL'
         required: true
         default: 'https://example.com'
       test_goal:
-        description: '测试指令'
+        description: 'Test instructions'
         required: true
-        default: '验证首页正常加载'
+        default: 'Verify that the home page loads correctly'
 
 env:
   AITEST_API_URL: ${{ secrets.AITEST_API_URL || 'http://localhost:8020' }}
 
 jobs:
   ai-test:
-    name: 🤖 AI 端到端测试
+    name: 🤖 AI end-to-end tests
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
     steps:
-      - name: 📥 检出代码
+      - name: 📥 Check out code
         uses: actions/checkout@v4
 
-      - name: 🐍 设置 Python
+      - name: 🐍 Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      - name: 🏥 检查平台健康
+      - name: 🏥 Check platform health
         run: |
-          python aitest.py health || echo "⚠️ 平台未就绪，跳过测试"
+          python aitest.py health || echo "⚠️ Platform is not ready; skipping tests"
 
-      - name: 🚀 执行 AI 测试
+      - name: 🚀 Run AI tests
         run: |
           python aitest.py run \
             --url "${{ github.event.inputs.test_url || env.DEFAULT_URL || 'https://example.com' }}" \
-            --goal "${{ github.event.inputs.test_goal || '验证首页正常加载并检查关键元素' }}" \
+            --goal "${{ github.event.inputs.test_goal || 'Verify that the home page loads correctly and check key elements' }}" \
             --wait \
             --timeout 120 \
             --output junit
 
-      - name: 📊 上传测试报告
+      - name: 📊 Upload test reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: ai-test-results
           path: test-results-*.xml
 
-      - name: 📋 发布测试结果
+      - name: 📋 Publish test results
         if: always()
         uses: mikepenz/action-junit-report@v4
         with:
@@ -72,9 +72,9 @@ jobs:
           fail_on_failure: true
           detailed_summary: true
 
-  # ── 可选: 部署后回归测试 ──
+  # ── Optional: regression tests after deployment ──
   regression-test:
-    name: 🔄 部署后回归
+    name: 🔄 Regression after deployment
     needs: [ai-test]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -85,17 +85,17 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: 🔄 执行回归测试套件
+      - name: 🔄 Run the regression test suite
         run: |
           python aitest.py run \
             --url "${{ secrets.STAGING_URL || 'https://staging.example.com' }}" \
-            --goal "执行完整回归测试：首页、登录、搜索、个人中心" \
+            --goal "Run a full regression test: home page, login, search, and account page" \
             --mode deep \
             --wait \
             --timeout 300 \
             --output junit
 
-      - name: 📊 上传回归报告
+      - name: 📊 Upload regression reports
         if: always()
         uses: actions/upload-artifact@v4
         with:

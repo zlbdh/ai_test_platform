@@ -1,5 +1,5 @@
 # ============================================================================
-# AI Test Platform — GitLab CI 模板
+# AI Test Platform — GitLab CI template
 # ============================================================================
 
 variables:
@@ -16,7 +16,7 @@ ai-test:
     - python aitest.py health
     - python aitest.py run
         --url "${TEST_URL:-https://example.com}"
-        --goal "${TEST_GOAL:-验证首页正常加载}"
+        --goal "${TEST_GOAL:-Verify that the home page loads correctly}"
         --wait --timeout 120 --output junit
   artifacts:
     when: always

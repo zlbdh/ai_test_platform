@@ -1,6 +1,6 @@
 """
-API 模糊测试子图 - LangGraph 子图
-自动生成攻击载荷，持续测试直到找到漏洞
+API fuzzing subgraph - LangGraph subgraph
+Automatically generate attack payloads and continue testing until a vulnerability is found
 """
 import logging
 from typing import TypedDict, Annotated, Literal
@@ -12,43 +12,43 @@ from skills.schemathesis_integration import fuzz_with_schemathesis
 
 
 class FuzzingState(TypedDict):
-    """模糊测试状态"""
-    endpoint: Annotated[str, "API 端点"]
-    method: Annotated[str, "HTTP 方法"]
-    base_params: Annotated[dict, "基础参数"]
-    attack_payloads: Annotated[list, "攻击载荷列表"]
-    current_payload_index: Annotated[int, "当前载荷索引"]
-    test_results: Annotated[list, "测试结果列表"]
-    vulnerabilities: Annotated[list, "发现的漏洞列表"]
-    max_iterations: Annotated[int, "最大迭代次数"]
-    current_iteration: Annotated[int, "当前迭代次数"]
+    """Fuzzing state"""
+    endpoint: Annotated[str, "API endpoint"]
+    method: Annotated[str, "HTTP method"]
+    base_params: Annotated[dict, "Base parameters"]
+    attack_payloads: Annotated[list, "Attack payload list"]
+    current_payload_index: Annotated[int, "Current payload index"]
+    test_results: Annotated[list, "Test result list"]
+    vulnerabilities: Annotated[list, "Discovered vulnerability list"]
+    max_iterations: Annotated[int, "Maximum iterations"]
+    current_iteration: Annotated[int, "Current iteration"]
 
 
 class APIFuzzingSubgraph:
-    """API 模糊测试子图"""
+    """API fuzzing subgraph"""
     
     def __init__(self):
-        """初始化模糊测试子图"""
+        """Initialize the fuzzing subgraph"""
         self.graph = self._build_graph()
     
     def _build_graph(self) -> StateGraph:
-        """构建模糊测试子图"""
+        """Build the fuzzing subgraph"""
         workflow = StateGraph(FuzzingState)
         
-        # 添加节点
+        # Add nodes
         workflow.add_node("generate_payloads", self._generate_payloads_node)
         workflow.add_node("execute_attack", self._execute_attack_node)
         workflow.add_node("analyze_response", self._analyze_response_node)
         workflow.add_node("record_vulnerability", self._record_vulnerability_node)
         
-        # 设置入口点
+        # Set the entry point
         workflow.set_entry_point("generate_payloads")
         
-        # 添加边
+        # Add edges
         workflow.add_edge("generate_payloads", "execute_attack")
         workflow.add_edge("execute_attack", "analyze_response")
         
-        # 条件边：根据响应分析决定下一步
+        # Conditional edges: choose the next step based on response analysis
         workflow.add_conditional_edges(
             "analyze_response",
             self._should_record_vulnerability,
@@ -71,10 +71,10 @@ class APIFuzzingSubgraph:
         return workflow.compile()
     
     def _generate_payloads_node(self, state: FuzzingState) -> FuzzingState:
-        """生成攻击载荷节点"""
-        logger.info("[模糊测试] 生成攻击载荷...")
+        """Attack payload generation node"""
+        logger.info("[Fuzzing] Generate attack payloads...")
         
-        # 生成各种类型的攻击载荷
+        # Generate different types of attack payloads
         payload_types = ["sql_injection", "xss", "number", "string"]
         attack_payloads = []
         
@@ -93,7 +93,7 @@ class APIFuzzingSubgraph:
                         "payload_type": item.get("type")
                     })
         
-        # 添加更多攻击载荷
+        # Add more attack payloads
         attack_payloads.extend([
             {"type": "command_injection", "value": "; ls -la", "payload_type": "attack"},
             {"type": "path_traversal", "value": "../../../etc/passwd", "payload_type": "attack"},
@@ -114,7 +114,7 @@ class APIFuzzingSubgraph:
         return state
     
     def _execute_attack_node(self, state: FuzzingState) -> FuzzingState:
-        """执行攻击节点"""
+        """Attack execution node"""
         payloads = state.get("attack_payloads", [])
         current_index = state.get("current_payload_index", 0)
         
@@ -126,16 +126,16 @@ class APIFuzzingSubgraph:
         method = state.get("method", "POST")
         base_params = state.get("base_params", {})
         
-        logger.info(f"[模糊测试] 测试载荷 {current_index + 1}/{len(payloads)}: {payload.get('type')}")
+        logger.info(f"[Fuzzing] Test payload {current_index + 1}/{len(payloads)}: {payload.get('type')}")
         
-        # 构建测试参数
+        # Build test parameters
         test_params = {**base_params}
         
-        # 将攻击载荷注入到每个参数
+        # Inject the attack payload into each parameter
         for key in test_params.keys():
             test_params[key] = payload.get("value")
         
-        # 调用 API
+        # Call the API
         try:
             response = call_api.invoke({
                 "method": method,
@@ -162,7 +162,7 @@ class APIFuzzingSubgraph:
         return state
     
     def _analyze_response_node(self, state: FuzzingState) -> FuzzingState:
-        """分析响应节点"""
+        """Response analysis node"""
         if not state.get("test_results"):
             return state
         
@@ -173,29 +173,29 @@ class APIFuzzingSubgraph:
         status_code = response.get("status_code", 0)
         response_body = str(response.get("body", ""))
         
-        # 判断是否发现漏洞
+        # Determine whether a vulnerability was found
         is_vulnerable = False
         vulnerability_type = None
         
-        # 检查 500 错误
+        # Check for 500 errors
         if status_code >= 500:
             is_vulnerable = True
             vulnerability_type = "server_error"
         
-        # 检查 SQL 注入迹象
+        # Check for signs of SQL injection
         elif payload.get("type") == "sql_injection":
             sql_errors = ["sql syntax", "mysql", "postgresql", "database", "sql error"]
             if any(error in response_body.lower() for error in sql_errors):
                 is_vulnerable = True
                 vulnerability_type = "sql_injection"
         
-        # 检查 XSS 迹象
+        # Check for signs of XSS
         elif payload.get("type") == "xss":
             if payload.get("value") in response_body:
                 is_vulnerable = True
                 vulnerability_type = "xss"
         
-        # 检查命令注入
+        # Check for command injection
         elif payload.get("type") == "command_injection":
             if status_code != 200 or "error" in response_body.lower():
                 is_vulnerable = True
@@ -212,16 +212,16 @@ class APIFuzzingSubgraph:
         return state
     
     def _record_vulnerability_node(self, state: FuzzingState) -> FuzzingState:
-        """记录漏洞节点"""
+        """Vulnerability recording node"""
         vulnerabilities = state.get("vulnerabilities", [])
         if vulnerabilities:
             last_vuln = vulnerabilities[-1]
-            logger.warning(f"[模糊测试] 发现漏洞: {last_vuln.get('type')} (严重程度: {last_vuln.get('severity')})")
+            logger.warning(f"[Fuzzing] Vulnerability found: {last_vuln.get('type')} (Severity: {last_vuln.get('severity')})")
         
         return state
     
     def _should_record_vulnerability(self, state: FuzzingState) -> Literal["record", "continue", "end"]:
-        """判断是否应该记录漏洞"""
+        """Determine whether to record a vulnerability"""
         vulnerabilities = state.get("vulnerabilities", [])
         if vulnerabilities and len(vulnerabilities) > len(state.get("test_results", [])) - 1:
             return "record"
@@ -241,7 +241,7 @@ class APIFuzzingSubgraph:
         return "continue"
     
     def _should_continue_attacking(self, state: FuzzingState) -> Literal["continue", "end"]:
-        """判断是否继续攻击"""
+        """Determine whether to continue testing attacks"""
         current_iteration = state.get("current_iteration", 0)
         max_iterations = state.get("max_iterations", 50)
         
@@ -258,16 +258,16 @@ class APIFuzzingSubgraph:
     
     def run(self, endpoint: str, method: str = "POST", base_params: dict = None, max_iterations: int = 50) -> dict:
         """
-        运行模糊测试
+        Run fuzz testing
         
         Args:
-            endpoint: API 端点
-            method: HTTP 方法
-            base_params: 基础参数
-            max_iterations: 最大迭代次数
+            endpoint: API endpoint
+            method: HTTP method
+            base_params: Base parameters
+            max_iterations: Maximum iterations
             
         Returns:
-            模糊测试结果
+            Fuzz testing results
         """
         initial_state: FuzzingState = {
             "endpoint": endpoint,
@@ -293,11 +293,11 @@ class APIFuzzingSubgraph:
         }
 
 
-# 全局实例
+# Global instance
 _fuzzing_subgraph = None
 
 def get_fuzzing_subgraph() -> APIFuzzingSubgraph:
-    """获取模糊测试子图单例"""
+    """Get the fuzzing subgraph singleton"""
     global _fuzzing_subgraph
     if _fuzzing_subgraph is None:
         _fuzzing_subgraph = APIFuzzingSubgraph()

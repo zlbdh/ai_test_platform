@@ -1,21 +1,21 @@
 """
-子图管理 - 统一管理所有子图
+Subgraph management - central management for all subgraphs
 """
 from workflows.ui_healing_subgraph import UIHealingSubgraph, get_healing_subgraph
 from workflows.api_fuzzing_subgraph import APIFuzzingSubgraph, get_fuzzing_subgraph
 
 
 def create_ui_healing_subgraph() -> UIHealingSubgraph:
-    """创建 UI 自愈子图"""
+    """Create a UI healing subgraph"""
     return get_healing_subgraph()
 
 
 def create_api_fuzzing_subgraph() -> APIFuzzingSubgraph:
-    """创建 API 模糊测试子图"""
+    """Create an API fuzzing subgraph"""
     return get_fuzzing_subgraph()
 
 
-# 子图注册表
+# Subgraph registry
 SUBGRAPHS = {
     "ui_healing": create_ui_healing_subgraph,
     "api_fuzzing": create_api_fuzzing_subgraph,
@@ -24,15 +24,15 @@ SUBGRAPHS = {
 
 def get_subgraph(name: str):
     """
-    获取子图
+    Get a subgraph
     
     Args:
-        name: 子图名称 (ui_healing, api_fuzzing)
+        name: Subgraph name (ui_healing, api_fuzzing)
         
     Returns:
-        子图实例
+        Subgraph instance
     """
     if name not in SUBGRAPHS:
-        raise ValueError(f"未知的子图名称: {name}")
+        raise ValueError(f"Unknown subgraph name: {name}")
     
     return SUBGRAPHS[name]()

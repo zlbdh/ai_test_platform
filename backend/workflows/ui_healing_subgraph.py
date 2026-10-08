@@ -1,6 +1,6 @@
 """
-UI 自愈子图 - LangGraph 子图
-当 UI 操作失败时，自动尝试修复
+UI healing subgraph - LangGraph subgraph
+Automatically attempt recovery when a UI action fails
 """
 import logging
 from typing import TypedDict, Annotated, Literal
@@ -13,66 +13,66 @@ from core.config import Config
 import os
 
 # =============================================================================
-# 方案 3: 视觉自愈系统 (Visual Self-Healing System) - SoM Hybrid 实现
+# Approach 3: Visual Self-Healing System - SoM hybrid implementation
 # =============================================================================
-# 核心原理:
-# 当常规的 DOM 选择器 (Selector) 失效导致操作失败时，激活此"自愈子图"。
-# 它采用 "DOM 为主，视觉为辅" 的混合策略：
-# 1. Capture: 捕获当前页面的"视觉快照"(截图)和"结构快照"(DOM)。
-# 2. Analyze: 利用视觉大模型 (VLM) 像人类一样"看"图，定位目标元素。
-# 3. Map: 将视觉定位结果映射回代码可执行的新选择器。
-# 4. Retry: 使用新选择器重试操作。
+# Core principles:
+# Activate this healing subgraph when an invalid conventional DOM selector causes an action to fail.
+# It uses a hybrid strategy that prioritizes the DOM and supplements it with vision:
+# 1. Capture: Capture the current page's visual snapshot (screenshot) and structural snapshot (DOM).
+# 2. Analyze: Use a vision-language model (VLM) to examine the image and locate the target element.
+# 3. Map: Map the visual location to a new selector that code can execute.
+# 4. Retry: Retry the action with the new selector.
 # =============================================================================
 
 
 class HealingState(TypedDict):
-    """自愈状态"""
-    failed_action: Annotated[dict, "失败的操作"]
-    original_selector: Annotated[str, "原始选择器"]
-    url: Annotated[str, "页面 URL"]
-    screenshot_path: Annotated[str, "截图路径"]
-    dom_structure: Annotated[dict, "DOM 结构"]
-    analysis_result: Annotated[dict, "LLM 分析结果"]
-    new_selector: Annotated[str, "新的选择器"]
-    retry_result: Annotated[dict, "重试结果"]
-    healing_attempts: Annotated[int, "自愈尝试次数"]
-    max_attempts: Annotated[int, "最大尝试次数"]
-    session_id: Annotated[str, "会话ID"]
+    """Healing state"""
+    failed_action: Annotated[dict, "Failed action"]
+    original_selector: Annotated[str, "Original selector"]
+    url: Annotated[str, "Page URL"]
+    screenshot_path: Annotated[str, "Screenshot path"]
+    dom_structure: Annotated[dict, "DOM structure"]
+    analysis_result: Annotated[dict, "LLM analysis result"]
+    new_selector: Annotated[str, "New selector"]
+    retry_result: Annotated[dict, "Retry result"]
+    healing_attempts: Annotated[int, "Healing attempt count"]
+    max_attempts: Annotated[int, "Maximum attempts"]
+    session_id: Annotated[str, "Session ID"]
 
 
 class UIHealingSubgraph:
-    """UI 自愈子图"""
+    """UI healing subgraph"""
     
     def __init__(self):
-        """初始化自愈子图"""
+        """Initialize the healing subgraph"""
         self.graph = self._build_graph()
     
     def _build_graph(self) -> StateGraph:
         """
-        构建自愈工作流图 (DAG)
+        Build the healing workflow graph (DAG)
         
-        工作流节点说明:
-        1. capture_context:       [感知] 获取截图和 DOM，为分析做准备。
-        2. analyze_with_llm:      [认知] VLM 视觉分析，寻找元素 (SoM 视觉定位)。
-        3. generate_new_selector: [决策] 将视觉结果翻译为 Playwright 选择器。
-        4. retry_action:          [行动] 执行修复后的操作。
+        Workflow nodes:
+        1. capture_context:       [Perception] Capture a screenshot and DOM for analysis.
+        2. analyze_with_llm:      [Reasoning] Use VLM visual analysis to locate elements (SoM visual localization).
+        3. generate_new_selector: [Decision] Convert the visual result into a Playwright selector.
+        4. retry_action:          [Action] Execute the repaired action.
         """
         workflow = StateGraph(HealingState)
         
-        # 添加节点
+        # Add nodes
         workflow.add_node("capture_context", self._capture_context_node)
         workflow.add_node("analyze_with_llm", self._analyze_with_llm_node)
         workflow.add_node("generate_new_selector", self._generate_new_selector_node)
         workflow.add_node("retry_action", self._retry_action_node)
         
-        # 设置入口点
+        # Set the entry point
         workflow.set_entry_point("capture_context")
         
-        # 添加边
+        # Add edges
         workflow.add_edge("capture_context", "analyze_with_llm")
         workflow.add_edge("analyze_with_llm", "generate_new_selector")
         
-        # 条件边：根据重试结果决定是否继续
+        # Conditional edges: decide whether to continue based on the retry result
         workflow.add_conditional_edges(
             "generate_new_selector",
             self._should_retry,
@@ -97,20 +97,20 @@ class UIHealingSubgraph:
     
     def _capture_context_node(self, state: HealingState) -> HealingState:
         """
-        [节点 1] 捕获上下文 (Context Capture)
+        [Node 1] Context capture
         
-        这是自愈的第一步。为了让 AI "看懂" 发生了什么，我们需要采集多模态数据：
-        1. 视觉数据 (Screenshot): 包含页面布局、颜色、遮挡关系等 DOM 无法体现的信息。
-        2. 结构数据 (DOM Snapshot): 包含页面标签、属性、文本等代码层面的信息。
+        This is the first healing step. Collect multimodal data so the AI can understand what happened:
+        1. Visual data (screenshot): page layout, colors, occlusion, and other information the DOM cannot capture.
+        2. Structural data (DOM snapshot): tags, attributes, text, and other code-level information.
         
-        这两种数据将共同构成 "SoM (Set-of-Mark)" 分析的基础。
+        Together, these two data sources form the basis of SoM (Set-of-Mark) analysis.
         """
-        logger.info("[自愈] 捕获页面上下文...")
+        logger.info("[Healing] Capture page context...")
         
         url = state.get("url", "")
         os.makedirs(Config.SCREENSHOT_DIR, exist_ok=True)
         
-        # 截图 (传入 session_id)
+        # Take a screenshot with session_id
         session_id = state.get("session_id")
         # take_screenshot tool usage: await take_screenshot.ainvoke(...)
         # But here we are in a synchronous graph node? LangGraph nodes can be sync or async.
@@ -135,7 +135,7 @@ class UIHealingSubgraph:
     
     # Redefining methods as async for proper tool usage
     async def _capture_context_node(self, state: HealingState) -> HealingState:
-        logger.info("[自愈] 捕获页面上下文...")
+        logger.info("[Healing] Capture page context...")
         url = state.get("url", "")
         os.makedirs(Config.SCREENSHOT_DIR, exist_ok=True)
         
@@ -151,9 +151,9 @@ class UIHealingSubgraph:
             dom_info = await get_dom_snapshot.ainvoke({"session_id": session_id})
             state["dom_structure"] = dom_info
         except Exception as e:
-            logger.warning(f"[自愈] 上下文捕获失败: {e}")
+            logger.warning(f"[Healing] Context capture failed: {e}")
 
-        # 初始化尝试次数
+        # Initialize the attempt count
         if "healing_attempts" not in state:
             state["healing_attempts"] = 0
         if "max_attempts" not in state:
@@ -162,15 +162,15 @@ class UIHealingSubgraph:
         return state
 
     async def _analyze_with_llm_node(self, state: HealingState) -> HealingState:
-        logger.info("[自愈] 使用 LLM 分析页面...")
+        logger.info("[Healing] Analyze the page with the LLM...")
         failed_action = state.get("failed_action", {})
         original_selector = state.get("original_selector", "")
         screenshot_path = state.get("screenshot_path", "")
         
         question = f"""
-原始选择器 '{original_selector}' 失败了。
-失败的操作：{failed_action.get('action', 'unknown')}
-请分析页面，找到相似的元素。
+The original selector '{original_selector}' failed.
+Failed action: {failed_action.get('action', 'unknown')}
+Analyze the page and find a similar element.
 """
         # analyze_screenshot is sync in vision_tools.py?
         # Let's check vision_tools.py. It is defined as `def analyze_screenshot`.
@@ -185,14 +185,14 @@ class UIHealingSubgraph:
         return state
 
     async def _generate_new_selector_node(self, state: HealingState) -> HealingState:
-        logger.info("[自愈] 生成新的选择器...")
+        logger.info("[Healing] Generate a new selector...")
         analysis = state.get("analysis_result", {})
         dom_structure = state.get("dom_structure", {})
         original_selector = state.get("original_selector", "")
         
         analysis_text = str(analysis.get("analysis", ""))
         
-        # 尝试从 DOM 结构中找到相似元素
+        # Try to find a similar element in the DOM structure
         elements = dom_structure.get("elements", [])
         
         new_selector = None
@@ -217,7 +217,7 @@ class UIHealingSubgraph:
         return state
 
     async def _retry_action_node(self, state: HealingState) -> HealingState:
-        logger.info(f"[自愈] 使用新选择器重试: {state.get('new_selector')}")
+        logger.info(f"[Healing] Retry with the new selector: {state.get('new_selector')}")
         failed_action = state.get("failed_action", {})
         new_selector = state.get("new_selector", "")
         url = state.get("url", "")
@@ -240,7 +240,7 @@ class UIHealingSubgraph:
                     "session_id": session_id
                 })
             else:
-                result = {"status": "error", "error": f"不支持的操作类型: {action_type}"}
+                result = {"status": "error", "error": f"Unsupported action type: {action_type}"}
             
             state["retry_result"] = result
             
@@ -295,11 +295,11 @@ class UIHealingSubgraph:
         }
 
 
-# 全局实例
+# Global instance
 _healing_subgraph = None
 
 def get_healing_subgraph() -> UIHealingSubgraph:
-    """获取自愈子图单例"""
+    """Get the healing subgraph singleton"""
     global _healing_subgraph
     if _healing_subgraph is None:
         _healing_subgraph = UIHealingSubgraph()

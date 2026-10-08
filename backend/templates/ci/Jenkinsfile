@@ -1,10 +1,10 @@
 # ============================================================================
-# AI Test Platform — Jenkinsfile 模板
+# AI Test Platform — Jenkinsfile template
 #
-# 使用方法:
-# 1. 将此文件复制到你的项目根目录
-# 2. 配置 Jenkins 环境变量 AITEST_API_URL
-# 3. 运行 Pipeline
+# Usage:
+# 1. Copy this file to your project root
+# 2. Configure the AITEST_API_URL environment variable in Jenkins
+# 3. Run the pipeline
 # ============================================================================
 
 pipeline {
@@ -15,19 +15,19 @@ pipeline {
     }
 
     parameters {
-        string(name: 'TEST_URL', defaultValue: 'https://example.com', description: '测试目标 URL')
-        string(name: 'TEST_GOAL', defaultValue: '验证首页正常加载', description: '测试指令')
-        choice(name: 'TEST_MODE', choices: ['smart', 'fast', 'deep'], description: '测试模式')
+        string(name: 'TEST_URL', defaultValue: 'https://example.com', description: 'Test target URL')
+        string(name: 'TEST_GOAL', defaultValue: 'Verify that the home page loads correctly', description: 'Test instructions')
+        choice(name: 'TEST_MODE', choices: ['smart', 'fast', 'deep'], description: 'Test mode')
     }
 
     stages {
-        stage('🏥 健康检查') {
+        stage('🏥 Health check') {
             steps {
                 sh 'python aitest.py health'
             }
         }
 
-        stage('🚀 AI 测试') {
+        stage('🚀 AI tests') {
             steps {
                 sh """
                     python aitest.py run \\
@@ -47,7 +47,7 @@ pipeline {
             }
         }
 
-        stage('📊 生成报告') {
+        stage('📊 Generate reports') {
             steps {
                 sh 'python aitest.py report'
                 sh 'python aitest.py analytics'
@@ -57,10 +57,10 @@ pipeline {
 
     post {
         failure {
-            echo '❌ AI 测试失败!'
+            echo '❌ AI tests failed!'
         }
         success {
-            echo '✅ AI 测试通过!'
+            echo '✅ AI tests passed!'
         }
     }
 }
