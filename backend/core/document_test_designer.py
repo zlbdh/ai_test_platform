@@ -1,10 +1,10 @@
 """
-面向需求文档 / 开发文档的测试设计器
+Test designer for requirements and development documents
 
-职责：
-- 将 RequirementParser 的基础结果转成可执行测试
-- 按文档类型补充更专业的测试策略
-- 返回生成摘要，帮助前端解释“为什么这样生成”
+Responsibilities:
+- Convert RequirementParser results into executable tests
+- Add specialized testing strategies by document type
+- Return a generation summary so the frontend can explain the design choices
 """
 
 from __future__ import annotations
@@ -49,7 +49,7 @@ class DocumentTestDesigner:
             tests,
             title=title,
             document_type=getattr(analysis, "document_type", "general_text"),
-            document_label=getattr(analysis, "document_label", "文档"),
+            document_label=getattr(analysis, "document_label", "Document"),
             document_role=document_role,
         )
 
@@ -97,17 +97,17 @@ class DocumentTestDesigner:
 
         bundle_tests = self._annotate_tests(
             self._build_bundle_alignment_tests(bundle_analysis),
-            title="多文档交叉检测",
+            title="Cross-document analysis",
             document_type="document_bundle",
-            document_label="交叉检测",
+            document_label="Cross-document analysis",
             document_role="bundle",
         )
         all_tests.extend(bundle_tests)
         if bundle_tests:
             document_sources.append({
-                "title": "多文档交叉检测",
+                "title": "Cross-document analysis",
                 "document_type": "document_bundle",
-                "document_label": "交叉检测",
+                "document_label": "Cross-document analysis",
                 "document_role": "bundle",
                 "generated_count": len(bundle_tests),
             })
@@ -131,7 +131,7 @@ class DocumentTestDesigner:
         if parsed_result is None or not getattr(parsed_result, "test_cases", None):
             return []
 
-        document_label = getattr(analysis, "document_label", "文档")
+        document_label = getattr(analysis, "document_label", "Document")
         generated = []
         for tc in parsed_result.test_cases:
             rule_refs = []
@@ -140,16 +140,16 @@ class DocumentTestDesigner:
 
             instruction_parts = [
                 getattr(tc, "description", ""),
-                f"来源: {document_label}",
-                f"步骤: {'; '.join(getattr(tc, 'steps', []) or [])}",
-                f"期望: {'; '.join(getattr(tc, 'expected_results', []) or [])}",
+                f"Source: {document_label}",
+                f"Steps: {'; '.join(getattr(tc, 'steps', []) or [])}",
+                f"Expected: {'; '.join(getattr(tc, 'expected_results', []) or [])}",
             ]
             if rule_refs:
-                instruction_parts.append(f"追溯规则: {', '.join(rule_refs)}")
+                instruction_parts.append(f"Traceability rules: {', '.join(rule_refs)}")
 
             generated.append({
                 "id": getattr(tc, "case_id", "TC-UNKNOWN"),
-                "name": getattr(tc, "title", "未命名测试"),
+                "name": getattr(tc, "title", "Untitled test"),
                 "type": getattr(tc, "test_type", "ui_e2e"),
                 "priority": getattr(getattr(tc, "priority", None), "value", "medium"),
                 "instruction": "\n".join([part for part in instruction_parts if part]),
@@ -177,13 +177,13 @@ class DocumentTestDesigner:
 
             tests.append({
                 "id": f"API-HAPPY-{idx:03d}",
-                "name": f"接口主流程: {endpoint}",
+                "name": f"API happy path: {endpoint}",
                 "type": "api_rest",
                 "priority": "high",
                 "instruction": (
-                    f"验证接口 {endpoint} 的主流程返回。\n"
-                    f"步骤: 准备合法请求参数; 调用接口 {endpoint}; 校验响应码、核心字段和结构。\n"
-                    f"期望: 返回成功状态，响应结构与接口定义一致。"
+                    f"Verify the happy-path response from {endpoint}.\n"
+                    f"Steps: Prepare valid request parameters; call {endpoint}; validate the status code, key fields, and structure.\n"
+                    f"Expected: A success status and a response structure matching the API definition."
                 ),
                 "tags": ["api", "contract", "generated:api_spec", f"doc:{analysis.document_type}"],
                 "basis": [endpoint],
@@ -192,13 +192,13 @@ class DocumentTestDesigner:
 
             tests.append({
                 "id": f"API-CONTRACT-{idx:03d}",
-                "name": f"接口契约校验: {endpoint}",
+                "name": f"API contract validation: {endpoint}",
                 "type": "contract",
                 "priority": "high",
                 "instruction": (
-                    f"对接口 {endpoint} 做契约校验。\n"
-                    f"步骤: 读取接口文档; 发送请求; 对比响应字段、数据类型、必填项和状态码。\n"
-                    f"期望: 请求/响应符合 OpenAPI/Swagger 定义。"
+                    f"Validate the contract for {endpoint}.\n"
+                    f"Steps: Read the API specification; send a request; compare response fields, data types, required fields, and status codes.\n"
+                    f"Expected: Requests/responses comply with the OpenAPI/Swagger definition."
                 ),
                 "tags": ["api", "contract", "schema", "generated:api_spec", f"doc:{analysis.document_type}"],
                 "basis": [endpoint],
@@ -208,13 +208,13 @@ class DocumentTestDesigner:
             if endpoint_parameters:
                 tests.append({
                     "id": f"API-PARAM-{idx:03d}",
-                    "name": f"接口参数校验: {endpoint}",
+                    "name": f"API parameter validation: {endpoint}",
                     "type": "api_rest",
                     "priority": "high",
                     "instruction": (
-                        f"围绕接口 {endpoint} 的参数定义做校验。\n"
-                        f"步骤: 覆盖参数 {', '.join(endpoint_parameters[:4])}; 分别验证必填、边界值、非法类型和缺失场景。\n"
-                        "期望: 参数校验行为与接口定义一致，错误提示清晰。"
+                        f"Validate the parameter definitions for {endpoint}.\n"
+                        f"Steps: Cover parameters {', '.join(endpoint_parameters[:4])}; verify required values, boundaries, invalid types, and missing values.\n"
+                        "Expected: Validation follows the API specification and produces clear errors."
                     ),
                     "tags": ["api", "parameter", "data_validation", "generated:api_spec", f"doc:{analysis.document_type}"],
                     "basis": [endpoint, *endpoint_parameters[:4]],
@@ -224,13 +224,13 @@ class DocumentTestDesigner:
             if endpoint_statuses:
                 tests.append({
                     "id": f"API-STATUS-{idx:03d}",
-                    "name": f"响应状态覆盖: {endpoint}",
+                    "name": f"Response status coverage: {endpoint}",
                     "type": "contract",
                     "priority": "medium",
                     "instruction": (
-                        f"验证接口 {endpoint} 的响应状态覆盖。\n"
-                        f"步骤: 分别触发文档定义的状态 {', '.join(endpoint_statuses[:4])}; 检查状态码、错误信息和响应体结构。\n"
-                        "期望: 每类状态均能稳定复现，且语义与文档一致。"
+                        f"Verify response status coverage for {endpoint}.\n"
+                        f"Steps: Trigger documented statuses {', '.join(endpoint_statuses[:4])}; check status codes, error messages, and response structure.\n"
+                        "Expected: Each status is consistently reproducible and matches the documented meaning."
                     ),
                     "tags": ["api", "status_code", "contract", "generated:api_spec", f"doc:{analysis.document_type}"],
                     "basis": [endpoint, *endpoint_statuses[:4]],
@@ -240,13 +240,13 @@ class DocumentTestDesigner:
             if error_codes:
                 tests.append({
                     "id": f"API-NEG-{idx:03d}",
-                    "name": f"接口异常处理: {endpoint}",
+                    "name": f"API error handling: {endpoint}",
                     "type": "api_rest",
                     "priority": "medium",
                     "instruction": (
-                        f"验证接口 {endpoint} 的异常响应处理。\n"
-                        f"步骤: 构造非法参数或缺失参数; 调用接口 {endpoint}; 校验错误码和错误信息。\n"
-                        f"期望: 返回文档中定义的错误码，如 {', '.join(error_codes[:3])}。"
+                        f"Verify exception responses from {endpoint}.\n"
+                        f"Steps: Supply invalid or missing parameters; call {endpoint}; validate error codes and messages.\n"
+                        f"Expected: Documented error codes, such as {', '.join(error_codes[:3])}, are returned."
                     ),
                     "tags": ["api", "negative", "error_handling", "generated:api_spec", f"doc:{analysis.document_type}"],
                     "basis": [endpoint, *error_codes[:3]],
@@ -256,13 +256,13 @@ class DocumentTestDesigner:
         for idx, schema_name in enumerate(schema_entities[:6], 1):
             tests.append({
                 "id": f"API-SCHEMA-{idx:03d}",
-                "name": f"模型结构校验: {schema_name}",
+                "name": f"Model structure validation: {schema_name}",
                 "type": "contract",
                 "priority": "medium",
                 "instruction": (
-                    f"验证接口文档中的模型 {schema_name} 是否能正确映射到请求/响应结构。\n"
-                    "步骤: 读取模型字段定义; 抽样验证字段名、类型、必填约束和嵌套结构。\n"
-                    "期望: 模型结构可稳定支撑接口契约校验。"
+                    f"Verify that model {schema_name} in the API specification maps correctly to request/response structures.\n"
+                    "Steps: Read model field definitions; sample field names, types, required constraints, and nested structures.\n"
+                    "Expected: The model consistently supports API contract validation."
                 ),
                 "tags": ["api", "schema", "contract", "generated:api_spec", f"doc:{analysis.document_type}"],
                 "basis": [schema_name],
@@ -287,13 +287,13 @@ class DocumentTestDesigner:
 
             tests.append({
                 "id": f"DB-SCHEMA-{idx:03d}",
-                "name": f"表结构校验: {table}",
+                "name": f"Table structure validation: {table}",
                 "type": "data_validation",
                 "priority": "high",
                 "instruction": (
-                    f"验证表 {table} 的结构定义是否满足设计。\n"
-                    f"步骤: 查询表结构; 校验字段 {', '.join(table_columns[:4]) or '定义字段'}、主键、索引和默认值定义; 记录缺失约束。\n"
-                    f"期望: 表结构与数据库设计一致。"
+                    f"Verify that table {table} matches its design.\n"
+                    f"Steps: Query the table structure; check columns {', '.join(table_columns[:4]) or 'defined columns'}, primary keys, indexes, and defaults; record missing constraints.\n"
+                    f"Expected: Table structure matches the database design."
                 ),
                 "tags": ["database", "schema", "generated:db_schema", f"doc:{analysis.document_type}"],
                 "basis": [table, *table_columns[:4]],
@@ -303,13 +303,13 @@ class DocumentTestDesigner:
             if table_constraints:
                 tests.append({
                     "id": f"DB-CONSTRAINT-{idx:03d}",
-                    "name": f"数据约束校验: {table}",
+                    "name": f"Data constraint validation: {table}",
                     "type": "data_validation",
                     "priority": "medium",
                     "instruction": (
-                        f"围绕表 {table} 做约束验证。\n"
-                        f"步骤: 准备边界数据; 插入/更新数据; 验证约束 {', '.join(table_constraints[:4])}。\n"
-                        f"期望: 数据库按设计拒绝非法数据，并保留有效数据。"
+                        f"Validate constraints on table {table}.\n"
+                        f"Steps: Prepare boundary data; insert/update records; verify constraints {', '.join(table_constraints[:4])}.\n"
+                        f"Expected: The database rejects invalid data and retains valid data as designed."
                     ),
                     "tags": ["database", "constraint", "negative", "generated:db_schema", f"doc:{analysis.document_type}"],
                     "basis": [table, *table_constraints[:4]],
@@ -319,13 +319,13 @@ class DocumentTestDesigner:
             if table_relations:
                 tests.append({
                     "id": f"DB-REL-{idx:03d}",
-                    "name": f"外键完整性校验: {table}",
+                    "name": f"Foreign-key integrity validation: {table}",
                     "type": "data_validation",
                     "priority": "high",
                     "instruction": (
-                        f"验证表 {table} 的关联完整性。\n"
-                        f"步骤: 围绕关系 {', '.join(table_relations[:3])} 构造插入、删除和更新场景; 检查外键限制与级联行为。\n"
-                        "期望: 关联数据保持一致，不会出现脏引用。"
+                        f"Verify relationship integrity for table {table}.\n"
+                        f"Steps: Construct insert, delete, and update scenarios for relationships {', '.join(table_relations[:3])}; check foreign-key restrictions and cascading behavior.\n"
+                        "Expected: Related data remains consistent without dangling references."
                     ),
                     "tags": ["database", "relation", "integrity", "generated:db_schema", f"doc:{analysis.document_type}"],
                     "basis": [table, *table_relations[:3]],
@@ -335,13 +335,13 @@ class DocumentTestDesigner:
             if table_indexes:
                 tests.append({
                     "id": f"DB-INDEX-{idx:03d}",
-                    "name": f"索引策略验证: {table}",
+                    "name": f"Index strategy validation: {table}",
                     "type": "data_validation",
                     "priority": "medium",
                     "instruction": (
-                        f"验证表 {table} 的索引配置是否支撑核心查询场景。\n"
-                        f"步骤: 检查索引 {', '.join(table_indexes[:3])}; 对典型查询执行 explain 或执行计划分析; 观察是否命中索引。\n"
-                        "期望: 核心查询可命中预期索引，避免明显全表扫描。"
+                        f"Verify that table {table}'s indexes support core query scenarios.\n"
+                        f"Steps: Check indexes {', '.join(table_indexes[:3])}; run explain or execution-plan analysis on typical queries; check index usage.\n"
+                        "Expected: Core queries use the intended indexes and avoid obvious full-table scans."
                     ),
                     "tags": ["database", "index", "performance", "generated:db_schema", f"doc:{analysis.document_type}"],
                     "basis": [table, *table_indexes[:3]],
@@ -360,13 +360,13 @@ class DocumentTestDesigner:
         for idx, flow in enumerate(flows[:6], 1):
             tests.append({
                 "id": f"DESIGN-FLOW-{idx:03d}",
-                "name": f"设计流转验证: {flow[:28]}",
+                "name": f"Design workflow validation: {flow[:28]}",
                 "type": "business_flow",
                 "priority": "high",
                 "instruction": (
-                    f"根据开发设计验证流程：{flow}。\n"
-                    f"步骤: 准备前置条件; 按设计执行模块交互; 检查状态流转、接口调用顺序和结果落库。\n"
-                    f"期望: 实现行为与设计说明一致。"
+                    f"Verify the development-design workflow: {flow}.\n"
+                    f"Steps: Prepare prerequisites; perform module interactions as designed; check transitions, API call order, and database persistence.\n"
+                    f"Expected: Implementation behavior matches the design description."
                 ),
                 "tags": ["integration", "flow", "generated:design", f"doc:{analysis.document_type}"],
                 "basis": [flow],
@@ -376,13 +376,13 @@ class DocumentTestDesigner:
         for idx, endpoint in enumerate(endpoints[:8], 1):
             tests.append({
                 "id": f"DESIGN-API-{idx:03d}",
-                "name": f"设计接口联调: {endpoint}",
+                "name": f"Design API integration: {endpoint}",
                 "type": "api_rest",
                 "priority": "high",
                 "instruction": (
-                    f"按开发设计验证接口 {endpoint}。\n"
-                    f"步骤: 基于设计准备请求; 调用接口; 检查关键字段、状态变化与副作用。\n"
-                    f"期望: 接口行为符合设计说明，并能支撑上层业务流程。"
+                    f"Verify {endpoint} against the development design.\n"
+                    f"Steps: Prepare a request from the design; call the API; check key fields, state changes, and side effects.\n"
+                    f"Expected: API behavior follows the design and supports higher-level workflows."
                 ),
                 "tags": ["api", "integration", "generated:design", f"doc:{analysis.document_type}"],
                 "basis": [endpoint],
@@ -392,13 +392,13 @@ class DocumentTestDesigner:
         if constraints:
             tests.append({
                 "id": "DESIGN-BOUNDARY-001",
-                "name": "开发约束边界验证",
+                "name": "Development constraint boundary validation",
                 "type": "data_validation",
                 "priority": "medium",
                 "instruction": (
-                    "针对开发文档中的关键约束做边界测试。\n"
-                    f"步骤: 准备边界数据; 覆盖约束 {', '.join(constraints[:4])}; 校验系统拒绝非法输入并正确提示。\n"
-                    "期望: 系统严格遵守设计约束。"
+                    "Run boundary tests for key constraints in the development document.\n"
+                    f"Steps: Prepare boundary data; cover constraints {', '.join(constraints[:4])}; verify that invalid input is rejected with clear messages.\n"
+                    "Expected: The system strictly follows the design constraints."
                 ),
                 "tags": ["boundary", "constraint", "generated:design", f"doc:{analysis.document_type}"],
                 "basis": constraints[:4],
@@ -408,13 +408,13 @@ class DocumentTestDesigner:
         if error_codes:
             tests.append({
                 "id": "DESIGN-ERROR-001",
-                "name": "设计异常码验证",
+                "name": "Design error-code validation",
                 "type": "api_rest",
                 "priority": "medium",
                 "instruction": (
-                    "验证开发文档定义的异常码和失败处理逻辑。\n"
-                    f"步骤: 人为制造失败场景; 观察返回码/异常码 {', '.join(error_codes[:4])}; 检查补偿、回滚或提示信息。\n"
-                    "期望: 失败路径符合设计说明。"
+                    "Verify error codes and failure-handling logic defined in the development document.\n"
+                    f"Steps: Induce failure scenarios; observe return/error codes {', '.join(error_codes[:4])}; check compensation, rollback, or messages.\n"
+                    "Expected: Failure paths follow the design description."
                 ),
                 "tags": ["negative", "error_handling", "generated:design", f"doc:{analysis.document_type}"],
                 "basis": error_codes[:4],
@@ -431,13 +431,13 @@ class DocumentTestDesigner:
         for idx, flow in enumerate(flows[:4], 1):
             tests.append({
                 "id": f"REQ-FLOW-{idx:03d}",
-                "name": f"主流程验证: {flow[:28]}",
+                "name": f"Main workflow validation: {flow[:28]}",
                 "type": "ui_e2e",
                 "priority": "high",
                 "instruction": (
-                    f"围绕需求流程“{flow}”生成端到端验证。\n"
-                    "步骤: 准备账号和数据; 按流程完成操作; 验证页面反馈、接口结果和状态变化。\n"
-                    "期望: 用户可顺利完成该流程，关键断言均通过。"
+                    f"Generate end-to-end verification for requirement workflow '{flow}'.\n"
+                    "Steps: Prepare accounts and data; complete the workflow; verify page feedback, API results, and state changes.\n"
+                    "Expected: The user completes the workflow and all key assertions pass."
                 ),
                 "tags": ["ui", "business_flow", "generated:requirement", f"doc:{analysis.document_type}"],
                 "basis": [flow],
@@ -447,13 +447,13 @@ class DocumentTestDesigner:
         if rules:
             tests.append({
                 "id": "REQ-NEG-001",
-                "name": "核心业务规则负向验证",
+                "name": "Core business rule negative validation",
                 "type": "business_flow",
                 "priority": "medium",
                 "instruction": (
-                    "针对需求中的核心规则设计负向场景。\n"
-                    f"步骤: 选择关键规则 {', '.join(rules[:3])}; 构造违反规则的输入; 检查系统拦截和提示。\n"
-                    "期望: 系统拒绝非法操作，并保留清晰的错误反馈。"
+                    "Design negative scenarios for core requirement rules.\n"
+                    f"Steps: Select key rules {', '.join(rules[:3])}; supply inputs that violate them; inspect blocking behavior and messages.\n"
+                    "Expected: The system rejects invalid actions and provides clear error feedback."
                 ),
                 "tags": ["negative", "rule_validation", "generated:requirement", f"doc:{analysis.document_type}"],
                 "basis": rules[:3],
@@ -471,11 +471,11 @@ class DocumentTestDesigner:
     ) -> Dict[str, Any]:
         doc_type = getattr(analysis, "document_type", "general_text")
         strategy_map = {
-            "requirement_prd": ("需求优先", "优先覆盖业务主流程、验收标准与关键负向规则。"),
-            "development_design": ("设计驱动", "优先覆盖接口联调、状态流转、边界约束和异常码。"),
-            "api_spec": ("接口契约优先", "优先覆盖接口主流程、契约一致性和异常响应。"),
-            "database_schema": ("数据结构优先", "优先覆盖表结构、约束和数据一致性。"),
-            "general_text": ("通用提炼", "基于文档中可识别的规则和流程生成基础测试建议。"),
+            "requirement_prd": ("Requirements first", "Prioritize main workflows, acceptance criteria, and key negative rules."),
+            "development_design": ("Design driven", "Prioritize API integration, state transitions, boundary constraints, and error codes."),
+            "api_spec": ("API contracts first", "Prioritize API happy paths, contract consistency, and exception responses."),
+            "database_schema": ("Data structures first", "Prioritize table structures, constraints, and data consistency."),
+            "general_text": ("General extraction", "Generate basic test recommendations from identifiable document rules and workflows."),
         }
         strategy_label, rationale = strategy_map.get(doc_type, strategy_map["general_text"])
 
@@ -513,7 +513,7 @@ class DocumentTestDesigner:
                 {
                     "title": title,
                     "document_type": doc_type,
-                    "document_label": getattr(analysis, "document_label", "文档"),
+                    "document_label": getattr(analysis, "document_label", "Document"),
                     "document_role": document_role,
                     "generated_count": len(tests),
                 }
@@ -541,24 +541,24 @@ class DocumentTestDesigner:
         combined_focus_areas = self._unique_values(combined_focus_areas)[:8] or ["ui_e2e"]
 
         primary_strategy_map = {
-            "requirement_prd": "需求驱动",
-            "development_design": "设计驱动",
-            "api_spec": "接口契约驱动",
-            "database_schema": "数据结构驱动",
-            "general_text": "文档驱动",
+            "requirement_prd": "requirements-driven",
+            "development_design": "design-driven",
+            "api_spec": "API-contract-driven",
+            "database_schema": "data-structure-driven",
+            "general_text": "document-driven",
         }
         primary_type = getattr(primary_analysis, "document_type", "general_text")
         primary_strategy = primary_strategy_map.get(primary_type, primary_strategy_map["general_text"])
 
         rationale = (
-            f"以主文档的{primary_strategy}策略为主，吸收参考文档中的接口、数据或设计细节，"
-            "并根据交叉检测结果补充一致性验证。"
+            f"Use the primary document's {primary_strategy} strategy, incorporate API, data, or design details from references, "
+            "and add consistency checks based on cross-document findings."
         )
 
         return {
             "title": primary_title,
             "document_type": primary_type,
-            "strategy_label": "多文档联合设计",
+            "strategy_label": "Combined document design",
             "rationale": rationale,
             "generated_count": len(tests),
             "counts_by_type": counts_by_type,
@@ -621,19 +621,19 @@ class DocumentTestDesigner:
             test_type = "contract"
             if category == "coverage":
                 test_type = "business_flow"
-            if "约束" in str(getattr(finding, "message", "")) or "字段" in str(getattr(finding, "message", "")):
+            if any(token in str(getattr(finding, "message", "")).lower() for token in ("约束", "字段", "constraint", "field")):
                 test_type = "data_validation"
 
             tests.append({
                 "id": f"BUNDLE-{idx:03d}",
-                "name": f"跨文档{category}验证 {idx}",
+                "name": f"Cross-document {category} validation {idx}",
                 "type": test_type,
                 "priority": "high" if severity in {"error", "warning"} else "medium",
                 "instruction": (
-                    "基于主文档与参考文档的交叉检测结果执行联合验证。\n"
-                    f"问题: {getattr(finding, 'message', '')}\n"
-                    "步骤: 对照主文档、参考文档和系统实现; 触发相关业务/API/数据场景; 检查行为、响应和数据是否同时满足多份文档。\n"
-                    f"期望: {getattr(finding, 'suggestion', '')}"
+                    "Run combined verification from primary/reference cross-document findings.\n"
+                    f"Issue: {getattr(finding, 'message', '')}\n"
+                    "Steps: Compare primary documents, references, and implementation; trigger relevant business/API/data scenarios; verify behavior, responses, and data against every document.\n"
+                    f"Expected: {getattr(finding, 'suggestion', '')}"
                 ),
                 "tags": ["bundle", "cross_document", "generated:bundle", f"bundle:{category}"],
                 "basis": [getattr(finding, "message", "")],

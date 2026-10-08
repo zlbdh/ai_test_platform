@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-Test Generator — 增强型测试生成器
+Test Generator — enhanced test generation
 
-在现有 RequirementParser 基础上扩展：
-1. 多阶段 Chain-of-Thought Prompt
-2. 负面场景自动生成
-3. 边界条件识别
-4. 性能/安全场景模板
+Extend the existing RequirementParser with:
+1. Multistage Chain-of-Thought prompts
+2. Automatic negative scenarios
+3. Boundary identification
+4. Performance/security scenario templates
 """
 
 from typing import Dict, Any, List, Optional
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class GeneratedTestCase:
-    """生成的测试用例"""
+    """Generated test case"""
     id: str = ""
     title: str = ""
     category: str = "functional"   # functional, boundary, negative, performance, security
@@ -44,106 +44,106 @@ class GeneratedTestCase:
 
 class TestGenerator:
     """
-    增强型测试生成器
+    Enhanced test generator
 
-    使用 Chain-of-Thought (CoT) 多阶段 Prompt：
-    Stage 1: 从需求提取测试条件
-    Stage 2: 为每个条件生成正面/负面/边界场景
-    Stage 3: 生成具体步骤
-    Stage 4: LLM-as-Judge 质量审查
+    Use multistage Chain-of-Thought (CoT) prompts:
+    Stage 1: Extract test conditions from requirements
+    Stage 2: Generate positive/negative/boundary scenarios for each condition
+    Stage 3: Generate specific steps
+    Stage 4: LLM-as-Judge quality review
     """
 
-    STAGE1_PROMPT = """你是资深QA测试设计专家。
+    STAGE1_PROMPT = """You are a senior QA test design expert.
 
-## 任务
-从以下需求中提取所有可测试的条件。
+## Task
+Extract every testable condition from these requirements.
 
-## 需求描述
+## Requirement Description
 {requirement}
 
-## 要求
-请列出所有可测试的条件，输出JSON格式（不要markdown包裹）：
+## Requirements
+List all testable conditions as JSON, without Markdown fences:
 {{
     "conditions": [
         {{
             "id": "C1",
-            "description": "<条件描述>",
+            "description": "<Condition description>",
             "type": "<functional/validation/permission/data>",
-            "inputs": ["<涉及的输入字段>"],
-            "constraints": ["<约束条件>"]
+            "inputs": ["<Relevant input fields>"],
+            "constraints": ["<Constraints>"]
         }}
     ]
 }}"""
 
-    STAGE2_PROMPT = """基于以下测试条件，生成多维度测试场景。
+    STAGE2_PROMPT = """Generate multidimensional test scenarios from these test conditions.
 
-## 测试条件
+## Test Conditions
 {condition}
 
-## 要求
-为此条件生成以下类型的测试场景：
-1. 正常路径（Happy Path）
-2. 边界条件（Boundary）
-3. 负面场景（Negative）
-4. 异常恢复（Error Recovery）
+## Requirements
+Generate these types of scenario for this condition:
+1. Happy path
+2. Boundary conditions
+3. Negative scenarios
+4. Error recovery
 
-输出JSON格式（不要markdown包裹）：
+Output JSON without Markdown fences:
 {{
     "scenarios": [
         {{
-            "title": "<场景标题>",
+            "title": "<Scenario title>",
             "category": "<functional/boundary/negative/error_recovery>",
             "priority": "<high/medium/low>",
-            "description": "<场景描述>",
-            "test_data": "<具体测试数据>"
+            "description": "<Scenario description>",
+            "test_data": "<Specific test data>"
         }}
     ]
 }}"""
 
-    STAGE3_PROMPT = """将以下测试场景转化为自动化可执行的步骤。
+    STAGE3_PROMPT = """Convert this test scenario into steps executable by automation.
 
-## 场景
-标题: {title}
-描述: {description}
-类别: {category}
-测试数据: {test_data}
+## Scenario
+Title: {title}
+Description: {description}
+Category: {category}
+Test data: {test_data}
 
-## 要求
-输出JSON格式（不要markdown包裹）：
+## Requirements
+Output JSON without Markdown fences:
 {{
-    "preconditions": ["<前置条件1>"],
+    "preconditions": ["<Precondition 1>"],
     "steps": [
         {{
             "step": 1,
-            "action": "<操作描述，如：在输入框中输入'xxx'>",
-            "expected": "<预期结果>"
+            "action": "<Action description, such as entering 'xxx' in an input>",
+            "expected": "<Expected result>"
         }}
     ],
-    "expected_results": ["<最终预期结果>"],
-    "tags": ["<标签>"]
+    "expected_results": ["<Final expected result>"],
+    "tags": ["<Tag>"]
 }}"""
 
-    REVIEW_PROMPT = """你是QA测试评审专家。请评审以下测试用例的质量。
+    REVIEW_PROMPT = """You are a QA test review expert. Assess the quality of these test cases.
 
-## 需求
+## Requirements
 {requirement}
 
-## 生成的测试用例
+## Generated Test Cases
 {test_cases}
 
-## 评审维度
-1. 覆盖完整性：是否遗漏了重要场景？
-2. 步骤可执行性：步骤是否具体到可以自动化执行？
-3. 预期明确性：预期结果是否明确可验证？
-4. 边界考虑：是否覆盖了边界和异常情况？
+## Review Dimensions
+1. Coverage completeness: Are important scenarios missing?
+2. Executable steps: Are steps specific enough for automation?
+3. Clear expectations: Are expected results explicit and verifiable?
+4. Boundary coverage: Are boundaries and exceptions covered?
 
-输出JSON格式（不要markdown包裹）：
+Output JSON without Markdown fences:
 {{
     "overall_score": <1-10>,
     "coverage_score": <1-10>,
     "executability_score": <1-10>,
-    "missing_scenarios": ["<遗漏的场景>"],
-    "improvements": ["<改进建议>"]
+    "missing_scenarios": ["<Missing scenarios>"],
+    "improvements": ["<Improvement recommendations>"]
 }}"""
 
     def __init__(self):
@@ -162,32 +162,32 @@ class TestGenerator:
         with_review: bool = True,
     ) -> Dict[str, Any]:
         """
-        多阶段测试用例生成。
+        Generate test cases in multiple stages.
 
         Args:
-            requirement: 需求描述
-            categories: 生成类别过滤（functional/boundary/negative等）
-            with_review: 是否启用 LLM-as-Judge 评审
+            requirement: Requirement description
+            categories: Category filter (functional/boundary/negative, etc.)
+            with_review: Whether to enable LLM-as-Judge review
 
         Returns:
-            完整的测试生成结果
+            Complete test generation result
         """
         import asyncio
 
-        logger.info(f"🧪 开始生成测试用例: {requirement[:100]}...")
+        logger.info(f"🧪 Generating test cases: {requirement[:100]}...")
 
-        # Stage 1: 提取测试条件
+        # Stage 1: Extract test conditions
         conditions = await self._stage1_extract_conditions(requirement)
         if not conditions:
-            return {"success": False, "error": "未提取到可测试条件", "test_cases": []}
+            return {"success": False, "error": "No testable conditions were extracted", "test_cases": []}
 
-        # Stage 2: 生成多维场景
+        # Stage 2: Generate multidimensional scenarios
         all_scenarios = []
         for cond in conditions:
             scenarios = await self._stage2_generate_scenarios(cond)
             all_scenarios.extend(scenarios)
 
-        # Stage 3: 转化为可执行步骤
+        # Stage 3: Convert to executable steps
         test_cases = []
         for i, scenario in enumerate(all_scenarios):
             if categories and scenario.get("category") not in categories:
@@ -196,12 +196,12 @@ class TestGenerator:
             if tc:
                 test_cases.append(tc)
 
-        # Stage 4: 质量审查
+        # Stage 4: Quality review
         review = None
         if with_review and test_cases:
             review = await self._stage4_review(requirement, test_cases)
 
-        logger.info(f"✅ 生成完成: {len(test_cases)} 个测试用例")
+        logger.info(f"✅ Generated {len(test_cases)} test cases")
 
         return {
             "success": True,
@@ -212,7 +212,7 @@ class TestGenerator:
         }
 
     async def _stage1_extract_conditions(self, requirement: str) -> List[Dict]:
-        """Stage 1: 提取测试条件"""
+        """Stage 1: Extract test conditions"""
         try:
             import asyncio
             llm = self._get_llm()
@@ -222,11 +222,11 @@ class TestGenerator:
             data = self._parse_json(content)
             return data.get("conditions", [])
         except Exception as e:
-            logger.error(f"Stage 1 失败: {e}")
+            logger.error(f"Stage 1 failed: {e}")
             return []
 
     async def _stage2_generate_scenarios(self, condition: Dict) -> List[Dict]:
-        """Stage 2: 生成多维场景"""
+        """Stage 2: Generate multidimensional scenarios"""
         try:
             import asyncio
             llm = self._get_llm()
@@ -236,11 +236,11 @@ class TestGenerator:
             data = self._parse_json(content)
             return data.get("scenarios", [])
         except Exception as e:
-            logger.error(f"Stage 2 失败: {e}")
+            logger.error(f"Stage 2 failed: {e}")
             return []
 
     async def _stage3_generate_steps(self, scenario: Dict, index: int) -> Optional[GeneratedTestCase]:
-        """Stage 3: 生成可执行步骤"""
+        """Stage 3: Generate executable steps"""
         try:
             import asyncio
             llm = self._get_llm()
@@ -256,7 +256,7 @@ class TestGenerator:
 
             return GeneratedTestCase(
                 id=f"TC_{index:03d}",
-                title=scenario.get("title", f"测试用例 {index}"),
+                title=scenario.get("title", f"Test case {index}"),
                 category=scenario.get("category", "functional"),
                 priority=scenario.get("priority", "medium"),
                 preconditions=data.get("preconditions", []),
@@ -265,11 +265,11 @@ class TestGenerator:
                 tags=data.get("tags", []),
             )
         except Exception as e:
-            logger.error(f"Stage 3 失败: {e}")
+            logger.error(f"Stage 3 failed: {e}")
             return None
 
     async def _stage4_review(self, requirement: str, test_cases: List[GeneratedTestCase]) -> Optional[Dict]:
-        """Stage 4: LLM-as-Judge 评审"""
+        """Stage 4: LLM-as-Judge review"""
         try:
             import asyncio
             llm = self._get_llm()
@@ -279,12 +279,12 @@ class TestGenerator:
             content = result.content if hasattr(result, "content") else str(result)
             return self._parse_json(content)
         except Exception as e:
-            logger.error(f"Stage 4 评审失败: {e}")
+            logger.error(f"Stage 4 review failed: {e}")
             return None
 
     @staticmethod
     def _parse_json(text: str) -> Dict:
-        """解析 LLM 输出中的 JSON"""
+        """Parse JSON from LLM output"""
         t = text.strip()
         if t.startswith("```"):
             t = t.split("\n", 1)[1] if "\n" in t else t[3:]

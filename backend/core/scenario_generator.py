@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-Scenario Generator — 场景生成器
+Scenario Generator
 
-从正常流程推导异常场景：
-- 组合参数生成边界用例
-- 从正常流程反推错误路径
-- 性能/安全场景模板填充
+Derive exception scenarios from normal workflows:
+- Combine parameters to generate boundary cases
+- Infer error paths from normal workflows
+- Populate performance/security scenario templates
 """
+
+import re
 
 from typing import Dict, Any, List, Optional
 from dataclasses import dataclass, field
@@ -17,75 +19,75 @@ import itertools
 logger = logging.getLogger(__name__)
 
 
-# ── 场景模板 ──────────────────────────────────────────────────────────────────
+# ── Scenario templates ──────────────────────────────────────────────────────
 
 BOUNDARY_TEMPLATES = {
     "string": [
-        {"name": "空字符串", "value": ""},
-        {"name": "单字符", "value": "a"},
-        {"name": "最大长度", "value": "a" * 255},
-        {"name": "超长字符串", "value": "a" * 10000},
-        {"name": "特殊字符", "value": "<script>alert(1)</script>"},
-        {"name": "SQL注入", "value": "' OR 1=1 --"},
-        {"name": "Unicode字符", "value": "🎯测试émoji"},
-        {"name": "空格填充", "value": "   "},
-        {"name": "制表符和换行", "value": "\t\n\r"},
+        {"name": "Empty string", "value": ""},
+        {"name": "Single character", "value": "a"},
+        {"name": "Maximum length", "value": "a" * 255},
+        {"name": "Very long string", "value": "a" * 10000},
+        {"name": "Special characters", "value": "<script>alert(1)</script>"},
+        {"name": "SQL injection", "value": "' OR 1=1 --"},
+        {"name": "Unicode characters", "value": "🎯测试émoji"},
+        {"name": "Space padding", "value": "   "},
+        {"name": "Tabs and newlines", "value": "\t\n\r"},
     ],
     "number": [
-        {"name": "零", "value": 0},
-        {"name": "负数", "value": -1},
-        {"name": "极大数", "value": 999999999},
-        {"name": "小数", "value": 0.001},
-        {"name": "边界最大", "value": 2147483647},
-        {"name": "非数字字符串", "value": "abc"},
+        {"name": "Zero", "value": 0},
+        {"name": "Negative number", "value": -1},
+        {"name": "Very large number", "value": 999999999},
+        {"name": "Decimal", "value": 0.001},
+        {"name": "Maximum boundary", "value": 2147483647},
+        {"name": "Nonnumeric string", "value": "abc"},
     ],
     "email": [
-        {"name": "无效格式", "value": "not-an-email"},
-        {"name": "缺少@", "value": "userexample.com"},
-        {"name": "缺少域名", "value": "user@"},
-        {"name": "特殊字符", "value": "user+tag@example.com"},
-        {"name": "超长邮箱", "value": "a" * 200 + "@example.com"},
+        {"name": "Invalid format", "value": "not-an-email"},
+        {"name": "Missing @", "value": "userexample.com"},
+        {"name": "Missing domain", "value": "user@"},
+        {"name": "Special characters", "value": "user+tag@example.com"},
+        {"name": "Very long email", "value": "a" * 200 + "@example.com"},
     ],
     "url": [
-        {"name": "无协议", "value": "example.com"},
-        {"name": "无效协议", "value": "ftp://example.com"},
-        {"name": "含特殊字符", "value": "https://example.com/<script>"},
-        {"name": "本地地址", "value": "http://localhost:8080"},
-        {"name": "IP地址", "value": "http://192.168.1.1"},
+        {"name": "Missing protocol", "value": "example.com"},
+        {"name": "Invalid protocol", "value": "ftp://example.com"},
+        {"name": "Contains special characters", "value": "https://example.com/<script>"},
+        {"name": "Local address", "value": "http://localhost:8080"},
+        {"name": "IP address", "value": "http://192.168.1.1"},
     ],
 }
 
 PERFORMANCE_TEMPLATES = [
     {
-        "name": "并发用户负载",
-        "description": "模拟 {users} 个并发用户同时执行相同操作",
+        "name": "Concurrent user load",
+        "description": "Simulate {users} concurrent users performing the same action",
         "params": {"users": [10, 50, 100, 500]},
     },
     {
-        "name": "大数据量测试",
-        "description": "提交 {size} 条数据记录观察系统响应",
+        "name": "Large data volume",
+        "description": "Submit {size} records and observe the system response",
         "params": {"size": [100, 1000, 10000]},
     },
     {
-        "name": "持续压力测试",
-        "description": "在 {duration} 分钟内持续发送请求",
+        "name": "Sustained stress test",
+        "description": "Send requests continuously for {duration} minutes",
         "params": {"duration": [5, 15, 30]},
     },
 ]
 
 SECURITY_TEMPLATES = [
-    {"name": "XSS攻击", "action": "输入 <script>alert('xss')</script> 到所有文本输入框"},
-    {"name": "SQL注入", "action": "输入 ' OR '1'='1 到查询和搜索输入框"},
-    {"name": "CSRF探测", "action": "检查表单是否包含 CSRF token"},
-    {"name": "路径遍历", "action": "在文件上传路径中使用 ../../../etc/passwd"},
-    {"name": "认证绕过", "action": "直接访问需要认证的API端点（不带token）"},
-    {"name": "权限越权", "action": "用普通用户token访问管理员API"},
-    {"name": "敏感信息泄露", "action": "检查API响应中是否包含密码/token等敏感字段"},
+    {"name": "XSS attack", "action": "Enter <script>alert('xss')</script> in every text input"},
+    {"name": "SQL injection", "action": "Enter ' OR '1'='1 in query and search inputs"},
+    {"name": "CSRF detection", "action": "Check whether forms include a CSRF token"},
+    {"name": "Path traversal", "action": "Use ../../../etc/passwd in the file upload path"},
+    {"name": "Authentication bypass", "action": "Access authentication-required API endpoints directly without a token"},
+    {"name": "Unauthorized access", "action": "Access administrator APIs with a standard-user token"},
+    {"name": "Sensitive data exposure", "action": "Check API responses for sensitive fields such as passwords or tokens"},
 ]
 
 
 class ScenarioGenerator:
-    """场景生成器"""
+    """Scenario generator"""
 
     def generate_boundary_scenarios(
         self,
@@ -94,15 +96,15 @@ class ScenarioGenerator:
         custom_values: List[Any] = None,
     ) -> List[Dict]:
         """
-        为指定字段生成边界测试场景。
+        Generate boundary test scenarios for a field.
 
         Args:
-            field_name: 字段名称
-            field_type: 字段类型（string/number/email/url）
-            custom_values: 自定义测试值
+            field_name: Field name
+            field_type: Field type (string/number/email/url)
+            custom_values: Custom test values
 
         Returns:
-            边界测试场景列表
+            List of boundary test scenarios
         """
         templates = BOUNDARY_TEMPLATES.get(field_type, BOUNDARY_TEMPLATES["string"])
         scenarios = []
@@ -113,70 +115,71 @@ class ScenarioGenerator:
                 "category": "boundary",
                 "field": field_name,
                 "test_value": t["value"],
-                "expected": f"{field_name}字段输入'{t['name']}'时应正确处理",
+                "expected": f"The {field_name} field correctly handles '{t['name']}' input",
             })
 
         if custom_values:
             for i, val in enumerate(custom_values):
                 scenarios.append({
-                    "title": f"{field_name} - 自定义值 {i+1}",
+                    "title": f"{field_name} - Custom value {i+1}",
                     "category": "boundary",
                     "field": field_name,
                     "test_value": val,
-                    "expected": f"{field_name}字段输入自定义值时应正确处理",
+                    "expected": f"The {field_name} field correctly handles the custom value",
                 })
 
         return scenarios
 
     def generate_negative_scenarios(self, positive_flow: List[Dict]) -> List[Dict]:
         """
-        从正常流程反推负面场景。
+        Derive negative scenarios from the normal workflow.
 
-        为每个步骤生成：跳过、错误输入、超时 等变体。
+        Generate variants such as skipped steps, invalid inputs, and timeouts for each step.
         """
         scenarios = []
 
         for i, step in enumerate(positive_flow):
             action = step.get("action", step.get("instruction", ""))
 
-            # 跳过此步骤
+            # Skip this step
             scenarios.append({
-                "title": f"跳过步骤 {i+1}: {action[:30]}",
+                "title": f"Skip step {i+1}: {action[:30]}",
                 "category": "negative",
-                "description": f"跳过 '{action}' 步骤，直接执行后续操作",
+                "description": f"Skip '{action}' and proceed directly to subsequent actions",
                 "skip_step": i,
             })
 
-            # 错误输入
-            if any(kw in action for kw in ["输入", "填写", "fill", "type"]):
+            # Invalid input
+            if (any(kw in action.lower() for kw in ["输入", "填写", "fill", "type"])
+                    or re.search(r"\b(?:enter|input)\b", action, re.IGNORECASE)):
                 scenarios.append({
-                    "title": f"步骤 {i+1} 错误输入",
+                    "title": f"Step {i+1}: Invalid input",
                     "category": "negative",
-                    "description": f"在 '{action}' 步骤中输入无效数据",
+                    "description": f"Enter invalid data during '{action}'",
                     "modify_step": i,
-                    "modification": "使用无效数据",
+                    "modification": "Use invalid data",
                 })
 
-            # 重复操作
+            # Repeat the action
             scenarios.append({
-                "title": f"重复步骤 {i+1}: {action[:30]}",
+                "title": f"Repeat step {i+1}: {action[:30]}",
                 "category": "negative",
-                "description": f"连续执行两次 '{action}'",
+                "description": f"Perform '{action}' twice in succession",
                 "repeat_step": i,
             })
 
-        # 反序执行
+        # Reverse execution order
         if len(positive_flow) > 2:
             scenarios.append({
-                "title": "反序执行所有步骤",
+                "title": "Run all steps in reverse order",
                 "category": "negative",
-                "description": "按逆序执行所有操作步骤",
+                "description": "Execute every action step in reverse order",
             })
 
         return scenarios
 
     def generate_performance_scenarios(self, target_url: str) -> List[Dict]:
-        """生成性能测试场景"""
+        """Generate performance test scenarios"""
         return [
             {
                 "title": t["name"],
@@ -195,7 +198,7 @@ class ScenarioGenerator:
         ]
 
     def generate_security_scenarios(self, target_url: str) -> List[Dict]:
-        """生成安全测试场景"""
+        """Generate security test scenarios"""
         return [
             {
                 "title": t["name"],
@@ -213,26 +216,26 @@ class ScenarioGenerator:
         max_combinations: int = 50,
     ) -> List[Dict]:
         """
-        组合参数覆盖 — Pairwise 或全组合。
+        Parameter combination coverage: pairwise or all combinations.
 
         Args:
-            fields: {字段名: [可能的值列表]}
-            max_combinations: 最大组合数
+            fields: {field_name: [possible values]}
+            max_combinations: Maximum number of combinations
         """
         keys = list(fields.keys())
         values = list(fields.values())
 
-        # 全组合
+        # All combinations
         all_combos = list(itertools.product(*values))
         if len(all_combos) > max_combinations:
-            # 降级为 pairwise 近似：取前 N 个
+            # Fall back to a pairwise approximation: take the first N
             all_combos = all_combos[:max_combinations]
 
         scenarios = []
         for i, combo in enumerate(all_combos):
             params = dict(zip(keys, combo))
             scenarios.append({
-                "title": f"组合 {i+1}: {json.dumps(params, ensure_ascii=False)[:80]}",
+                "title": f"Combination {i+1}: {json.dumps(params, ensure_ascii=False)[:80]}",
                 "category": "combination",
                 "parameters": params,
             })

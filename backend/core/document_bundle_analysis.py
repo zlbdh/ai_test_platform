@@ -1,9 +1,9 @@
 """
-多文档交叉检测
+Cross-document analysis
 
-职责：
-- 对主文档与参考文档做一致性和覆盖性检查
-- 识别接口、状态码、约束等信号的缺口或冲突
+Responsibilities:
+- Check consistency and coverage across primary and reference documents
+- Identify gaps or conflicts in APIs, status codes, constraints, and related signals
 """
 
 from __future__ import annotations
@@ -94,8 +94,8 @@ class DocumentBundleAnalyzer:
             findings.append(self._finding(
                 "warning",
                 "coverage",
-                "需求文档缺少开发/接口类参考文档，交叉检测深度有限。",
-                "补充开发设计、OpenAPI 或接口说明文档后再做一致性检查。"
+                "The requirements document lacks development/API references, limiting cross-document analysis.",
+                "Add development designs, OpenAPI specifications, or interface documentation before checking consistency."
             ))
 
         if primary_extracted.get("data_constraints") and not any(
@@ -105,8 +105,8 @@ class DocumentBundleAnalyzer:
             findings.append(self._finding(
                 "warning",
                 "coverage",
-                "主文档包含数据约束，但参考文档未体现对应字段/表结构约束。",
-                "补充数据库设计或接口字段约束，建立数据验证追溯关系。"
+                "The primary document contains data constraints that are absent from reference field/table definitions.",
+                "Add database designs or API field constraints to establish data-validation traceability."
             ))
 
         if primary_extracted.get("error_codes") and not any(
@@ -116,8 +116,8 @@ class DocumentBundleAnalyzer:
             findings.append(self._finding(
                 "info",
                 "coverage",
-                "主文档提到了失败码/异常码，但参考文档缺少对应响应定义。",
-                "补充错误码语义、异常响应体和失败路径说明。"
+                "The primary document mentions failure/error codes without corresponding reference response definitions.",
+                "Add error-code meanings, exception response bodies, and failure-path descriptions."
             ))
 
         return findings
@@ -138,8 +138,8 @@ class DocumentBundleAnalyzer:
                 findings.append(self._finding(
                     "warning",
                     "consistency",
-                    f"部分主文档接口未在参考文档中找到对应定义：{', '.join(missing_endpoints[:3])}。",
-                    "核对接口命名、路径版本号或补齐缺失的接口定义。"
+                    f"Some primary-document APIs lack reference definitions: {', '.join(missing_endpoints[:3])}.",
+                    "Check API names and path versions, or add the missing definitions."
                 ))
 
         primary_codes = self._extract_status_like_codes(primary_extracted)
@@ -152,8 +152,8 @@ class DocumentBundleAnalyzer:
             findings.append(self._finding(
                 "warning",
                 "consistency",
-                "主文档与参考文档的错误码/响应状态没有交集。",
-                "检查失败码约定是否一致，并统一成功/失败响应设计。"
+                "The primary and reference documents have no overlapping error codes or response statuses.",
+                "Check error-code consistency and standardize success/failure response designs."
             ))
 
         return findings
@@ -180,8 +180,8 @@ class DocumentBundleAnalyzer:
                 findings.append(self._finding(
                     "warning",
                     "consistency",
-                    f"字段/约束“{field_name}”在多份文档中的表达不一致：{sample_primary} <> {sample_reference}。",
-                    "统一字段约束的阈值、单位和比较符号，避免测试断言冲突。"
+                    f"Field/constraint '{field_name}' differs across documents: {sample_primary} <> {sample_reference}.",
+                    "Standardize constraint thresholds, units, and comparison operators to avoid conflicting test assertions."
                 ))
 
         return findings
@@ -202,6 +202,9 @@ class DocumentBundleAnalyzer:
             r"(?P<field>[A-Za-z_][A-Za-z0-9_.]*)[^0-9<>=]{0,20}(?P<op>>=|<=|>|<|=)\s*(?P<value>\d+(?:\.\d+)?)",
             r"(?P<field>[\u4e00-\u9fa5A-Za-z_][\u4e00-\u9fa5A-Za-z0-9_.]*)[^0-9]{0,20}(?P<op>不少于|不低于|至少|不小于|不大于|不超过|至多|最多|大于|小于|高于|低于|为)\s*(?P<value>\d+(?:\.\d+)?)",
         ]
+        patterns.append(
+            r"(?P<field>[A-Za-z_][A-Za-z0-9_.]*)\s+(?i:(?:must\s+be\s+|should\s+be\s+|is\s+)?(?P<op>no less than|not less than|at least|no more than|not greater than|at most|greater than|more than|less than|equals?))\s*(?P<value>\d+(?:\.\d+)?)"
+        )
         for pattern in patterns:
             match = re.search(pattern, text)
             if not match:
@@ -228,7 +231,12 @@ class DocumentBundleAnalyzer:
             "低于": "<",
             "为": "=",
         }
-        return mapping.get(operator, operator)
+        mapping.update({
+            "no less than": ">=", "not less than": ">=", "at least": ">=",
+            "no more than": "<=", "not greater than": "<=", "at most": "<=",
+            "greater than": ">", "more than": ">", "less than": "<", "equal": "=", "equals": "=",
+        })
+        return mapping.get(operator.lower(), operator)
 
     def _extract_status_like_codes(self, extracted: Dict[str, List[str]]) -> set[str]:
         codes = set()
@@ -287,11 +295,11 @@ class DocumentBundleAnalyzer:
         reference_types = {str(item.get("document_type", "general_text")) for item in references}
 
         if primary_type == "requirement_prd" and "api_spec" in reference_types:
-            actions.append("将需求场景映射到接口路径，建立业务流程到 API 的追溯关系。")
+            actions.append("Map requirement scenarios to API paths to trace business workflows to APIs.")
         if "database_schema" in reference_types:
-            actions.append("把关键字段约束同步映射为数据库校验和数据一致性测试。")
+            actions.append("Map key field constraints to database validation and data-consistency tests.")
         if not actions:
-            actions.append("多文档之间未发现明显缺口，可直接基于联合上下文生成测试。")
+            actions.append("No obvious cross-document gaps were found; generate tests from the combined context.")
         return self._unique(actions)
 
     def _finding(self, severity: str, category: str, message: str, suggestion: str) -> BundleFinding:

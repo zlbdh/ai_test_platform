@@ -1,11 +1,11 @@
 """
-Requirement Parser - 需求文档解析器
+Requirement Parser
 
-从 PRD/需求文档中自动提取：
-- 业务规则
-- 验收标准  
-- 测试用例
-实现 AI 95%+ 自动化测试
+Automatically extract from PRD/requirement documents:
+- Business rules
+- Acceptance criteria
+- Test cases
+Support 95%+ AI test automation
 """
 
 from typing import Dict, Any, List, Optional
@@ -16,12 +16,12 @@ import json
 
 
 class RuleType(Enum):
-    FUNCTIONAL = "functional"      # 功能性需求
-    VALIDATION = "validation"      # 验证规则
-    BUSINESS = "business"          # 业务逻辑
-    UI = "ui"                      # UI 要求
-    PERFORMANCE = "performance"    # 性能要求
-    SECURITY = "security"          # 安全要求
+    FUNCTIONAL = "functional"      # Functional requirements
+    VALIDATION = "validation"      # Validation rules
+    BUSINESS = "business"          # Business logic
+    UI = "ui"                      # UI requirements
+    PERFORMANCE = "performance"    # Performance requirements
+    SECURITY = "security"          # Security requirements
 
 
 class Priority(Enum):
@@ -33,7 +33,7 @@ class Priority(Enum):
 
 @dataclass
 class BusinessRule:
-    """业务规则"""
+    """Business rule"""
     rule_id: str
     rule_type: RuleType
     description: str
@@ -46,7 +46,7 @@ class BusinessRule:
 
 @dataclass
 class TestCase:
-    """测试用例"""
+    """Test case"""
     case_id: str
     title: str
     description: str
@@ -61,7 +61,7 @@ class TestCase:
 
 @dataclass
 class ParsedRequirement:
-    """解析后的需求"""
+    """Parsed requirements"""
     title: str
     summary: str
     rules: List[BusinessRule]
@@ -71,14 +71,14 @@ class ParsedRequirement:
 
 
 class RequirementParser:
-    """需求文档解析器"""
+    """Requirement document parser"""
     
     def __init__(self, llm_client=None):
         self.llm = llm_client
         self.rule_patterns = self._init_patterns()
     
     def _init_patterns(self) -> Dict:
-        """初始化规则识别模式"""
+        """Initialize rule-recognition patterns"""
         return {
             "must": r"(必须|应该|需要|要求|must|shall|should|require)",
             "condition": r"(当|如果|若|在.*情况下|when|if|given)",
@@ -92,25 +92,25 @@ class RequirementParser:
     
     def parse_text(self, content: str, title: str = "Untitled") -> ParsedRequirement:
         """
-        解析需求文档文本
+        Parse requirement document text
         
         Args:
-            content: 需求文档内容
-            title: 文档标题
+            content: Requirement document contents
+            title: Document title
         
         Returns:
-            ParsedRequirement: 解析结果
+            ParsedRequirement: Parsing result
         """
-        # 分割章节
+        # Split into sections
         sections = self._split_sections(content)
         
-        # 提取规则
+        # Extract rules
         rules = self._extract_rules(content, sections)
         
-        # 生成测试用例
+        # Generate test cases
         test_cases = self._generate_test_cases(rules)
         
-        # 计算置信度
+        # Calculate confidence
         confidence = self._calculate_confidence(rules, content)
         
         return ParsedRequirement(
@@ -123,10 +123,10 @@ class RequirementParser:
         )
     
     def _split_sections(self, content: str) -> Dict[str, str]:
-        """分割文档章节"""
+        """Split document sections"""
         sections = {}
         
-        # 匹配 Markdown 标题
+        # Match Markdown headings
         pattern = r'^(#{1,3})\s+(.+)$'
         lines = content.split('\n')
         
@@ -153,11 +153,11 @@ class RequirementParser:
         content: str, 
         sections: Dict[str, str]
     ) -> List[BusinessRule]:
-        """提取业务规则"""
+        """Extract business rules"""
         rules = []
         rule_counter = 0
         
-        # 按句子分割
+        # Split into sentences
         sentences = re.split(r'[。.!！?？\n]', content)
         
         for sentence in sentences:
@@ -169,7 +169,7 @@ class RequirementParser:
             if rule_type:
                 rule_counter += 1
                 
-                # 提取条件和期望行为
+                # Extract conditions and expected behavior
                 conditions, behavior = self._parse_condition_behavior(sentence)
                 
                 rules.append(BusinessRule(
@@ -185,10 +185,10 @@ class RequirementParser:
         return rules
     
     def _classify_rule(self, text: str) -> Optional[RuleType]:
-        """分类规则类型"""
+        """Classify the rule type"""
         text_lower = text.lower()
         
-        # 检查各类模式
+        # Check each pattern category
         if re.search(self.rule_patterns["perf"], text_lower):
             return RuleType.PERFORMANCE
         elif re.search(self.rule_patterns["validation"], text_lower):
@@ -205,16 +205,17 @@ class RequirementParser:
         return None
     
     def _parse_condition_behavior(self, text: str) -> tuple:
-        """解析条件和期望行为"""
+        """Parse conditions and expected behavior"""
         conditions = []
         behavior = text
         
-        # 查找条件关键词
+        # Find condition keywords
         cond_patterns = [
             r"当(.+?)时[,，](.+)",
             r"如果(.+?)[,，]则(.+)",
             r"若(.+?)[,，](.+)",
-            r"在(.+?)情况下[,，](.+)"
+            r"在(.+?)情况下[,，](.+)",
+            r"(?i)\b(?:when|if|given)\s+(.+?)[,;]\s*(?:then\s+)?(.+)"
         ]
         
         for pattern in cond_patterns:
@@ -227,7 +228,7 @@ class RequirementParser:
         return conditions, behavior
     
     def _determine_priority(self, text: str) -> Priority:
-        """确定规则优先级"""
+        """Determine rule priority"""
         critical_keywords = ["必须", "关键", "核心", "must", "critical", "essential"]
         high_keywords = ["重要", "需要", "should", "important", "required"]
         low_keywords = ["可选", "建议", "optional", "nice to have"]
@@ -244,17 +245,17 @@ class RequirementParser:
         return Priority.MEDIUM
     
     def _generate_test_cases(self, rules: List[BusinessRule]) -> List[TestCase]:
-        """根据规则生成测试用例"""
+        """Generate test cases from rules"""
         test_cases = []
         case_counter = 0
         
         for rule in rules:
             case_counter += 1
             
-            # 正向测试用例
+            # Positive test case
             test_cases.append(self._create_positive_case(rule, case_counter))
             
-            # 如果有条件，生成边界/负向用例
+            # Generate boundary/negative cases when conditions exist
             if rule.conditions:
                 case_counter += 1
                 test_cases.append(self._create_negative_case(rule, case_counter))
@@ -262,16 +263,16 @@ class RequirementParser:
         return test_cases
     
     def _create_positive_case(self, rule: BusinessRule, counter: int) -> TestCase:
-        """创建正向测试用例"""
+        """Create a positive test case"""
         return TestCase(
             case_id=f"TC-{counter:03d}",
-            title=f"验证: {rule.description[:50]}...",
-            description=f"验证规则 {rule.rule_id} 的正向场景",
-            preconditions=rule.conditions if rule.conditions else ["系统正常运行"],
+            title=f"Verify: {rule.description[:50]}...",
+            description=f"Verify the positive scenario for rule {rule.rule_id}",
+            preconditions=rule.conditions if rule.conditions else ["The system is operating normally"],
             steps=[
-                "准备测试数据",
-                "执行相关操作",
-                "观察系统响应"
+                "Prepare test data",
+                "Perform the relevant actions",
+                "Observe the system response"
             ],
             expected_results=[rule.expected_behavior],
             test_type=self._map_rule_to_test_type(rule.rule_type),
@@ -281,18 +282,18 @@ class RequirementParser:
         )
     
     def _create_negative_case(self, rule: BusinessRule, counter: int) -> TestCase:
-        """创建负向测试用例"""
+        """Create a negative test case"""
         return TestCase(
             case_id=f"TC-{counter:03d}",
-            title=f"边界测试: {rule.description[:40]}...",
-            description=f"验证规则 {rule.rule_id} 的边界/异常场景",
-            preconditions=["系统正常运行"],
+            title=f"Boundary test: {rule.description[:40]}...",
+            description=f"Verify boundary/exception scenarios for rule {rule.rule_id}",
+            preconditions=["The system is operating normally"],
             steps=[
-                "准备无效/边界测试数据",
-                "执行相关操作",
-                "观察错误处理"
+                "Prepare invalid/boundary test data",
+                "Perform the relevant actions",
+                "Observe error handling"
             ],
-            expected_results=["系统正确处理异常情况"],
+            expected_results=["The system handles exceptions correctly"],
             test_type=self._map_rule_to_test_type(rule.rule_type),
             priority=rule.priority,
             related_rules=[rule.rule_id],
@@ -300,7 +301,7 @@ class RequirementParser:
         )
     
     def _map_rule_to_test_type(self, rule_type: RuleType) -> str:
-        """映射规则类型到测试类型"""
+        """Map rule types to test types"""
         mapping = {
             RuleType.FUNCTIONAL: "ui_e2e",
             RuleType.VALIDATION: "api_rest",
@@ -312,7 +313,7 @@ class RequirementParser:
         return mapping.get(rule_type, "ui_e2e")
     
     def _generate_summary(self, content: str) -> str:
-        """生成文档摘要"""
+        """Generate a document summary"""
         lines = content.split('\n')
         summary_lines = []
         
@@ -330,22 +331,22 @@ class RequirementParser:
         rules: List[BusinessRule], 
         content: str
     ) -> float:
-        """计算解析置信度"""
+        """Calculate parsing confidence"""
         if not content:
             return 0.0
         
-        # 基础分
+        # Base score
         score = 0.3
         
-        # 规则数量加分
+        # Bonus for rule count
         if len(rules) > 0:
             score += min(0.3, len(rules) * 0.03)
         
-        # 结构化程度加分
+        # Bonus for document structure
         if '##' in content or '###' in content:
             score += 0.2
         
-        # 关键词密度加分
+        # Bonus for keyword density
         keywords_found = sum(
             1 for p in self.rule_patterns.values()
             if re.search(p, content.lower())
@@ -355,7 +356,7 @@ class RequirementParser:
         return min(1.0, score)
     
     def to_json(self, result: ParsedRequirement) -> str:
-        """转换为 JSON"""
+        """Convert to JSON"""
         data = {
             "title": result.title,
             "summary": result.summary,
@@ -379,11 +380,11 @@ class RequirementParser:
         return json.dumps(data, ensure_ascii=False, indent=2)
 
 
-# 单例
+# Singleton
 _parser: Optional[RequirementParser] = None
 
 def get_requirement_parser() -> RequirementParser:
-    """获取需求解析器单例"""
+    """Get the requirement parser singleton"""
     global _parser
     if _parser is None:
         _parser = RequirementParser()

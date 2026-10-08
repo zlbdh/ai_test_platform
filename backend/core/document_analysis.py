@@ -1,11 +1,11 @@
 """
-文档检测与结构化分析
+Document detection and structured analysis
 
-目标：
-- 识别文档类型（需求、开发、接口、数据库、通用文本）
-- 给出完整性 / 可测性 / 质量评分
-- 提取对测试设计有价值的结构化信号
-- 为后续测试用例生成提供更可信的输入
+Goals:
+- Identify document types (requirements, development, API, database, general text)
+- Score completeness, testability, and quality
+- Extract structured signals useful for test design
+- Provide more reliable input for subsequent test-case generation
 """
 
 from __future__ import annotations
@@ -39,14 +39,14 @@ class DocumentAnalysis:
 
 
 class DocumentAnalyzer:
-    """面向测试设计的轻量文档检测器。"""
+    """Lightweight document analyzer for test design."""
 
     _DOC_LABELS = {
-        "requirement_prd": "需求文档",
-        "development_design": "开发文档",
-        "api_spec": "接口文档",
-        "database_schema": "数据库设计",
-        "general_text": "通用文本",
+        "requirement_prd": "Requirements document",
+        "development_design": "Development document",
+        "api_spec": "API specification",
+        "database_schema": "Database design",
+        "general_text": "General text",
     }
 
     _VAGUE_TERMS = [
@@ -60,9 +60,11 @@ class DocumentAnalyzer:
         "优化体验",
         "尽量",
         "提升性能",
+        "as soon as possible", "reasonable", "appropriate", "friendly", "stable",
+        "if necessary", "support more", "improve experience", "as much as possible", "improve performance",
     ]
 
-    _ACTOR_PATTERN = re.compile(r"(用户|管理员|商家|运营|访客|游客|客服|审计员|开发人员|测试人员)")
+    _ACTOR_PATTERN = re.compile(r"(用户|管理员|商家|运营|访客|游客|客服|审计员|开发人员|测试人员|(?i:\b(?:users?|administrators?|merchants?|operators?|visitors?|guests?|support agents?|auditors?|developers?|testers?)\b))")
     _API_PATTERN = re.compile(r"\b(GET|POST|PUT|DELETE|PATCH)\s+(/[A-Za-z0-9_\-/{}/.]+)")
     _ERROR_CODE_PATTERN = re.compile(r"\b(?:ERR_[A-Z0-9_]+|[45]\d{2})\b")
     _SQL_TABLE_PATTERN = re.compile(r"CREATE\s+TABLE\s+[`\"\[]?(\w+)[`\"\]]?", re.IGNORECASE)
@@ -71,7 +73,8 @@ class DocumentAnalyzer:
     _CONSTRAINT_PATTERN = re.compile(
         r"(不少于|不大于|不超过|不低于|至少|至多|最大|最小|上限|下限|"
         r"长度|范围|必填|非空|唯一|枚举|有效期|超时|响应时间|并发|TPS|QPS|权限|"
-        r"大于|小于|高于|低于|早于|晚于|>=|<=|==|>|<)"
+        r"大于|小于|高于|低于|早于|晚于|>=|<=|==|>|<|"
+        r"(?i:\b(?:at least|at most|no more than|no less than|maximum|minimum|upper limit|lower limit|length|range|required|nonempty|unique|enum|expiration|timeout|response time|concurrent|concurrency|permissions?|greater than|less than|earlier than|later than)\b))"
     )
     _OPENAPI_METHODS = {"get", "post", "put", "delete", "patch", "head", "options"}
 
@@ -91,7 +94,7 @@ class DocumentAnalyzer:
 
         return DocumentAnalysis(
             document_type=doc_type,
-            document_label=self._DOC_LABELS.get(doc_type, "通用文本"),
+            document_label=self._DOC_LABELS.get(doc_type, "General text"),
             quality_score=quality_score,
             completeness_score=completeness_score,
             testability_score=testability_score,
@@ -104,13 +107,13 @@ class DocumentAnalyzer:
     def detect_document_type(self, content: str, title: str = "") -> str:
         combined = f"{title}\n{content}".lower()
 
-        if any(token in combined for token in ["openapi", "swagger", '"paths"', "api接口", "接口定义"]):
+        if any(token in combined for token in ["openapi", "swagger", '"paths"', "api接口", "接口定义", "api specification", "api definition"]):
             return "api_spec"
-        if "create table" in combined or "表结构" in combined or "数据库设计" in combined:
+        if "create table" in combined or "表结构" in combined or "数据库设计" in combined or "database schema" in combined or "database design" in combined:
             return "database_schema"
-        if any(token in combined for token in ["技术方案", "设计说明", "模块设计", "架构设计", "时序图", "部署方案", "开发文档"]):
+        if any(token in combined for token in ["技术方案", "设计说明", "模块设计", "架构设计", "时序图", "部署方案", "开发文档", "technical design", "design specification", "module design", "architecture design", "sequence diagram", "deployment plan", "development document"]):
             return "development_design"
-        if any(token in combined for token in ["prd", "需求文档", "功能需求", "验收标准", "用户故事", "业务规则"]):
+        if any(token in combined for token in ["prd", "需求文档", "功能需求", "验收标准", "用户故事", "业务规则", "requirements document", "functional requirements", "acceptance criteria", "user stories", "business rules"]):
             return "requirement_prd"
         return "general_text"
 
@@ -169,88 +172,88 @@ class DocumentAnalyzer:
             if not extracted["flows"]:
                 issues.append(self._issue(
                     "warning", "completeness",
-                    "未识别到清晰的业务流程或步骤描述。",
-                    "补充主流程、异常流程和关键前置条件。"
+                    "No clear business workflow or step descriptions were identified.",
+                    "Add main workflows, exception paths, and key preconditions."
                 ))
             if not extracted["data_constraints"]:
                 issues.append(self._issue(
                     "warning", "testability",
-                    "缺少可直接落地为测试断言的数据约束。",
-                    "补充长度、范围、状态、时效、权限等可验证条件。"
+                    "Data constraints suitable for direct test assertions are missing.",
+                    "Add verifiable length, range, state, timing, and permission conditions."
                 ))
-            if not self._contains_any(content, ["验收标准", "期望结果", "应当", "必须", "成功", "失败"]):
+            if not self._contains_any(content, ["验收标准", "期望结果", "应当", "必须", "成功", "失败", "acceptance criteria", "expected results", "shall", "must", "success", "failure"]):
                 issues.append(self._issue(
                     "error", "testability",
-                    "文档缺少明确验收标准，直接生成测试用例的可信度较低。",
-                    "增加可验证的成功/失败标准与边界处理规则。"
+                    "The document lacks explicit acceptance criteria, reducing the reliability of generated tests.",
+                    "Add verifiable success/failure criteria and boundary-handling rules."
                 ))
 
         if doc_type == "development_design":
             if not extracted["api_endpoints"] and not extracted["database_objects"]:
                 issues.append(self._issue(
                     "warning", "completeness",
-                    "开发文档中未识别到接口定义或数据库对象。",
-                    "补充接口、字段约束、状态流转或模块交互说明。"
+                    "No interface definitions or database objects were identified in the development document.",
+                    "Add interfaces, field constraints, state transitions, or module interaction descriptions."
                 ))
             if not extracted["error_codes"]:
                 issues.append(self._issue(
                     "info", "testability",
-                    "未识别到错误码或异常场景说明。",
-                    "补充失败场景、重试策略、回滚/补偿逻辑。"
+                    "No error codes or exception scenarios were identified.",
+                    "Add failure scenarios, retry strategies, and rollback/compensation logic."
                 ))
 
         if doc_type == "api_spec":
             if not extracted["api_endpoints"]:
                 issues.append(self._issue(
                     "error", "completeness",
-                    "接口文档中未识别到可测试的 API 路径。",
-                    "检查 OpenAPI/Swagger 结构是否完整。"
+                    "No testable API paths were identified in the API document.",
+                    "Check that the OpenAPI/Swagger structure is complete."
                 ))
             if not extracted.get("api_parameters", []):
                 issues.append(self._issue(
                     "info", "testability",
-                    "接口文档未识别到参数定义。",
-                    "补充路径参数、查询参数、请求体字段及其必填约束。"
+                    "No parameter definitions were identified in the API document.",
+                    "Add path/query parameters, request-body fields, and required-field constraints."
                 ))
             if not extracted.get("response_statuses", []):
                 issues.append(self._issue(
                     "warning", "completeness",
-                    "接口文档缺少明确的响应状态定义。",
-                    "补充成功、校验失败和系统异常的响应状态。"
+                    "The API document lacks explicit response-status definitions.",
+                    "Add response statuses for success, validation failure, and system errors."
                 ))
             if not extracted["error_codes"]:
                 issues.append(self._issue(
                     "info", "testability",
-                    "接口文档缺少错误码/异常响应定义。",
-                    "补充 4xx/5xx 响应和错误码语义。"
+                    "The API document lacks error-code or exception-response definitions.",
+                    "Add 4xx/5xx responses and error-code meanings."
                 ))
 
         if doc_type == "database_schema" and not extracted["database_objects"]:
             issues.append(self._issue(
                 "warning", "completeness",
-                "数据库文档中未识别到表结构定义。",
-                "补充 CREATE TABLE、索引、约束或数据字典。"
+                "No table definitions were identified in the database document.",
+                "Add CREATE TABLE statements, indexes, constraints, or a data dictionary."
             ))
         if doc_type == "database_schema" and extracted["database_objects"] and not extracted.get("database_columns", []):
             issues.append(self._issue(
                 "warning", "completeness",
-                "数据库文档识别到了表名，但没有识别到字段定义。",
-                "补充字段名、类型、非空/唯一/默认值等列级约束。"
+                "Table names were identified in the database document, but column definitions were not.",
+                "Add column names, types, and column-level constraints such as nullability, uniqueness, and defaults."
             ))
 
-        vague_hits = [term for term in self._VAGUE_TERMS if term in content]
+        vague_hits = [term for term in self._VAGUE_TERMS if term.lower() in content.lower()]
         if vague_hits:
             issues.append(self._issue(
                 "info", "ambiguity",
-                f"检测到模糊表达：{', '.join(vague_hits[:4])}。",
-                "将模糊目标改写成可量化、可验证的描述。"
+                f"Vague wording detected: {', '.join(vague_hits[:4])}.",
+                "Rewrite vague goals as measurable, verifiable descriptions."
             ))
 
         if len(content.strip()) < 80:
             issues.append(self._issue(
                 "warning", "completeness",
-                "文档内容较短，可能不足以支撑高质量测试设计。",
-                "补充业务背景、输入输出、边界条件和异常处理。"
+                "The document is short and may not support high-quality test design.",
+                "Add business context, inputs/outputs, boundaries, and error handling."
             ))
 
         return issues
@@ -277,7 +280,7 @@ class DocumentAnalyzer:
             score += min(len(extracted.get("database_columns", [])) * 0.01, 0.1)
             score += min(len(extracted.get("database_indexes", [])) * 0.02, 0.08)
             score += min(len(extracted.get("database_relations", [])) * 0.02, 0.08)
-        if self._contains_any(content, ["异常", "失败", "错误", "error", "rollback", "回滚"]):
+        if self._contains_any(content, ["异常", "失败", "错误", "error", "rollback", "回滚", "exception", "failure"]):
             score += 0.05
         if self._contains_any(content, ["验收标准", "期望结果", "acceptance", "expected"]):
             score += 0.05
@@ -292,7 +295,7 @@ class DocumentAnalyzer:
         issues: List[AnalysisIssue],
     ) -> float:
         score = 0.4
-        measurable_count = len(re.findall(r"(不少于|不大于|<=|>=|<|>|响应时间|并发|ms|分钟|秒|长度|次数|\d+)", content))
+        measurable_count = len(re.findall(r"(不少于|不大于|<=|>=|<|>|响应时间|并发|ms|分钟|秒|长度|次数|\d+|(?i:\b(?:at least|at most|response time|concurrent|concurrency|minutes?|seconds?|length|count)\b))", content))
         score += min(measurable_count * 0.02, 0.16)
         score += min(len(extracted["error_codes"]) * 0.02, 0.08)
         score += min(len(extracted["actors"]) * 0.02, 0.08)
@@ -334,7 +337,7 @@ class DocumentAnalyzer:
             recommended.extend(["data_validation"])
         if self._contains_security_signals(extracted["business_rules"] + extracted["flows"] + extracted["data_constraints"]):
             recommended.append("security")
-        if self._contains_any(" ".join(extracted["business_rules"] + extracted["flows"] + extracted["data_constraints"]), ["性能", "响应时间", "并发", "吞吐"]):
+        if self._contains_any(" ".join(extracted["business_rules"] + extracted["flows"] + extracted["data_constraints"]), ["性能", "响应时间", "并发", "吞吐", "performance", "response time", "concurrent", "concurrency", "throughput"]):
             recommended.append("performance")
 
         return self._unique(recommended)
@@ -348,26 +351,26 @@ class DocumentAnalyzer:
         actions: List[str] = []
 
         if any(issue.severity == "error" for issue in issues):
-            actions.append("先修正文档中的关键缺口，再生成正式测试用例。")
+            actions.append("Resolve critical document gaps before generating formal test cases.")
         if extracted["api_endpoints"]:
-            actions.append("优先生成 API/契约测试，并补充异常响应断言。")
+            actions.append("Prioritize API/contract tests and add exception-response assertions.")
         if extracted.get("api_parameters", []):
-            actions.append("补充必填参数、边界值和非法组合的校验场景。")
+            actions.append("Add validation scenarios for required parameters, boundary values, and invalid combinations.")
         if extracted.get("response_statuses", []):
-            actions.append("覆盖成功、业务校验失败和系统异常等响应状态。")
+            actions.append("Cover response statuses for success, business validation failures, and system errors.")
         if extracted["database_objects"]:
-            actions.append("补充数据一致性、约束校验和回滚场景。")
+            actions.append("Add data consistency, constraint validation, and rollback scenarios.")
         if extracted.get("database_relations", []):
-            actions.append("增加外键完整性、级联更新/删除和关联查询场景。")
+            actions.append("Add foreign-key integrity, cascading update/delete, and relationship-query scenarios.")
         if extracted["flows"]:
-            actions.append("按主流程、异常流程和边界流程拆分测试场景。")
+            actions.append("Separate scenarios into main workflows, exception paths, and boundary paths.")
         if doc_type == "requirement_prd":
-            actions.append("建立需求段落到测试用例的追溯关系。")
+            actions.append("Link requirement sections to test cases for traceability.")
         if doc_type == "development_design":
-            actions.append("将技术约束映射为接口、数据和容错类用例。")
+            actions.append("Map technical constraints to API, data, and fault-tolerance test cases.")
 
         if not actions:
-            actions.append("文档信息有限，建议补充业务流程、约束和异常处理后再生成。")
+            actions.append("Document information is limited; add workflows, constraints, and error handling before generation.")
 
         return self._unique(actions)
 
@@ -711,7 +714,7 @@ class DocumentAnalyzer:
             stripped = line.strip()
             if not stripped:
                 continue
-            if re.search(r"(必须|应该|需要|要求|当|如果|若|校验|验证|禁止|支持|应当|shall|must|should)", stripped):
+            if re.search(r"(必须|应该|需要|要求|当|如果|若|校验|验证|禁止|支持|应当|shall|must|should|(?i:\b(?:shall|must|should|require|requires|when|if|validate|verify|prohibit|support)\b))", stripped):
                 results.append(stripped.lstrip("-*1234567890.、) "))
         return self._unique(results[:20])
 
@@ -731,7 +734,7 @@ class DocumentAnalyzer:
 
     def _contains_security_signals(self, items: List[str]) -> bool:
         joined = " ".join(items).lower()
-        return any(token in joined for token in ["安全", "权限", "认证", "鉴权", "密码", "token", "csrf", "xss", "sql"])
+        return any(token in joined for token in ["安全", "权限", "认证", "鉴权", "密码", "token", "csrf", "xss", "sql", "security", "permission", "authentication", "authorization", "password"])
 
     def _unique(self, values: List[str]) -> List[str]:
         seen = set()

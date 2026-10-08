@@ -30,7 +30,7 @@ def test_document_analyzer_detects_requirement_document():
     analysis = analyzer.analyze(content, "登录 PRD")
 
     assert analysis.document_type == "requirement_prd"
-    assert analysis.document_label == "需求文档"
+    assert analysis.document_label == "Requirements document"
     assert analysis.completeness_score >= 0.6
     assert analysis.testability_score >= 0.55
     assert "用户" in analysis.extracted["actors"]
@@ -158,7 +158,7 @@ def test_document_test_designer_builds_api_spec_tests():
     analysis = analyzer.analyze(content, "orders-openapi.json")
     designed = designer.design(content, "orders-openapi.json", analysis, None)
 
-    assert designed["generation_summary"]["strategy_label"] == "接口契约优先"
+    assert designed["generation_summary"]["strategy_label"] == "API contracts first"
     assert designed["generation_summary"]["counts_by_type"]["api_rest"] >= 1
     assert any(test["source"] == "api_spec" for test in designed["tests"])
     assert any("/orders" in test["name"] for test in designed["tests"])
@@ -201,9 +201,9 @@ def test_document_test_designer_builds_richer_api_spec_tests():
     analysis = analyzer.analyze(content, "orders-openapi.json")
     designed = designer.design(content, "orders-openapi.json", analysis, None)
 
-    assert any(test["name"] == "接口参数校验: POST /orders" for test in designed["tests"])
-    assert any(test["name"] == "响应状态覆盖: POST /orders" for test in designed["tests"])
-    assert any(test["name"].startswith("模型结构校验:") for test in designed["tests"])
+    assert any(test["name"] == "API parameter validation: POST /orders" for test in designed["tests"])
+    assert any(test["name"] == "Response status coverage: POST /orders" for test in designed["tests"])
+    assert any(test["name"].startswith("Model structure validation:") for test in designed["tests"])
 
 
 def test_document_analyzer_extracts_database_schema_details():
@@ -261,7 +261,7 @@ def test_document_bundle_analyzer_detects_cross_document_gaps():
     assert "requirement_prd" in bundle.involved_document_types
     assert "development_design" in bundle.involved_document_types
     assert any(finding.category == "coverage" for finding in bundle.findings)
-    assert any("联合" in action or "补充" in action for action in bundle.recommended_actions)
+    assert any("combined" in action or "Add" in action for action in bundle.recommended_actions)
 
 
 def test_document_test_designer_builds_bundle_design_from_reference_documents():
@@ -317,7 +317,7 @@ def test_document_test_designer_builds_bundle_design_from_reference_documents():
         bundle_analysis=bundle,
     )
 
-    assert designed["generation_summary"]["strategy_label"] == "多文档联合设计"
+    assert designed["generation_summary"]["strategy_label"] == "Combined document design"
     assert designed["generation_summary"]["counts_by_origin"]["primary"] >= 1
     assert designed["generation_summary"]["counts_by_origin"]["reference"] >= 1
     assert designed["generation_summary"]["counts_by_origin"]["bundle"] >= 1
@@ -346,9 +346,9 @@ def test_document_test_designer_builds_database_schema_integrity_tests():
     analysis = analyzer.analyze(content, "数据库设计.sql")
     designed = designer.design(content, "数据库设计.sql", analysis, None)
 
-    assert designed["generation_summary"]["strategy_label"] == "数据结构优先"
-    assert any(test["name"] == "外键完整性校验: orders" for test in designed["tests"])
-    assert any(test["name"] == "索引策略验证: orders" for test in designed["tests"])
+    assert designed["generation_summary"]["strategy_label"] == "Data structures first"
+    assert any(test["name"] == "Foreign-key integrity validation: orders" for test in designed["tests"])
+    assert any(test["name"] == "Index strategy validation: orders" for test in designed["tests"])
 
 
 def test_document_test_designer_builds_development_design_tests():
@@ -366,10 +366,10 @@ def test_document_test_designer_builds_development_design_tests():
     analysis = analyzer.analyze(content, "订单模块开发文档")
     designed = designer.design(content, "订单模块开发文档", analysis, None)
 
-    assert designed["generation_summary"]["strategy_label"] == "设计驱动"
+    assert designed["generation_summary"]["strategy_label"] == "Design driven"
     assert any("金额必须大于 0" in item for item in analysis.extracted["data_constraints"])
     assert any(test["source"] == "development_design" for test in designed["tests"])
-    assert any("开发约束边界验证" == test["name"] for test in designed["tests"])
+    assert any("Development constraint boundary validation" == test["name"] for test in designed["tests"])
     assert any(test["type"] == "api_rest" for test in designed["tests"])
 
 
@@ -524,7 +524,7 @@ async def test_requirement_generate_tests_merges_reference_generated_tests():
     result = await generate_tests_from_requirement(req)
 
     assert result["status"] == "success"
-    assert result["generation_summary"]["strategy_label"] == "多文档联合设计"
+    assert result["generation_summary"]["strategy_label"] == "Combined document design"
     assert result["generation_summary"]["counts_by_origin"]["reference"] >= 1
     assert result["generation_summary"]["counts_by_origin"]["bundle"] >= 1
     assert any(test["document_role"] == "reference" for test in result["tests"])

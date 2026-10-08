@@ -49,4 +49,4 @@ class TestTestDataGenerator:
         result = TestDataGenerator.generate("sample_platform_elder_profile", count=1, include_edge=True)
 
         assert result["count"] >= 3
-        assert any(row.get("_edge") == "空档案" for row in result["data"])
+        assert any(row.get("_edge") == "Empty profile" for row in result["data"])

@@ -1,10 +1,10 @@
 ﻿# -*- coding: utf-8 -*-
 """
-TestDataGenerator — AI 驱动的测试数据管理模块
-功能：
-1. AI 智能数据生成（边界值、异常值、格式化数据）
-2. 数据参数化支持（CSV/JSON 数据集）
-3. 预置数据模板（用户/地址/支付/搜索词等）
+TestDataGenerator — AI-driven test data management
+Features:
+1. AI-assisted data generation (boundaries, invalid values, formatted data)
+2. Parameterized data support (CSV/JSON datasets)
+3. Built-in templates (users/addresses/payments/search terms, etc.)
 """
 import json
 import random
@@ -16,73 +16,74 @@ from typing import Dict, List, Any, Optional
 
 logger = logging.getLogger(__name__)
 
-# ── 预置数据模板 ──
+# ── Built-in data templates ──
 
 _TEMPLATES: Dict[str, Dict[str, Any]] = {
     "user": {
-        "label": "用户信息",
-        "description": "生成用户注册/登录测试数据",
+        "label": "User information",
+        "description": "Generate registration/sign-in test data",
         "fields": ["username", "email", "password", "phone", "age"],
         "generator": "_gen_user",
     },
     "address": {
-        "label": "地址信息",
-        "description": "生成中国地址测试数据",
+        "label": "Address information",
+        "description": "Generate synthetic US address test data",
         "fields": ["province", "city", "district", "street", "zipcode"],
         "generator": "_gen_address",
     },
     "payment": {
-        "label": "支付信息",
-        "description": "生成支付/订单测试数据",
+        "label": "Payment information",
+        "description": "Generate payment/order test data",
         "fields": ["order_id", "amount", "currency", "card_number", "expiry"],
         "generator": "_gen_payment",
     },
     "search": {
-        "label": "搜索词",
-        "description": "生成搜索测试数据（含特殊字符、SQL注入等）",
+        "label": "Search terms",
+        "description": "Generate search test data, including special characters and SQL injection",
         "fields": ["keyword", "type"],
         "generator": "_gen_search",
     },
     "boundary": {
-        "label": "边界值",
-        "description": "生成边界值测试数据（空值、超长、特殊字符）",
+        "label": "Boundary values",
+        "description": "Generate boundary test data: empty, oversized, and special-character values",
         "fields": ["value", "type", "description"],
         "generator": "_gen_boundary",
     },
     "sample_platform_work_order": {
-        "label": "示例项目工单",
-        "description": "生成示例项目工单调度测试数据，带 TEST_SAMPLE 可回收前缀",
+        "label": "Sample project work orders",
+        "description": "Generate work-order dispatch data with a TEST_SAMPLE prefix for cleanup",
         "fields": ["title", "businessType", "urgencyLevel", "customerName", "customerPhone", "address", "source", "cleanupTag"],
         "generator": "_gen_sample_platform_work_order",
     },
     "sample_platform_property_parking": {
-        "label": "示例项目停车合同",
-        "description": "生成智慧物业停车合同测试数据，便于续费/终止/导出回归",
+        "label": "Sample project parking contracts",
+        "description": "Generate property parking-contract data for renewal, termination, and export regression tests",
         "fields": ["communityName", "licensePlate", "parkingSpaceNo", "contractStatus", "contactName", "contactPhone", "amount", "cleanupTag"],
         "generator": "_gen_sample_platform_property_parking",
     },
     "sample_platform_elder_profile": {
-        "label": "示例项目老人档案",
-        "description": "生成养老管理老人档案测试数据，默认带脱敏验证字段",
+        "label": "Sample project senior profiles",
+        "description": "Generate senior-care profiles with fields for data-masking verification",
         "fields": ["elderName", "communityName", "careLevel", "contactPhone", "emergencyContact", "specialNeeds", "cleanupTag"],
         "generator": "_gen_sample_platform_elder_profile",
     },
     "sample_platform_announcement": {
-        "label": "示例项目公告",
-        "description": "生成智慧物业公告/报事测试数据，适合发布与回收验证",
+        "label": "Sample project announcements",
+        "description": "Generate property announcement/issue-report data for publishing and cleanup checks",
         "fields": ["communityName", "title", "category", "content", "publishStatus", "cleanupTag"],
         "generator": "_gen_sample_platform_announcement",
     },
 }
 
-# ── 数据生成器 ──
+# ── Data generators ──
 
-_FIRST_NAMES = ["张", "李", "王", "赵", "刘", "陈", "杨", "黄", "周", "吴"]
-_LAST_NAMES = ["伟", "强", "芳", "敏", "静", "杰", "磊", "洋", "勇", "艳"]
-_PROVINCES = ["北京", "上海", "广东", "浙江", "江苏", "四川", "湖北", "山东"]
-_CITIES = {"北京": ["朝阳区", "海淀区"], "上海": ["浦东新区", "徐汇区"],
-           "广东": ["广州", "深圳"], "浙江": ["杭州", "宁波"]}
-_SAMPLE_COMMUNITIES = ["幸福里", "示例项目花园", "康养嘉苑", "春和景明"]
+_FIRST_NAMES = ["Alex", "Jordan", "Taylor", "Morgan", "Casey", "Riley", "Avery", "Cameron", "Jamie", "Robin"]
+_LAST_NAMES = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Miller", "Davis", "Wilson", "Moore", "Taylor"]
+_PROVINCES = ["California", "New York", "Texas", "Washington", "Illinois", "Colorado", "Oregon", "Massachusetts"]
+_CITIES = {"California": ["San Diego", "Sacramento"], "New York": ["Buffalo", "Albany"],
+           "Texas": ["Austin", "Dallas"], "Washington": ["Seattle", "Spokane"], "Illinois": ["Chicago"], "Colorado": ["Denver"], "Oregon": ["Portland"], "Massachusetts": ["Boston"]}
+_SAMPLE_COMMUNITIES = ["Maple Grove", "Sample Gardens", "Willow Court", "Oak Meadows"]
+# Sample-platform enum payloads intentionally retain the target API values.
 _SAMPLE_BUSINESS_TYPES = ["家政服务", "物业服务", "养老服务"]
 _SAMPLE_CARE_LEVELS = ["自理", "半失能", "失能", "特护"]
 _SAMPLE_ANNOUNCEMENT_CATEGORIES = ["物业公告", "停水停电", "活动通知", "维修通知"]
@@ -107,7 +108,7 @@ def _validate_count(count: int) -> Optional[str]:
 
 
 def _gen_user(count: int, include_edge: bool = True) -> List[Dict]:
-    """生成用户测试数据"""
+    """Generate user test data"""
     data = []
     for i in range(count):
         name = random.choice(_FIRST_NAMES) + random.choice(_LAST_NAMES) + str(i)
@@ -122,41 +123,41 @@ def _gen_user(count: int, include_edge: bool = True) -> List[Dict]:
     if include_edge and count > 0:
         data.extend([
             {"username": "", "email": "", "password": "", "phone": "", "age": 0,
-             "_edge": "空值"},
+             "_edge": "Empty values"},
             {"username": "a" * 256, "email": "x" * 200 + "@test.com",
              "password": "a", "phone": "000", "age": -1,
-             "_edge": "超长/无效值"},
+             "_edge": "Oversized/invalid values"},
             {"username": "<script>alert(1)</script>", "email": "test@",
              "password": "12345678", "phone": "00000000000", "age": 999,
-             "_edge": "XSS/格式异常"},
+             "_edge": "XSS/invalid format"},
         ])
 
     return data
 
 
 def _gen_address(count: int, include_edge: bool = True) -> List[Dict]:
-    """生成地址测试数据"""
+    """Generate address test data"""
     data = []
     for _ in range(count):
         province = random.choice(_PROVINCES)
-        cities = _CITIES.get(province, [province + "市"])
+        cities = _CITIES.get(province, [province])
         data.append({
             "province": province,
             "city": random.choice(cities),
-            "district": f"{random.choice(['东', '西', '南', '北'])}城区",
-            "street": f"{_rand_str(2, '大学中山人民建设')}路{random.randint(1,999)}号",
-            "zipcode": _rand_str(6, string.digits),
+            "district": f"{random.choice(['East', 'West', 'South', 'North'])} District",
+            "street": f"{random.randint(1,999)} {random.choice(['Oak', 'Maple', 'Pine', 'Cedar'])} Street",
+            "zipcode": _rand_str(5, string.digits),
         })
 
     if include_edge and count > 0:
         data.append({"province": "", "city": "", "district": "", "street": "", "zipcode": "",
-                      "_edge": "空地址"})
+                      "_edge": "Empty address"})
 
     return data
 
 
 def _gen_payment(count: int, include_edge: bool = True) -> List[Dict]:
-    """生成支付测试数据"""
+    """Generate payment test data"""
     data = []
     for _ in range(count):
         data.append({
@@ -170,22 +171,22 @@ def _gen_payment(count: int, include_edge: bool = True) -> List[Dict]:
     if include_edge and count > 0:
         data.extend([
             {"order_id": "", "amount": 0, "currency": "", "card_number": "", "expiry": "",
-             "_edge": "空值"},
+             "_edge": "Empty values"},
             {"order_id": "X" * 100, "amount": -1, "currency": "INVALID",
              "card_number": "0000000000000000", "expiry": "13/99",
-             "_edge": "无效值"},
+             "_edge": "Invalid values"},
             {"order_id": "A1", "amount": 0.001, "currency": "CNY",
              "card_number": "1234", "expiry": "00/00",
-             "_edge": "边界值"},
+             "_edge": "Boundary values"},
         ])
 
     return data
 
 
 def _gen_search(count: int, include_edge: bool = True) -> List[Dict]:
-    """生成搜索关键词测试数据"""
-    normal = ["AI测试", "python教程", "自动化测试工具", "Playwright", "selenium",
-              "机器学习", "GPT", "测试用例管理", "DevOps", "云原生"]
+    """Generate search-keyword test data"""
+    normal = ["AI testing", "Python tutorials", "test automation tools", "Playwright", "selenium",
+              "machine learning", "GPT", "test case management", "DevOps", "cloud native"]
     data = [{"keyword": random.choice(normal), "type": "normal"} for _ in range(count)]
 
     if include_edge and count > 0:
@@ -196,39 +197,39 @@ def _gen_search(count: int, include_edge: bool = True) -> List[Dict]:
             {"keyword": "<img onerror=alert(1) src=x>", "type": "xss"},
             {"keyword": "' OR 1=1 --", "type": "sql_injection"},
             {"keyword": "../../etc/passwd", "type": "path_traversal"},
-            {"keyword": "测试%00空字节", "type": "null_byte"},
+            {"keyword": "test%00null byte", "type": "null_byte"},
             {"keyword": "🤖💥🔥👾", "type": "emoji"},
-            {"keyword": "   前后空格   ", "type": "trim_test"},
+            {"keyword": "   surrounding spaces   ", "type": "trim_test"},
         ])
 
     return data
 
 
 def _gen_boundary(count: int, **_) -> List[Dict]:
-    """生成通用边界值数据，根据 count 参数截取合理数量"""
+    """Generate a count-limited sample of general boundary values"""
     all_boundaries = [
-        {"value": "", "type": "empty_string", "description": "空字符串"},
-        {"value": None, "type": "null", "description": "null 值"},
-        {"value": 0, "type": "zero", "description": "零"},
-        {"value": -1, "type": "negative", "description": "负数"},
-        {"value": 2147483647, "type": "int_max", "description": "INT 最大值"},
-        {"value": -2147483648, "type": "int_min", "description": "INT 最小值"},
-        {"value": 0.1 + 0.2, "type": "float_precision", "description": "浮点精度问题"},
-        {"value": "a" * 1000, "type": "long_string", "description": "超长字符串 (1000)"},
-        {"value": "a" * 10000, "type": "very_long", "description": "极长字符串 (10000)"},
-        {"value": " ", "type": "single_space", "description": "单个空格"},
-        {"value": "\t\n\r", "type": "whitespace_chars", "description": "制表+换行符"},
-        {"value": "<script>alert('xss')</script>", "type": "xss", "description": "XSS 攻击"},
-        {"value": "'; DROP TABLE users; --", "type": "sql_injection", "description": "SQL 注入"},
-        {"value": "../../etc/passwd", "type": "path_traversal", "description": "路径遍历"},
-        {"value": "🤖💥🔥", "type": "emoji", "description": "Emoji 字符"},
-        {"value": "中文テスト한국어", "type": "multibyte", "description": "多语言字符"},
-        {"value": True, "type": "boolean_true", "description": "布尔 True"},
-        {"value": False, "type": "boolean_false", "description": "布尔 False"},
-        {"value": [], "type": "empty_array", "description": "空数组"},
-        {"value": {}, "type": "empty_object", "description": "空对象"},
+        {"value": "", "type": "empty_string", "description": "Empty string"},
+        {"value": None, "type": "null", "description": "Null value"},
+        {"value": 0, "type": "zero", "description": "Zero"},
+        {"value": -1, "type": "negative", "description": "Negative number"},
+        {"value": 2147483647, "type": "int_max", "description": "Maximum INT"},
+        {"value": -2147483648, "type": "int_min", "description": "Minimum INT"},
+        {"value": 0.1 + 0.2, "type": "float_precision", "description": "Floating-point precision"},
+        {"value": "a" * 1000, "type": "long_string", "description": "Long string (1000)"},
+        {"value": "a" * 10000, "type": "very_long", "description": "Very long string (10000)"},
+        {"value": " ", "type": "single_space", "description": "Single space"},
+        {"value": "\t\n\r", "type": "whitespace_chars", "description": "Tabs and newlines"},
+        {"value": "<script>alert('xss')</script>", "type": "xss", "description": "XSS attack"},
+        {"value": "'; DROP TABLE users; --", "type": "sql_injection", "description": "SQL injection"},
+        {"value": "../../etc/passwd", "type": "path_traversal", "description": "Path traversal"},
+        {"value": "🤖💥🔥", "type": "emoji", "description": "Emoji characters"},
+        {"value": "中文テスト한국어", "type": "multibyte", "description": "Multilingual characters"},
+        {"value": True, "type": "boolean_true", "description": "Boolean True"},
+        {"value": False, "type": "boolean_false", "description": "Boolean False"},
+        {"value": [], "type": "empty_array", "description": "Empty array"},
+        {"value": {}, "type": "empty_object", "description": "Empty object"},
     ]
-    # 根据 count 参数随机采样，避免固定返回全量 20 条
+    # Randomly sample by count rather than always returning all 20 values
     return random.sample(all_boundaries, min(count, len(all_boundaries)))
 
 
@@ -237,12 +238,12 @@ def _gen_sample_platform_work_order(count: int, include_edge: bool = True) -> Li
     for i in range(count):
         token = _prefixed_token("WO", i)
         data.append({
-            "title": f"{token}_工单回归",
+            "title": f"{token}_WorkOrderRegression",
             "businessType": random.choice(_SAMPLE_BUSINESS_TYPES),
             "urgencyLevel": random.choice(["普通", "紧急", "非常紧急"]),
-            "customerName": f"测试客户{i + 1}",
+            "customerName": f"Test Customer {i + 1}",
             "customerPhone": f"139{_rand_str(8, string.digits)}",
-            "address": f"{random.choice(_SAMPLE_COMMUNITIES)}{random.randint(1, 20)}栋{random.randint(101, 2402)}室",
+            "address": f"{random.choice(_SAMPLE_COMMUNITIES)}, Building {random.randint(1, 20)}, Unit {random.randint(101, 2402)}",
             "source": random.choice(["自有", "平台"]),
             "cleanupTag": token,
         })
@@ -258,7 +259,7 @@ def _gen_sample_platform_work_order(count: int, include_edge: bool = True) -> Li
                 "address": "",
                 "source": "",
                 "cleanupTag": "TEST_SAMPLE_WO_EDGE_EMPTY",
-                "_edge": "空值工单",
+                "_edge": "Empty work order",
             },
             {
                 "title": "X" * 128,
@@ -269,7 +270,7 @@ def _gen_sample_platform_work_order(count: int, include_edge: bool = True) -> Li
                 "address": "a" * 256,
                 "source": "平台",
                 "cleanupTag": "TEST_SAMPLE_WO_EDGE_INVALID",
-                "_edge": "超长/异常值",
+                "_edge": "Oversized/invalid values",
             },
         ])
     return data
@@ -285,7 +286,7 @@ def _gen_sample_platform_property_parking(count: int, include_edge: bool = True)
             "licensePlate": f"{province_code}{random.choice('ABCDEFGHJKLMNPQRSTUVWXYZ')}{_rand_str(5, string.ascii_uppercase + string.digits)}",
             "parkingSpaceNo": f"A{random.randint(1, 9)}-{random.randint(1, 999):03d}",
             "contractStatus": random.choice(["生效中", "待签约", "已到期"]),
-            "contactName": f"车主{i + 1}",
+            "contactName": f"Vehicle Owner {i + 1}",
             "contactPhone": f"138{_rand_str(8, string.digits)}",
             "amount": round(random.uniform(100.0, 2000.0), 2),
             "cleanupTag": token,
@@ -300,7 +301,7 @@ def _gen_sample_platform_property_parking(count: int, include_edge: bool = True)
             "contactPhone": "000",
             "amount": -1,
             "cleanupTag": "TEST_SAMPLE_PK_EDGE_INVALID",
-            "_edge": "异常合同",
+            "_edge": "Invalid contract",
         })
     return data
 
@@ -309,14 +310,14 @@ def _gen_sample_platform_elder_profile(count: int, include_edge: bool = True) ->
     data = []
     for i in range(count):
         token = _prefixed_token("ELDER", i)
-        elder_name = random.choice(_FIRST_NAMES) + random.choice(_LAST_NAMES)
+        elder_name = random.choice(_FIRST_NAMES) + " " + random.choice(_LAST_NAMES)
         data.append({
             "elderName": elder_name,
             "communityName": random.choice(_SAMPLE_COMMUNITIES),
             "careLevel": random.choice(_SAMPLE_CARE_LEVELS),
             "contactPhone": f"137{_rand_str(8, string.digits)}",
-            "emergencyContact": f"家属{i + 1}",
-            "specialNeeds": random.choice(["无", "低盐饮食", "助行器", "定时服药"]),
+            "emergencyContact": f"Family Member {i + 1}",
+            "specialNeeds": random.choice(["None", "Low-sodium diet", "Walker", "Scheduled medication"]),
             "cleanupTag": token,
         })
     if include_edge and count > 0:
@@ -329,17 +330,17 @@ def _gen_sample_platform_elder_profile(count: int, include_edge: bool = True) ->
                 "emergencyContact": "",
                 "specialNeeds": "",
                 "cleanupTag": "TEST_SAMPLE_ELDER_EDGE_EMPTY",
-                "_edge": "空档案",
+                "_edge": "Empty profile",
             },
             {
-                "elderName": "敏感老人",
+                "elderName": "Sensitive Test Profile",
                 "communityName": random.choice(_SAMPLE_COMMUNITIES),
                 "careLevel": "特护",
                 "contactPhone": "110",
                 "emergencyContact": "<script>",
                 "specialNeeds": "a" * 128,
                 "cleanupTag": "TEST_SAMPLE_ELDER_EDGE_INVALID",
-                "_edge": "隐私/格式异常",
+                "_edge": "Privacy/invalid format",
             },
         ])
     return data
@@ -351,9 +352,9 @@ def _gen_sample_platform_announcement(count: int, include_edge: bool = True) -> 
         token = _prefixed_token("NOTICE", i)
         data.append({
             "communityName": random.choice(_SAMPLE_COMMUNITIES),
-            "title": f"{token}_公告发布验证",
+            "title": f"{token}_AnnouncementPublication",
             "category": random.choice(_SAMPLE_ANNOUNCEMENT_CATEGORIES),
-            "content": f"{token} 用于验证公告新增、编辑、发布与回收。",
+            "content": f"{token} verifies announcement creation, editing, publication, and cleanup.",
             "publishStatus": random.choice(["草稿", "已发布", "已下线"]),
             "cleanupTag": token,
         })
@@ -365,7 +366,7 @@ def _gen_sample_platform_announcement(count: int, include_edge: bool = True) -> 
             "content": "",
             "publishStatus": "未知",
             "cleanupTag": "TEST_SAMPLE_NOTICE_EDGE_EMPTY",
-            "_edge": "空公告",
+            "_edge": "Empty announcement",
         })
     return data
 
@@ -384,11 +385,11 @@ _GENERATORS = {
 
 
 class TestDataGenerator:
-    """测试数据生成器"""
+    """Test data generator"""
 
     @staticmethod
     def list_templates() -> List[Dict]:
-        """列出所有可用的数据模板"""
+        """List available data templates"""
         return [
             {"id": k, "label": v["label"], "description": v["description"], "fields": v["fields"]}
             for k, v in _TEMPLATES.items()
@@ -396,7 +397,7 @@ class TestDataGenerator:
 
     @staticmethod
     def generate(template_id: str, count: int = 5, include_edge: bool = True) -> Dict:
-        """按模板生成测试数据"""
+        """Generate test data from a template"""
         count_error = _validate_count(count)
         if count_error:
             return {"error": count_error}
@@ -425,7 +426,7 @@ class TestDataGenerator:
     @staticmethod
     def generate_custom(fields: List[Dict], count: int = 5) -> Dict:
         """
-        自定义字段生成。
+        Generate custom fields.
         fields: [{"name": "username", "type": "string", "min": 3, "max": 20}, ...]
         """
         count_error = _validate_count(count)
