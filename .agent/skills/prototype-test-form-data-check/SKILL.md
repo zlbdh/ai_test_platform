@@ -1,39 +1,39 @@
 ---
 name: prototype-test-form-data-check
-description: 原型测试中的表单与数据检查技能。用于验证字段、必填、默认值、校验提示、详情展示、列表列、统计卡片和关联数据展示对需求的承接情况。适用于：发现字段缺口、详情展示不足、表单规则不清、假展示或硬编码数据问题。
+description: Form and data checking for prototype testing. Verify that fields, required markers, defaults, validation messages, detail displays, list columns, statistics cards, and related records implement requirements. Use to identify missing fields, insufficient details, unclear form rules, superficial displays, and hardcoded data.
 ---
 
-# 字段、校验与数据展示检查
+# Field, Validation, and Data Display Checks
 
-确认“该看见的数据、该填写的字段、该提示的规则”已经被原型完整承接。
+Confirm that the prototype fully represents the data users need to see, fields they need to complete, and rules they need to understand.
 
-## 先读什么
+## Read First
 
-- 本地 [references/form-data-checklist.md](references/form-data-checklist.md)
-- 共享 [../prototype-test-engineering/references/issue-taxonomy.md](../prototype-test-engineering/references/issue-taxonomy.md)
+- Local: [references/form-data-checklist.md](references/form-data-checklist.md)
+- Shared: [../prototype-test-engineering/references/issue-taxonomy.md](../prototype-test-engineering/references/issue-taxonomy.md)
 
-## 执行步骤
+## Execution Steps
 
-1. 从需求解析结果中拿到页面字段清单。
-2. 对照原型检查：
-- 字段已存在
-- 必填标识清晰可见
-- 默认值表达完整
-- 校验提示表达完整
-- 列表列、详情区和统计卡片承接关键数据
-3. 区分“字段未出现”“字段出现但规则缺失”“展示存在但数据含义不清”。
-4. 对高风险缺口打 `field_gap`。
+1. Obtain the page field inventory from requirement analysis.
+2. Check the prototype against it:
+- Fields exist
+- Required-field markers are clearly visible
+- Default values are fully represented
+- Validation messages are fully represented
+- List columns, detail regions, and statistics cards include key data
+3. Distinguish absent fields, present fields with missing rules, and displays with unclear data meaning.
+4. Mark high-risk gaps as `field_gap`.
 
-## 强制规则
+## Mandatory Rules
 
-- 只出现标签文字，不等于字段已可输入或可校验。
-- 列表页有搜索项但无结果列承接时，不算完整展示。
-- 详情页固定文案或固定数字，不能证明是动态承接。
+- A label alone does not prove that a field accepts input or supports validation.
+- A search filter without a corresponding result column is not complete display coverage.
+- Fixed text or numbers on a detail page do not prove dynamic data behavior.
 
-## 交付物
+## Deliverables
 
-- 字段覆盖矩阵
-- 校验与默认值缺口
-- 列表/详情/统计展示缺口
+- Field coverage matrix
+- Validation and default-value gaps
+- List/detail/statistics display gaps
 
-使用 [templates/output.md](templates/output.md) 输出。
+Use [templates/output.md](templates/output.md) for the output.

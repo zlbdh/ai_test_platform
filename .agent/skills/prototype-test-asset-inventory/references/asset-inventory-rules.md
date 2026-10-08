@@ -1,16 +1,16 @@
 # Asset Inventory Rules
 
-## 必盘点对象
+## Required Inventory Targets
 
-- 技术入口页
-- 平台壳页
-- 模块列表页
-- 详情/审核页
-- 看板页
-- 设置/配置页
-- 可能承接弹窗的页面
+- Technical entry pages
+- Platform shell pages
+- Module list pages
+- Detail/review pages
+- Dashboard pages
+- Settings/configuration pages
+- Pages that may contain dialogs
 
-## 重点标记
+## Key Annotations
 
 - `entry_page`
 - `standalone_page`
@@ -18,8 +18,8 @@
 - `out_of_scope_asset`
 - `missing_asset_risk`
 
-## 常见误判
+## Common Misjudgments
 
-- 把登录页当作业务缺陷判定页，而用户只把它当技术入口。
-- 把带某业务关键词的文件名直接当目标页面。
-- 忽略详情页中的 Tab，导致嵌入式承接点漏记。
+- Treating a sign-in page as a business-defect assessment page when the user considers it only a technical entry point.
+- Treating a filename containing a business keyword as the target page without verification.
+- Missing embedded destinations by overlooking tabs on detail pages.

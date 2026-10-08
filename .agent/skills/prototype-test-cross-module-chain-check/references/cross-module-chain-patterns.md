@@ -1,17 +1,17 @@
 # Cross Module Chain Patterns
 
-## 常见链路
+## Common Workflows
 
-- 企业管理 -> 站点管理
-- 站点管理 -> 服务管理
-- 站点管理 -> 商品管理
-- 服务/商品审核 -> 上架展示
-- 订单路由与监控 -> 财务结算
-- 订单路由与监控 -> 投诉处理
+- Company management -> Site management
+- Site management -> Service management
+- Site management -> Product management
+- Service/product review -> Published listing
+- Order routing and monitoring -> Financial settlement
+- Order routing and monitoring -> Complaint handling
 
-## 最少证据
+## Minimum Evidence
 
-- 起点页面证据
-- 触发动作证据
-- 下游承接证据
-- 回写/回显或状态变化证据
+- Starting-page evidence
+- Trigger-action evidence
+- Downstream integration evidence
+- Writeback, displayed-result, or state-change evidence

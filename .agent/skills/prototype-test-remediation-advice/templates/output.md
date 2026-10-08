@@ -1,4 +1,4 @@
-# 整改建议输出
+# Remediation Recommendations Output
 
-| 角色 | 优先级 | 对应 finding | 建议动作 | 复测方式 |
+| Role | Priority | Related finding | Recommended action | Retest method |
 |---|---|---|---|---|

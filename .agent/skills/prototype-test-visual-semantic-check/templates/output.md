@@ -1,4 +1,4 @@
-# 视觉语义检查输出
+# Visual-Semantic Check Output
 
-| 页面/区域 | 检查项 | 结论 | 影响 | 证据 |
+| Page/region | Check | Conclusion | Impact | Evidence |
 |---|---|---|---|---|

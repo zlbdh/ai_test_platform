@@ -1,4 +1,4 @@
-# 异常边界检查输出
+# Exception and Boundary Check Output
 
-| 页面/动作 | 异常或边界 | 原型现状 | 结论 | 证据 | 备注 |
+| Page/action | Exception or boundary | Current prototype | Conclusion | Evidence | Notes |
 |---|---|---|---|---|---|

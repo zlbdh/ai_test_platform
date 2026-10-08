@@ -1,6 +1,6 @@
 interface:
-  display_name: "原型测试工程化"
-  short_description: "统一编排需求解析映射验证门禁与整改的原型测试工程能力"
+  display_name: "Prototype Testing Engineering"
+  short_description: "Orchestrate requirement analysis, mapping, verification, quality gates, and remediation"
   default_prompt: "Use $prototype-test-engineering to explain, plan, or run an engineering-grade prototype-testing workflow."
 
 policy:

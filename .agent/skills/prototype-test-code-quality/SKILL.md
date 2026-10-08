@@ -1,19 +1,19 @@
 ---
 name: prototype-test-code-quality
-description: HTML原型测试 — 代码规范与可迁移性审计。检验CSS设计系统一致性、JS代码规范、组件模式可迁移性、HTML语义化、安全隐患等代码质量维度。
+description: HTML prototype testing — code standards and migration readiness audit. Check CSS design-system consistency, JavaScript conventions, component portability, semantic HTML, security risks, and other code-quality dimensions.
 ---
 
-# 代码规范与可迁移性审计
+# Code Standards and Migration Readiness Audit
 
-## 适用场景
-当需要从**开发者/架构师视角**评估 HTML 原型的代码质量和框架迁移准备度时使用本技能。重点检查代码规范度与迁移到目标管理后台框架的就绪度。
+## When to Use
+Use this skill to assess HTML prototype code quality and readiness for framework migration from a **developer/architect perspective**. Focus on coding conventions and readiness to migrate to the target administration framework.
 
 ---
 
-## 审计检查清单
+## Audit Checklist
 
-### 1. CSS 设计系统一致性
-- [ ] **CSS 变量体系**：使用 `:root` 定义全局 CSS 变量，并保持变量命名一致
+### 1. CSS Design-System Consistency
+- [ ] **CSS variables**: Define global variables in `:root` with consistent naming.
   ```css
   :root {
     --primary: #409EFF;
@@ -22,117 +22,117 @@ description: HTML原型测试 — 代码规范与可迁移性审计。检验CSS�
     --danger: #F56C6C;
   }
   ```
-- [ ] **变量复用率**：样式广泛使用 `var(--xxx)` 引用变量，避免硬编码颜色值
-- [ ] **颜色语义正确**：`.tag-success` 的背景色保持绿色系，避免误用蓝色 `#f0f9ff` 等配色
-- [ ] **字体大小层级**：建立清晰的字体大小梯度，如 11px/12px/13px/14px/16px
-- [ ] **各模块 CSS 一致性**：抽取 5 个模块的 `:root` 变量定义，确认内容完全一致
+- [ ] **Variable reuse**: Use `var(--xxx)` throughout styles rather than hardcoded colors.
+- [ ] **Correct color semantics**: Keep `.tag-success` backgrounds green; avoid incorrect blue palettes such as `#f0f9ff`.
+- [ ] **Type scale**: Establish clear font-size levels, such as 11px/12px/13px/14px/16px.
+- [ ] **Cross-module CSS consistency**: Compare `:root` definitions from five modules and confirm that they match exactly.
 
-### 2. JavaScript 代码规范
-- [ ] **全局函数命名**：遵循统一的命名约定，如 `renderTable()`、`handleSearch()`、`handleReset()`、`showDetail()`、`backToList()`
-- [ ] **数据数组命名**：主数据数组统一采用 `xxxList` + `filtered` 命名模式
-- [ ] **状态映射对象**：使用 `statusMap` / `typeMap` 等映射对象统一管理标签样式
-- [ ] **事件绑定方式**：统一事件绑定约定，避免混用内联 `onclick=""` 与 `addEventListener`
-- [ ] **代码注释**：为模块补齐标头注释，包含文件名、功能描述和需求来源
+### 2. JavaScript Conventions
+- [ ] **Global function names**: Use consistent names such as `renderTable()`, `handleSearch()`, `handleReset()`, `showDetail()`, and `backToList()`.
+- [ ] **Data array names**: Use the `xxxList` + `filtered` naming pattern consistently for primary arrays.
+- [ ] **State maps**: Manage label styles centrally with maps such as `statusMap` and `typeMap`.
+- [ ] **Event binding**: Use a consistent convention rather than mixing inline `onclick=""` with `addEventListener`.
+- [ ] **Code comments**: Add module headers containing the filename, purpose, and requirement source.
   ```javascript
   // =============================================
-  // 模块：XXX — 列表页
-  // 文件：modules/xxx-list.html
-  // 需求来源：xx_需求.md § 3.1
+  // Module: XXX — List page
+  // File: modules/xxx-list.html
+  // Requirement source: xx_requirements.md § 3.1
   // =============================================
   ```
 
-### 3. 组件模式可迁移性
-- [ ] **函数拆分清晰**：为每个功能提供独立函数，例如 renderTable、handleSearch、showDetail，避免逻辑混杂
-- [ ] **数据与视图分离**：把数据存储在 JS 数组中，通过函数完成渲染，避免直接在 HTML 中硬编码数据
-- [ ] **弹窗模式统一**：所有弹窗统一采用 `.modal-mask + .modal` 模式
-- [ ] **确认弹窗复用**：提供通用的 `showConfirm(msg, callback)` 函数
-- [ ] **Toast 提示复用**：提供通用的 `showToast(msg, type)` 函数
-- [ ] **迁移难度评估**：
-  - 低难度：数据数组 → `ref([])`，`renderTable()` → `v-for`，`onclick` → `@click`
-  - 中难度：弹窗 → `el-dialog + v-model`（需参考 dialog_v_model_pattern）
-  - 高难度：复杂图表 → ECharts 组件封装
+### 3. Component Portability
+- [ ] **Clear function boundaries**: Provide separate functions such as renderTable, handleSearch, and showDetail instead of mixing responsibilities.
+- [ ] **Separate data and views**: Store data in JavaScript arrays and render it through functions rather than hardcoding it in HTML.
+- [ ] **Consistent dialogs**: Use the `.modal-mask + .modal` pattern for all dialogs.
+- [ ] **Reusable confirmations**: Provide a shared `showConfirm(msg, callback)` function.
+- [ ] **Reusable toasts**: Provide a shared `showToast(msg, type)` function.
+- [ ] **Migration difficulty**:
+  - Low: data arrays → `ref([])`, `renderTable()` → `v-for`, `onclick` → `@click`
+  - Medium: dialogs → `el-dialog + v-model` (refer to dialog_v_model_pattern)
+  - High: complex charts → ECharts components
 
-### 4. HTML 结构与语义化
-- [ ] **表单 name 属性**：为 `<input>` / `<select>` / `<textarea>` 配置 `name` 属性
-- [ ] **表单 id 唯一性**：确保所有元素的 `id` 属性全局唯一
-- [ ] **语义化标签**：合理使用 `<header>`、`<main>`、`<footer>`、`<section>` 等 HTML5 语义标签
-- [ ] **表格可访问性**：为 `<table>` 分离 `<thead>` 和 `<tbody>`
-- [ ] **图片 alt 属性**：为 `<img>` 提供 `alt` 描述
+### 4. HTML Structure and Semantics
+- [ ] **Form name attributes**: Set `name` on `<input>`, `<select>`, and `<textarea>` elements.
+- [ ] **Unique form IDs**: Ensure that every element's `id` is globally unique.
+- [ ] **Semantic elements**: Use HTML5 elements such as `<header>`, `<main>`, `<footer>`, and `<section>` appropriately.
+- [ ] **Accessible tables**: Separate `<thead>` and `<tbody>` within `<table>`.
+- [ ] **Image alt attributes**: Provide an `alt` description for `<img>`.
 
-### 5. 安全与性能
-- [ ] **XSS 风险**：在 `innerHTML` 赋值时对用户输入做转义处理
-  - 原型阶段 Mock 数据无风险，但需标注开发时的处理方案
-- [ ] **密码安全**：避免使用 `Math.random()` 生成密码，改用安全随机方案
-- [ ] **定时器清理**：为 `setInterval` / `setTimeout` 配置对应的 `clearInterval` / `clearTimeout`
-- [ ] **内存泄漏**：为动态创建的 DOM 元素（如 Toast）提供移除机制
+### 5. Security and Performance
+- [ ] **XSS risks**: Escape user input before assigning it to `innerHTML`.
+  - Mock data does not pose this risk during prototyping, but document the implementation-stage handling.
+- [ ] **Password security**: Use secure randomness instead of `Math.random()` to generate passwords.
+- [ ] **Timer cleanup**: Pair `setInterval` and `setTimeout` with `clearInterval` and `clearTimeout`.
+- [ ] **Memory leaks**: Remove dynamically created DOM elements such as toasts when no longer needed.
 
 ---
 
-## 审计方法
+## Audit Method
 
-### 步骤 1：CSS 系统一致性扫描
+### Step 1: Scan CSS Consistency
 ```bash
-# 提取所有模块的 :root 定义进行对比
+# Extract and compare :root definitions from all modules
 grep -h ":root{" modules/*.html | sort | uniq -c
 ```
 
-### 步骤 2：函数命名统一性扫描
+### Step 2: Scan Function Naming
 ```bash
-# 提取所有模块的 function 定义
+# Extract function definitions from all modules
 grep -oh "function [a-zA-Z]*(" modules/*.html | sort | uniq -c | sort -rn
 ```
 
-### 步骤 3：组件模式一致性检查
+### Step 3: Check Component Patterns
 ```
-1. 抽取 5 个列表模块，比较其 renderTable() 的实现模式
-2. 抽取 5 个表单模块，比较其 openForm() / submitForm() 的实现模式
-3. 列出所有模块使用的弹窗模式（showConfirm/showToast）签名
+1. Compare renderTable() patterns in five list modules.
+2. Compare openForm() / submitForm() patterns in five form modules.
+3. List the dialog function signatures (showConfirm/showToast) used by all modules.
 ```
 
-### 步骤 4：迁移就绪度评估
+### Step 4: Assess Migration Readiness
 ```
-对照目标管理后台框架，逐一评估：
-- 数据层：Mock 数组 → API 调用
-- 视图层：innerHTML → Vue template
-- 交互层：onclick → @click + methods
-- 组件层：自定义弹窗 → Element Plus
-- 路由层：display:none → Vue Router
+Assess each layer against the target administration framework:
+- Data: mock arrays → API calls
+- Views: innerHTML → Vue templates
+- Interaction: onclick → @click + methods
+- Components: custom dialogs → Element Plus
+- Routing: display:none → Vue Router
 ```
 
 ---
 
-## 输出模板
+## Output Template
 
 ```markdown
-## 代码质量审计结果 — [模块名/全局]
+## Code Quality Audit Results — [Module/Global]
 
-### CSS 设计系统
-| 检查项 | 状态 | 说明 |
+### CSS Design System
+| Check | Status | Description |
 |-------|------|------|
-| :root 变量定义 | ✅ 一致 | 70 个模块变量定义相同 |
-| 颜色语义正确 | ❌ 有误 | tag-success 背景色为蓝色系 |
+| :root variable definitions | ✅ Consistent | Identical definitions across 70 modules |
+| Correct color semantics | ❌ Incorrect | tag-success uses a blue background |
 
-### 代码规范
-| 检查项 | 状态 | 说明 |
+### Coding Conventions
+| Check | Status | Description |
 |-------|------|------|
-| 函数命名一致 | ✅ | renderTable/handleSearch 模式统一 |
-| 模块注释 | ✅ | 每个文件有标头注释 |
-| name 属性 | ❌ | 全部表单缺少 name 属性 |
+| Consistent function names | ✅ | Uniform renderTable/handleSearch patterns |
+| Module comments | ✅ | Every file has a header comment |
+| name attributes | ❌ | All forms lack name attributes |
 
-### 迁移就绪度
-| 迁移项 | 难度 | 说明 |
+### Migration Readiness
+| Migration item | Difficulty | Description |
 |-------|------|------|
-| 数据层 → API | 低 | 数据数组结构清晰 |
-| 弹窗 → el-dialog | 中 | 需采用 v-model 模式 |
-| 图表 → ECharts | 高 | CSS 伪图表需全部重写 |
+| Data → API | Low | Clear data-array structure |
+| Dialogs → el-dialog | Medium | Requires the v-model pattern |
+| Charts → ECharts | High | All CSS placeholder charts need rewriting |
 ```
 
 ---
 
-## 典型问题模式
+## Typical Issue Patterns
 
-1. **CSS 变量语义错误**：`.tag-success` 使用蓝色系背景而非绿色系
-2. **表单缺少 name 属性**：所有 input 仅有 id 无 name
-3. **innerHTML XSS 风险**：数据直接拼接进 HTML 字符串无转义
-4. **密码使用 Math.random()**：密码生成不安全
-5. **setInterval 无清理**：定时器在页面切换后仍在运行
+1. **Incorrect CSS variable semantics**: `.tag-success` uses a blue background instead of green.
+2. **Missing form name attributes**: All inputs have id but no name.
+3. **innerHTML XSS risks**: Data is interpolated directly into HTML strings without escaping.
+4. **Math.random() passwords**: Password generation is insecure.
+5. **Uncleared setInterval timers**: Timers keep running after page changes.

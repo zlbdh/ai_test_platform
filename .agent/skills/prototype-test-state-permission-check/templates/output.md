@@ -1,4 +1,4 @@
-# 状态权限检查输出
+# State and Permission Check Output
 
-| 页面/对象 | 状态或角色 | 需求规则 | 原型现状 | 结论 | 证据 |
+| Page/object | State or role | Requirement rule | Current prototype | Conclusion | Evidence |
 |---|---|---|---|---|---|

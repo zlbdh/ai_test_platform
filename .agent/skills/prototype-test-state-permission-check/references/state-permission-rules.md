@@ -1,16 +1,16 @@
 # State And Permission Rules
 
-## 至少验证
+## Minimum Verification
 
-- 状态集合是否完整
-- 初始状态是否明确
-- 状态变化动作是否明确
-- 不同状态下按钮是否不同
-- 不同角色下按钮是否不同
-- 只读态/禁用态是否有表达
+- Is the state set complete?
+- Is the initial state explicit?
+- Are state-changing actions explicit?
+- Do buttons differ by state?
+- Do buttons differ by role?
+- Are read-only and disabled states represented?
 
-## 高风险假通过
+## High-Risk False Passes
 
-- 有“状态”列，但没有任何状态变化路径。
-- 通过和驳回都缺少意见或原因输入。
-- 所有人都能看到同一组危险操作。
+- A State column exists without any state-transition path.
+- Both approval and rejection lack opinion or reason fields.
+- Every user sees the same dangerous actions.

@@ -1,8 +1,8 @@
 # Coverage Matrix
 
-| 模块/链路 | 需求解析 | 资产盘点 | 页面映射 | 结构检查 | 流程检查 | 状态/权限 | 异常边界 | 视觉语义 | 收口 |
+| Module/workflow | Requirement analysis | Asset inventory | Page mapping | Structure | Workflow | States/permissions | Exceptions/boundaries | Visual semantics | Consolidation |
 |---|---|---|---|---|---|---|---|---|---|
 
-## 页面映射附录
-| 需求页 | 原型页/承接方式 | 映射状态 | 证据 |
+## Page Mapping Appendix
+| Required page | Prototype page/destination | Mapping status | Evidence |
 |---|---|---|---|

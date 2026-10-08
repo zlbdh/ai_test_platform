@@ -1,16 +1,16 @@
-# 页面映射输出
+# Page Mapping Output
 
-## 映射摘要
-- 需求页面数：
-- 已建立可信映射数：
-- 缺页数：
-- 误映射数：
-- 范围外原型页数：
+## Mapping Summary
+- Required pages:
+- Reliable mappings:
+- Missing pages:
+- Incorrect mappings:
+- Out-of-scope prototype pages:
 
-## 映射矩阵
-| 需求页 | 原型页/承接方式 | 状态 | 需求证据 | 原型证据 | 备注 |
+## Mapping Matrix
+| Required page | Prototype page/destination | Status | Requirement evidence | Prototype evidence | Notes |
 |---|---|---|---|---|---|
 
-## 高风险项
-| 页面 | 风险类型 | 说明 | 建议 |
+## High-Risk Items
+| Page | Risk type | Description | Recommendation |
 |---|---|---|---|

@@ -1,33 +1,33 @@
-# 模块级原型测试报告
+# Module Prototype Testing Report
 
-## 模块信息
-- 模块名称：
-- 需求来源：
-- 原型来源：
-- 范围与排除项：
+## Module Information
+- Module name:
+- Requirement source:
+- Prototype source:
+- Scope and exclusions:
 
-## 结构化摘要
-- 角色：
-- 页面：
-- 主流程：
-- 状态：
-- 关键字段：
+## Structured Summary
+- Roles:
+- Pages:
+- Main workflows:
+- States:
+- Key fields:
 
-## 验证结果
-| 维度 | 结论 | 证据 | 备注 |
+## Verification Results
+| Dimension | Conclusion | Evidence | Notes |
 |---|---|---|---|
-| 页面映射 |  |  |  |
-| 页面结构 |  |  |  |
-| 主操作链 |  |  |  |
-| 字段/校验 |  |  |  |
-| 状态/权限 |  |  |  |
-| 异常/边界 |  |  |  |
-| 视觉语义 |  |  |  |
+| Page mapping |  |  |  |
+| Page structure |  |  |  |
+| Main action chain |  |  |  |
+| Fields/validation |  |  |  |
+| States/permissions |  |  |  |
+| Exceptions/boundaries |  |  |  |
+| Visual semantics |  |  |  |
 
 ## Findings
-| ID | 类别 | 严重级别 | 结论 | 影响 | 建议 |
+| ID | Category | Severity | Conclusion | Impact | Recommendation |
 |---|---|---|---|---|---|
 
-## 静态原型无法证明项
+## Items a Static Prototype Cannot Prove
 
-## 下一步动作
+## Next Actions

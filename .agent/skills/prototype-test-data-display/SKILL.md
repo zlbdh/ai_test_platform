@@ -1,127 +1,127 @@
 ---
 name: prototype-test-data-display
-description: HTML原型测试 — 数据展示丰富度审计。检验 Mock 数据量、看板维度覆盖、详情页数据动态化程度和图表交互能力。
+description: HTML prototype testing — data display richness audit. Check mock-data volume, dashboard dimension coverage, dynamic detail-page data, and chart interaction.
 ---
 
-# 数据展示丰富度审计
+# Data Display Richness Audit
 
-## 适用场景
-当需要评估 HTML 原型的**数据展示质量**时使用本技能。重点检查展示数据的丰富度、维度覆盖度，以及对需求理解和演示的支撑力度。
-
----
-
-## 审计检查清单
-
-### 1. Mock 数据量评估
-- [ ] **列表数据量**：每个列表页至少准备 10~15 条 Mock 数据
-  - 少于 5 条：无法体现分页效果，搜索演示效果差
-  - 5~10 条：基本可用，但状态覆盖可能不全
-  - 15 条以上：理想状态，可完整演示分页和搜索
-- [ ] **状态覆盖**：让 Mock 数据覆盖所有业务状态
-  - 如订单需覆盖：待接单/处理中/已完成/已取消/异常/退款中
-- [ ] **角色覆盖**：让 Mock 数据体现不同类型或角色的差异
-  - 如企业分：物业/家政/养老/商品不同行业
-- [ ] **时间分布**：让 Mock 数据分布在合理的时间段内
-  - 避免所有数据集中在同一天/同一月
-
-### 2. 数据看板/仪表盘评估
-- [ ] **指标完整性**：梳理看板覆盖的核心指标，并补齐缺失的关键维度
-  - 基础指标：总量、增量、占比
-  - 进阶指标：同比增长率、环比变化、趋势方向
-- [ ] **时间维度**：提供多时间粒度切换能力，如日/周/月/季/年
-- [ ] **对比维度**：补齐业务线对比、企业对比、区域对比等多维分析
-- [ ] **指标说明**：为增长率和变化率标注参照基准，如「较上月 +12.5%」而非仅「↑ 12.5%」
-- [ ] **图表交互**：提供数据钻取、筛选和悬停提示等交互能力
-
-### 3. 详情页数据动态化
-- [ ] **数据上下文关联**：让详情页数据随所选记录变化
-  - 常见问题：无论点击谁的详情，统计卡片都显示相同数字（硬编码）
-- [ ] **关联记录展示**：让详情页的子表或 Tab 数据关联到当前记录
-  - 如：消费者详情的消费记录直接取当前消费者的数据
-- [ ] **画像/图表数据**：让图表数据基于对象的真实属性生成
-  - 常见问题：饼图/柱状图使用随机数或固定值而非引用对象数据
-
-### 4. 图表/可视化评估
-- [ ] **图表实现方式**：使用 CSS 伪图表还是真正的图表库（ECharts/Chart.js）
-  - CSS 伪图表（`conic-gradient`、`div.bar`）在原型阶段可以接受，但需标注开发时的替换方案
-- [ ] **数据标签**：为图表展示数据标签，如数值或百分比
-- [ ] **图例/标注**：为图表补齐图例和坐标轴标签
-- [ ] **空状态**：为无数据图表提供空状态提示，避免直接显示空白区域
-
-### 5. 导出与报表
-- [ ] **导出功能**：为列表或报表提供导出按钮
-- [ ] **导出格式**：支持 Excel/PDF/CSV 等多格式选择
-- [ ] **导出范围**：明确导出当前搜索结果还是全量数据，并给出说明
+## When to Use
+Use this skill to assess the **data display quality** of HTML prototypes. Focus on data richness, dimension coverage, and support for understanding and demonstrating requirements.
 
 ---
 
-## 审计方法
+## Audit Checklist
 
-### 步骤 1：数据量扫描
+### 1. Mock-Data Volume
+- [ ] **List volume**: Provide at least 10–15 mock records per list page.
+  - Fewer than 5: insufficient to demonstrate pagination and search effectively.
+  - 5–10: basically usable, but may not cover all states.
+  - More than 15: ideal for demonstrating pagination and search fully.
+- [ ] **State coverage**: Include mock data for every business state.
+  - For orders: awaiting acceptance/in progress/completed/canceled/exception/refunding.
+- [ ] **Role coverage**: Represent differences between entity types or roles.
+  - For companies: property management/housekeeping/senior care/products.
+- [ ] **Time distribution**: Spread mock data across a reasonable period.
+  - Avoid concentrating all records on the same day or in the same month.
+
+### 2. Dashboards
+- [ ] **Metric completeness**: Inventory core dashboard metrics and add missing key dimensions.
+  - Basic metrics: totals, increments, proportions.
+  - Advanced metrics: year-over-year growth, period-over-period changes, trend direction.
+- [ ] **Time dimensions**: Support switching among day/week/month/quarter/year views.
+- [ ] **Comparison dimensions**: Include comparisons across business lines, companies, regions, and other dimensions.
+- [ ] **Metric explanations**: State comparison baselines, such as “+12.5% vs. last month,” instead of only “↑ 12.5%.”
+- [ ] **Chart interaction**: Support drilldowns, filtering, and hover tooltips.
+
+### 3. Dynamic Detail-Page Data
+- [ ] **Record context**: Make detail-page data change with the selected record.
+  - Common issue: every record's statistics cards show the same hardcoded numbers.
+- [ ] **Related records**: Associate detail-page subtables and tabs with the current record.
+  - Example: customer purchase history uses that customer's records.
+- [ ] **Profile/chart data**: Generate charts from the object's actual attributes.
+  - Common issue: pie/bar charts use random or fixed values rather than object data.
+
+### 4. Charts and Visualization
+- [ ] **Chart implementation**: Determine whether charts use CSS approximations or a chart library such as ECharts/Chart.js.
+  - CSS approximations (`conic-gradient`, `div.bar`) are acceptable in prototypes, but document their implementation-stage replacements.
+- [ ] **Data labels**: Display values or percentages on charts.
+- [ ] **Legends and annotations**: Include legends and axis labels.
+- [ ] **Empty states**: Show an empty-state message rather than a blank area when chart data is unavailable.
+
+### 5. Exports and Reports
+- [ ] **Export actions**: Provide export buttons for lists or reports.
+- [ ] **Export formats**: Support formats such as Excel/PDF/CSV.
+- [ ] **Export scope**: State whether the export includes current search results or all data.
+
+---
+
+## Audit Method
+
+### Step 1: Scan Data Volume
 ```javascript
-// 在源码中查找 Mock 数据数组
-// 检查数据条数（数组长度）
-const dataArray = [...]; // 查找类似变量
-console.log(dataArray.length); // 目标：>= 10
+// Find mock-data arrays in the source
+// Check record counts (array lengths)
+const dataArray = [...]; // Find similar variables
+console.log(dataArray.length); // Target: >= 10
 ```
 
-### 步骤 2：状态覆盖检查
+### Step 2: Check State Coverage
 ```
-1. 列出该模块的所有业务状态
-2. 在 Mock 数据中确认每个状态至少有 1 条数据
-3. 标记缺失的状态
-```
-
-### 步骤 3：看板维度分析
-```
-1. 截图当前看板页面
-2. 列出所有展示的指标
-3. 对照业务需求文档，补齐遗漏的关键指标
-4. 确认页面具备时间维度切换能力
+1. List every business state in the module.
+2. Confirm that mock data includes at least one record in each state.
+3. Mark missing states.
 ```
 
-### 步骤 4：详情数据动态性验证
+### Step 3: Analyze Dashboard Dimensions
 ```
-1. 使用 browser_subagent 打开页面
-2. 依次点击不同记录的「详情」
-3. 对比详情页中的统计数据变化情况
-4. 如果数据不变 → 标记为硬编码问题
+1. Capture the current dashboard.
+2. List every displayed metric.
+3. Compare with business requirements and add missing key metrics.
+4. Confirm that the page supports changing time granularity.
+```
+
+### Step 4: Verify Dynamic Detail Data
+```
+1. Open the page with browser_subagent.
+2. Open Details for several records in turn.
+3. Compare changes in the detail-page statistics.
+4. If the values do not change, flag hardcoded data.
 ```
 
 ---
 
-## 输出模板
+## Output Template
 
 ```markdown
-## 数据展示审计结果 — [模块名]
+## Data Display Audit Results — [Module]
 
-### Mock 数据量评估
-| 评估项 | 当前 | 建议 | 状态 |
+### Mock-Data Volume
+| Assessment | Current | Recommended | Status |
 |-------|------|------|------|
-| 列表数据量 | 5 条 | 15 条+ | ❌ 不足 |
-| 状态覆盖 | 3/6 | 6/6 | ❌ 不全 |
-| 时间分布 | 1 个月 | 6 个月+ | ❌ 集中 |
+| List records | 5 | 15+ | ❌ Insufficient |
+| State coverage | 3/6 | 6/6 | ❌ Incomplete |
+| Time distribution | 1 month | 6+ months | ❌ Concentrated |
 
-### 看板指标评估
-| 指标类别 | 已覆盖 | 缺失 |
+### Dashboard Metrics
+| Metric category | Covered | Missing |
 |---------|-------|------|
-| 基础总量 | ✅ | — |
-| 同比/环比 | ❌ | 需增加 |
-| 分类统计 | ❌ | 按类型分列 |
+| Basic totals | ✅ | — |
+| Year-over-year/period-over-period | ❌ | Add comparisons |
+| Category statistics | ❌ | Break down by type |
 
-### 详情页动态化
-| 检查点 | 动态结论 | 说明 |
+### Dynamic Detail Pages
+| Check | Dynamic result | Description |
 |-------|---------|------|
-| 统计卡片 | ❌ 硬编码 | 所有记录显示相同数据 |
-| 子表数据 | ✅ 动态 | 基于 .filter() 关联 |
+| Statistics cards | ❌ Hardcoded | Every record shows the same data |
+| Subtable data | ✅ Dynamic | Related records selected with .filter() |
 ```
 
 ---
 
-## 典型问题模式
+## Typical Issue Patterns
 
-1. **数据量过少**：列表仅 3~5 条数据，无法体现分页和搜索效果
-2. **状态覆盖不全**：Mock 数据中缺少部分状态，搜索下拉的某些选项选中后无结果
-3. **看板维度单一**：仅展示绝对数值，缺少同比/环比/趋势方向等分析维度
-4. **详情数据硬编码**：详情页的统计/图表数据不随所选记录变化，始终显示固定值
-5. **图表为占位符**：使用 emoji 图标或文字「地图占位」代替真实图表
+1. **Too little data**: Lists contain only 3–5 records, preventing effective pagination and search demonstrations.
+2. **Incomplete state coverage**: Some states are absent, so certain search options return no results.
+3. **Limited dashboard dimensions**: Only absolute values appear, without year-over-year/period-over-period comparisons or trends.
+4. **Hardcoded detail data**: Statistics and charts always show fixed values regardless of the selected record.
+5. **Placeholder charts**: Emoji or “Map placeholder” text replaces actual visualizations.

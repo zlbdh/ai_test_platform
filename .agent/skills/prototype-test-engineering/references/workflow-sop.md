@@ -1,63 +1,63 @@
 # Workflow SOP
 
-## 0. 进入条件
+## 0. Entry Conditions
 
-- 明确用户要做的是能力说明、测试计划、完整测试、还是局部复核。
-- 明确需求来源、原型来源、事实源边界。
-- 明确是否允许把嵌入式承接视为已覆盖。
-- 明确是否接真实系统；若未接真实系统，则默认“静态原型模式”。
+- Determine whether the user wants a capability explanation, test plan, full test, or targeted review.
+- Establish requirement sources, prototype sources, and source-of-truth boundaries.
+- Establish whether embedded destinations may count as coverage.
+- Establish whether a real system is connected; otherwise default to static prototype mode.
 
-## 1. 范围锁定
+## 1. Define Scope
 
-- 列出模块范围、排除项、关键链路、关键页面。
-- 若用户指定唯一事实源，只以该事实源为准。
-- 若范围不完整，用 `scope_gap` 标记，不私自补齐。
+- List modules, exclusions, key workflows, and key pages.
+- If the user specifies a sole source of truth, use only that source.
+- Mark incomplete scope as `scope_gap`; do not fill it in without authorization.
 
-## 2. 需求解析
+## 2. Analyze Requirements
 
-- 抽取模块、页面、角色、流程、规则、状态、字段、约束。
-- 输出结构化矩阵，作为后续映射和验证的唯一上游输入。
+- Extract modules, pages, roles, workflows, rules, states, fields, and constraints.
+- Produce a structured matrix as the sole upstream input for mapping and verification.
 
-## 3. 原型资产盘点
+## 3. Inventory Prototype Assets
 
-- 识别入口页、模块页、详情页、弹窗承接点、看板页。
-- 区分独立访问页与嵌入式承接点。
+- Identify entry pages, module pages, detail pages, dialog destinations, and dashboards.
+- Distinguish directly accessible pages from embedded destinations.
 
-## 4. 页面映射
+## 4. Map Pages
 
-- 把每个需求页标成：
+- Assign each required page one of these states:
   - `standalone_mapped`
   - `embedded_covered`
   - `missing_page`
   - `mis_mapping`
   - `out_of_scope_prototype`
-- 每条映射都附证据，不得仅凭文件名。
+- Attach evidence to every mapping; filenames alone are insufficient.
 
-## 5. 模块验证
+## 5. Verify Modules
 
-- 至少覆盖：
-  - 导航入口
-  - 主列表或主表单
-  - 详情/审核/看板
-- 分别从结构、流程、字段、状态/权限、异常边界角度验证。
+- Cover at least:
+  - Navigation entry points
+  - Main lists or main forms
+  - Details/reviews/dashboards
+- Verify structure, workflows, fields, states/permissions, and exception boundaries separately.
 
-## 6. 跨模块链路
+## 6. Cross-Module Workflows
 
-- 只验证真实上下游承接，不把“都存在页面”误判为链路闭环。
-- 必须说明入口、动作、结果、回写或回显证据。
+- Verify actual upstream/downstream integration; do not mistake the existence of pages for a complete workflow.
+- Explain evidence for entry points, actions, results, and writebacks or displayed results.
 
-## 7. 视觉语义
+## 7. Visual Semantics
 
-- 重点看关键信息层级、看板布局、列表/表单/详情主骨架。
-- 不做像素级比较时，明确标记为“语义级视觉检查”。
+- Focus on key information hierarchy, dashboard layout, and primary list/form/detail structures.
+- If there is no pixel-level comparison, explicitly label the work as a semantic visual check.
 
-## 8. 收口与门禁
+## 8. Consolidation and Gates
 
-- 统一 issue taxonomy、severity、evidence。
-- 统一输出覆盖率、映射率、关键缺口、静态无法证明项。
-- 给出 verdict：`pass`、`pass_with_risk`、`fail`。
+- Standardize issue taxonomy, severity, and evidence.
+- Report coverage, mapping rates, critical gaps, and statically unprovable items consistently.
+- Give a verdict: `pass`, `pass_with_risk`, or `fail`.
 
-## 9. 整改建议
+## 9. Remediation Recommendations
 
-- 面向产品、设计、前端、后端、测试分别给建议。
-- 每条建议必须对应一个或多个 finding。
+- Provide separate recommendations for product, design, frontend, backend, and testing teams.
+- Every recommendation must correspond to one or more findings.

@@ -1,30 +1,30 @@
 # Structure Checklist
 
-## 列表页
+## List Pages
 
-- 搜索区
-- 表格区
-- 分页区
-- 统计区或工具栏
-- 行操作区
+- Search region
+- Table region
+- Pagination region
+- Statistics region or toolbar
+- Row actions
 
-## 表单页
+## Form Pages
 
-- 分组标题
-- 字段区
-- 校验提示区
-- 提交/取消区
+- Group headings
+- Field region
+- Validation-message region
+- Submit/cancel region
 
-## 详情/审核页
+## Detail/Review Pages
 
-- 头部摘要
-- 基本信息区
-- 关联数据区
-- 审核/处理动作区
+- Header summary
+- Basic information
+- Related data
+- Review/processing actions
 
-## 看板页
+## Dashboard Pages
 
-- 指标卡片
-- 图表容器
-- 时间筛选或刷新入口
-- 空态/无数据提示
+- Metric cards
+- Chart containers
+- Time filters or refresh entry points
+- Empty/no-data messages

@@ -1,27 +1,27 @@
-# 原型测试工程化输出总览
+# Prototype Testing Engineering Overview
 
-## 输入摘要
-- 需求来源：
-- 原型来源：
-- 范围：
-- 排除项：
-- 验证深度：
+## Input Summary
+- Requirement source:
+- Prototype source:
+- Scope:
+- Exclusions:
+- Verification depth:
 
-## 系统能力映射
-| 能力层 | 现有系统组件 | 当前能解决的问题 | 当前边界 |
+## System Capability Mapping
+| Capability layer | Existing system component | Problems currently addressed | Current boundaries |
 |---|---|---|---|
 
-## 测试结果摘要
-| 指标 | 值 | 说明 |
+## Test Results Summary
+| Metric | Value | Description |
 |---|---|---|
 
-## 关键问题
-| 问题 | 类别 | 严重级别 | 影响 | 建议 |
+## Key Issues
+| Issue | Category | Severity | Impact | Recommendation |
 |---|---|---|---|---|
 
-## 门禁结论
+## Gate Conclusion
 - verdict：
-- 依据：
-- 风险说明：
+- Basis:
+- Risks:
 
-## 后续动作
+## Follow-Up Actions

@@ -1,37 +1,37 @@
 ---
 name: prototype-test-cross-module-chain-check
-description: 原型测试中的跨模块链路检查技能。用于验证上下游模块之间的入口、跳转、回写、回显和状态承接已形成真实业务闭环，而不是只有若干孤立页面。适用于：检查企业到站点、审核到上架、订单到财务/投诉、商家到商品/站点等跨模块链路。
+description: Cross-module workflow checking for prototype testing. Verify that entry points, navigation, writebacks, displayed results, and state transitions form a complete business workflow across upstream and downstream modules rather than isolated pages. Use for company-to-site, review-to-publication, order-to-finance/complaint, and merchant-to-product/site workflows.
 ---
 
-# 跨模块链路闭环检查
+# Cross-Module Workflow Completion Check
 
-把“模块之间真的连起来了吗”单独验证，避免单页都正常但业务链中途断掉。
+Verify whether modules actually connect, preventing workflows from breaking even when each page works independently.
 
-## 先读什么
+## Read First
 
-- 本地 [references/cross-module-chain-patterns.md](references/cross-module-chain-patterns.md)
-- 共享 [../prototype-test-engineering/references/issue-taxonomy.md](../prototype-test-engineering/references/issue-taxonomy.md)
+- Local: [references/cross-module-chain-patterns.md](references/cross-module-chain-patterns.md)
+- Shared: [../prototype-test-engineering/references/issue-taxonomy.md](../prototype-test-engineering/references/issue-taxonomy.md)
 
-## 执行步骤
+## Execution Steps
 
-1. 先列出待检链路的起点、终点、关键中间节点。
-2. 逐节点确认入口、动作、结果和下游承接。
-3. 重点查看以下承接关系：
-   - 只写上下游关系、但无入口
-   - 有入口、但无结果回写或回显
-   - 状态改变后无下游承接
-4. 对真实断裂点打 `chain_gap`。
+1. List the starting point, endpoint, and key intermediate nodes of the workflow.
+2. Verify each node's entry point, action, result, and downstream integration.
+3. Focus on these integration patterns:
+   - Documented upstream/downstream relationships without entry points
+   - Entry points without result writebacks or displayed results
+   - State changes without downstream handling
+4. Mark confirmed breaks as `chain_gap`.
 
-## 强制规则
+## Mandatory Rules
 
-- 页面都存在，不等于链路闭环。
-- 只有文档里写有依赖，原型中无入口或回显时，算链路缺口。
-- 下游如果只是同名页面，但没有承接当前对象或状态，不算闭环。
+- The existence of every page does not prove a complete workflow.
+- A dependency described only in documentation, with no prototype entry point or displayed result, is a workflow gap.
+- A downstream page with the same name does not complete the workflow unless it handles the current object or state.
 
-## 交付物
+## Deliverables
 
-- 跨模块链路矩阵
-- 断链点说明
-- 优先修复建议
+- Cross-module workflow matrix
+- Description of workflow breaks
+- Prioritized remediation recommendations
 
-使用 [templates/output.md](templates/output.md) 输出。
+Use [templates/output.md](templates/output.md) for the output.

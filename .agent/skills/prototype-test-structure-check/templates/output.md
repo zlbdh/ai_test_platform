@@ -1,4 +1,4 @@
-# 结构检查输出
+# Structure Check Output
 
-| 页面 | 页面类型 | 结构结论 | 缺失区块 | 证据 | 备注 |
+| Page | Page type | Structure conclusion | Missing regions | Evidence | Notes |
 |---|---|---|---|---|---|

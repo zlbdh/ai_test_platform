@@ -1,33 +1,33 @@
 # Issue Taxonomy
 
-## 问题分类
+## Issue Categories
 
-| code | 含义 | 典型场景 |
+| code | Meaning | Typical scenario |
 |---|---|---|
-| `doc_gap` | 需求文档缺失、漏写、不可测 | 缺状态流转、缺字段约束、缺异常分支 |
-| `asset_gap` | 原型资产本身不全 | 缺模块页、缺入口、缺弹窗承接点 |
-| `missing_page` | 需求页在原型中未找到 | 需求有详情页，HTML 中无对应页也无嵌入承接 |
-| `mis_mapping` | 需求页被映射到错误原型页 | 把代购管理列表映射到楼盘管理页 |
-| `broken_flow` | 页面存在但流程不闭环 | 列表可进详情，但无提交/返回/结果态 |
-| `field_gap` | 字段、校验、默认值、展示缺失 | 必填字段未体现，详情缺关键列 |
-| `state_gap` | 状态定义或流转缺失 | 有状态列，但没有流转条件和结果 |
-| `permission_gap` | 权限、显隐、禁用态缺失 | 按钮都显示，角色差异未体现 |
-| `exception_gap` | 空态、失败态、拦截、确认缺失 | 删除无确认、空列表无空态 |
-| `visual_gap` | 视觉骨架或语义承接缺失 | 看板布局、关键区域、信息层级错位 |
-| `chain_gap` | 跨模块链路未闭环 | A 模块发起动作，B 模块无承接 |
-| `scope_gap` | 范围或事实源本身不完整 | 用户未提供需求或排除了关键资料 |
+| `doc_gap` | Requirements are missing, incomplete, or untestable | Missing transitions, field constraints, or exception paths |
+| `asset_gap` | Prototype assets are incomplete | Missing module page, entry point, or dialog destination |
+| `missing_page` | Required page not found in the prototype | Requirements specify a detail page, but HTML has no page or embedded destination |
+| `mis_mapping` | Requirement mapped to the wrong prototype page | Mapping a purchasing-management list to a property-management page |
+| `broken_flow` | Pages exist but the workflow is incomplete | List opens details, but no submit/back/result state exists |
+| `field_gap` | Missing field, validation, default, or display | Required field absent or key detail column missing |
+| `state_gap` | Missing state definitions or transitions | State column exists without transition conditions or results |
+| `permission_gap` | Missing permissions, visibility, or disabled states | Every button is visible without role differences |
+| `exception_gap` | Missing empty/failure states, blocking, or confirmation | Deletion lacks confirmation or an empty list lacks an empty state |
+| `visual_gap` | Missing visual structure or semantic representation | Misplaced dashboard layout, key areas, or information hierarchy |
+| `chain_gap` | Incomplete cross-module workflow | Module A initiates an action without module B handling it |
+| `scope_gap` | Scope or source of truth is incomplete | User omitted requirements or excluded key sources |
 
-## 严重级别
+## Severity
 
-| severity | 解释 | 处理方式 |
+| severity | Explanation | Handling |
 |---|---|---|
-| `blocking` | 阻断开发/验证的关键缺口 | 默认判定不通过 |
-| `major` | 影响主流程、主页面、关键规则 | 默认高优先级整改 |
-| `normal` | 有问题但不阻断主流程 | 进入常规整改清单 |
-| `pending_confirmation` | 现有证据不足，需要人工或真实系统补证 | 明确列入待确认，不算通过 |
+| `blocking` | Critical gap blocking development or verification | Fail by default |
+| `major` | Affects a main workflow, primary page, or key rule | High-priority remediation by default |
+| `normal` | Issue does not block the main workflow | Add to the standard remediation list |
+| `pending_confirmation` | Evidence is insufficient; human or live-system confirmation is needed | Explicitly list as pending, not passed |
 
-## 三态结论
+## Three-State Conclusions
 
-- `verified_pass`：有明确证据证明已覆盖。
-- `verified_gap`：有明确证据证明存在缺口。
-- `static_unprovable`：静态原型无法证明，不得写成通过。
+- `verified_pass`: clear evidence proves coverage.
+- `verified_gap`: clear evidence proves a gap.
+- `static_unprovable`: a static prototype cannot prove the behavior; never report it as passed.

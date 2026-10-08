@@ -1,121 +1,121 @@
 ---
 name: prototype-test-ux-experience
-description: HTML原型测试 — 用户体验审计。检验信息架构、操作路径效率、批量操作、导航一致性、响应式适配、无障碍访问等用户体验维度。
+description: HTML prototype testing — user experience audit. Check information architecture, action-path efficiency, batch actions, navigation consistency, responsive behavior, accessibility, and other experience dimensions.
 ---
 
-# 用户体验审计
+# User Experience Audit
 
-## 适用场景
-当需要从**用户操作效率和视觉感受**角度评估 HTML 原型质量时使用本技能。重点检查操作顺手度、信息可找性和整体效率。
-
----
-
-## 审计检查清单
-
-### 1. 信息架构与布局
-- [ ] **表格列数量**：将列表列数控制在 10 列以内，并避免在 1366px 屏幕上出现水平滚动
-- [ ] **列优先级**：高频关注列（状态/操作）靠右且固定可见
-- [ ] **信息密度**：看板页面在笔记本屏幕（1366×768）上不出现关键信息挤压或截断
-- [ ] **内容截断**：长文本提供 tooltip、popover 或展开按钮等截断展示方案
-- [ ] **卡片布局**：统计卡片的 `grid-template-columns` 在小屏上自适应换行
-
-### 2. 操作路径效率
-- [ ] **核心操作步数**：控制核心业务操作步数，并持续优化路径长度
-  - 最佳：1~2 步（如列表直接编辑、行内操作）
-  - 可接受：3~4 步（如列表→详情→操作→确认）
-  - 需优化：5 步以上
-- [ ] **常用操作可见性**：让最常用的操作按钮在不滚动的情况下可见
-- [ ] **返回路径**：从详情页或子页面返回列表的路径保持简短直接
-- [ ] **上下文保持**：从详情页返回列表后保留搜索条件和页码
-
-### 3. 批量操作能力
-- [ ] **多选支持**：列表提供复选框以支持多选
-- [ ] **批量操作按钮**：提供批量导出、批量删除、批量状态变更等操作
-- [ ] **全选/反选**：提供表头全选复选框
-- [ ] **选中计数**：多选后展示「已选 X 条」提示
-
-### 4. 导航一致性
-- [ ] **面包屑**：为每个页面提供面包屑，并支持点击返回上级
-- [ ] **返回按钮位置**：统一所有页面的「返回」按钮位置，建议固定在右上角
-- [ ] **Tab 标签排列**：高频 Tab 排在前面；Tab 超过 5 个时提供折叠或滚动方案
-- [ ] **详情页上下条**：为审批、处理等高频场景提供「上一条/下一条」快捷切换
-- [ ] **键盘快捷键**：支持 `Esc` 关闭弹窗或返回列表
-
-### 5. 反馈与确认
-- [ ] **操作成功反馈**：在提交、保存、删除后给出明确的成功提示
-- [ ] **操作失败反馈**：校验不通过时给出具体错误提示，避免笼统的「操作失败」
-- [ ] **危险操作二次确认**：为删除、禁用、终止合作等不可逆操作提供二次确认弹窗
-- [ ] **超级危险操作三重确认**：为停封营业等重大操作提供口令输入确认，如输入「确认处罚」
-- [ ] **加载状态**：长时间操作展示 loading 提示，并禁用按钮以防重复提交
-
-### 6. 视觉一致性
-- [ ] **颜色语义**：成功（绿色）、警告（橙色）、危险（红色）、信息（灰色）保持全站统一
-- [ ] **标签样式**：`.tag-success / .tag-warning / .tag-danger` 的颜色与语义保持一致
-- [ ] **字体大小**：正文、标题、标签、按钮形成清晰的字号层级
-- [ ] **间距一致**：卡片间距、表格内边距、弹窗内边距保持全站一致
-
-### 7. 响应式适配
-- [ ] **最小宽度**：页面在 1280px 宽度下保持可正常使用
-- [ ] **表格滚动**：宽表格支持水平滚动且不撑破布局
-- [ ] **弹窗尺寸**：为弹窗的 `max-width` 和 `max-height` 配置 `vw/vh` 约束
+## When to Use
+Use this skill to assess HTML prototypes from the perspective of **user efficiency and visual experience**. Focus on ease of operation, findability, and overall efficiency.
 
 ---
 
-## 审计方法
+## Audit Checklist
 
-### 方法 A：体验走查
+### 1. Information Architecture and Layout
+- [ ] **Table columns**: Keep lists within 10 columns and avoid horizontal scrolling on a 1366px screen.
+- [ ] **Column priority**: Keep frequently used state/action columns on the right and fixed in view.
+- [ ] **Information density**: Prevent key dashboard information from being squeezed or clipped on a 1366×768 laptop screen.
+- [ ] **Truncated content**: Provide tooltips, popovers, or expand buttons for long text.
+- [ ] **Card layout**: Make statistics-card `grid-template-columns` wrap responsively on smaller screens.
+
+### 2. Action-Path Efficiency
+- [ ] **Core action steps**: Limit steps for core business actions and continually streamline paths.
+  - Best: 1–2 steps, such as direct list editing or inline actions.
+  - Acceptable: 3–4 steps, such as list → details → action → confirm.
+  - Needs improvement: 5 or more steps.
+- [ ] **Common action visibility**: Keep the most-used buttons visible without scrolling.
+- [ ] **Return paths**: Keep the path from details or child pages back to the list short and direct.
+- [ ] **Context preservation**: Preserve search filters and page numbers when returning from details.
+
+### 3. Batch Actions
+- [ ] **Multi-selection**: Provide list checkboxes for selecting multiple records.
+- [ ] **Batch buttons**: Provide batch export, deletion, state changes, and similar actions.
+- [ ] **Select/deselect all**: Provide a select-all checkbox in the table header.
+- [ ] **Selection count**: Display “X selected” after multi-selection.
+
+### 4. Navigation Consistency
+- [ ] **Breadcrumbs**: Provide breadcrumbs on every page, with links to parent levels.
+- [ ] **Back button placement**: Use a consistent position, preferably the upper-right corner.
+- [ ] **Tab order**: Put frequently used tabs first; provide collapsing or scrolling when there are more than five.
+- [ ] **Previous/next record**: Provide quick record switching for frequent approval and processing tasks.
+- [ ] **Keyboard shortcuts**: Support `Esc` to close dialogs or return to the list.
+
+### 5. Feedback and Confirmation
+- [ ] **Success feedback**: Clearly confirm submission, saving, and deletion.
+- [ ] **Failure feedback**: Give specific validation errors instead of a generic “Operation failed.”
+- [ ] **Dangerous-action confirmation**: Require confirmation dialogs for irreversible actions such as deletion, disabling, or terminating a partnership.
+- [ ] **Extra confirmation for critical actions**: Require a typed confirmation phrase, such as “Confirm penalty,” for major actions such as suspending business operations.
+- [ ] **Loading states**: Show loading feedback for long operations and disable buttons to prevent duplicate submission.
+
+### 6. Visual Consistency
+- [ ] **Color semantics**: Use consistent colors throughout: success (green), warning (orange), danger (red), information (gray).
+- [ ] **Tag styles**: Keep `.tag-success / .tag-warning / .tag-danger` colors consistent with their meanings.
+- [ ] **Font sizes**: Establish clear size levels for body text, headings, labels, and buttons.
+- [ ] **Spacing**: Keep card gaps, table padding, and dialog padding consistent throughout.
+
+### 7. Responsive Behavior
+- [ ] **Minimum width**: Keep pages usable at 1280px width.
+- [ ] **Table scrolling**: Allow wide tables to scroll horizontally without breaking layout.
+- [ ] **Dialog sizing**: Constrain `max-width` and `max-height` with `vw/vh` units.
+
+---
+
+## Audit Method
+
+### Method A: Experience Walkthrough
 ```
-1. 使用 browser_subagent 在 1366×768 分辨率下打开页面
-2. 截图记录首屏展示效果
-3. 模拟常见用户操作路径（搜索→查看→编辑→保存→返回）
-4. 记录操作步数和发现的体验问题
+1. Open the page at 1366×768 with browser_subagent.
+2. Capture the initial viewport.
+3. Simulate common paths: search → view → edit → save → return.
+4. Record action counts and experience issues.
 ```
 
-### 方法 B：一致性审查
+### Method B: Consistency Review
 ```
-1. 列出所有模块的「返回」按钮位置
-2. 比较各模块的 Tab 排列顺序
-3. 检查全站的 .tag 样式定义一致性
-4. 比较各弹窗的尺寸和布局模式
+1. List Back button positions across modules.
+2. Compare tab ordering across modules.
+3. Check consistency of .tag styles throughout.
+4. Compare dialog sizes and layout patterns.
 ```
 
-### 方法 C：效率测试
+### Method C: Efficiency Testing
 ```
-1. 选取 5 个核心业务场景
-2. 计算每个场景从进入到完成的最少操作步数
-3. 识别操作路径可优化的环节（如增加快捷入口、减少弹窗层级）
+1. Select five core business scenarios.
+2. Count the minimum steps from entry to completion for each scenario.
+3. Identify improvements such as shortcuts or fewer dialog layers.
 ```
 
 ---
 
-## 输出模板
+## Output Template
 
 ```markdown
-## 用户体验审计结果 — [模块名]
+## User Experience Audit Results — [Module]
 
-### 操作路径效率
-| 场景 | 当前步数 | 建议步数 | 优化方案 |
+### Action-Path Efficiency
+| Scenario | Current steps | Recommended steps | Improvement |
 |------|---------|---------|---------|
-| 审批一条投诉 | 6 步 | 3 步 | 增加列表行内快捷操作 |
+| Approve a complaint | 6 | 3 | Add inline list actions |
 
-### 一致性检查
-| 检查项 | 状态 | 说明 |
+### Consistency Checks
+| Check | Status | Description |
 |-------|------|------|
-| 返回按钮位置 | ❌ 不统一 | 部分左上角/部分右上角 |
-| 标签颜色语义 | ❌ 不一致 | tag-success 用了蓝色系背景 |
+| Back button placement | ❌ Inconsistent | Upper-left on some pages, upper-right on others |
+| Tag color semantics | ❌ Inconsistent | tag-success uses a blue background |
 
-### 批量操作缺失
-| 模块 | 缺失操作 | 建议 |
+### Missing Batch Actions
+| Module | Missing action | Recommendation |
 |------|---------|------|
-| enterprise-list | 批量导出/暂停 | 增加多选+批量操作栏 |
+| enterprise-list | Batch export/suspend | Add multi-selection and a batch-action bar |
 ```
 
 ---
 
-## 典型问题模式
+## Typical Issue Patterns
 
-1. **返回按钮位置不统一**：在不同模块中「返回列表」按钮在左上/右上交替出现
-2. **批量操作全面缺失**：列表页有全选复选框但无对应的批量操作按钮
-3. **表格列过多**：超过 10 列导致在笔记本上必须水平滚动才能看到操作列
-4. **操作路径过长**：需要 5+ 步才能完成一个常规操作（如查看→返回→搜索→查看→操作）
-5. **无上下文保持**：从详情返回列表后搜索条件和页码被重置
+1. **Inconsistent Back placement**: Back to list alternates between upper-left and upper-right across modules.
+2. **Missing batch actions**: List pages provide select-all checkboxes without corresponding batch buttons.
+3. **Too many columns**: More than 10 columns require horizontal scrolling to reach actions on laptops.
+4. **Long action paths**: Routine actions require 5+ steps, such as view → return → search → view → act.
+5. **Lost context**: Returning from details resets filters and page numbers.

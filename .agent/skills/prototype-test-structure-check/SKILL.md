@@ -1,35 +1,35 @@
 ---
 name: prototype-test-structure-check
-description: 原型测试中的结构检查技能。用于核查菜单、路由、页面骨架、搜索区、列表区、详情区、看板区、弹窗区、分页区等结构承接与需求页面类型的匹配度。适用于：判断页面骨架完整度、复核关键页面缺失区块情况、解释为什么某页面虽然存在但不等于需求页。
+description: Structural checking for prototype testing. Verify that menus, routes, page skeletons, search/list/detail/dashboard/dialog/pagination regions match required page types. Use to assess structural completeness, review missing regions on key pages, and explain why an existing page does not necessarily implement the required page.
 ---
 
-# 页面结构检查
+# Page Structure Checks
 
-验证“页面长得对不对”，不是只验证“页面在不在”。
+Verify that the page has the correct structure, not merely that it exists.
 
-## 先读什么
+## Read First
 
-- 本地 [references/structure-checklist.md](references/structure-checklist.md)
-- 共享 [../prototype-test-engineering/references/issue-taxonomy.md](../prototype-test-engineering/references/issue-taxonomy.md)
+- Local: [references/structure-checklist.md](references/structure-checklist.md)
+- Shared: [../prototype-test-engineering/references/issue-taxonomy.md](../prototype-test-engineering/references/issue-taxonomy.md)
 
-## 执行步骤
+## Execution Steps
 
-1. 根据页面映射锁定目标页和页面类型。
-2. 检查菜单、面包屑、路由命名和标题与需求的一致性。
-3. 检查页面骨架具备该类型应有的区块。
-4. 记录缺失区块、错位区块、假容器区块。
-5. 把结果交给后续流程、字段、异常 skill，不替它们代判通过。
+1. Identify the target page and its type from page mappings.
+2. Check that menus, breadcrumbs, route names, and headings match requirements.
+3. Verify that the page skeleton includes the regions expected for its type.
+4. Record missing, misplaced, and placeholder-only regions.
+5. Pass results to workflow, field, and exception skills; do not declare their checks passed on their behalf.
 
-## 强制规则
+## Mandatory Rules
 
-- 有个空容器不等于该区块已实现。
-- 页面标题与页面主体内容不一致时，优先怀疑误映射。
-- 结构检查只确认“区块承接”，不替代流程和状态结论。
+- An empty container does not prove that a region is implemented.
+- Suspect an incorrect mapping when the page title and main content disagree.
+- Structure checks establish only region coverage; they do not replace workflow or state conclusions.
 
-## 交付物
+## Deliverables
 
-- 结构承接矩阵
-- 关键区块缺口
-- 页面类型错配说明
+- Structural coverage matrix
+- Key-region gaps
+- Explanation of page-type mismatches
 
-使用 [templates/output.md](templates/output.md) 输出。
+Use [templates/output.md](templates/output.md) for the output.

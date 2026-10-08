@@ -1,4 +1,4 @@
-# 表单数据检查输出
+# Form and Data Check Output
 
-| 页面 | 字段/展示项 | 需求要求 | 原型现状 | 结论 | 证据 |
+| Page | Field/display item | Requirement | Current prototype | Conclusion | Evidence |
 |---|---|---|---|---|---|

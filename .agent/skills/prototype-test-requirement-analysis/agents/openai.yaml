@@ -1,6 +1,6 @@
 interface:
-  display_name: "原型测试需求解析"
-  short_description: "解析需求并提取模块页面流程状态字段约束的原型测试基线"
+  display_name: "Prototype Test Requirement Analysis"
+  short_description: "Extract modules, pages, workflows, states, fields, and constraints into a testing baseline"
   default_prompt: "Use $prototype-test-requirement-analysis to extract structured prototype-testing facts from requirement documents."
 
 policy:

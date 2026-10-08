@@ -1,105 +1,105 @@
 ---
 name: prototype-test-business-logic
-description: HTML原型测试 — 业务逻辑完善度审计。检验模块间业务联动、流程完整性、业务规则覆盖、字段完整性等业务层面的需求遗漏。
+description: HTML prototype testing — business logic completeness audit. Check cross-module integration, workflow completeness, business rule coverage, field completeness, and other missing business requirements.
 ---
 
-# 业务逻辑完善度审计
+# Business Logic Completeness Audit
 
-## 适用场景
-当需要从**产品/业务视角**审计 HTML 原型的业务逻辑完整性时使用本技能。重点检查业务流程完整度与跨模块联动承接情况。
-
----
-
-## 审计检查清单
-
-### 1. 跨模块业务联动
-- [ ] **状态级联传播**：确认 A 模块的状态变更会同步影响 B 模块的数据或操作
-  - 示例：企业暂停 → 订单进入拦截态；消费者黑名单 → 下单入口被阻断
-- [ ] **数据双向关联**：确认 A 详情页展示 B 模块的关联记录
-  - 示例：消费者详情 → 展示投诉记录；订单详情 → 展示所属账单
-- [ ] **操作结果回写**：确认在 A 模块发起的操作会在 B 模块生成记录
-  - 示例：投诉页发起处罚 → 处罚管理自动创建记录
-
-### 2. 业务流程完整性
-- [ ] **审批链路**：确认需要审批的业务具备完整的审批流程原型
-  - 检查点：发起 → 初审 → 复审 → 通过/驳回 → 驳回修改 → 重新提交
-- [ ] **状态机完整性**：确认实体状态流转覆盖全部核心场景
-  - 检查点：草稿/待审核/已通过/已驳回/已发布/已下架，每个状态都配置正确的操作按钮
-- [ ] **异常分支**：补齐「驳回后重新提交」「超时未处理」「取消后退款」等异常场景
-- [ ] **闭环校验**：确认业务流程首尾闭环，不出现「死胡同」状态
-
-### 3. 业务规则覆盖
-- [ ] **权限控制**：为不同角色提供差异化的操作按钮，至少在原型注释中标注
-- [ ] **时间约束**：为日期字段配置合理的最小值与最大值约束
-- [ ] **金额计算**：保证金额场景的计算逻辑正确，例如单价×数量-优惠=实付
-- [ ] **配额限制**：补齐必要的数量或次数上限设置，如每日最大接单数、每人限领数
-- [ ] **互斥规则**：为互相冲突的选项配置联动控制，如选择「免单」后隐藏金额输入框
-
-### 4. 字段完整性
-- [ ] **必要字段缺失**：对照业务场景补齐遗漏的关键字段
-  - 常见缺失：SLA 时效字段、会员等级字段、审计日志字段、凭证上传字段
-- [ ] **配置项硬编码**：避免把阈值或规则直接写死在代码中，如合同到期预警 30 天、个税阈值 800 元
-- [ ] **关联字段缺失**：在详情页补齐关联模块的信息，如订单详情展示服务人员信息
+## When to Use
+Use this skill to audit HTML prototype business logic from a **product/business perspective**. Focus on complete workflows and integration between modules.
 
 ---
 
-## 审计方法
+## Audit Checklist
 
-### 步骤 1：梳理模块关系图
+### 1. Cross-Module Business Integration
+- [ ] **Cascading state changes**: Confirm that a state change in module A updates data or available actions in module B.
+  - Example: suspending a company blocks orders; blocklisting a customer prevents order placement.
+- [ ] **Bidirectional data relationships**: Confirm that module A's detail page shows related records from module B.
+  - Example: customer details show complaints; order details show the associated bill.
+- [ ] **Write back action results**: Confirm that an action initiated in module A creates a record in module B.
+  - Example: initiating a penalty from a complaint automatically creates a penalty-management record.
+
+### 2. Workflow Completeness
+- [ ] **Approval chain**: Confirm that workflows requiring approval have a complete approval prototype.
+  - Check: initiate → initial review → secondary review → approve/reject → revise after rejection → resubmit.
+- [ ] **Complete state machine**: Confirm that entity transitions cover all core scenarios.
+  - Check: draft/pending review/approved/rejected/published/unpublished, with the correct action buttons for each state.
+- [ ] **Exception paths**: Cover scenarios such as resubmission after rejection, overdue processing, and refunds after cancellation.
+- [ ] **End-to-end completion**: Confirm that workflows reach a complete outcome without dead-end states.
+
+### 3. Business Rule Coverage
+- [ ] **Access control**: Provide role-specific action buttons, or at least document the differences in prototype comments.
+- [ ] **Time constraints**: Set reasonable minimum and maximum values for date fields.
+- [ ] **Amount calculations**: Ensure financial calculations are correct, such as unit price × quantity − discount = amount paid.
+- [ ] **Quota limits**: Include necessary count or frequency limits, such as daily order limits or per-person claim limits.
+- [ ] **Mutually exclusive rules**: Link conflicting choices, such as hiding the amount field when a free order is selected.
+
+### 4. Field Completeness
+- [ ] **Missing required fields**: Add key fields missing from the business scenario.
+  - Common omissions: SLA deadlines, membership levels, audit logs, and supporting-document uploads.
+- [ ] **Hardcoded settings**: Avoid hardcoding thresholds or rules, such as a 30-day contract expiration warning or a CNY 800 income-tax threshold.
+- [ ] **Missing relationship fields**: Include related module information on detail pages, such as service personnel on order details.
+
+---
+
+## Audit Method
+
+### Step 1: Map Module Relationships
 ```
-列出所有模块，标注模块间的业务关联关系：
-- 企业管理 → 订单中心（企业接单）
-- 消费者中心 → 投诉处理（消费者投诉）
-- 投诉处理 → 处罚管理（投诉导致处罚）
-- 订单中心 → 财务结算（订单产生账单）
-- 培训中心 → 考试管理 → 题库（学完参考）
+List all modules and their business relationships:
+- Company management → Order center (company order acceptance)
+- Customer center → Complaint handling (customer complaints)
+- Complaint handling → Penalty management (complaint-driven penalties)
+- Order center → Financial settlement (orders generate bills)
+- Training center → Exam management → Question bank (exams after training)
 ```
 
-### 步骤 2：逐条验证联动
+### Step 2: Verify Each Integration
 ```
-对于每对关联模块：
-1. 打开模块 A 的源码，确认存在指向模块 B 的数据或链接
-2. 打开模块 B 的源码，确认展示了模块 A 的关联数据
-3. 确认状态变更操作已覆盖另一模块的影响
+For every pair of related modules:
+1. Open module A's source and confirm that data or links point to module B.
+2. Open module B's source and confirm that it displays related module A data.
+3. Confirm that state-changing actions account for their effects on the other module.
 ```
 
-### 步骤 3：流程走查
+### Step 3: Walk Through Workflows
 ```
-对于每个业务流程：
-1. 列出完整的状态流转链路
-2. 逐一确认每个状态节点在原型中都具备对应的操作按钮
-3. 确认「驳回后重新提交」等异常分支已被处理
+For each workflow:
+1. List the complete sequence of state transitions.
+2. Confirm that each state has corresponding action buttons in the prototype.
+3. Confirm that exception paths such as resubmission after rejection are handled.
 ```
 
 ---
 
-## 输出模板
+## Output Template
 
 ```markdown
-## 业务逻辑审计结果 — [模块名/业务域]
+## Business Logic Audit Results — [Module/Business Domain]
 
-### 跨模块联动检查
-| 关联关系 | 联动结论 | 缺失描述 | 优先级 |
+### Cross-Module Integration
+| Relationship | Integration result | Missing behavior | Priority |
 |---------|---------|---------|-------|
-| A → B | ❌ | 缺少 XXX 关联 | 🔴高 |
+| A → B | ❌ | Missing XXX relationship | 🔴 High |
 
-### 流程完整性检查
-| 流程 | 节点覆盖 | 缺失环节 | 优先级 |
+### Workflow Completeness
+| Workflow | Node coverage | Missing steps | Priority |
 |------|---------|---------|-------|
-| 企业入驻 | 3/6 | 缺初审/财务审核/法务审核 | 🔴高 |
+| Company onboarding | 3/6 | Missing initial/financial/legal review | 🔴 High |
 
-### 字段缺失检查
-| 模块 | 缺失字段 | 业务场景 | 优先级 |
+### Missing Fields
+| Module | Missing field | Business scenario | Priority |
 |------|---------|---------|-------|
-| consumer-list | 会员等级 | 区分用户层级 | 🟡中 |
+| consumer-list | Membership level | Distinguish customer tiers | 🟡 Medium |
 ```
 
 ---
 
-## 典型问题模式
+## Typical Issue Patterns
 
-1. **跨模块孤岛**：每个模块独立完整但模块间无数据/状态关联
-2. **审批链路断裂**：仅有「提交」和「结果」两个节点，缺少中间审批环节
-3. **缺少异常分支**：仅考虑了「正常流程」，未覆盖驳回/超时/取消等场景
-4. **配置项硬编码**：阈值、规则、策略直接写死在代码中无法灵活配置
-5. **关联数据不展示**：详情页仅展示自身数据，不展示关联模块的记录
+1. **Isolated modules**: Each module works independently, but data and state are not linked across modules.
+2. **Broken approval chains**: Only submission and results are present; intermediate approvals are missing.
+3. **Missing exception paths**: Only the happy path is covered, without rejection, timeout, or cancellation.
+4. **Hardcoded settings**: Thresholds, rules, and policies cannot be configured because they are embedded in code.
+5. **Missing related data**: Detail pages show only their own data, without records from related modules.

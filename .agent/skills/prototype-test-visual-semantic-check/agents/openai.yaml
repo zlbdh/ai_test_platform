@@ -1,6 +1,6 @@
 interface:
-  display_name: "原型视觉语义检查"
-  short_description: "检查视觉骨架信息层级关键区域与看板布局的业务语义承接"
+  display_name: "Prototype Visual-Semantic Check"
+  short_description: "Check business meaning in visual structure, hierarchy, key regions, and dashboard layouts"
   default_prompt: "Use $prototype-test-visual-semantic-check to validate visual semantics, layout skeletons, and critical visual regions."
 
 policy:

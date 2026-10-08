@@ -1,16 +1,16 @@
 # Exception And Boundary Checklist
 
-## 至少验证
+## Minimum Verification
 
-- 空态
-- 无搜索结果态
-- 失败提示
-- 删除/禁用/解绑确认
-- 加载状态
-- 提交后防重表达
+- Empty states
+- No search results
+- Failure messages
+- Delete/disable/unlink confirmations
+- Loading states
+- Duplicate-submission prevention after submission
 
-## 常见缺口
+## Common Gaps
 
-- 删除直接执行，无二次确认。
-- 弹窗关闭后没有任何反馈。
-- 详情页没有“无关联数据”时的展示。
+- Deletion executes immediately without confirmation.
+- Closing a dialog provides no feedback.
+- A detail page has no representation for missing related data.

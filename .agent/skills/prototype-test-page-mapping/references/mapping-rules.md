@@ -1,28 +1,28 @@
 # Mapping Rules
 
-## 五种状态的判断口径
+## Criteria for the Five States
 
 ### `standalone_mapped`
-- 有独立页面文件或独立可访问页面。
-- 页面标题、区块、动作与需求页主要语义一致。
+- A standalone page file or independently accessible page exists.
+- Its title, regions, and actions match the required page's primary meaning.
 
 ### `embedded_covered`
-- 无独立页面。
-- 但能在现有页面的 Tab、弹窗、抽屉或详情区中找到明确承接。
-- 必须看到入口和承接内容，二者缺一不可。
+- No standalone page exists.
+- An existing tab, dialog, drawer, or detail region clearly implements the requirement.
+- Both the entry point and destination content must be visible; neither may be missing.
 
 ### `missing_page`
-- 检查过候选页和承接点后，仍未找到可承接的内容。
+- No suitable content was found after checking candidate pages and destinations.
 
 ### `mis_mapping`
-- 当前映射对象主题明显不同。
-- 示例：把“代购管理列表”映射到“楼盘管理”页面。
+- The mapped target clearly addresses a different subject.
+- Example: mapping a purchasing-management list to a property-management page.
 
 ### `out_of_scope_prototype`
-- 页面存在，但本轮需求范围没有定义它。
+- The page exists but is not defined in the current requirement scope.
 
-## 误映射高危信号
+## Warning Signs of Incorrect Mapping
 
-- 只有文件名关键词相似。
-- 页面主标题、搜索条件、表格列与需求页主体不一致。
-- 映射后会把真实缺页掩盖掉。
+- Only filename keywords match.
+- The main title, search filters, or table columns differ from the required page's subject.
+- The mapping would conceal an actually missing page.

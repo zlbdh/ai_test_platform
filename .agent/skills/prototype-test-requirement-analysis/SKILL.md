@@ -1,49 +1,49 @@
 ---
 name: prototype-test-requirement-analysis
-description: 原型测试中的需求解析技能。用于读取需求文档并抽取模块、页面、角色、流程、规则、状态、字段、约束和验收线索，形成可用于页面映射、模块验证和门禁收口的结构化基线。适用于：只有需求文档时的需求测试、完整原型测试的第一步、复核某模块定义完整度、解释文档为什么不可测或与总览不一致。
+description: Requirement analysis for prototype testing. Read requirements and extract modules, pages, roles, workflows, rules, states, fields, constraints, and acceptance signals into a structured baseline for page mapping, module verification, and gates. Use when only requirements are available, as the first step of full testing, to review module completeness, or to explain untestable documents and inconsistencies with overviews.
 ---
 
-# 需求解析与结构化抽取
+# Requirement Analysis and Structured Extraction
 
-把需求文档转成“后续 skill 可消费的事实矩阵”，不要停留在阅读摘要层。
+Convert requirements into a fact matrix that downstream skills can use; a reading summary alone is insufficient.
 
-## 先读什么
+## Read First
 
-- 本地 [references/requirement-signals.md](references/requirement-signals.md)
-- 共享 [../prototype-test-engineering/references/issue-taxonomy.md](../prototype-test-engineering/references/issue-taxonomy.md)
-- 需要解释平台现有能力时，再读 [../prototype-test-engineering/references/current-system-mapping.md](../prototype-test-engineering/references/current-system-mapping.md)
+- Local: [references/requirement-signals.md](references/requirement-signals.md)
+- Shared: [../prototype-test-engineering/references/issue-taxonomy.md](../prototype-test-engineering/references/issue-taxonomy.md)
+- To explain existing platform capabilities, also read [../prototype-test-engineering/references/current-system-mapping.md](../prototype-test-engineering/references/current-system-mapping.md).
 
-## 执行步骤
+## Execution Steps
 
-1. 锁定唯一事实源，列出本轮允许使用的需求文件。
-2. 逐份抽取：
-   - 模块
-   - 页面
-   - 角色
-   - 主流程
-   - 状态与状态变化
-   - 字段与约束
-   - 异常分支
-   - 跨模块依赖
-3. 建立三个基线矩阵：
-   - 模块-页面矩阵
-   - 页面-字段/动作矩阵
-   - 流程-状态矩阵
-4. 用 `doc_gap`、`scope_gap`、`state_gap`、`field_gap`、`permission_gap` 等分类标问题。
-5. 把“静态原型后续需要验证什么”也标出来，作为下游 skill 的输入。
+1. Establish the sole source of truth and list requirement files permitted for this task.
+2. Extract from each document:
+   - Modules
+   - Pages
+   - Roles
+   - Main workflows
+   - States and transitions
+   - Fields and constraints
+   - Exception paths
+   - Cross-module dependencies
+3. Build three baseline matrices:
+   - Module-to-page matrix
+   - Page-to-field/action matrix
+   - Workflow-to-state matrix
+4. Classify issues with categories such as `doc_gap`, `scope_gap`, `state_gap`, `field_gap`, and `permission_gap`.
+5. Identify what later static-prototype verification must check, as input for downstream skills.
 
-## 强制规则
+## Mandatory Rules
 
-- 需求里没写的，不要替作者脑补成已定义。
-- 总览文档和模块文档不一致时，显式记为 `doc_gap` 或 `scope_gap`，不要擅自择一忽略。
-- 文档只写了页面名、没写动作和状态时，不得判定为“可测充分”。
-- 需求测试的通过条件是“有证据支持的完整性”，不是“读起来像没问题”。
+- Do not invent definitions that the requirements do not contain.
+- Explicitly record conflicts between overview and module documents as `doc_gap` or `scope_gap`; do not silently choose one and ignore the other.
+- A document that names pages without actions and states is not sufficiently testable.
+- Requirements pass based on evidence-supported completeness, not because the text seems fine.
 
-## 交付物
+## Deliverables
 
-- 模块/页面/角色/流程/规则/状态/字段结构化摘要
-- 文档问题清单
-- 下游建议验证点
-- 可直接交给 `prototype-test-page-mapping` 的页面清单
+- Structured summary of modules/pages/roles/workflows/rules/states/fields
+- Document issue list
+- Recommended downstream verification points
+- Page inventory ready for `prototype-test-page-mapping`
 
-使用 [templates/output.md](templates/output.md) 输出。
+Use [templates/output.md](templates/output.md) for the output.

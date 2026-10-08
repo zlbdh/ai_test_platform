@@ -1,15 +1,15 @@
-# 资产盘点输出
+# Asset Inventory Output
 
-## 资产概览
-- 原型来源：
-- 技术入口页：
-- 页面总数：
-- 范围外页面数：
+## Asset Overview
+- Prototype source:
+- Technical entry page:
+- Total pages:
+- Out-of-scope pages:
 
-## 页面资产清单
-| 资产 | 类型 | 可访问方式 | 可能承接点 | 备注 |
+## Page Asset Inventory
+| Asset | Type | Access method | Candidate destination | Notes |
 |---|---|---|---|---|
 
-## 风险
-| 风险 | 类别 | 说明 | 建议 |
+## Risks
+| Risk | Category | Description | Recommendation |
 |---|---|---|---|

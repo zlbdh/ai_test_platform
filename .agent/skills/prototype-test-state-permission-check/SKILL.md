@@ -1,40 +1,40 @@
 ---
 name: prototype-test-state-permission-check
-description: 原型测试中的状态与权限检查技能。用于验证状态集合、状态流转条件、按钮显隐、角色可见性、只读态、禁用态、审核/上下架/启停等关键规则已被原型和需求共同承接。适用于：查状态流转不清、假通过按钮、角色差异缺失、审核类页面规则不闭环。
+description: State and permission checking for prototype testing. Verify that requirements and prototypes jointly define state sets, transition conditions, button visibility, role visibility, read-only and disabled states, and key review/publication/activation rules. Use to detect unclear transitions, superficial approval buttons, missing role distinctions, and incomplete review-page rules.
 ---
 
-# 状态流转与权限显隐检查
+# State Transition and Permission Visibility Checks
 
-把“状态”和“权限”当成高风险逻辑点单独验证，不把状态列或按钮存在误判为规则完整。
+Verify states and permissions as separate high-risk logic areas; a state column or button does not prove complete rules.
 
-## 先读什么
+## Read First
 
-- 本地 [references/state-permission-rules.md](references/state-permission-rules.md)
-- 共享 [../prototype-test-engineering/references/issue-taxonomy.md](../prototype-test-engineering/references/issue-taxonomy.md)
+- Local: [references/state-permission-rules.md](references/state-permission-rules.md)
+- Shared: [../prototype-test-engineering/references/issue-taxonomy.md](../prototype-test-engineering/references/issue-taxonomy.md)
 
-## 执行步骤
+## Execution Steps
 
-1. 从需求解析结果中列出状态集合与状态变化条件。
-2. 逐状态检查：
-- 当前状态表达清晰
-- 允许动作表达清晰
-- 禁止动作具备禁用、隐藏或只读表现
-3. 逐角色检查：
-   - 谁能看见
-   - 谁能操作
-   - 谁只能查看
-4. 对状态缺口打 `state_gap`，对权限缺口打 `permission_gap`。
+1. List the state set and transition conditions from requirement analysis.
+2. Check each state:
+- The current state is clearly represented
+- Allowed actions are clear
+- Prohibited actions are disabled, hidden, or read-only
+3. Check each role:
+   - Who can see the content
+   - Who can perform actions
+   - Who has view-only access
+4. Mark state gaps as `state_gap` and permission gaps as `permission_gap`.
 
-## 强制规则
+## Mandatory Rules
 
-- 只有状态标签，没有流转条件，不算状态逻辑完整。
-- 按钮存在但没有角色或状态约束，不算权限已承接。
-- 审核类页面至少要确认通过/驳回/退回或等价结果态，不得只看一个主按钮。
+- State labels without transition conditions do not establish complete state logic.
+- Buttons without role or state constraints do not establish permission coverage.
+- Review pages must cover approval/rejection/return or equivalent outcomes; checking a single primary button is insufficient.
 
-## 交付物
+## Deliverables
 
-- 状态矩阵
-- 角色/按钮显隐矩阵
-- 假通过风险清单
+- State matrix
+- Role/button visibility matrix
+- False-pass risk list
 
-使用 [templates/output.md](templates/output.md) 输出。
+Use [templates/output.md](templates/output.md) for the output.

@@ -1,14 +1,14 @@
-# 收口输出
+# Consolidated Output
 
-## 指标
-| 指标 | 值 | 结论 |
+## Metrics
+| Metric | Value | Conclusion |
 |---|---|---|
 
 ## Findings
-| ID | 类别 | 严重级别 | 结论 | 证据 |
+| ID | Category | Severity | Conclusion | Evidence |
 |---|---|---|---|---|
 
 ## Verdict
 - verdict：
-- 依据：
-- 风险：
+- Basis:
+- Risks:

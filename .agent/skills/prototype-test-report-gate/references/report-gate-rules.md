@@ -1,15 +1,15 @@
 # Report And Gate Rules
 
-## 必须输出
+## Required Outputs
 
-- finding 清单
-- 覆盖率和映射率
-- blocking / major / normal / pending_confirmation 数量
+- Finding list
+- Coverage and mapping rates
+- Counts of blocking / major / normal / pending_confirmation
 - verdict
-- 风险说明
+- Risk explanations
 
-## verdict 最低要求
+## Minimum verdict Requirements
 
-- 说明依据指标
-- 说明是否存在 blocking
-- 说明是否存在静态无法证明项
+- Explain the supporting metrics
+- State whether blocking issues exist
+- State whether statically unprovable items exist

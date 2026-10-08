@@ -1,14 +1,14 @@
 # Remediation Prioritization
 
-## 优先级建议
+## Suggested Priorities
 
-- `P0`：阻断级缺口、误映射、关键页面缺失、关键状态流转缺失
-- `P1`：主流程缺口、主字段缺口、关键异常边界缺失
-- `P2`：普通展示问题、体验问题、补充性说明
+- `P0`: blocking gaps, incorrect mappings, missing critical pages, missing critical state transitions
+- `P1`: main workflow gaps, key field gaps, missing critical exception/boundary handling
+- `P2`: ordinary display issues, experience issues, supplementary explanations
 
-## 角色建议示例
+## Role-Specific Examples
 
-- 产品：补状态流转、补角色规则、补范围定义
-- 设计：补弹窗、补空态、补危险操作确认
-- 前端：补结构承接、补按钮显隐、补流程闭环
-- 测试：补场景、补证据、补门禁口径
+- Product: define state transitions, role rules, and scope.
+- Design: add dialogs, empty states, and dangerous-action confirmations.
+- Frontend: implement structure, button visibility, and complete workflows.
+- Testing: add scenarios, evidence, and gate criteria.

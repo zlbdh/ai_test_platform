@@ -1,6 +1,6 @@
 # Evidence Spec
 
-## 一条 finding 至少包含
+## Minimum Contents of a Finding
 
 - `evidence_id`
 - `source_type`
@@ -9,7 +9,7 @@
 - `excerpt_or_snapshot`
 - `why_it_matters`
 
-## source_type 取值建议
+## Suggested source_type Values
 
 - `requirement_doc`
 - `html_file`
@@ -18,16 +18,16 @@
 - `playbook_data`
 - `manual_observation`
 
-## locator 规范
+## locator Conventions
 
-- 文档：章节名、页面名、字段名、标题
-- HTML：文件名、元素文本、函数名、Tab 名、按钮名
-- 截图：页面区域名或动作前后状态
-- 代码：接口名、路由、配置项、函数名
+- Documents: section name, page name, field name, heading
+- HTML: filename, element text, function name, tab name, button name
+- Screenshots: page region or states before/after an action
+- Code: interface name, route, configuration key, function name
 
-## 证据采集约束
+## Evidence Collection Constraints
 
-- 映射结论必须至少给 1 条需求证据 + 1 条原型证据。
-- 缺页结论必须说明已检查哪些候选文件和承接点。
-- 误映射结论必须说明“为什么当前页面不属于该需求页”。
-- 静态无法证明的结论也要附证据，说明为何当前资料不足。
+- Every mapping conclusion needs at least one requirement citation and one prototype citation.
+- A missing-page conclusion must identify the candidate files and destinations that were checked.
+- An incorrect-mapping conclusion must explain why the current page does not implement the required page.
+- Conclusions that static evidence is insufficient must also cite evidence and explain the limitation.

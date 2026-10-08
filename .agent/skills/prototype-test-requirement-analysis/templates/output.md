@@ -1,21 +1,21 @@
-# 需求解析输出
+# Requirement Analysis Output
 
-## 范围
-- 文档来源：
-- 模块范围：
-- 排除项：
+## Scope
+- Document sources:
+- Module scope:
+- Exclusions:
 
-## 结构化提取
-| 模块 | 页面 | 角色 | 主流程 | 状态 | 关键字段 |
+## Structured Extraction
+| Module | Page | Role | Main workflow | State | Key fields |
 |---|---|---|---|---|---|
 
-## 发现的问题
-| ID | 类别 | 严重级别 | 说明 | 建议 |
+## Findings
+| ID | Category | Severity | Description | Recommendation |
 |---|---|---|---|---|
 
-## 给下游 skill 的输入
-- 页面清单：
-- 关键流程：
-- 必查状态：
-- 必查字段：
-- 静态原型无法证明项：
+## Input for Downstream Skills
+- Page inventory:
+- Key workflows:
+- Required state checks:
+- Required field checks:
+- Items a static prototype cannot prove:

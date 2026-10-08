@@ -1,25 +1,25 @@
 # Form And Data Checklist
 
-## 表单
+## Forms
 
-- 字段标签
-- 输入控件
-- 必填标识
-- 默认值
-- 校验提示
-- 提交/取消按钮
+- Field labels
+- Input controls
+- Required markers
+- Defaults
+- Validation messages
+- Submit/cancel buttons
 
-## 数据展示
+## Data Display
 
-- 列表列
-- 详情字段
-- 统计卡片
-- 关联记录
-- 图表或看板容器
+- List columns
+- Detail fields
+- Statistics cards
+- Related records
+- Chart or dashboard containers
 
-## 常见缺口
+## Common Gaps
 
-- 需求有字段，原型没有控件。
-- 有控件，但没有必填/格式提示。
-- 详情页缺关键字段。
-- 看板只放占位数字，没有口径说明。
+- A required field has no prototype control.
+- A control lacks required-field or format guidance.
+- A detail page lacks key fields.
+- A dashboard shows placeholder numbers without metric definitions.

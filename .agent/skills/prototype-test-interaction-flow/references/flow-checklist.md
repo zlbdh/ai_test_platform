@@ -1,16 +1,16 @@
 # Flow Checklist
 
-## 至少验证
+## Minimum Verification
 
-- 入口是否真实存在
-- 入口后是否进入目标页/目标区块
-- 是否有关键动作按钮
-- 动作后是否有确认或结果反馈
-- 是否存在可用的返回路径
+- Does the entry point actually exist?
+- Does it lead to the target page or region?
+- Are key action buttons present?
+- Does the action provide confirmation or result feedback?
+- Is there a usable return path?
 
-## 高风险断裂点
+## High-Risk Break Points
 
-- 只有列表，没有详情
-- 只有详情，没有保存/提交
-- 只有按钮，没有弹窗内容
-- 只有弹窗，没有成功/失败反馈
+- List without details
+- Details without save/submit
+- Button without dialog contents
+- Dialog without success/failure feedback

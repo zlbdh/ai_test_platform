@@ -1,4 +1,4 @@
-# 流程检查输出
+# Workflow Check Output
 
-| 流程 | 入口 | 关键步骤 | 结论 | 断裂点 | 证据 |
+| Workflow | Entry | Key steps | Conclusion | Break point | Evidence |
 |---|---|---|---|---|---|
