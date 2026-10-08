@@ -1,16 +1,16 @@
-# frontend
+# Frontend
 
-前端工作台负责承接测试编排、军团中心、执行中心、专项测试、部署治理和知识分析等 UI 能力。
+The frontend workbench provides UI capabilities for test orchestration, the legion center, the execution center, specialized testing, deployment governance, and knowledge analysis.
 
-## 当前事实
+## Current facts
 
-- 技术栈：React 19、TypeScript 5.9、Vite 7、Zustand 5、TailwindCSS 3.4
-- 默认端口：`8010`
-- 页面规模：`31` 个页面文件
-- 服务入口：`backendService.ts`、`commanderService.ts`、`deployService.ts`、`notificationService.ts`、`requirementService.ts`
-- 状态管理：以多个 Zustand store 分域维护，关键包括 `executionStore`、`commanderStore`、`legionControlStore`
+- Stack: React 19, TypeScript 5.9, Vite 7, Zustand 5, TailwindCSS 3.4
+- Default port: `8010`
+- Page count: `31` page files
+- Service entry points: `backendService.ts`, `commanderService.ts`, `deployService.ts`, `notificationService.ts`, `requirementService.ts`
+- State management: multiple Zustand stores organized by domain, including `executionStore`, `commanderStore`, and `legionControlStore`
 
-## 开发命令
+## Development commands
 
 ```powershell
 npm run dev
@@ -20,15 +20,14 @@ npx tsc -b --noEmit
 npx vitest run
 ```
 
-## 前端主契约
+## Main frontend contracts
 
-- `TestOrchestrator.tsx` 同时消费后端 SSE 日志流和状态轮询接口
-- `backendService.ts` 使用原生 `fetch` + `AbortController`
-- 页面导航已扩展到编排、军团、探索、发布风险、部署、通知、知识和专项测试等多个域
+- `TestOrchestrator.tsx` consumes both the backend SSE log stream and status polling API.
+- `backendService.ts` uses native `fetch` and `AbortController`.
+- Navigation covers orchestration, legions, exploration, release risk, deployment, notifications, knowledge, and specialized testing.
 
-## 文档边界
+## Documentation boundaries
 
-- 本目录文档只记录前端当前事实
-- 项目级架构与清理策略请回到仓根 `README.md` 和 `docx/` 文档
-- `.agent/workflows/` 已移除，这不是前端运行时能力的一部分
-
+- Documentation in this directory records current frontend facts only.
+- For project architecture and cleanup policies, see the root `README.md` and `docx/` documentation.
+- `.agent/workflows/` has been removed; it is not a frontend runtime capability.

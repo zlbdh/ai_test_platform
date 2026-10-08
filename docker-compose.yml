@@ -1,5 +1,5 @@
 # Docker Compose - AI Test Platform
-# 一键部署前后端
+# Deploy the backend and frontend together
 
 services:
   backend:

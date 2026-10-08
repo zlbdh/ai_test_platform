@@ -1,21 +1,21 @@
-# 公开发布说明
+# Public Release Notes
 
-本仓库是公开脱敏版，目标是展示 AI Test Platform 的工程结构和 Agent 测试平台能力，而不是发布任何真实业务资产。
+This sanitized public repository demonstrates the engineering structure and agent-based testing capabilities of AI Test Platform. It does not publish real business assets.
 
-已排除或泛化的内容：
+The following content has been excluded or generalized:
 
-- 真实业务项目名称、客户/组织名称、远程仓库地址和本机路径
-- 原始 `docx/` 调研文档、原型测试报告、回归手册和业务材料
-- 本机运行数据、数据库、浏览器 profile、截图、日志、Allure 报告、缓存和部署快照
-- 真实通知平台、LLM、数据库、系统管理等凭据
-- 与具体项目绑定的 playbook 名称、项目 ID、数据前缀和 URL
+- Real business project names, customer and organization names, remote repository URLs, and local paths
+- Original `docx/` research documents, prototype test reports, regression manuals, and business materials
+- Local runtime data, databases, browser profiles, screenshots, logs, Allure reports, caches, and deployment snapshots
+- Real notification platform, LLM, database, and system administration credentials
+- Project-specific playbook names, project IDs, data prefixes, and URLs
 
-保留的内容：
+The following content is retained:
 
-- 后端 FastAPI + Agent 编排代码
-- 前端 React/Vite 工作台代码
-- 本地 skills、测试、模板和基础配置
-- `.env.example` 中的环境变量占位
-- 泛化后的 sample platform playbook，用于展示项目级测试包机制
+- FastAPI backend and agent orchestration code
+- React/Vite frontend workbench code
+- Local skills, tests, templates, and baseline configuration
+- Environment-variable placeholders in `.env.example`
+- The generalized sample platform playbook, demonstrating project-specific test packages
 
-注意：本仓库仍是 `public`。如需保留更完整的真实材料，请放在私有仓库或内部制品库，不要放在公开 GitHub 仓库中。
+This repository remains `public`. Store complete, real materials in a private repository or internal artifact store, never in this public GitHub repository.

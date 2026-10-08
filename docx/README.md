@@ -1,5 +1,5 @@
-# 公开版文档说明
+# Public Edition Documentation
 
-原始 `docx/` 中包含项目调研、回归测试、业务原型和运行排查材料，公开版已全部移除。
+The original `docx/` directory contained project research, regression tests, business prototypes, and runtime troubleshooting materials. These have all been removed from the public edition.
 
-这里仅保留说明文件，避免公开仓库暴露真实业务信息、内部路径、截图、报告或历史运行证据。需要了解项目结构时，请优先阅读根目录 `README.md`、`PUBLICATION_NOTES.md` 和代码目录。
+Only explanatory notes remain here, to avoid exposing real business information, internal paths, screenshots, reports, or historical runtime evidence. For the project structure, start with the root `README.md`, `PUBLICATION_NOTES.md`, and source directories.

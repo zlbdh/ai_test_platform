@@ -1,34 +1,34 @@
 # AGENTS.md
 
-本文件是当前仓库给协作者和编码代理使用的事实说明。若文档与代码不一致，以代码为准，并在文档里登记漂移点。
+This file records current repository facts for collaborators and coding agents. If documentation and code disagree, follow the code and document the discrepancy.
 
-## 协作原则
+## Collaboration principles
 
-- 默认以中文交流、写文档、写说明
-- 优先先读代码再做判断，不根据旧文档臆断现状
-- 仓库长期处于活跃开发态，工作区可能很脏；不要批量回退源码改动
-- 涉及清理时，只清缓存、构建产物、报告、临时日志和探针文件，不碰业务数据库、部署快照、浏览器 profile 和大型工具目录
+- Use American English by default for communication, documentation, and explanations.
+- Read the code before drawing conclusions; do not infer the current state from old documentation.
+- This repository is under active development, and the working tree may contain many changes. Do not revert source changes in bulk.
+- Cleanup is limited to caches, build artifacts, reports, temporary logs, and probe files. Preserve business databases, deployment snapshots, browser profiles, and large tool directories.
 
-## 当前架构事实
+## Current architecture
 
-- 后端入口：`backend/main.py`
-- 前端入口：`frontend/src/main.tsx`
-- 编排主链：`Orchestrator + PlannerAgent + EventBus + ExecutorAgent + SessionState`
-- 兼容层：`SharedBrowserState` 仍提供旧接口，但底层已桥接到 `SessionState`
-- 前端主服务：`backendService.ts`、`commanderService.ts`、`deployService.ts`
-- 前端主状态：`appStore`、`aiSettingsStore`、`agentStore`、`executionStore`、`commanderStore`、`legionControlStore`
+- Backend entry point: `backend/main.py`
+- Frontend entry point: `frontend/src/main.tsx`
+- Main orchestration path: `Orchestrator + PlannerAgent + EventBus + ExecutorAgent + SessionState`
+- Compatibility layer: `SharedBrowserState` still provides legacy interfaces, but its implementation delegates to `SessionState`.
+- Main frontend services: `backendService.ts`, `commanderService.ts`, `deployService.ts`
+- Main frontend stores: `appStore`, `aiSettingsStore`, `agentStore`, `executionStore`, `commanderStore`, `legionControlStore`
 
-## 当前目录事实
+## Current directory structure
 
-- `backend/routers/`：40 个路由文件，已纳入 `exploration`、`release`、`platform`、`commander` 等新域
-- `backend/services/`：36 个服务文件，承担专项测试、平台治理、探索、发布风险和执行中心能力
-- `backend/workflows/`：保留，属于 LangGraph 工作流实现
-- `.agent/workflows/`：已移除，不再作为项目内置工作流入口
-- `docx/`：中文第一方文档目录，已区分当前事实源与历史归档页
+- `backend/routers/`: 40 route files, including newer domains such as `exploration`, `release`, `platform`, and `commander`
+- `backend/services/`: 36 service files for specialized testing, platform governance, exploration, release risk, and the execution center
+- `backend/workflows/`: retained for LangGraph workflow implementations
+- `.agent/workflows/`: removed; no longer an entry point for built-in project workflows
+- `docx/`: first-party documentation, with current sources of truth distinguished from historical archives
 
-## 命令基线
+## Baseline commands
 
-### 后端
+### Backend
 
 ```powershell
 cd backend
@@ -37,7 +37,7 @@ python -m pytest tests/ -v
 python -m pytest tests/unit/test_orchestrator.py -q
 ```
 
-### 前端
+### Frontend
 
 ```powershell
 cd frontend
@@ -47,16 +47,15 @@ npx vitest run
 npx vitest run src/test/config.test.ts --reporter=dot
 ```
 
-## 关键公共面
+## Key public interfaces
 
-- REST：由 `main.py` 注册的路由族统一暴露
-- SSE：核心日志流包含 `type`、`event`、`status`、`step_index`、`ui_track`
-- 内部协议：`TaskEvent`、`ResultEvent`、`SessionState.run_browser()` 的浏览器线程命令队列
-- 前端契约：`TestOrchestrator.tsx` 同时消费状态轮询和 SSE 结构化日志
+- REST: route groups registered by `main.py`
+- SSE: the core log stream includes `type`, `event`, `status`, `step_index`, and `ui_track`.
+- Internal protocols: `TaskEvent`, `ResultEvent`, and the browser-thread command queue in `SessionState.run_browser()`
+- Frontend contract: `TestOrchestrator.tsx` consumes both status polling and structured SSE logs.
 
-## 当前已知漂移点
+## Known documentation drift
 
-- 旧文档常把 `SharedBrowserState` 当成主要状态容器，这在当前代码里已经不成立
-- 部分历史文档仍沿用旧模块规模和旧页面清单，现已在 `docx/` 中转成归档页
-- 仓库里仍存在少量被 Git 跟踪的历史生成物，这类文件会优先做定点恢复，不在源码清理里粗暴移除
-
+- Older documentation often describes `SharedBrowserState` as the primary state container; this no longer reflects the code.
+- Some historical documents use obsolete module counts and page inventories. They have been moved to archive pages in `docx/`.
+- A few historical generated artifacts remain tracked by Git. Restore these selectively rather than deleting them indiscriminately during source cleanup.
