@@ -10,7 +10,7 @@ from core.shared import SharedBrowserState
 
 logger = logging.getLogger(__name__)
 
-# JavaScript 脚本：用于注入 Set-of-Marks (SoM) 标记
+# JavaScript for injecting Set-of-Marks (SoM) labels
 # ... (Script remains unchanged)
 SOM_JS = """
 (function() {
@@ -18,23 +18,23 @@ SOM_JS = """
     const elements = document.querySelectorAll('button, a, input, [role="button"]');
     let counter = 1;
     
-    // 清理旧标记
+    // Remove old labels
     document.querySelectorAll('.som-marker').forEach(e => e.remove());
     
     elements.forEach(el => {
         const rect = el.getBoundingClientRect();
-        // 过滤不可见元素
+        // Filter out invisible elements
         if (rect.width > 0 && rect.height > 0 && window.getComputedStyle(el).visibility !== 'hidden') {
             el.setAttribute('data-som-id', counter);
             
-            // 创建并样式化数字标记
+            // Create and style numeric labels
             const marker = document.createElement('div');
             marker.className = 'som-marker';
             marker.textContent = counter;
             marker.style.position = 'absolute';
             marker.style.left = (rect.left + window.scrollX) + 'px';
             marker.style.top = (rect.top + window.scrollY) + 'px';
-            marker.style.backgroundColor = '#ff0000'; // 醒目的红色
+            marker.style.backgroundColor = '#ff0000'; // Bright red
             marker.style.color = 'white';
             marker.style.fontSize = '12px';
             marker.style.fontWeight = 'bold';
@@ -53,7 +53,7 @@ SOM_JS = """
 
 async def analyze_with_som(page, task_desc):
     """
-    使用 Set-of-Marks (SoM) 视觉技术定位元素 ID (Async Version)。
+    Locate element IDs with Set-of-Marks (SoM) vision (async version).
     """
     logger.info(f"[SoM] Starting analysis: {task_desc}")
     
@@ -63,15 +63,15 @@ async def analyze_with_som(page, task_desc):
         return None
         
     try:
-        # 1. 注入标记 (Inject Markers)
+        # 1. Inject markers
         await page.evaluate(SOM_JS)
-        await asyncio.sleep(0.5) # 等待渲染完成
+        await asyncio.sleep(0.5) # Wait for rendering
         
-        # 2. 截图 (Screenshot)
+        # 2. Take a screenshot
         screenshot_bytes = await page.screenshot(type="jpeg", quality=50)
         base64_image = base64.b64encode(screenshot_bytes).decode('utf-8')
         
-        # 3. 构造视觉提示词 (Vision Prompt)
+        # 3. Build the vision prompt
         msg = HumanMessage(
             content=[
                 {"type": "text", "text": SOM_VISION_PROMPT.format(task_desc=task_desc)},
@@ -79,7 +79,7 @@ async def analyze_with_som(page, task_desc):
             ]
         )
         
-        # 4. 调用视觉大模型 (Invoke Vision LLM)
+        # 4. Invoke the vision LLM
         try:
             res = await asyncio.wait_for(vision_llm.ainvoke([msg]), timeout=60)
         except Exception as e_vision:
@@ -92,7 +92,7 @@ async def analyze_with_som(page, task_desc):
         result = json.loads(content)
         som_id = result.get("id")
         
-        # 5. 清理标记 (Cleanup)
+        # 5. Remove markers
         await page.evaluate("document.querySelectorAll('.som-marker').forEach(e => e.remove());")
         
         if som_id:
@@ -111,8 +111,8 @@ async def analyze_with_som(page, task_desc):
 
 def sync_analyze_with_som(page, task_desc):
     """
-    使用 Set-of-Marks (SoM) 视觉技术定位元素 ID (Sync Version)。
-    用于 sync_playwright executor 线程。
+    Locate element IDs with Set-of-Marks (SoM) vision (sync version).
+    For the sync_playwright executor thread.
     """
     import json as _json
     import time as _time
@@ -125,15 +125,15 @@ def sync_analyze_with_som(page, task_desc):
         return None
         
     try:
-        # 1. 注入标记 (Inject Markers) — 同步调用
+        # 1. Inject markers — Synchronous call
         page.evaluate(SOM_JS)
-        _time.sleep(0.5)  # 等待渲染完成
+        _time.sleep(0.5)  # Wait for rendering
         
-        # 2. 截图 (Screenshot) — 同步调用
+        # 2. Take a screenshot — Synchronous call
         screenshot_bytes = page.screenshot(type="jpeg", quality=50)
         base64_image = base64.b64encode(screenshot_bytes).decode('utf-8')
         
-        # 3. 构造视觉提示词 (Vision Prompt)
+        # 3. Build the vision prompt
         msg = HumanMessage(
             content=[
                 {"type": "text", "text": SOM_VISION_PROMPT.format(task_desc=task_desc)},
@@ -141,7 +141,7 @@ def sync_analyze_with_som(page, task_desc):
             ]
         )
         
-        # 4. 调用视觉大模型 (Invoke Vision LLM) — 同步调用
+        # 4. Invoke the vision LLM — Synchronous call
         try:
             res = vision_llm.invoke([msg])
         except Exception as e_vision:
@@ -153,7 +153,7 @@ def sync_analyze_with_som(page, task_desc):
         result = _json.loads(content)
         som_id = result.get("id")
         
-        # 5. 清理标记 (Cleanup) — 同步调用
+        # 5. Remove markers — Synchronous call
         page.evaluate("document.querySelectorAll('.som-marker').forEach(e => e.remove());")
         
         if som_id:
@@ -282,10 +282,10 @@ async def find_selector(html, desc):
 
 
 # ============================================================
-# Phase 3: 页面状态感知增强
+# Phase 3: Enhanced page state awareness
 # ============================================================
 
-# --- 共享 JS 脚本常量（sync/async 共用）---
+# --- Shared JavaScript constants for sync and async use---
 
 _VISIBLE_TEXT_JS = """
 () => {
@@ -332,13 +332,13 @@ _ALERTS_JS = """
     document.querySelectorAll('dialog[open], [role="dialog"], [role="alertdialog"]')
         .forEach(el => {
             const t = (el.textContent || '').trim().substring(0, 80);
-            if (t) alerts.push('弹窗: ' + t);
+            if (t) alerts.push('Alert: ' + t);
         });
     document.querySelectorAll('.modal.show, .modal.active, [class*="modal"][style*="display: block"]')
         .forEach(el => {
             const t = (el.textContent || '').trim().substring(0, 80);
             if (t && !alerts.some(a => a.includes(t.substring(0, 20))))
-                alerts.push('模态框: ' + t);
+                alerts.push('Modal: ' + t);
         });
     return alerts;
 }
@@ -346,7 +346,7 @@ _ALERTS_JS = """
 
 
 def _new_page_state() -> dict:
-    """创建空白的页面状态字典。"""
+    """Create an empty page state dictionary."""
     return {
         "url": "", "title": "",
         "interactive_elements": "", "element_count": 0,
@@ -356,7 +356,7 @@ def _new_page_state() -> dict:
 
 
 def _process_dom_indexer(state: dict, dom_indexer, label: str = "PageState") -> None:
-    """将 dom_indexer 的扫描结果填充到 state 中（scan 需在调用前完成）。"""
+    """Populate state from dom_indexer results; scan must finish before this call."""
     try:
         state["interactive_elements"] = dom_indexer.format_for_llm()
         state["element_count"] = len(dom_indexer._index_map)
@@ -371,7 +371,7 @@ def _process_dom_indexer(state: dict, dom_indexer, label: str = "PageState") -> 
 
 
 def _fill_evaluate_results(state: dict, visible_text, scroll, alerts) -> None:
-    """将 JS evaluate 结果填充到 state 中。"""
+    """Populate state from JavaScript evaluate results."""
     state["visible_text"] = (visible_text or "")[:800]
     state["scroll_info"] = scroll or {}
     state["alerts"] = alerts or []
@@ -379,8 +379,8 @@ def _fill_evaluate_results(state: dict, visible_text, scroll, alerts) -> None:
 
 def get_page_state(page) -> dict:
     """
-    获取结构化页面状态（sync 版本）。
-    集成 DomIndexer 的元素索引 + 页面元信息 + 弹窗/滚动检测。
+    Get structured page state (sync version).
+    Combine DomIndexer element indexes, page metadata, and alert/scroll detection.
     """
     from core.dom_indexer import dom_indexer
 
@@ -392,14 +392,14 @@ def get_page_state(page) -> dict:
     except Exception:
         pass
 
-    # 交互元素索引
+    # Interactive element index
     try:
         dom_indexer.scan(page)
         _process_dom_indexer(state, dom_indexer, "PageState")
     except Exception as e:
         logger.warning(f"[PageState] Element scan failed: {e}")
 
-    # JS evaluate: 可见文本 / 滚动 / 弹窗
+    # JavaScript evaluate: visible text, scrolling, and alerts
     visible_text = scroll = alerts = None
     try:
         visible_text = page.evaluate(_VISIBLE_TEXT_JS)
@@ -419,35 +419,35 @@ def get_page_state(page) -> dict:
 
 
 def format_page_state_for_log(state: dict) -> str:
-    """将页面状态格式化为简洁的日志文本"""
+    """Format page state as concise log text"""
     lines = [
         f"📍 URL: {state.get('url', 'N/A')}",
         f"📄 Title: {state.get('title', 'N/A')}",
-        f"🔢 可交互元素: {state.get('element_count', 0)} 个",
+        f"🔢 Interactive elements: {state.get('element_count', 0)}",
     ]
     scroll = state.get('scroll_info', {})
     if scroll:
-        s = f"↕ 滚动: {scroll.get('scroll_percent', 0)}%"
+        s = f"↕ Scroll: {scroll.get('scroll_percent', 0)}%"
         if scroll.get('can_scroll_down'):
-            s += f" (下方 {scroll.get('pixels_below', '?')}px)"
+            s += f" ({scroll.get('pixels_below', '?')}px below)"
         lines.append(s)
     alerts = state.get('alerts', [])
     if alerts:
-        lines.append(f"⚠️ 弹窗: {', '.join(alerts[:3])}")
+        lines.append(f"⚠️ Alert: {', '.join(alerts[:3])}")
     new_els = state.get('new_elements', [])
     if new_els:
-        lines.append(f"✨ 新元素: {', '.join(new_els[:5])}")
+        lines.append(f"✨ New elements: {', '.join(new_els[:5])}")
     return "\n".join(lines)
 
 
 # ============================================================
-# Phase 5: Async 版页面状态获取
+# Phase 5: Async page state retrieval
 # ============================================================
 
 async def async_get_page_state(page) -> dict:
     """
-    获取结构化页面状态（async 版本，Phase 5）。
-    使用 await page.evaluate() 适配 async Playwright。
+    Get structured page state (async version, Phase 5).
+    Use await page.evaluate() with async Playwright.
     """
     from core.dom_indexer import dom_indexer
 
@@ -459,14 +459,14 @@ async def async_get_page_state(page) -> dict:
     except Exception:
         pass
 
-    # 交互元素索引
+    # Interactive element index
     try:
         await dom_indexer.async_scan(page)
         _process_dom_indexer(state, dom_indexer, "PageState/Async")
     except Exception as e:
         logger.warning(f"[PageState/Async] Element scan failed: {e}")
 
-    # JS evaluate: 可见文本 / 滚动 / 弹窗
+    # JavaScript evaluate: visible text, scrolling, and alerts
     visible_text = scroll = alerts = None
     try:
         visible_text = await page.evaluate(_VISIBLE_TEXT_JS)
@@ -517,7 +517,7 @@ class SharedBrowser:
 
 
 class BridgedBrowserLocator:
-    """通过 SessionState 桥接执行 locator 操作。"""
+    """Run locator operations through the SessionState bridge."""
 
     def __init__(self, browser: SharedBrowser, session_id: str, selector: str):
         self.browser = browser
@@ -565,7 +565,7 @@ class BridgedBrowserLocator:
 
 
 class BridgedElementHandle:
-    """使用 selector + index 重建 element 操作，避免跨线程传递真实句柄。"""
+    """Reconstruct element operations from selector and index to avoid passing handles between threads."""
 
     def __init__(self, browser: SharedBrowser, session_id: str, selector: str, index: int = 0):
         self.browser = browser
@@ -606,7 +606,7 @@ class BridgedElementHandle:
 
 
 class BridgedBrowserPage:
-    """为 legacy async 工具提供 page-like 接口，但底层走 SessionState 桥接。"""
+    """Provide a page-like interface for legacy async tools through the SessionState bridge."""
 
     def __init__(self, session_id: str = "default_session", browser: SharedBrowser | None = None):
         self.browser = browser or SharedBrowser()

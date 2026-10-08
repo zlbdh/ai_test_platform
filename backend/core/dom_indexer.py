@@ -1,8 +1,8 @@
 """
-智能 DOM 元素索引器 (Phase 1)
-参考 browser-use 的 AX Tree 索引设计。
-扫描页面所有可交互元素，给每个元素编号。
-Executor 通过索引号或语义文本匹配来定位元素，而非依赖 CSS Selector。
+Intelligent DOM element indexer (Phase 1)
+Based on the browser-use AX Tree indexing design.
+Scan all interactive page elements and assign each an index.
+The executor locates elements by index or semantic text matching without relying on CSS selectors.
 """
 import json
 import logging
@@ -14,11 +14,11 @@ logger = logging.getLogger(__name__)
 
 
 # ============================================================
-# JS：注入到页面中，扫描所有可交互元素并返回索引
+# JavaScript injected into the page to scan interactive elements and return indexes
 # ============================================================
 SCAN_JS = """
 () => {
-    // 所有可交互元素的选择器
+    // Selectors for all interactive elements
     const interactiveSelectors = [
         'a[href]',
         'button',
@@ -52,18 +52,18 @@ SCAN_JS = """
         const rect = el.getBoundingClientRect();
         const style = window.getComputedStyle(el);
 
-        // 过滤不可见元素
+        // Filter out invisible elements
         if (rect.width <= 0 || rect.height <= 0) return;
         if (style.display === 'none' || style.visibility === 'hidden') return;
         if (style.opacity === '0') return;
 
-        // 过滤视口之外的元素 (允许一定容差)
+        // Filter out elements outside the viewport, with some tolerance
         if (rect.bottom < -50 || rect.top > window.innerHeight + 50) return;
         if (rect.right < -50 || rect.left > window.innerWidth + 50) return;
 
         index++;
 
-        // 提取语义信息
+        // Extract semantic information
         const tag = el.tagName.toLowerCase();
         const type = el.getAttribute('type') || '';
         const text = (el.innerText || '').trim().substring(0, 100);
@@ -77,7 +77,7 @@ SCAN_JS = """
         const href = el.getAttribute('href') || '';
         const alt = el.getAttribute('alt') || '';
 
-        // 构造最佳描述
+        // Build the best description
         let description = ariaLabel || text || placeholder || title || alt || name || id;
         if (!description && tag === 'input') {
             description = type ? `${type} input` : 'input';
@@ -86,17 +86,17 @@ SCAN_JS = """
             description = href.substring(0, 60);
         }
 
-        // 标记索引到元素上（供后续定位使用）
+        // Mark the element with its index for subsequent location
         el.setAttribute('data-ai-idx', index);
 
-        // 生成一个足够唯一的 CSS Selector 作为后备
+        // Generate a sufficiently unique fallback CSS selector
         let cssSelector = '';
         if (id) {
             cssSelector = '#' + CSS.escape(id);
         } else if (name && tag === 'input') {
             cssSelector = `${tag}[name="${name}"]`;
         } else {
-            // 使用 data-ai-idx
+            // Use data-ai-idx
             cssSelector = `[data-ai-idx="${index}"]`;
         }
 
@@ -114,7 +114,7 @@ SCAN_JS = """
                 w: Math.round(rect.width),
                 h: Math.round(rect.height)
             },
-            // 额外属性用于模糊匹配
+            // Additional attributes for fuzzy matching
             _all_text: [text, ariaLabel, placeholder, title, name, id, alt]
                 .filter(Boolean)
                 .join(' ')
@@ -129,42 +129,42 @@ SCAN_JS = """
 
 class DomIndexer:
     """
-    页面可交互元素索引器。
-    每次调用 scan(page) 会为页面中所有可交互元素生成带编号的索引，
-    并支持通过索引号或语义文本来定位元素。
+    Indexer for interactive page elements.
+    Each scan(page) call creates numbered indexes for all interactive page elements,
+    and supports element location by index or semantic text.
     """
 
     def __init__(self):
         self._index_map = {}      # {idx: element_info}
-        self._prev_index_map = {} # 上一次的索引（用于检测新元素）
+        self._prev_index_map = {} # Previous indexes, for detecting new elements
         self._scan_time = 0
 
     def scan(self, page) -> dict:
         """
-        扫描页面，建立元素索引。
-        返回索引映射 {idx: {tag, type, text, selector, ...}}
+        Scan the page and build element indexes.
+        Return the index mapping {idx: {tag, type, text, selector, ...}}
         """
         try:
             elements = page.evaluate(SCAN_JS)
         except Exception as e:
-            logger.error(f"[DomIndexer] 扫描失败: {e}")
+            logger.error(f"[DomIndexer] Scan failed: {e}")
             return self._index_map
 
-        # 保存上一次的索引
+        # Save the previous indexes
         self._prev_index_map = dict(self._index_map)
 
-        # 构建新索引
+        # Build new indexes
         self._index_map = {}
         for el in (elements or []):
             self._index_map[el['idx']] = el
 
         self._scan_time = time.time()
         if not self._index_map:
-            logger.warning("[DomIndexer] 扫描完成但未发现任何可交互元素，页面可能未完全加载或无交互控件")
+            logger.warning("[DomIndexer] Scan completed without interactive elements; the page may still be loading or have no interactive controls")
         return self._index_map
 
     def get_new_elements(self) -> list:
-        """检测与上次扫描相比新出现的元素（通过文本比较）"""
+        """Detect newly appearing elements by comparing text with the previous scan"""
         if not self._prev_index_map:
             return []
 
@@ -180,14 +180,14 @@ class DomIndexer:
 
     def format_for_llm(self, max_items: int = 80) -> str:
         """
-        生成适合 LLM 消费的元素列表（紧凑格式，优化 Token）。
-        格式参考 browser-use / agent-browser:
-        [1] input "搜索关键词" (type='text')
-        [2] button "百度一下"
-        *[3] div "新出现的弹窗"
+        Generate a compact element list for LLM input, minimizing tokens.
+        Format based on browser-use / agent-browser:
+        [1] input "Search keywords" (type='text')
+        [2] button "Search"
+        *[3] div "New alert"
         """
         if not self._index_map:
-            return "(页面无可交互元素)"
+            return "(No interactive page elements)"
 
         new_elements = self.get_new_elements()
         new_idxs = {el['idx'] for el in new_elements}
@@ -196,11 +196,11 @@ class DomIndexer:
         items = sorted(self._index_map.items())[:max_items]
 
         for idx, el in items:
-            prefix = "*" if idx in new_idxs else ""  # 新元素标 *
+            prefix = "*" if idx in new_idxs else ""  # Mark new elements with *
             tag = el['tag']
             text = el['text']
 
-            # 附加属性（紧凑格式）
+            # Additional attributes in compact form
             attrs = []
             if el.get('type'):
                 attrs.append(f"type='{el['type']}'")
@@ -216,33 +216,33 @@ class DomIndexer:
             lines.append(f"{prefix}[{idx}] {tag}{text_repr}{attr_str}")
 
         if len(self._index_map) > max_items:
-            lines.append(f"... (共 {len(self._index_map)} 个元素, 已显示前 {max_items} 个)")
+            lines.append(f"... ({len(self._index_map)} elements total; showing the first {max_items})")
 
         return "\n".join(lines)
 
     def find_by_index(self, idx: int) -> dict | None:
-        """通过索引号获取元素信息"""
+        """Get element information by index"""
         return self._index_map.get(idx)
 
     def find_by_text(self, text: str, threshold: float = 0.4) -> dict | None:
         """
-        通过语义文本模糊匹配元素。
-        用于当 LLM 给出描述性文本（如 "搜索框"、"百度一下"）时定位。
+        Fuzzy-match elements using semantic text.
+        Locate elements when the LLM supplies descriptive text such as "Search field" or "Search".
         
-        匹配策略：
-        1. 精确子串匹配
-        2. 模糊匹配 (SequenceMatcher)
-        3. 语义角色匹配（根据中文关键词推断元素类型）
+        Matching strategies:
+        1. Exact substring matching
+        2. Fuzzy matching (SequenceMatcher)
+        3. Semantic role matching (infer element types from descriptive keywords)
         """
         text_lower = text.lower().strip()
 
-        # 1. 精确子串匹配
+        # 1. Exact substring matching
         for idx, el in self._index_map.items():
             all_text = el.get('_all_text', '')
             if text_lower in all_text:
                 return el
 
-        # 2. 模糊匹配
+        # 2. Fuzzy matching
         best_match = None
         best_score = threshold
         for idx, el in self._index_map.items():
@@ -255,14 +255,14 @@ class DomIndexer:
         if best_match:
             return best_match
 
-        # 3. 语义角色匹配
-        # 根据中文描述推断目标元素类型（一个关键词可匹配多种 tag）
+        # 3. Semantic role matching
+        # Infer target element types from descriptions; one keyword may match multiple tags
         role_keywords = {
-            ('input', 'textarea'): ['输入框', '搜索框', '文本框', '输入', '填写', '搜索栏', '搜索'],
-            ('button',): ['按钮', '点击', '提交', '确定', '确认', '搜索按钮'],
-            ('a',): ['链接', '跳转', '导航'],
-            ('select',): ['下拉框', '选择框', '下拉', '选择'],
-            ('textarea',): ['文本域', '多行输入', '评论框', '留言框'],
+            ('input', 'textarea'): ['输入框', '搜索框', '文本框', '输入', '填写', '搜索栏', '搜索', 'input', 'search field', 'text field', 'fill'],
+            ('button',): ['按钮', '点击', '提交', '确定', '确认', '搜索按钮', 'button', 'click', 'submit', 'confirm'],
+            ('a',): ['链接', '跳转', '导航', 'link', 'navigate'],
+            ('select',): ['下拉框', '选择框', '下拉', '选择', 'dropdown', 'select'],
+            ('textarea',): ['文本域', '多行输入', '评论框', '留言框', 'textarea', 'comment box', 'multiline'],
         }
         
         target_tags = set()
@@ -273,7 +273,7 @@ class DomIndexer:
                     break
         
         if target_tags:
-            # 在匹配类型的元素中找最佳候选
+            # Find the best candidate among matching element types
             candidates = [
                 el for el in self._index_map.values()
                 if el.get('tag') in target_tags
@@ -282,20 +282,20 @@ class DomIndexer:
             if len(candidates) == 1:
                 return candidates[0]
             
-            # 如果有多个同类型候选，用文本打分
+            # Score by text when several candidates share the same type
             if candidates:
-                # 特殊处理：如果描述中含有"搜索"且有搜索输入框
+                # Special handling for search descriptions when a search input is available
                 for c in candidates:
                     c_text = c.get('_all_text', '')
                     c_selector = c.get('selector', '')
-                    # 检查 placeholder/id/class 是否暗示搜索功能
-                    if '搜索' in text_lower and any(
+                    # Check whether placeholder/id/class suggests search functionality
+                    if ('搜索' in text_lower or 'search' in text_lower) and any(
                         kw in (c_text + ' ' + c_selector).lower() 
                         for kw in ['搜索', 'search', '请输入', '关键词', 'query', 'keyword', 'chat-textarea', 'kw']
                     ):
                         return c
                 
-                # 退而求其次：选择最显眼的（面积最大的）同类型元素
+                # Fallback: choose the most prominent matching element by area
                 best_candidate = max(candidates, key=lambda c: (
                     c.get('rect', {}).get('w', 0) * c.get('rect', {}).get('h', 0)
                 ))
@@ -305,19 +305,19 @@ class DomIndexer:
 
     def resolve_target(self, target: str) -> tuple[str, str]:
         """
-        智能解析 target 字段，返回 (selector, method)。
+        Parse the target field and return (selector, method).
         
-        支持四种定位方式：
-        1. 索引号: "[5]" 或 "5" (纯数字) → 用 data-ai-idx
-        2. CSS Selector: "#id" 或 ".class" → 直接透传
-        3. 描述性文本: "搜索框" "百度一下" → 语义匹配
-        4. Fallback: 原样返回，executor 会尝试 Playwright 语义定位器
+        Support four location methods:
+        1. Index: "[5]" or "5" (digits only) → use data-ai-idx
+        2. CSS selector: "#id" or ".class" → pass through directly
+        3. Descriptive text: "Search field" or "Search" → semantic matching
+        4. Fallback: return unchanged for the executor to try Playwright semantic locators
 
-        返回: (css_selector, "index" | "selector" | "text" | "fallback")
+        Return: (css_selector, "index" | "selector" | "text" | "fallback")
         """
         target = target.strip()
 
-        # 1. 索引号格式: [5] 或纯数字
+        # 1. Index format: [5] or digits only
         idx_match = re.match(r'^\[?(\d+)\]?$', target)
         if idx_match:
             idx = int(idx_match.group(1))
@@ -325,30 +325,30 @@ class DomIndexer:
             if el:
                 return el['selector'], "index"
             else:
-                # 即使不在索引中，也将其作为 index 选择器返回，由 Playwright 处理找不到的异常
-                # 这样可以避免 fallthrough 后被误认为是非法的 CSS Selector
+                # Return an index selector even if absent from the index; let Playwright handle not-found errors
+                # This prevents fallthrough from treating the input as an invalid CSS selector
                 return f'[data-ai-idx="{idx}"]', "index"
 
-        # 2. CSS Selector 格式（以 # . [ 开头 或含有 = 等）
+        # 2. CSS selector format (starts with # . [ or contains =, etc.)
         if re.match(r'^[#.\[]', target) or (re.match(r'^[a-z]', target) and any(c in target for c in '[]=>')):
             return target, "selector"
 
-        # 3. 描述性文本 → 多层语义匹配
+        # 3. Descriptive text → layered semantic matching
         el = self.find_by_text(target)
         if el:
             return el['selector'], "text"
 
-        # 4. Fallback: 原样返回（executor 会尝试 Playwright 语义定位器）
+        # 4. Fallback: return unchanged for the executor to try Playwright semantic locators
         return target, "fallback"
 
     async def async_scan(self, page) -> dict:
         """
-        异步版扫描（Phase 5），适配 async Playwright。
+        Async scan (Phase 5) for async Playwright.
         """
         try:
             elements = await page.evaluate(SCAN_JS)
         except Exception as e:
-            logger.error(f"[DomIndexer] 异步扫描失败: {e}")
+            logger.error(f"[DomIndexer] Async scan failed: {e}")
             return self._index_map
 
         self._prev_index_map = dict(self._index_map)
@@ -360,5 +360,5 @@ class DomIndexer:
         return self._index_map
 
 
-# 全局单例
+# Global singleton
 dom_indexer = DomIndexer()
