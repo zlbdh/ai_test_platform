@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 """
-Agent 评估指标 — 量化评估每个 Agent 的决策质量和可靠性
+Agent evaluation metrics — measure each agent's decision quality and reliability
 
-指标分类：
-- 规划质量: PlanCompletenessMetric
-- 执行忠实度: ExecutionFidelityMetric
-- 自愈成功率: HealingSuccessRateMetric
-- 幻觉检测: HallucinationDetector
-- Token 效率: TokenEfficiencyMetric
-- 一致性: ConsistencyScoreMetric
-- 步骤准确率: StepAccuracyMetric
-- 目标完成率: GoalAchievementMetric
+Metric categories:
+- Planning quality: PlanCompletenessMetric
+- Execution fidelity: ExecutionFidelityMetric
+- Healing success rate: HealingSuccessRateMetric
+- Hallucination detection: HallucinationDetector
+- Token efficiency: TokenEfficiencyMetric
+- Consistency: ConsistencyScoreMetric
+- Step accuracy: StepAccuracyMetric
+- Goal completion rate: GoalAchievementMetric
 """
 
 from dataclasses import dataclass, field
@@ -27,14 +27,14 @@ import statistics
 logger = logging.getLogger(__name__)
 
 
-# ── 数据结构 ──────────────────────────────────────────────────────────────────
+# ── Data structures ──────────────────────────────────────────────────────────────────
 
 @dataclass
 class MetricResult:
-    """单个指标评估结果"""
+    """Evaluation result for one metric"""
     metric_name: str
-    score: float           # 0.0 - 1.0 归一化分数
-    raw_value: Any         # 原始值
+    score: float           # Normalized score from 0.0 to 1.0
+    raw_value: Any         # Raw value
     details: Dict[str, Any] = field(default_factory=dict)
     timestamp: float = field(default_factory=time.time)
 
@@ -50,7 +50,7 @@ class MetricResult:
 
 @dataclass
 class EvaluationContext:
-    """评估上下文 — 包含评估所需的全部数据"""
+    """Evaluation context containing all data needed for assessment"""
     session_id: str = ""
     trace_id: str = ""
     agent_name: str = ""
@@ -65,15 +65,15 @@ class EvaluationContext:
     duration_ms: float = 0.0
 
 
-# ── 基类 ──────────────────────────────────────────────────────────────────────
+# ── Base class ──────────────────────────────────────────────────────────────────────
 
 class BaseMetric(ABC):
-    """评估指标基类"""
+    """Base class for evaluation metrics"""
 
     @property
     @abstractmethod
     def name(self) -> str:
-        """指标名称"""
+        """Metric name"""
         ...
 
     @property
@@ -82,20 +82,20 @@ class BaseMetric(ABC):
 
     @abstractmethod
     def evaluate(self, ctx: EvaluationContext) -> MetricResult:
-        """执行评估"""
+        """Run the evaluation"""
         ...
 
 
-# ── 具体指标实现 ──────────────────────────────────────────────────────────────
+# ── Metric implementations ──────────────────────────────────────────────────────────────
 
 class PlanCompletenessMetric(BaseMetric):
     """
-    规划完备性 — 评估 Agent 规划的步骤是否覆盖了目标的各方面。
+    Plan completeness — evaluate whether the agent's planned steps cover every aspect of the goal.
 
-    评估维度：
-    - 步骤数是否合理（非空且不冗余）
-    - 每步是否有明确的 action 和 target
-    - 步骤间是否有逻辑顺序
+    Evaluation dimensions:
+    - Whether the step count is reasonable (nonempty and not redundant)
+    - Whether each step has a clear action and target
+    - Whether the steps follow a logical order
     """
 
     @property
@@ -104,7 +104,7 @@ class PlanCompletenessMetric(BaseMetric):
 
     @property
     def description(self) -> str:
-        return "评估 Agent 规划步骤的完备性和逻辑性"
+        return "Evaluate the completeness and logical order of the agent's planned steps"
 
     def evaluate(self, ctx: EvaluationContext) -> MetricResult:
         steps = ctx.planned_steps
@@ -113,10 +113,10 @@ class PlanCompletenessMetric(BaseMetric):
                 metric_name=self.name,
                 score=0.0,
                 raw_value={"step_count": 0},
-                details={"reason": "无规划步骤"},
+                details={"reason": "No planned steps"},
             )
 
-        # 检查每步是否有效
+        # Check whether each step is valid
         valid_steps = 0
         issues = []
         for i, step in enumerate(steps):
@@ -125,11 +125,11 @@ class PlanCompletenessMetric(BaseMetric):
             if has_action:
                 valid_steps += 1
             else:
-                issues.append(f"步骤 {i+1} 缺少明确操作")
+                issues.append(f"Step {i+1} has no clear action")
 
         validity_score = valid_steps / len(steps) if steps else 0
 
-        # 步骤数量合理性（3-20步为正常范围）
+        # Evaluate step count (3-20 steps is the normal range)
         step_count = len(steps)
         if 3 <= step_count <= 20:
             count_score = 1.0
@@ -150,12 +150,12 @@ class PlanCompletenessMetric(BaseMetric):
 
 class ExecutionFidelityMetric(BaseMetric):
     """
-    执行忠实度 — 计划 vs 实际执行的偏差。
+    Execution fidelity — deviation between planned and actual execution.
 
-    关注：
-    - 实际执行的步骤是否与计划一致
-    - 跳过或额外增加的步骤比例
-    - 执行顺序偏差
+    Focus areas:
+    - Whether executed steps match the plan
+    - Proportion of skipped or additional steps
+    - Deviations in execution order
     """
 
     @property
@@ -164,7 +164,7 @@ class ExecutionFidelityMetric(BaseMetric):
 
     @property
     def description(self) -> str:
-        return "计划步骤与实际执行之间的偏差率"
+        return "Deviation rate between planned and executed steps"
 
     def evaluate(self, ctx: EvaluationContext) -> MetricResult:
         planned = ctx.planned_steps
@@ -175,7 +175,7 @@ class ExecutionFidelityMetric(BaseMetric):
                 metric_name=self.name,
                 score=0.5,
                 raw_value={"planned": 0, "executed": len(executed)},
-                details={"reason": "无计划步骤，无法评估忠实度"},
+                details={"reason": "No planned steps; cannot evaluate fidelity"},
             )
 
         if not executed:
@@ -183,17 +183,17 @@ class ExecutionFidelityMetric(BaseMetric):
                 metric_name=self.name,
                 score=0.0,
                 raw_value={"planned": len(planned), "executed": 0},
-                details={"reason": "无执行步骤"},
+                details={"reason": "No executed steps"},
             )
 
-        # 计算匹配率
+        # Calculate the match rate
         planned_count = len(planned)
         executed_count = len(executed)
 
-        # 匹配度：执行数/计划数的比例偏差
+        # Match quality: deviation in the ratio of executed to planned steps
         ratio = min(executed_count, planned_count) / max(executed_count, planned_count)
 
-        # 额外步骤惩罚（自愈/重试不惩罚）
+        # Penalize extra steps (excluding healing and retries)
         extra_steps = max(0, executed_count - planned_count)
         healing_steps = sum(1 for s in executed if s.get("is_healing") or s.get("is_retry"))
         meaningful_extra = max(0, extra_steps - healing_steps)
@@ -219,7 +219,7 @@ class ExecutionFidelityMetric(BaseMetric):
 
 class HealingSuccessRateMetric(BaseMetric):
     """
-    自愈成功率 — 各交互层级的触发频率和成功率。
+    Healing success rate — trigger frequency and success rate at each interaction level.
     """
 
     @property
@@ -228,23 +228,23 @@ class HealingSuccessRateMetric(BaseMetric):
 
     @property
     def description(self) -> str:
-        return "自愈机制在各层级的触发频率和修复成功率"
+        return "Healing trigger frequency and recovery success rate at each level"
 
     def evaluate(self, ctx: EvaluationContext) -> MetricResult:
         events = ctx.healing_events
         if not events:
             return MetricResult(
                 metric_name=self.name,
-                score=1.0,  # 无需自愈 = 完美
+                score=1.0,  # No healing needed = perfect score
                 raw_value={"total_events": 0},
-                details={"reason": "无自愈事件"},
+                details={"reason": "No healing events"},
             )
 
         total = len(events)
         successes = sum(1 for e in events if e.get("success", False))
         success_rate = successes / total if total > 0 else 0
 
-        # 按层级统计
+        # Aggregate by level
         tier_stats = {}
         for e in events:
             tier = str(e.get("tier", "unknown"))
@@ -254,7 +254,7 @@ class HealingSuccessRateMetric(BaseMetric):
             if e.get("success", False):
                 tier_stats[tier]["success"] += 1
 
-        # 自愈频率：频繁自愈降低分数
+        # Healing frequency: frequent healing lowers the score
         frequency_penalty = min(0.3, total * 0.03)
         score = success_rate - frequency_penalty
 
@@ -268,11 +268,11 @@ class HealingSuccessRateMetric(BaseMetric):
 
 class HallucinationDetector(BaseMetric):
     """
-    幻觉检测 — 检测 Agent 是否「编造」了实际不存在的操作结果。
+    Hallucination detection — detect whether the agent fabricated action results that did not occur.
 
-    通过截图和 DOM 交叉验证：
-    - Agent 声称点击了某按钮，但 DOM 中无此元素
-    - Agent 声称页面显示了某文本，但截图中不存在
+    Cross-check screenshots and the DOM:
+    - The agent claims it clicked a button that is absent from the DOM
+    - The agent claims the page displays text that is absent from the screenshot
     """
 
     @property
@@ -281,7 +281,7 @@ class HallucinationDetector(BaseMetric):
 
     @property
     def description(self) -> str:
-        return "Agent 幻觉行为检测分数（越高越好，即越少幻觉）"
+        return "Agent hallucination detection score (higher is better, meaning fewer hallucinations)"
 
     def evaluate(self, ctx: EvaluationContext) -> MetricResult:
         executed = ctx.executed_steps
@@ -290,7 +290,7 @@ class HallucinationDetector(BaseMetric):
                 metric_name=self.name,
                 score=1.0,
                 raw_value={"checked_steps": 0},
-                details={"reason": "无执行步骤"},
+                details={"reason": "No executed steps"},
             )
 
         total_checks = 0
@@ -298,13 +298,13 @@ class HallucinationDetector(BaseMetric):
         hallucination_details = []
 
         for i, step in enumerate(executed):
-            # 检查操作声明是否有实际结果佐证
+            # Check whether action claims are supported by actual results
             claimed_result = step.get("result", {})
             actual_success = step.get("success", None)
 
             if actual_success is not None:
                 total_checks += 1
-                # Agent 声称成功但实际失败
+                # The agent claims success but the action actually failed
                 if claimed_result.get("success") and not actual_success:
                     hallucinations += 1
                     hallucination_details.append({
@@ -313,7 +313,7 @@ class HallucinationDetector(BaseMetric):
                         "claimed": claimed_result,
                     })
 
-            # 检查 Agent 是否引用了不存在的选择器
+            # Check whether the agent referenced a nonexistent selector
             selector = step.get("selector", "")
             if selector and step.get("element_found") is False:
                 total_checks += 1
@@ -325,7 +325,7 @@ class HallucinationDetector(BaseMetric):
                 })
 
         if total_checks == 0:
-            score = 0.8  # 无法验证时给予中等分数
+            score = 0.8  # Assign a moderate score when verification is unavailable
         else:
             score = 1.0 - (hallucinations / total_checks)
 
@@ -339,7 +339,7 @@ class HallucinationDetector(BaseMetric):
 
 class TokenEfficiencyMetric(BaseMetric):
     """
-    Token 效率 — 评估 Token 消耗、响应时间、重试次数是否合理。
+    Token efficiency — evaluate whether token consumption, response time, and retry count are reasonable.
     """
 
     @property
@@ -348,7 +348,7 @@ class TokenEfficiencyMetric(BaseMetric):
 
     @property
     def description(self) -> str:
-        return "LLM Token 消耗和响应时间的效率评估"
+        return "Evaluate efficiency based on LLM token consumption and response time"
 
     def evaluate(self, ctx: EvaluationContext) -> MetricResult:
         spans = ctx.trace_spans
@@ -357,7 +357,7 @@ class TokenEfficiencyMetric(BaseMetric):
                 metric_name=self.name,
                 score=0.5,
                 raw_value={"total_spans": 0},
-                details={"reason": "无 trace span 数据"},
+                details={"reason": "No trace span data"},
             )
 
         total_tokens = sum(s.get("total_tokens", 0) for s in spans)
@@ -365,8 +365,8 @@ class TokenEfficiencyMetric(BaseMetric):
         total_cost = sum(s.get("cost_usd", 0) for s in spans)
         avg_duration = total_duration / len(spans) if spans else 0
 
-        # Token 效率评分
-        # 基准：每步约 500 token、3000ms 响应为合理
+        # Token efficiency score
+        # Baseline: approximately 500 tokens and a 3,000 ms response per step is reasonable
         steps = len(ctx.executed_steps) or 1
         tokens_per_step = total_tokens / steps
 
@@ -377,7 +377,7 @@ class TokenEfficiencyMetric(BaseMetric):
         else:
             token_score = max(0.2, 1.0 - (tokens_per_step - 300) / 2000)
 
-        # 延迟评分
+        # Latency score
         if avg_duration < 2000:
             latency_score = 1.0
         elif avg_duration < 5000:
@@ -407,9 +407,9 @@ class TokenEfficiencyMetric(BaseMetric):
 
 class ConsistencyScoreMetric(BaseMetric):
     """
-    一致性评分 — 相同任务多次执行的结果一致性。
+    Consistency score — agreement across repeated executions of the same task.
 
-    需要历史数据参与对比。
+    Requires historical data for comparison.
     """
 
     @property
@@ -418,10 +418,10 @@ class ConsistencyScoreMetric(BaseMetric):
 
     @property
     def description(self) -> str:
-        return "相同任务多次执行的结果一致性"
+        return "Agreement across repeated executions of the same task"
 
     def evaluate(self, ctx: EvaluationContext) -> MetricResult:
-        # 从 SQLite 查询相同 goal 的历史执行
+        # Query SQLite for previous executions with the same goal
         history = self._get_history(ctx.goal)
 
         if len(history) < 2:
@@ -429,14 +429,14 @@ class ConsistencyScoreMetric(BaseMetric):
                 metric_name=self.name,
                 score=0.8,
                 raw_value={"history_count": len(history)},
-                details={"reason": "历史数据不足，至少需要2次执行才能计算一致性"},
+                details={"reason": "Insufficient history; at least two executions are required to calculate consistency"},
             )
 
-        # 比较结果一致性
+        # Compare result consistency
         results = [h.get("success", False) for h in history]
         success_rate = sum(results) / len(results)
 
-        # 步骤数一致性
+        # Step count consistency
         step_counts = [h.get("step_count", 0) for h in history if h.get("step_count")]
         if len(step_counts) >= 2:
             step_stddev = statistics.stdev(step_counts) if len(step_counts) > 1 else 0
@@ -456,7 +456,7 @@ class ConsistencyScoreMetric(BaseMetric):
         )
 
     def _get_history(self, goal: str) -> List[Dict]:
-        """从评估数据库获取历史记录"""
+        """Get historical records from the evaluation database"""
         try:
             db_path = os.path.join(
                 os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
@@ -477,7 +477,7 @@ class ConsistencyScoreMetric(BaseMetric):
 
 class StepAccuracyMetric(BaseMetric):
     """
-    单步操作准确率 — 每一步操作在首次尝试中成功的概率。
+    Step accuracy — the probability that each action succeeds on its first attempt.
     """
 
     @property
@@ -486,7 +486,7 @@ class StepAccuracyMetric(BaseMetric):
 
     @property
     def description(self) -> str:
-        return "首次尝试成功的操作步骤占比"
+        return "Proportion of action steps that succeed on the first attempt"
 
     def evaluate(self, ctx: EvaluationContext) -> MetricResult:
         executed = ctx.executed_steps
@@ -495,7 +495,7 @@ class StepAccuracyMetric(BaseMetric):
                 metric_name=self.name,
                 score=0.0,
                 raw_value={"total_steps": 0},
-                details={"reason": "无执行步骤"},
+                details={"reason": "No executed steps"},
             )
 
         first_attempt_success = 0
@@ -503,7 +503,7 @@ class StepAccuracyMetric(BaseMetric):
 
         for step in executed:
             if step.get("is_healing") or step.get("is_retry"):
-                continue  # 跳过自愈/重试步骤
+                continue  # Skip healing and retry steps
             total_actions += 1
             if step.get("success", False) and not step.get("heal_used", False):
                 first_attempt_success += 1
@@ -526,7 +526,7 @@ class StepAccuracyMetric(BaseMetric):
 
 class GoalAchievementMetric(BaseMetric):
     """
-    目标完成率 — 最终目标是否成功达成。
+    Goal completion rate — whether the final goal was achieved.
     """
 
     @property
@@ -535,7 +535,7 @@ class GoalAchievementMetric(BaseMetric):
 
     @property
     def description(self) -> str:
-        return "最终测试目标是否成功达成"
+        return "Whether the final test goal was achieved"
 
     def evaluate(self, ctx: EvaluationContext) -> MetricResult:
         result = ctx.final_result
@@ -544,10 +544,10 @@ class GoalAchievementMetric(BaseMetric):
                 metric_name=self.name,
                 score=0.0,
                 raw_value={"status": "no_result"},
-                details={"reason": "无最终结果数据"},
+                details={"reason": "No final result data"},
             )
 
-        # 从 final_result 判断
+        # Determine the outcome from final_result
         success = result.get("success", False)
         status = result.get("status", "unknown")
 
@@ -568,9 +568,9 @@ class GoalAchievementMetric(BaseMetric):
         )
 
 
-# ── 聚合评估 ──────────────────────────────────────────────────────────────────
+# ── Aggregate evaluation ──────────────────────────────────────────────────────────────────
 
-# 所有可用指标
+# All available metrics
 ALL_METRICS: List[BaseMetric] = [
     PlanCompletenessMetric(),
     ExecutionFidelityMetric(),
@@ -585,7 +585,7 @@ ALL_METRICS: List[BaseMetric] = [
 
 def evaluate_all(ctx: EvaluationContext, metrics: Optional[List[BaseMetric]] = None) -> Dict[str, MetricResult]:
     """
-    运行所有（或指定的）评估指标。
+    Run all evaluation metrics or a specified subset.
 
     Returns:
         Dict[metric_name, MetricResult]
@@ -599,7 +599,7 @@ def evaluate_all(ctx: EvaluationContext, metrics: Optional[List[BaseMetric]] = N
             result = metric.evaluate(ctx)
             results[metric.name] = result
         except Exception as e:
-            logger.warning(f"指标 {metric.name} 评估失败: {e}")
+            logger.warning(f"Metric {metric.name} evaluation failed: {e}")
             results[metric.name] = MetricResult(
                 metric_name=metric.name,
                 score=0.0,
@@ -611,7 +611,7 @@ def evaluate_all(ctx: EvaluationContext, metrics: Optional[List[BaseMetric]] = N
 
 
 def compute_overall_score(results: Dict[str, MetricResult]) -> float:
-    """计算加权综合分数"""
+    """Calculate the weighted overall score"""
     weights = {
         "goal_achievement": 0.25,
         "step_accuracy": 0.15,

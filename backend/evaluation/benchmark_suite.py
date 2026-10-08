@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-Benchmark Suite — 标准化基准测试套件
+Benchmark Suite — Standardized benchmark suite
 
-提供可重复的标准化测试场景，用于评估Agent在不同场景下的表现。
-支持自定义场景、模型对比和历史趋势。
+Provides repeatable, standardized scenarios to evaluate agent performance across different tasks.
+Supports custom scenarios, model comparisons, and historical trends.
 """
 
 from dataclasses import dataclass, field
@@ -20,14 +20,14 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class BenchmarkScenario:
-    """基准测试场景"""
+    """Benchmark scenario"""
     id: str = ""
     name: str = ""
     description: str = ""
     category: str = "general"   # general, navigation, form, search, auth, complex
-    goal: str = ""              # 自然语言任务描述
-    target_url: str = ""        # 目标 URL
-    expected_steps: int = 0     # 预期步骤数
+    goal: str = ""              # Natural-language task description
+    target_url: str = ""        # Target URL
+    expected_steps: int = 0     # Expected step count
     timeout_seconds: int = 120
     difficulty: str = "medium"  # easy, medium, hard
     tags: List[str] = field(default_factory=list)
@@ -47,15 +47,15 @@ class BenchmarkScenario:
         }
 
 
-# ── 预定义基准场景 ──────────────────────────────────────────────────────────
+# ── Built-in benchmark scenarios ──────────────────────────────────────────────────────────
 
 BUILTIN_SCENARIOS: List[BenchmarkScenario] = [
     BenchmarkScenario(
         id="search_baidu",
-        name="百度搜索",
-        description="在百度搜索引擎中搜索关键词并验证结果",
+        name="Baidu search",
+        description="Search for a keyword on Baidu and verify the results",
         category="search",
-        goal="打开百度，搜索 'AI测试'，验证搜索结果页面显示了相关内容",
+        goal="Open Baidu, search for 'AI测试', and verify that the results page displays relevant content",
         target_url="https://www.baidu.com",
         expected_steps=5,
         difficulty="easy",
@@ -63,10 +63,10 @@ BUILTIN_SCENARIOS: List[BenchmarkScenario] = [
     ),
     BenchmarkScenario(
         id="search_bing",
-        name="Bing搜索",
-        description="在Bing搜索引擎中搜索并验证",
+        name="Bing search",
+        description="Search on Bing and verify the results",
         category="search",
-        goal="打开Bing，搜索 'selenium automation'，验证搜索结果存在",
+        goal="Open Bing, search for 'selenium automation', and verify that search results are present",
         target_url="https://www.bing.com",
         expected_steps=5,
         difficulty="easy",
@@ -74,10 +74,10 @@ BUILTIN_SCENARIOS: List[BenchmarkScenario] = [
     ),
     BenchmarkScenario(
         id="github_navigation",
-        name="GitHub导航",
-        description="在GitHub上导航到指定仓库并检查信息",
+        name="GitHub navigation",
+        description="Navigate to a repository on GitHub and check its information",
         category="navigation",
-        goal="打开 GitHub，搜索 'playwright'，点击第一个搜索结果，验证页面显示了仓库信息",
+        goal="Open GitHub, search for 'playwright', click the first search result, and verify that the page displays repository information",
         target_url="https://github.com",
         expected_steps=8,
         difficulty="medium",
@@ -85,10 +85,10 @@ BUILTIN_SCENARIOS: List[BenchmarkScenario] = [
     ),
     BenchmarkScenario(
         id="form_fill_basic",
-        name="基础表单填写",
-        description="在demo表单中填写信息",
+        name="Basic form entry",
+        description="Enter information in a demo form",
         category="form",
-        goal="打开 https://demoqa.com/text-box，填写 Full Name 为 'AI Tester'，Email 为 'ai@test.com'，然后点击 Submit 按钮",
+        goal="Open https://demoqa.com/text-box, enter 'AI Tester' as Full Name and 'ai@test.com' as Email, then click Submit",
         target_url="https://demoqa.com/text-box",
         expected_steps=6,
         difficulty="easy",
@@ -96,10 +96,10 @@ BUILTIN_SCENARIOS: List[BenchmarkScenario] = [
     ),
     BenchmarkScenario(
         id="multi_step_nav",
-        name="多步导航",
-        description="在网站中执行多步复合导航",
+        name="Multistep navigation",
+        description="Perform a sequence of navigation steps on a website",
         category="complex",
-        goal="打开 https://www.wikipedia.org，切换到中文版，搜索 '人工智能'，点击第一段中任意一个链接",
+        goal="Open https://www.wikipedia.org, switch to the Chinese edition, search for '人工智能', and click any link in the first paragraph",
         target_url="https://www.wikipedia.org",
         expected_steps=10,
         difficulty="hard",
@@ -107,10 +107,10 @@ BUILTIN_SCENARIOS: List[BenchmarkScenario] = [
     ),
     BenchmarkScenario(
         id="dropdown_select",
-        name="下拉菜单选择",
-        description="在页面上操作下拉菜单",
+        name="Dropdown selection",
+        description="Interact with a dropdown menu on the page",
         category="form",
-        goal="打开 https://demoqa.com/select-menu，选择 Old Style Select Menu 中的 'Blue' 选项",
+        goal="Open https://demoqa.com/select-menu and select 'Blue' in Old Style Select Menu",
         target_url="https://demoqa.com/select-menu",
         expected_steps=5,
         difficulty="medium",
@@ -118,10 +118,10 @@ BUILTIN_SCENARIOS: List[BenchmarkScenario] = [
     ),
     BenchmarkScenario(
         id="dynamic_element",
-        name="动态元素等待",
-        description="等待并操作动态加载的元素",
+        name="Wait for a dynamic element",
+        description="Wait for a dynamically loaded element and interact with it",
         category="complex",
-        goal="打开 https://demoqa.com/dynamic-properties，等待 'Visible After 5 Seconds' 按钮出现后点击它",
+        goal="Open https://demoqa.com/dynamic-properties, wait for the 'Visible After 5 Seconds' button to appear, then click it",
         target_url="https://demoqa.com/dynamic-properties",
         expected_steps=4,
         difficulty="medium",
@@ -129,10 +129,10 @@ BUILTIN_SCENARIOS: List[BenchmarkScenario] = [
     ),
     BenchmarkScenario(
         id="checkbox_toggle",
-        name="复选框操作",
-        description="展开树形结构并切换复选框",
+        name="Checkbox interaction",
+        description="Expand a tree and toggle a checkbox",
         category="form",
-        goal="打开 https://demoqa.com/checkbox，展开 Home 节点，然后勾选 Desktop 复选框",
+        goal="Open https://demoqa.com/checkbox, expand Home, then check Desktop",
         target_url="https://demoqa.com/checkbox",
         expected_steps=5,
         difficulty="medium",
@@ -143,7 +143,7 @@ BUILTIN_SCENARIOS: List[BenchmarkScenario] = [
 
 @dataclass
 class BenchmarkRunResult:
-    """基准测试运行结果"""
+    """Benchmark run result"""
     run_id: str = field(default_factory=lambda: str(uuid.uuid4())[:12])
     scenario_id: str = ""
     model: str = ""
@@ -181,7 +181,7 @@ class BenchmarkRunResult:
 
 
 class BenchmarkSuite:
-    """基准测试套件管理"""
+    """Manage the benchmark suite"""
 
     def __init__(self):
         self.scenarios: Dict[str, BenchmarkScenario] = {}
@@ -189,13 +189,13 @@ class BenchmarkSuite:
             os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
             "data", "evaluation.db"
         )
-        # 加载内置场景
+        # Load built-in scenarios
         for s in BUILTIN_SCENARIOS:
             self.scenarios[s.id] = s
         self._init_db()
 
     def _init_db(self):
-        """初始化评估数据库"""
+        """Initialize the evaluation database"""
         os.makedirs(os.path.dirname(self._db_path), exist_ok=True)
         with sqlite3.connect(self._db_path) as conn:
             conn.execute("""
@@ -227,9 +227,9 @@ class BenchmarkSuite:
             """)
 
     def list_scenarios(self, category: str = "") -> List[Dict]:
-        """列出所有可用场景"""
+        """List all available scenarios"""
         scenarios = list(self.scenarios.values())
-        # 加载自定义场景
+        # Load custom scenarios
         try:
             with sqlite3.connect(self._db_path) as conn:
                 rows = conn.execute("SELECT data FROM custom_scenarios").fetchall()
@@ -247,11 +247,11 @@ class BenchmarkSuite:
         return [s.to_dict() for s in scenarios]
 
     def get_scenario(self, scenario_id: str) -> Optional[BenchmarkScenario]:
-        """获取单个场景"""
+        """Get a scenario"""
         return self.scenarios.get(scenario_id)
 
     def add_custom_scenario(self, scenario: BenchmarkScenario):
-        """添加自定义场景"""
+        """Add a custom scenario"""
         if not scenario.id:
             scenario.id = f"custom_{str(uuid.uuid4())[:8]}"
         self.scenarios[scenario.id] = scenario
@@ -262,7 +262,7 @@ class BenchmarkSuite:
             )
 
     def save_run_result(self, result: BenchmarkRunResult, goal: str = ""):
-        """持久化运行结果"""
+        """Persist run results"""
         with sqlite3.connect(self._db_path) as conn:
             conn.execute("""
                 INSERT INTO evaluation_runs
@@ -280,7 +280,7 @@ class BenchmarkSuite:
             ))
 
     def get_results(self, scenario_id: str = "", limit: int = 50) -> List[Dict]:
-        """获取历史评估结果"""
+        """Get historical evaluation results"""
         try:
             with sqlite3.connect(self._db_path) as conn:
                 conn.row_factory = sqlite3.Row
@@ -302,14 +302,14 @@ class BenchmarkSuite:
                     results.append(d)
                 return results
         except Exception as e:
-            logger.error(f"获取评估结果失败: {e}")
+            logger.error(f"Failed to get evaluation results: {e}")
             return []
 
     def compare_models(self, scenario_id: str = "") -> Dict[str, Any]:
-        """对比不同模型在相同场景下的表现"""
+        """Compare different models on the same scenarios"""
         results = self.get_results(scenario_id=scenario_id, limit=200)
         if not results:
-            return {"models": {}, "message": "暂无评估数据"}
+            return {"models": {}, "message": "No evaluation data yet"}
 
         model_stats = {}
         for r in results:

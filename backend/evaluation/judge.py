@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-LLM-as-Judge — 用 LLM 评估另一个 LLM 的输出质量
+LLM-as-Judge — Use an LLM to evaluate another LLM's output quality
 
-支持多维度评分（0-10）、结构化评估输出。
+Supports multidimensional scores (0-10) and structured evaluation results.
 """
 
 from typing import Dict, Any, Optional
@@ -16,8 +16,8 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class JudgeResult:
-    """LLM-as-Judge 评估结果"""
-    scores: Dict[str, float] = field(default_factory=dict)   # 维度 → 0-10 分
+    """LLM-as-Judge evaluation result"""
+    scores: Dict[str, float] = field(default_factory=dict)   # Dimension → score from 0 to 10
     overall_score: float = 0.0
     reasoning: str = ""
     suggestions: list = field(default_factory=list)
@@ -35,49 +35,49 @@ class JudgeResult:
 
 class LLMJudge:
     """
-    使用 LLM 评估 Agent 输出质量。
+    Use an LLM to evaluate agent output quality.
 
-    评估维度：
-    - completeness（完整性）: 是否覆盖目标要求
-    - accuracy（准确性）: 操作是否精确无误
-    - efficiency（效率）: 步骤是否简洁，无多余操作
-    - robustness（鲁棒性）: 是否处理了边界情况
-    - clarity（清晰度）: 输出描述是否清晰
+    Evaluation dimensions:
+    - completeness: whether the output covers the goal's requirements
+    - accuracy: whether actions are precise and correct
+    - efficiency: whether the steps are concise without unnecessary actions
+    - robustness: whether edge cases are handled
+    - clarity: whether output descriptions are clear
     """
 
-    JUDGE_PROMPT = """你是一位资深QA评审专家。请评估以下AI测试Agent的执行表现。
+    JUDGE_PROMPT = """You are an experienced QA reviewer. Evaluate the following AI testing agent's execution performance. Write your assessment in American English.
 
-## 测试目标
+## Test goal
 {goal}
 
-## 计划步骤
+## Planned steps
 {planned_steps}
 
-## 实际执行
+## Actual execution
 {executed_steps}
 
-## 执行结果
+## Execution result
 {result}
 
-## 评估维度（每项 0-10 分）
+## Evaluation dimensions (0-10 each)
 
-请从以下5个维度评估，并输出JSON格式：
+Evaluate the following five dimensions and return JSON:
 
-1. **completeness**（完整性）: 是否覆盖了测试目标的所有方面
-2. **accuracy**（准确性）: 每步操作是否精确，结果是否正确
-3. **efficiency**（效率）: 步骤是否精简，Token消耗是否合理
-4. **robustness**（鲁棒性）: 是否妥善处理了异常和边界情况
-5. **clarity**（清晰度）: 日志和反馈描述是否清晰有用
+1. **completeness**: whether all aspects of the test goal were covered
+2. **accuracy**: whether each action was precise and its result correct
+3. **efficiency**: whether steps were concise and token consumption reasonable
+4. **robustness**: whether exceptions and edge cases were handled properly
+5. **clarity**: whether logs and feedback were clear and useful
 
-请严格输出以下JSON格式（不要加markdown包裹）：
+Return exactly the following JSON format without Markdown fences:
 {{
     "completeness": <0-10>,
     "accuracy": <0-10>,
     "efficiency": <0-10>,
     "robustness": <0-10>,
     "clarity": <0-10>,
-    "reasoning": "<总体评价，2-3句话>",
-    "suggestions": ["<改进建议1>", "<改进建议2>"]
+    "reasoning": "<overall assessment in 2-3 sentences>",
+    "suggestions": ["<improvement suggestion 1>", "<improvement suggestion 2>"]
 }}"""
 
     def __init__(self, llm_provider: str = "", model: str = ""):
@@ -91,7 +91,7 @@ class LLMJudge:
         executed_steps: list,
         result: dict,
     ) -> JudgeResult:
-        """执行 LLM-as-Judge 评估"""
+        """Run an LLM-as-Judge evaluation"""
         try:
             from core.llm_manager import get_llm_for_role
 
@@ -108,27 +108,27 @@ class LLMJudge:
             return self._parse_response(response)
 
         except Exception as e:
-            logger.error(f"LLM-as-Judge 评估失败: {e}")
+            logger.error(f"LLM-as-Judge evaluation failed: {e}")
             return JudgeResult(
-                reasoning=f"评估失败: {str(e)}",
+                reasoning=f"Evaluation failed: {str(e)}",
             )
 
     async def _invoke_llm(self, llm, prompt: str) -> str:
-        """调用 LLM"""
+        """Call the LLM"""
         try:
-            # 尝试异步调用
+            # Try an asynchronous call
             result = await llm.ainvoke(prompt)
             return result.content if hasattr(result, "content") else str(result)
         except Exception:
-            # 回退到同步
+            # Fall back to a synchronous call
             import asyncio
             result = await asyncio.to_thread(llm.invoke, prompt)
             return result.content if hasattr(result, "content") else str(result)
 
     def _parse_response(self, response: str) -> JudgeResult:
-        """解析 LLM 响应为结构化结果"""
+        """Parse the LLM response into a structured result"""
         try:
-            # 清理可能的 markdown 包裹
+            # Remove any Markdown fences
             text = response.strip()
             if text.startswith("```"):
                 text = text.split("\n", 1)[1] if "\n" in text else text[3:]
@@ -151,10 +151,10 @@ class LLMJudge:
                 suggestions=data.get("suggestions", []),
             )
         except (json.JSONDecodeError, ValueError) as e:
-            logger.warning(f"LLM Judge 响应解析失败: {e}, raw: {response[:200]}")
+            logger.warning(f"Failed to parse the LLM Judge response: {e}, raw: {response[:200]}")
             return JudgeResult(
                 overall_score=5.0,
-                reasoning=f"响应解析失败，原始文本: {response[:200]}",
+                reasoning=f"Response parsing failed; raw text: {response[:200]}",
             )
 
     def judge_sync(
@@ -164,7 +164,7 @@ class LLMJudge:
         executed_steps: list,
         result: dict,
     ) -> JudgeResult:
-        """同步版本的 LLM-as-Judge"""
+        """Synchronous LLM-as-Judge implementation"""
         import asyncio
         try:
             loop = asyncio.get_event_loop()
@@ -181,5 +181,5 @@ class LLMJudge:
                     self.judge(goal, planned_steps, executed_steps, result)
                 )
         except Exception as e:
-            logger.error(f"LLM-as-Judge 同步调用失败: {e}")
-            return JudgeResult(reasoning=f"同步调用失败: {str(e)}")
+            logger.error(f"Synchronous LLM-as-Judge call failed: {e}")
+            return JudgeResult(reasoning=f"Synchronous call failed: {str(e)}")

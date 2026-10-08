@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Evaluation Reporter — 评估报告生成器
+Evaluation Reporter — Evaluation report generator
 
-生成 JSON/HTML 格式的评估报告，支持对比和趋势分析。
+Generate JSON/HTML evaluation reports with comparisons and trend analysis.
 """
 
 from typing import Dict, Any, List, Optional
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 class EvaluationReporter:
-    """评估报告生成器"""
+    """Evaluation report generator"""
 
     def __init__(self):
         self._report_dir = os.path.join(
@@ -32,7 +32,7 @@ class EvaluationReporter:
         overall_score: float = 0.0,
         context: Optional[Dict] = None,
     ) -> Dict[str, Any]:
-        """生成单次评估摘要"""
+        """Generate a summary of one evaluation"""
         report = {
             "report_type": "evaluation_summary",
             "generated_at": time.time(),
@@ -50,18 +50,18 @@ class EvaluationReporter:
                 "model": context.get("model", ""),
             }
 
-        # 处理指标结果
+        # Process metric results
         for name, result in metric_results.items():
             if hasattr(result, "to_dict"):
                 report["metrics"][name] = result.to_dict()
             elif isinstance(result, dict):
                 report["metrics"][name] = result
 
-        # 添加 LLM Judge 结果
+        # Add LLM Judge results
         if judge_result:
             report["judge"] = judge_result if isinstance(judge_result, dict) else judge_result.to_dict() if hasattr(judge_result, 'to_dict') else {}
 
-        # 生成建议
+        # Generate recommendations
         report["recommendations"] = self._generate_recommendations(metric_results, overall_score)
 
         return report
@@ -70,9 +70,9 @@ class EvaluationReporter:
         self,
         run_results: List[Dict],
     ) -> Dict[str, Any]:
-        """生成模型/配置对比报告"""
+        """Generate a model/configuration comparison report"""
         if not run_results:
-            return {"report_type": "comparison", "message": "无数据"}
+            return {"report_type": "comparison", "message": "No data"}
 
         report = {
             "report_type": "comparison",
@@ -101,22 +101,22 @@ class EvaluationReporter:
                 "total_tokens": r.get("total_tokens", 0),
             })
 
-        # 找最佳模型
+        # Find the best model
         if model_scores:
             avg_scores = {m: sum(s) / len(s) for m, s in model_scores.items()}
             best = max(avg_scores, key=avg_scores.get)
             report["best_model"] = best
             report["model_averages"] = {m: round(s, 4) for m, s in avg_scores.items()}
-            report["summary"] = f"最佳模型: {best} (平均分: {avg_scores[best]:.4f})"
+            report["summary"] = f"Best model: {best} (average score: {avg_scores[best]:.4f})"
 
         return report
 
     def generate_trend(self, run_results: List[Dict]) -> Dict[str, Any]:
-        """生成趋势分析报告"""
+        """Generate a trend analysis report"""
         if not run_results:
-            return {"report_type": "trend", "message": "无数据"}
+            return {"report_type": "trend", "message": "No data"}
 
-        # 按时间排序
+        # Sort chronologically
         sorted_results = sorted(run_results, key=lambda r: r.get("timestamp", 0))
 
         report = {
@@ -138,7 +138,7 @@ class EvaluationReporter:
                 "success": r.get("success", False),
             })
 
-        # 简易趋势判断
+        # Determine the basic trend
         if len(scores) >= 3:
             first_half = sum(scores[:len(scores)//2]) / (len(scores)//2)
             second_half = sum(scores[len(scores)//2:]) / (len(scores) - len(scores)//2)
@@ -152,18 +152,18 @@ class EvaluationReporter:
         return report
 
     def save_report(self, report: Dict, name: str = "") -> str:
-        """保存报告到文件"""
+        """Save the report to a file"""
         if not name:
             name = f"eval_{report.get('report_type', 'report')}_{int(time.time())}"
         filepath = os.path.join(self._report_dir, f"{name}.json")
         with open(filepath, "w", encoding="utf-8") as f:
             json.dump(report, f, ensure_ascii=False, indent=2)
-        logger.info(f"评估报告已保存: {filepath}")
+        logger.info(f"Evaluation report saved: {filepath}")
         return filepath
 
     @staticmethod
     def _score_to_grade(score: float) -> str:
-        """分数转等级"""
+        """Convert a score to a grade"""
         if score >= 0.9:
             return "A+"
         elif score >= 0.8:
@@ -182,33 +182,33 @@ class EvaluationReporter:
         metric_results: Dict[str, Any],
         overall_score: float,
     ) -> List[str]:
-        """根据评估结果生成改进建议"""
+        """Generate improvement recommendations from evaluation results"""
         recs = []
 
         for name, result in metric_results.items():
             score = result.score if hasattr(result, 'score') else result.get("score", 1.0)
             if score < 0.5:
                 if name == "plan_completeness":
-                    recs.append("🔴 规划步骤不够完整，建议检查 Prompt 是否明确描述了任务分解")
+                    recs.append("🔴 The planned steps are incomplete. Check whether the prompt clearly describes task decomposition")
                 elif name == "execution_fidelity":
-                    recs.append("🔴 实际执行偏离计划较大，建议检查 Agent 的步骤跟踪机制")
+                    recs.append("🔴 Execution deviated substantially from the plan. Check the agent's step tracking")
                 elif name == "healing_success_rate":
-                    recs.append("🔴 自愈成功率偏低，建议增强视觉定位模型或调优 SoM 参数")
+                    recs.append("🔴 Healing success is low. Improve the visual localization model or tune SoM parameters")
                 elif name == "hallucination_score":
-                    recs.append("🔴 检测到 Agent 幻觉行为，建议增加输出验证环节")
+                    recs.append("🔴 Agent hallucinations were detected. Add output verification")
                 elif name == "token_efficiency":
-                    recs.append("🟡 Token 效率偏低，考虑优化 Prompt 长度或切换更经济的模型")
+                    recs.append("🟡 Token efficiency is low. Shorten the prompt or consider a more economical model")
                 elif name == "step_accuracy":
-                    recs.append("🔴 首次尝试成功率不高，建议优化元素定位策略")
+                    recs.append("🔴 First-attempt success is low. Improve the element location strategy")
                 elif name == "goal_achievement":
-                    recs.append("🔴 目标未达成，需要排查根本原因")
+                    recs.append("🔴 The goal was not achieved. Investigate the root cause")
             elif score < 0.7:
                 if name == "token_efficiency":
-                    recs.append("🟡 Token 消耗可优化，考虑使用缓存或 Snapshot 压缩")
+                    recs.append("🟡 Token consumption can be improved. Consider caching or snapshot compression")
 
         if overall_score >= 0.9:
-            recs.append("✅ 整体表现优秀！")
+            recs.append("✅ Excellent overall performance!")
         elif not recs:
-            recs.append("🟢 整体表现良好，无紧急改进项")
+            recs.append("🟢 Good overall performance; no urgent improvements needed")
 
         return recs
