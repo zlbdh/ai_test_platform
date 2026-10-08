@@ -1,18 +1,18 @@
-# SVG 图标创建示例
+# SVG Icon Creation Examples
 
-从零手写 SVG 图标的实战示例。
+Practical examples of writing SVG icons from scratch.
 
-## 基础模板
+## Basic Template
 
 ```xml
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
      fill="none" stroke="currentColor" stroke-width="2"
      stroke-linecap="round" stroke-linejoin="round">
-  <!-- 图标路径 -->
+  <!-- Icon paths -->
 </svg>
 ```
 
-## 示例一：完成图标（✓ 圆圈）
+## Example 1: Completion Icon (Checkmark in a Circle)
 
 ```xml
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
@@ -23,7 +23,7 @@
 </svg>
 ```
 
-## 示例二：渐变盾牌
+## Example 2: Gradient Shield
 
 ```xml
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
@@ -40,7 +40,7 @@
 </svg>
 ```
 
-## 示例三：脉搏心跳
+## Example 3: Heartbeat Pulse
 
 ```xml
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
@@ -50,31 +50,31 @@
 </svg>
 ```
 
-## SVG 元素速查
+## SVG Element Reference
 
-| 元素 | 用途 | 关键属性 |
+| Element | Purpose | Key attributes |
 | ---- | ---- | -------- |
-| `<line>` | 直线 | `x1, y1, x2, y2` |
-| `<rect>` | 矩形 | `x, y, width, height, rx` |
-| `<circle>` | 圆形 | `cx, cy, r` |
-| `<polyline>` | 折线 | `points` |
-| `<path>` | 任意形状 | `d`（路径命令） |
+| `<line>` | Straight line | `x1, y1, x2, y2` |
+| `<rect>` | Rectangle | `x, y, width, height, rx` |
+| `<circle>` | Circle | `cx, cy, r` |
+| `<polyline>` | Connected line segments | `points` |
+| `<path>` | Arbitrary shape | `d` (path commands) |
 
-## Path 命令速查
+## Path Command Reference
 
-| 命令 | 元素 | 说明 |
+| Command | Operation | Example |
 | ---- | ---- | ---- |
-| `M x y` | 移动到 | `M 10 10` |
-| `L x y` | 直线到 | `L 20 20` |
-| `Q cx cy x y` | 二次贝塞尔曲线 | `Q 15 5 20 10` |
-| `C cx1 cy1 cx2 cy2 x y` | 三次贝塞尔曲线 | `C 10 5 15 5 20 10` |
-| `A rx ry angle large sweep x y` | 弧线 | `A 10 10 0 0 1 20 20` |
+| `M x y` | Move to | `M 10 10` |
+| `L x y` | Line to | `L 20 20` |
+| `Q cx cy x y` | Quadratic Bézier curve | `Q 15 5 20 10` |
+| `C cx1 cy1 cx2 cy2 x y` | Cubic Bézier curve | `C 10 5 15 5 20 10` |
+| `A rx ry angle large sweep x y` | Arc | `A 10 10 0 0 1 20 20` |
 
-## 设计技巧
+## Design Tips
 
-1. **24×24 画布** — 行业标准尺寸
-2. **留 2px 内边距** — 内容在 2~22 范围
-3. **使用 `currentColor`** — 继承文字颜色
-4. **统一描边** — `stroke-width="2"`
-5. **圆角处理** — `stroke-linecap="round"` + `stroke-linejoin="round"`
-6. **简单优先** — 16×16 下也能辨识
+1. **24×24 canvas** — standard industry size.
+2. **2px padding** — keep content within the 2–22 range.
+3. **Use `currentColor`** — inherit the text color.
+4. **Consistent strokes** — `stroke-width="2"`.
+5. **Rounded ends and joins** — `stroke-linecap="round"` + `stroke-linejoin="round"`.
+6. **Prefer simplicity** — icons must remain recognizable at 16×16.

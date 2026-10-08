@@ -1,43 +1,43 @@
-# Favicon 生成完整指南
+# Complete Favicon Generation Guide
 
-从零开始生成一套完整的网站 Favicon 文件。
+Generate a complete website favicon set from scratch.
 
-## 决策树
+## Decision Tree
 
 ```text
-你有 Logo 吗？
-├─ 有，包含图标元素 → 方法一：提取 Logo 中的图标
-├─ 有，但只有文字   → 方法二：字母/首字母缩写 Favicon
-└─ 没有             → 方法三：品牌几何形状 Favicon
+Do you have a logo?
+├─ Yes, with an icon → Method 1: extract the logo icon
+├─ Yes, text only   → Method 2: letter/initials favicon
+└─ No               → Method 3: brand geometry favicon
 ```
 
-## 需要生成的文件清单
+## Required Files
 
-| 文件 | 尺寸 | 用途 |
+| File | Size | Purpose |
 | ---- | ---- | ---- |
-| `favicon.svg` | 32×32 viewBox | 现代浏览器，可缩放 |
-| `favicon.ico` | 16×16 + 32×32 | 传统浏览器兼容 |
-| `apple-touch-icon.png` | 180×180 | iOS 书签图标（必须实心背景） |
-| `icon-192.png` | 192×192 | Android/PWA 图标 |
-| `icon-512.png` | 512×512 | PWA 启动画面 |
-| `site.webmanifest` | - | PWA 配置文件 |
+| `favicon.svg` | 32×32 viewBox | Scalable icon for modern browsers |
+| `favicon.ico` | 16×16 + 32×32 | Legacy browser compatibility |
+| `apple-touch-icon.png` | 180×180 | iOS bookmark icon (solid background required) |
+| `icon-192.png` | 192×192 | Android/PWA icon |
+| `icon-512.png` | 512×512 | PWA splash screen |
+| `site.webmanifest` | - | PWA configuration |
 
-## 方法一：提取 Logo 图标
+## Method 1: Extract the Logo Icon
 
-1. 从 Logo 的 SVG 源文件中找到图标部分的 `<path>` 或 `<g>` 元素
-2. 复制图标路径到新的 32×32 SVG
-3. 居中并简化细节（16px 下看不清的细节要去掉）
+1. Find the icon's `<path>` or `<g>` elements in the logo's SVG source.
+2. Copy the icon paths into a new 32×32 SVG.
+3. Center the icon and simplify details that are unreadable at 16px.
 
 ```xml
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <!-- 从 Logo 提取的路径 -->
-  <path d="..." fill="#品牌色"/>
+  <!-- Path extracted from the logo -->
+  <path d="..." fill="#BRAND_COLOR"/>
 </svg>
 ```
 
-## 方法二：字母 Favicon
+## Method 2: Letter Favicon
 
-### 圆形背景 + 字母
+### Circular Background + Letter
 
 ```xml
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
@@ -48,7 +48,7 @@
 </svg>
 ```
 
-### 圆角矩形 + 字母
+### Rounded Rectangle + Letter
 
 ```xml
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
@@ -59,7 +59,7 @@
 </svg>
 ```
 
-### 渐变背景 + 字母
+### Gradient Background + Letter
 
 ```xml
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
@@ -76,36 +76,36 @@
 </svg>
 ```
 
-## 方法三：品牌几何形状
+## Method 3: Brand Geometry
 
-### 行业推荐
+### Industry Recommendations
 
-| 行业 | 推荐形状 | 推荐颜色 |
+| Industry | Suggested shapes | Suggested colors |
 | ---- | -------- | -------- |
-| 科技/互联网 | 六边形、圆角方块 | 蓝、紫渐变 |
-| 金融 | 盾牌、圆形 | 深蓝、金色 |
-| 医疗 | 十字、心形 | 蓝、绿、白 |
-| 教育 | 书本、帽子形状 | 蓝、红 |
-| 餐饮 | 圆形、暖色 | 红、橙、黄 |
-| 环保 | 叶子、圆形 | 绿色系 |
+| Technology/internet | Hexagon, rounded square | Blue/purple gradient |
+| Finance | Shield, circle | Dark blue, gold |
+| Healthcare | Cross, heart | Blue, green, white |
+| Education | Book, graduation cap | Blue, red |
+| Food service | Circle, warm palette | Red, orange, yellow |
+| Environment | Leaf, circle | Green palette |
 
-## 生成多尺寸文件
+## Generate Multiple Sizes
 
-### 使用 ImageMagick
+### Using ImageMagick
 
 ```bash
-# 生成 ICO（包含 16×16 和 32×32）
+# Generate ICO with 16×16 and 32×32 sizes
 convert favicon.svg -define icon:auto-resize=16,32 favicon.ico
 
-# 生成 Apple Touch Icon（180×180，实心背景）
+# Generate Apple Touch Icon (180×180, solid background)
 convert favicon.svg -resize 180x180 -background "#0066cc" -alpha remove apple-touch-icon.png
 
-# 生成 PWA 图标
+# Generate PWA icons
 convert favicon.svg -resize 192x192 -background transparent icon-192.png
 convert favicon.svg -resize 512x512 -background transparent icon-512.png
 ```
 
-### 使用 Sharp (Node.js)
+### Using Sharp (Node.js)
 
 ```javascript
 const sharp = require('sharp')
@@ -121,38 +121,38 @@ await sharp(svgBuffer).resize(192, 192).png().toFile('icon-192.png')
 await sharp(svgBuffer).resize(512, 512).png().toFile('icon-512.png')
 ```
 
-### 在线工具
+### Online Tools
 
-- [favicon.io](https://favicon.io) — 从文字/图片/Emoji 生成
-- [realfavicongenerator.net](https://realfavicongenerator.net) — 最全面的生成器
+- [favicon.io](https://favicon.io) — Generate from text, images, or emoji
+- [realfavicongenerator.net](https://realfavicongenerator.net) — Comprehensive generator
 
-## HTML 集成
+## HTML Integration
 
-在 `<head>` 中添加：
+Add to `<head>`:
 
 ```html
 <!-- Favicon -->
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 
-<!-- Apple Touch Icon（iOS 书签） -->
+<!-- Apple Touch Icon (iOS bookmarks) -->
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
 <!-- PWA Manifest -->
 <link rel="manifest" href="/site.webmanifest">
 
-<!-- 主题色（浏览器工具栏颜色） -->
+<!-- Theme color (browser toolbar) -->
 <meta name="theme-color" content="#0066cc">
 ```
 
-## Web Manifest 模板
+## Web Manifest Template
 
 `site.webmanifest`：
 
 ```json
 {
-  "name": "你的网站名称",
-  "short_name": "简称",
+  "name": "Your Website Name",
+  "short_name": "Short Name",
   "icons": [
     {
       "src": "/icon-192.png",
@@ -171,23 +171,23 @@ await sharp(svgBuffer).resize(512, 512).png().toFile('icon-512.png')
 }
 ```
 
-## 常见问题排查
+## Troubleshooting
 
-| 工具 | 特点 | 命令/地址 |
+| Tool | Feature | Command/URL |
 | ---- | ---- | --------- |
-| iOS 书签显示黑色方块 | 背景透明 | Apple Touch Icon 必须有实心背景 |
-| 浏览器标签图标不更新 | 缓存 | 清理浏览器缓存 或 给文件名加版本号 |
-| 16×16 下图标模糊 | 图标太复杂 | 简化设计，减少细节 |
-| Android 主屏显示默认图标 | 缺少 Manifest | 确保 `site.webmanifest` 路径正确 |
-| 使用了 CMS 默认图标 | 未替换 | 替换默认的 favicon 文件 |
+| iOS bookmark appears as a black square | Transparent background | Apple Touch Icon requires a solid background |
+| Browser tab icon does not update | Cache | Clear the browser cache or version the filename |
+| Blurry icon at 16×16 | Excessive complexity | Simplify the design and reduce details |
+| Android home screen shows a default icon | Missing manifest | Verify the `site.webmanifest` path |
+| CMS default icon appears | Default not replaced | Replace the default favicon file |
 
-## 检查清单
+## Checklist
 
-- [ ] `favicon.svg` — 32×32 viewBox，设计简洁
-- [ ] `favicon.ico` — 包含 16×16 和 32×32
-- [ ] `apple-touch-icon.png` — 180×180，**实心背景**
+- [ ] `favicon.svg` — 32×32 viewBox, simple design
+- [ ] `favicon.ico` — includes 16×16 and 32×32
+- [ ] `apple-touch-icon.png` — 180×180, **solid background**
 - [ ] `icon-192.png` — 192×192
 - [ ] `icon-512.png` — 512×512
-- [ ] `site.webmanifest` — 引用正确的图标路径
-- [ ] HTML `<head>` — 包含所有 `<link>` 标签
-- [ ] 在多设备上测试显示效果
+- [ ] `site.webmanifest` — references correct icon paths
+- [ ] HTML `<head>` — includes all `<link>` tags
+- [ ] Verify appearance on multiple devices

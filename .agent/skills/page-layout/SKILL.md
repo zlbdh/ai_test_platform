@@ -1,87 +1,87 @@
 ---
 name: page-layout
 description: |
-  页面布局设计专家。覆盖网站、APP、小程序、桌面端四大平台的页面结构与布局策略。
-  提供 CSS Grid/Flexbox 布局模板、响应式断点策略、安全区域适配、
-  导航模式选型、常见页面类型布局方案，以及各平台特有的布局约束。
+  Page layout design specialist covering page structure and layout strategies for websites, mobile apps, mini programs, and desktop apps.
+  Provides CSS Grid/Flexbox templates, responsive breakpoint strategies, safe-area handling,
+  navigation-pattern selection, common page layouts, and platform-specific constraints.
 
-  使用场景：设计页面结构、选择导航模式、处理响应式适配、
-  解决安全区域问题、实现特定页面类型（Dashboard/Landing/Feed 等）的布局时。
+  Use when designing page structure, choosing navigation patterns, implementing responsive layouts,
+  handling safe areas, or building specific page types such as dashboards, landing pages, and feeds.
 ---
 
-# 页面布局设计专家
+# Page Layout Design Specialist
 
-覆盖四大平台：网站 · APP · 小程序 · 桌面端。
+Covers four platforms: websites · mobile apps · mini programs · desktop apps.
 
-> 与 `ui-design-system` 互补：该 Skill 负责配色/字体/动画/风格，本 Skill 专注于**页面结构与空间组织**。
+> Complements `ui-design-system`: that skill handles colors, typography, animation, and style; this skill focuses on **page structure and spatial organization**.
 
 ---
 
-# AI 工作流
+# AI Workflow
 
-## Step 1: 确定平台与页面类型
+## Step 1: Identify the Platform and Page Type
 
 ```text
-目标平台？              页面类型？
-├─ 🌐 网站             ├─ Landing Page / 营销页
-├─ 📱 APP (iOS/Android) ├─ Dashboard / 管理后台
-├─ 🔷 小程序            ├─ 列表 / Feed 流
-├─ 🖥️ 桌面端           ├─ 详情页 / 表单页
-└─ 📐 跨平台            ├─ 电商 / 商品展示
-                        └─ 内容/博客/文档
+Target platform?        Page type?
+├─ 🌐 Website           ├─ Landing / marketing page
+├─ 📱 iOS/Android app   ├─ Dashboard / administration
+├─ 🔷 Mini program     ├─ List / feed
+├─ 🖥️ Desktop app      ├─ Detail / form page
+└─ 📐 Cross-platform   ├─ E-commerce / product catalog
+                        └─ Content / blog / documentation
 ```
 
-## Step 2: 选择布局模式（查下方布局决策树）
-## Step 3: 应用平台规范（查下方平台章节）
-## Step 4: 实现响应式适配（查下方响应式策略）
-## Step 5: 执行交付检查清单
+## Step 2: Choose a Layout Pattern (See the Decision Tree Below)
+## Step 3: Apply Platform Conventions (See Platform Sections Below)
+## Step 4: Implement Responsive Behavior (See Responsive Strategies Below)
+## Step 5: Complete the Delivery Checklist
 
 ---
 
-# CRITICAL — 布局必须遵守
+# CRITICAL — Mandatory Layout Rules
 
-| 规则 | 做法 | 不要 |
+| Rule | Do | Avoid |
 |------|------|------|
-| 用 Grid 做页面骨架 | `display: grid` 定义主区域 | 用 float/position 做整体布局 |
-| 用 Flexbox 做组件内部 | `display: flex` 排列子元素 | Grid 嵌 Grid 处理一维排列 |
-| 安全区域必须适配 | `env(safe-area-inset-*)` | 忽略刘海/圆角/底部指示条 |
-| 内容不超出视口 | `overflow` + `max-width` | 出现水平滚动条 |
-| 底部操作栏固定 | `position: fixed/sticky` + padding-bottom | 被虚拟键盘遮挡 |
-| 语义化区域标签 | `<header>/<nav>/<main>/<aside>/<footer>` | 全部用 `<div>` |
-| 触摸目标 ≥ 44pt | 按钮/链接可点击面积足够 | 紧凑排列无间距 |
+| Grid for page structure | Define main regions with `display: grid` | Overall layouts built with float/position |
+| Flexbox inside components | Arrange children with `display: flex` | Nested grids for one-dimensional arrangements |
+| Handle safe areas | Use `env(safe-area-inset-*)` | Ignoring notches, rounded corners, or home indicators |
+| Keep content within the viewport | Use `overflow` + `max-width` | Horizontal overflow |
+| Fix bottom action bars | Use `position: fixed/sticky` + padding-bottom | Bars hidden by the virtual keyboard |
+| Semantic region elements | Use `<header>/<nav>/<main>/<aside>/<footer>` | Using `<div>` for everything |
+| Touch targets ≥ 44pt | Provide sufficient button/link hit areas | Dense controls without spacing |
 
 ---
 
-# 一、布局决策树
+# 1. Layout Decision Tree
 
 ```text
-需要几个维度排列？
+How many layout dimensions are needed?
 │
-├─ 二维（行+列） → CSS Grid
-│   ├─ 页面骨架（Header/Sidebar/Main/Footer）
-│   ├─ 商品网格 / 卡片网格
-│   ├─ Bento Grid / 仪表盘
-│   └─ 图片画廊 / Masonry
+├─ Two (rows + columns) → CSS Grid
+│   ├─ Page structure (Header/Sidebar/Main/Footer)
+│   ├─ Product or card grids
+│   ├─ Bento grids / dashboards
+│   └─ Image galleries / masonry
 │
-├─ 一维（行 或 列） → Flexbox
-│   ├─ 导航栏（水平排列）
-│   ├─ 列表项（图标+文字+箭头）
-│   ├─ 按钮组（水平间距）
-│   ├─ 表单（纵向排列）
-│   └─ 居中对齐
+├─ One (rows or columns) → Flexbox
+│   ├─ Navigation bars (horizontal)
+│   ├─ List items (icon + text + arrow)
+│   ├─ Button groups (horizontal spacing)
+│   ├─ Forms (vertical)
+│   └─ Center alignment
 │
-└─ 文档流 → 正常流 + max-width
-    ├─ 博客文章
-    └─ 长表单
+└─ Document flow → Normal flow + max-width
+    ├─ Blog posts
+    └─ Long forms
 ```
 
 ---
 
-# 二、网站 / Web 应用布局
+# 2. Website / Web App Layouts
 
-## 2.1 页面类型速查
+## 2.1 Page Type Reference
 
-### Landing Page（单列流式）
+### Landing Page (Single-Column Flow)
 ```css
 .landing {
   display: flex;
@@ -94,10 +94,10 @@ description: |
   padding: 80px 24px;
   margin: 0 auto;
 }
-/* 典型结构: Hero → 功能介绍 → 社会证明 → CTA → FAQ → Footer */
+/* Typical structure: Hero → Features → Social proof → CTA → FAQ → Footer */
 ```
 
-### Dashboard（侧栏+内容区）
+### Dashboard (Sidebar + Content)
 ```css
 .dashboard {
   display: grid;
@@ -112,10 +112,10 @@ description: |
 .dashboard-header  { grid-area: header; }
 .dashboard-main    { grid-area: main; padding: 24px; overflow-y: auto; }
 
-/* 折叠侧栏 */
+/* Collapsed sidebar */
 .dashboard.collapsed { grid-template-columns: 64px 1fr; }
 
-/* 移动端：侧栏变抽屉 */
+/* Mobile: sidebar becomes a drawer */
 @media (max-width: 768px) {
   .dashboard { grid-template-columns: 1fr; grid-template-areas: "header" "main"; }
   .dashboard-sidebar { position: fixed; left: -260px; transition: left 0.3s; z-index: 100; }
@@ -123,7 +123,7 @@ description: |
 }
 ```
 
-### 商品网格（自适应列数）
+### Product Grid (Adaptive Column Count)
 ```css
 .product-grid {
   display: grid;
@@ -131,7 +131,7 @@ description: |
   gap: 24px;
   padding: 24px;
 }
-/* 无需媒体查询，自动响应 */
+/* Responsive without media queries */
 ```
 
 ### Bento Grid
@@ -156,7 +156,7 @@ description: |
 }
 ```
 
-### 博客 / 文档（居中+侧边 TOC）
+### Blog / Documentation (Centered Content + Sidebar TOC)
 ```css
 .article-layout {
   display: grid;
@@ -165,7 +165,7 @@ description: |
 .article-layout > * { grid-column: 2; }
 .article-layout > .full-bleed { grid-column: 1 / -1; }
 
-/* 带 TOC 侧栏 */
+/* With a TOC sidebar */
 @media (min-width: 1200px) {
   .article-with-toc {
     grid-template-columns: 1fr min(720px, 100%) 240px;
@@ -175,45 +175,45 @@ description: |
 }
 ```
 
-## 2.2 导航模式选型
+## 2.2 Choosing Navigation Patterns
 
-| 模式 | 适合场景 | 项目数 | CSS 关键 |
+| Pattern | Best for | Item count | Key CSS |
 |------|---------|--------|---------|
-| 水平导航栏 | 企业官网/Landing | 3-7 | `flex + justify-content` |
-| 侧边栏导航 | Dashboard/管理后台 | 5-20+ | `grid-template-columns` |
-| 汉堡菜单 | 移动端/项目多 | 5-15 | `position:fixed + transform` |
-| Tab 切换 | 内容分类 | 2-5 | `flex + border-bottom` |
-| 面包屑 | 多级层次 | -- | `flex + gap + ::before` |
+| Horizontal navigation | Company sites/landing pages | 3–7 | `flex + justify-content` |
+| Sidebar navigation | Dashboards/administration | 5–20+ | `grid-template-columns` |
+| Hamburger menu | Mobile/many items | 5–15 | `position:fixed + transform` |
+| Tabs | Content categories | 2–5 | `flex + border-bottom` |
+| Breadcrumbs | Multiple hierarchy levels | -- | `flex + gap + ::before` |
 
-## 2.3 响应式断点策略
+## 2.3 Responsive Breakpoint Strategy
 
 ```css
-/* 移动优先（推荐） */
-/* 基础样式 = 手机  */
-@media (min-width: 640px)  { /* 大手机/小平板 */ }
-@media (min-width: 768px)  { /* 平板竖屏     */ }
-@media (min-width: 1024px) { /* 笔记本       */ }
-@media (min-width: 1280px) { /* 桌面显示器    */ }
-@media (min-width: 1536px) { /* 大屏/2K      */ }
+/* Mobile first (recommended) */
+/* Base styles = phone */
+@media (min-width: 640px)  { /* Large phones/small tablets */ }
+@media (min-width: 768px)  { /* Portrait tablets */ }
+@media (min-width: 1024px) { /* Laptops */ }
+@media (min-width: 1280px) { /* Desktop monitors */ }
+@media (min-width: 1536px) { /* Large/2K displays */ }
 ```
 
 ```css
-/* Container Queries（组件级响应式，2025推荐） */
+/* Container queries (component-level responsiveness, recommended in 2025) */
 .card-container { container-type: inline-size; }
 
 @container (min-width: 400px) {
-  .card { flex-direction: row; /* 水平布局 */ }
+  .card { flex-direction: row; /* Horizontal layout */ }
 }
 @container (max-width: 399px) {
-  .card { flex-direction: column; /* 垂直堆叠 */ }
+  .card { flex-direction: column; /* Vertical stack */ }
 }
 ```
 
-## 2.4 间距系统
+## 2.4 Spacing System
 
 ```css
 :root {
-  /* 4px 基数间距 */
+  /* Spacing based on 4px increments */
   --space-1:  4px;   --space-2:  8px;
   --space-3:  12px;  --space-4:  16px;
   --space-5:  20px;  --space-6:  24px;
@@ -221,39 +221,39 @@ description: |
   --space-12: 48px;  --space-16: 64px;
   --space-20: 80px;  --space-24: 96px;
 
-  /* 页面内边距 */
+  /* Page padding */
   --page-padding: clamp(16px, 4vw, 80px);
 
-  /* 内容最大宽度 */
-  --max-width-sm: 640px;   /* 博客正文 */
-  --max-width-md: 960px;   /* 通常内容 */
-  --max-width-lg: 1200px;  /* 宽版内容 */
-  --max-width-xl: 1440px;  /* 超宽版面 */
+  /* Maximum content widths */
+  --max-width-sm: 640px;   /* Blog body */
+  --max-width-md: 960px;   /* Standard content */
+  --max-width-lg: 1200px;  /* Wide content */
+  --max-width-xl: 1440px;  /* Extra-wide layout */
 }
 ```
 
 ---
 
-# 三、移动端 APP 布局
+# 3. Mobile App Layouts
 
-## 3.1 iOS vs Android 布局对比
+## 3.1 iOS vs. Android Layout Comparison
 
-| 维度 | iOS (HIG) | Android (Material 3) |
+| Dimension | iOS (HIG) | Android (Material 3) |
 |------|-----------|---------------------|
-| **导航栏高度** | 44pt (Large Title: 96pt) | 64dp (TopAppBar) |
-| **底栏高度** | 49pt + safe-area | 80dp |
-| **底栏项数** | 2-5（推荐≤5） | 3-5（推荐3-4） |
-| **状态栏** | 47pt（刘海屏） | 24dp |
-| **触摸最小** | 44×44pt | 48×48dp |
-| **边距** | 16pt | 16dp |
-| **标题风格** | Large Title 可折叠 | 居中/左对齐 |
-| **返回方式** | ← 按钮 + 右滑手势 | 系统返回 + ← 按钮 |
+| **Navigation bar height** | 44pt (Large Title: 96pt) | 64dp (TopAppBar) |
+| **Bottom bar height** | 49pt + safe-area | 80dp |
+| **Bottom bar items** | 2–5 (recommend ≤5) | 3–5 (recommend 3–4) |
+| **Status bar** | 47pt (notched display) | 24dp |
+| **Minimum touch target** | 44×44pt | 48×48dp |
+| **Margins** | 16pt | 16dp |
+| **Title style** | Collapsible Large Title | Centered/left-aligned |
+| **Back navigation** | ← button + swipe right | System back + ← button |
 
-## 3.2 安全区域适配
+## 3.2 Safe-Area Handling
 
-### CSS 方案（WebView / Hybrid）
+### CSS (WebView / Hybrid)
 ```css
-/* 必须在 viewport 中设置 */
+/* Required viewport setting */
 /* <meta name="viewport" content="..., viewport-fit=cover"> */
 
 :root {
@@ -263,60 +263,60 @@ description: |
   --sar: env(safe-area-inset-right);
 }
 
-/* 页面顶部适配 */
+/* Top safe-area handling */
 .app-header {
   padding-top: calc(var(--space-4) + var(--sat));
 }
 
-/* 底部固定栏适配 */
+/* Fixed bottom bar safe-area handling */
 .bottom-nav {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
   padding-bottom: calc(12px + var(--sab));
-  /* 最小高度保证可点击 */
+  /* Minimum height keeps the target tappable */
   min-height: calc(56px + var(--sab));
 }
 
-/* 底部弹窗适配 */
+/* Bottom sheet safe-area handling */
 .bottom-sheet {
   padding-bottom: calc(var(--space-6) + var(--sab));
   border-radius: 20px 20px 0 0;
 }
 ```
 
-### React Native 方案
+### React Native
 ```jsx
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
-// 方式1：整页包裹
+// Method 1: wrap the entire page
 <SafeAreaView style={{ flex: 1 }}>{children}</SafeAreaView>
 
-// 方式2：精确控制
+// Method 2: precise control
 function MyScreen() {
   const insets = useSafeAreaInsets();
   return (
     <View style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}>
-      {/* 内容 */}
+      {/* Content */}
     </View>
   );
 }
 ```
 
-### Flutter 方案
+### Flutter
 ```dart
 Scaffold(
   body: SafeArea(
     child: YourContent(),
   ),
-  bottomNavigationBar: BottomNav(), // 自动适配
+  bottomNavigationBar: BottomNav(), // Automatic safe-area handling
 )
 ```
 
-## 3.3 APP 常见页面布局
+## 3.3 Common App Page Layouts
 
-### 列表页（Feed / Timeline）
+### List Page (Feed / Timeline)
 ```css
 .feed-page {
   display: flex;
@@ -331,7 +331,7 @@ Scaffold(
 .feed-content {
   flex: 1;
   overflow-y: auto;
-  -webkit-overflow-scrolling: touch; /* iOS 惯性滚动 */
+  -webkit-overflow-scrolling: touch; /* iOS momentum scrolling */
 }
 .feed-bottom {
   flex-shrink: 0;
@@ -339,19 +339,19 @@ Scaffold(
 }
 ```
 
-### Tab 切换页
+### Tabbed Page
 ```css
 .tab-page {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  height: 100dvh; /* 动态视口高度，排除虚拟键盘 */
+  height: 100dvh; /* Dynamic viewport height, excluding the virtual keyboard */
 }
 .tab-header { flex-shrink: 0; }
 .tab-content {
   flex: 1;
   overflow: hidden;
-  /* 横向滑动切换 */
+  /* Switch with horizontal swipes */
   display: flex;
   scroll-snap-type: x mandatory;
   overflow-x: auto;
@@ -363,19 +363,19 @@ Scaffold(
 }
 ```
 
-### 聊天页
+### Chat Page
 ```css
 .chat-page {
   display: flex;
   flex-direction: column;
-  height: 100dvh; /* 重要：使用 dvh 适配键盘 */
+  height: 100dvh; /* Important: use dvh for keyboard adaptation */
 }
 .chat-header { flex-shrink: 0; padding-top: var(--sat); }
 .chat-messages {
   flex: 1;
   overflow-y: auto;
   display: flex;
-  flex-direction: column-reverse; /* 新消息在底部 */
+  flex-direction: column-reverse; /* New messages at the bottom */
   padding: 16px;
 }
 .chat-input {
@@ -386,10 +386,10 @@ Scaffold(
 }
 ```
 
-## 3.4 手势与滑动布局
+## 3.4 Gestures and Swipe Layouts
 
 ```css
-/* 左滑操作 */
+/* Swipe-left actions */
 .swipe-item {
   position: relative;
   overflow: hidden;
@@ -405,9 +405,9 @@ Scaffold(
   transform: translateX(0);
 }
 
-/* 下拉刷新区域 */
+/* Pull-to-refresh region */
 .pull-to-refresh {
-  margin-top: -60px; /* 隐藏区域 */
+  margin-top: -60px; /* Hidden region */
   height: 60px;
   display: flex;
   align-items: center;
@@ -418,34 +418,34 @@ Scaffold(
 
 ---
 
-# 四、小程序布局
+# 4. Mini Program Layouts
 
-## 4.1 核心约束
+## 4.1 Core Constraints
 
-| 维度 | 微信规范 | 说明 |
+| Dimension | WeChat convention | Description |
 |------|---------|------|
-| **设计稿宽度** | 750rpx | 1rpx = 屏幕宽度/750 |
-| **导航栏** | 128rpx + 胶囊按钮 | 右上角胶囊不可自定义 |
-| **Tab Bar** | ≤5 项，高度 98rpx | 可自定义样式 |
-| **栅格** | 24列 | 官方推荐 |
-| **触摸区** | ≥ 75×75rpx | 防误触 |
-| **状态栏** | `wx.getSystemInfo` | 不同机型高度不同 |
+| **Design width** | 750rpx | 1rpx = screen width / 750 |
+| **Navigation bar** | 128rpx + capsule button | Upper-right capsule cannot be customized |
+| **Tab bar** | ≤5 items, 98rpx high | Custom styles allowed |
+| **Grid** | 24 columns | Official recommendation |
+| **Touch area** | ≥75×75rpx | Prevent accidental taps |
+| **Status bar** | `wx.getSystemInfo` | Height varies by device |
 
-## 4.2 rpx 常用尺寸
+## 4.2 Common rpx Sizes
 
 ```text
-设计稿(750px)  →  rpx    →  iPhone6(375pt)
-750px         →  750rpx →  375pt (满宽)
-375px         →  375rpx →  187.5pt (半宽)
+Design (750px) → rpx    → iPhone 6 (375pt)
+750px         → 750rpx → 375pt (full width)
+375px         → 375rpx → 187.5pt (half width)
 32px          →  32rpx  →  16pt
-28px          →  28rpx  →  14pt (最小正文)
-24px          →  24rpx  →  12pt (辅助文字)
+28px          → 28rpx  → 14pt (minimum body text)
+24px          → 24rpx  → 12pt (secondary text)
 ```
 
-## 4.3 自定义导航栏
+## 4.3 Custom Navigation Bars
 
 ```css
-/* 自定义导航栏（需设置 navigationStyle: "custom"） */
+/* Custom navigation bar (requires navigationStyle: "custom") */
 .custom-nav {
   position: fixed;
   top: 0;
@@ -454,81 +454,81 @@ Scaffold(
   z-index: 999;
 }
 .custom-nav-statusbar {
-  /* 高度由 wx.getSystemInfo().statusBarHeight 动态设定 */
+  /* Height set dynamically from wx.getSystemInfo().statusBarHeight */
 }
 .custom-nav-titlebar {
-  height: 88rpx; /* 标题栏固定高度 */
+  height: 88rpx; /* Fixed title-bar height */
   display: flex;
   align-items: center;
-  padding: 0 200rpx 0 32rpx; /* 右侧留出胶囊按钮空间 */
+  padding: 0 200rpx 0 32rpx; /* Reserve room for the capsule button on the right */
 }
 ```
 
-## 4.4 胶囊按钮适配
+## 4.4 Capsule Button Positioning
 
 ```javascript
-// 获取胶囊按钮位置
+// Get the capsule button's position
 const menuRect = wx.getMenuButtonBoundingClientRect()
 // { top, bottom, left, right, width, height }
 
-// 计算导航栏高度
+// Calculate navigation bar height
 const sysInfo = wx.getSystemInfoSync()
 const statusBarHeight = sysInfo.statusBarHeight
 const navBarHeight = (menuRect.top - statusBarHeight) * 2 + menuRect.height
-// 页面内容从 statusBarHeight + navBarHeight 开始
+// Page content begins at statusBarHeight + navBarHeight
 ```
 
-## 4.5 安全区域
+## 4.5 Safe Areas
 
 ```css
-/* 底部安全区适配 */
+/* Bottom safe-area handling */
 .mini-bottom-bar {
   padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
 }
 
-/* 全面屏适配 */
+/* Edge-to-edge display handling */
 page {
   padding-bottom: constant(safe-area-inset-bottom); /* iOS < 11.2 */
   padding-bottom: env(safe-area-inset-bottom);       /* iOS >= 11.2 */
 }
 ```
 
-## 4.6 小程序常见页面结构
+## 4.6 Common Mini Program Page Structure
 
 ```text
 ┌─────────────────────────┐
-│     状态栏 (系统)         │ ← statusBarHeight
+│     Status bar (system)   │ ← statusBarHeight
 ├─────────────────────────┤
-│  ← 标题  ···     [胶囊] │ ← 自定义导航栏
+│  ← Title  ···  [Capsule] │ ← Custom navigation bar
 ├─────────────────────────┤
 │                         │
-│     可滚动内容区          │ ← scroll-view 或 页面滚动
+│     Scrollable content   │ ← scroll-view or page scrolling
 │                         │
 ├─────────────────────────┤
 │  Tab1  Tab2  Tab3  Tab4 │ ← TabBar (98rpx)
 ├─────────────────────────┤
-│     安全区域              │ ← safe-area-inset-bottom
+│     Safe area            │ ← safe-area-inset-bottom
 └─────────────────────────┘
 ```
 
 ---
 
-# 五、桌面端布局
+# 5. Desktop Layouts
 
-## 5.1 桌面端特有考虑
+## 5.1 Desktop-Specific Considerations
 
-| 维度 | 规范 |
+| Dimension | Convention |
 |------|------|
-| **最小窗口** | 800×600 或 1024×600 |
-| **侧栏宽度** | 200-300px（可拖拽调整） |
-| **可折叠面板** | 支持折叠/展开侧栏 |
-| **多面板** | 主面板 + 详情面板 + 属性面板 |
-| **鼠标 hover** | 充分利用 hover 态 |
-| **右键菜单** | 上下文操作 |
-| **快捷键** | Ctrl+S 保存等 |
-| **窗口标题栏** | 可自定义 (frameless) |
+| **Minimum window** | 800×600 or 1024×600 |
+| **Sidebar width** | 200–300px (resizable by dragging) |
+| **Collapsible panels** | Support sidebar collapse/expand |
+| **Multiple panels** | Main + detail + properties panels |
+| **Mouse hover** | Make full use of hover states |
+| **Context menus** | Contextual actions |
+| **Keyboard shortcuts** | Ctrl+S to save, etc. |
+| **Window title bar** | Can be customized (frameless) |
 
-## 5.2 经典三栏布局（IDE/邮件客户端风格）
+## 5.2 Classic Three-Column Layout (IDE/Email Client)
 
 ```css
 .desktop-app {
@@ -543,7 +543,7 @@ page {
   overflow: hidden;
 }
 
-/* 拖拽调整面板宽度 */
+/* Drag to resize panel widths */
 .resize-handle {
   width: 4px;
   cursor: col-resize;
@@ -555,11 +555,11 @@ page {
 }
 ```
 
-## 5.3 自定义标题栏（Electron/Tauri）
+## 5.3 Custom Title Bars (Electron/Tauri)
 
 ```css
 .custom-titlebar {
-  -webkit-app-region: drag; /* 可拖拽移动窗口 */
+  -webkit-app-region: drag; /* Drag to move the window */
   height: 36px;
   display: flex;
   align-items: center;
@@ -568,21 +568,21 @@ page {
   user-select: none;
 }
 .custom-titlebar button {
-  -webkit-app-region: no-drag; /* 按钮可点击 */
+  -webkit-app-region: no-drag; /* Keep buttons clickable */
 }
 
-/* macOS 红绿灯按钮预留 */
+/* Reserve space for macOS traffic-light controls */
 .titlebar-macos { padding-left: 80px; }
-/* Windows 关闭按钮预留 */
+/* Reserve space for the Windows close button */
 .titlebar-windows { padding-right: 140px; }
 ```
 
-## 5.4 桌面端响应窗口大小
+## 5.4 Responding to Desktop Window Sizes
 
 ```css
-/* 桌面应用内的响应式 */
+/* Responsive behavior within desktop apps */
 .desktop-app {
-  /* 窄窗口：隐藏列表面板 */
+  /* Narrow window: hide the list panel */
   &.narrow {
     grid-template-columns: var(--sidebar-w) 1fr;
     grid-template-areas:
@@ -590,7 +590,7 @@ page {
       "sidebar  detail"
       "status   status";
   }
-  /* 极窄：侧栏变图标模式 */
+  /* Very narrow window: use an icon-only sidebar */
   &.compact {
     grid-template-columns: 48px 1fr;
   }
@@ -599,56 +599,56 @@ page {
 
 ---
 
-# 六、通用布局工具箱
+# 6. General Layout Toolkit
 
-## 6.1 居中方案速查
+## 6.1 Centering Reference
 
 ```css
-/* Flex 居中（最常用） */
+/* Flex centering (most common) */
 .center-flex { display: flex; justify-content: center; align-items: center; }
 
-/* Grid 居中（最简洁） */
+/* Grid centering (most concise) */
 .center-grid { display: grid; place-items: center; }
 
-/* 绝对定位居中 */
+/* Absolute-position centering */
 .center-abs { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
 
-/* 文本垂直居中 */
+/* Vertical text centering */
 .center-text { display: flex; align-items: center; min-height: 48px; }
 ```
 
-## 6.2 常用 Flex 模式
+## 6.2 Common Flex Patterns
 
 ```css
-/* 两端对齐（导航栏常用） */
+/* Space-between alignment (common for navigation bars) */
 .flex-between { display: flex; justify-content: space-between; align-items: center; }
 
-/* 等间距排列 */
+/* Equal spacing */
 .flex-even { display: flex; gap: 16px; flex-wrap: wrap; }
 
-/* 尾部推齐（设置行: 标题...值>） */
+/* Push trailing content right (settings row: label...value>) */
 .flex-push-end { display: flex; align-items: center; gap: 8px; }
 .flex-push-end > :last-child { margin-left: auto; }
 
-/* Flex 换行网格 */
+/* Wrapping flex grid */
 .flex-grid { display: flex; flex-wrap: wrap; gap: 16px; }
 .flex-grid > * { flex: 1 1 calc(33.333% - 16px); min-width: 200px; }
 ```
 
-## 6.3 常用 Grid 模式
+## 6.3 Common Grid Patterns
 
 ```css
-/* 自适应列数（最实用） */
+/* Adaptive column count (most practical) */
 .auto-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(var(--min-col, 250px), 1fr));
   gap: var(--grid-gap, 24px);
 }
 
-/* 固定比例网格 */
+/* Fixed-ratio grid */
 .ratio-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
 
-/* 等高卡片 */
+/* Equal-height cards */
 .equal-height-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -657,10 +657,10 @@ page {
 }
 ```
 
-## 6.4 粘性布局
+## 6.4 Sticky Layouts
 
 ```css
-/* 粘性头部 */
+/* Sticky header */
 .sticky-header {
   position: sticky;
   top: 0;
@@ -669,65 +669,65 @@ page {
   background: rgba(255, 255, 255, 0.8);
 }
 
-/* 粘性侧栏 */
+/* Sticky sidebar */
 .sticky-sidebar {
   position: sticky;
-  top: 80px; /* header 高度 */
+  top: 80px; /* Header height */
   align-self: start;
   max-height: calc(100vh - 100px);
   overflow-y: auto;
 }
 ```
 
-## 6.5 视口单位速查
+## 6.5 Viewport Unit Reference
 
 ```css
-/* 100vh 问题：移动端地址栏导致跳动 */
-/* 解决方案：使用新视口单位 */
+/* 100vh issue: mobile address bars cause layout jumps */
+/* Solution: use newer viewport units */
 .full-height {
-  height: 100vh;            /* 回退 */
-  height: 100dvh;           /* 动态视口高度（推荐） */
+  height: 100vh;            /* Fallback */
+  height: 100dvh;           /* Dynamic viewport height (recommended) */
 }
 
-/* svh = 最小视口高度（地址栏展开） */
-/* lvh = 最大视口高度（地址栏隐藏） */
-/* dvh = 动态视口高度（实时） */
+/* svh = smallest viewport height (address bar expanded) */
+/* lvh = largest viewport height (address bar hidden) */
+/* dvh = dynamic viewport height (live) */
 ```
 
 ---
 
-# 七、交付检查清单
+# 7. Delivery Checklist
 
-## 通用检查
-- [ ] 无水平溢出（所有断点下无横向滚动条）
-- [ ] 内容区有 `max-width` 限制（正文 ≤ 720px）
-- [ ] 使用语义化 HTML 标签
-- [ ] 交互元素触摸区 ≥ 44px
-- [ ] 页面主轴使用 `min-height: 100dvh`
-- [ ] 间距使用 4px 倍数
+## General Checks
+- [ ] No horizontal overflow at any breakpoint
+- [ ] Content has a `max-width` limit (body text ≤720px)
+- [ ] Semantic HTML elements are used
+- [ ] Interactive touch targets are ≥44px
+- [ ] The page's main axis uses `min-height: 100dvh`
+- [ ] Spacing uses multiples of 4px
 
-## 响应式检查
-- [ ] 375px（小手机）布局正常
-- [ ] 768px（平板）布局正常
-- [ ] 1024px（笔记本）布局正常
-- [ ] 1440px（桌面）布局正常
+## Responsive Checks
+- [ ] Correct layout at 375px (small phone)
+- [ ] Correct layout at 768px (tablet)
+- [ ] Correct layout at 1024px (laptop)
+- [ ] Correct layout at 1440px (desktop)
 
-## 平台特有检查
+## Platform-Specific Checks
 
 ### APP
-- [ ] safe-area 适配（顶部 + 底部）
-- [ ] 底部 Tab Bar 避开安全区
-- [ ] 键盘弹起不遮挡输入框（使用 dvh）
-- [ ] 下拉刷新区域预留
+- [ ] Top and bottom safe areas are handled
+- [ ] The bottom tab bar avoids the safe area
+- [ ] The keyboard does not cover inputs (use dvh)
+- [ ] Space is reserved for pull-to-refresh
 
-### 小程序
-- [ ] 胶囊按钮区域无遮挡
-- [ ] 自定义导航栏高度动态计算
-- [ ] rpx 单位使用正确
-- [ ] TabBar 不超过 5 项
+### Mini Programs
+- [ ] The capsule button area is unobstructed
+- [ ] Custom navigation bar height is calculated dynamically
+- [ ] rpx units are used correctly
+- [ ] The tab bar has no more than five items
 
-### 桌面端
-- [ ] 最小窗口尺寸下布局不崩
-- [ ] 侧栏可折叠/展开
-- [ ] 自定义标题栏拖拽区域正确
-- [ ] macOS/Windows 窗口控制按钮不被遮挡
+### Desktop
+- [ ] Layout remains usable at the minimum window size
+- [ ] Sidebar supports collapse/expand
+- [ ] Custom title-bar drag regions are correct
+- [ ] macOS/Windows window controls are unobstructed

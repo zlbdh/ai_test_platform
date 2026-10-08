@@ -1,10 +1,10 @@
-# 图标代码模板
+# Icon Code Templates
 
-各框架的图标使用模板和最佳实践。
+Framework-specific icon templates and best practices.
 
-## React + Lucide（推荐）
+## React + Lucide (Recommended)
 
-### 基本使用
+### Basic Usage
 
 ```tsx
 import { Home, Search, Settings } from 'lucide-react'
@@ -20,12 +20,12 @@ function Navbar() {
 }
 ```
 
-### 动态图标映射（✅ Tree-Shaking 安全）
+### Dynamic Icon Mapping (✅ Safe for Tree Shaking)
 
 ```tsx
 import { Home, Search, Settings, User, Bell, type LucideIcon } from 'lucide-react'
 
-// ✅ 显式映射，只打包使用到的图标
+// ✅ Explicit mapping bundles only the icons in use
 const ICON_MAP: Record<string, LucideIcon> = {
   home:     Home,
   search:   Search,
@@ -47,15 +47,15 @@ function DynamicIcon({ name, size = 20, className }: IconProps) {
 }
 ```
 
-### ❌ 错误做法
+### ❌ Incorrect Approach
 
 ```tsx
-// ❌ 导入全部图标，无法 Tree-Shaking
+// ❌ Importing every icon prevents tree shaking
 import * as Icons from 'lucide-react'
-const Icon = Icons[iconName]  // 全部 1400+ 图标都会被打包！
+const Icon = Icons[iconName]  // All 1,400+ icons will be bundled!
 ```
 
-### 带颜色和事件
+### Colors and Events
 
 ```tsx
 <Heart
@@ -67,7 +67,7 @@ const Icon = Icons[iconName]  // 全部 1400+ 图标都会被打包！
 
 ## Vue + Lucide
 
-### Vue 基本使用
+### Basic Vue Usage
 
 ```vue
 <script setup>
@@ -83,7 +83,7 @@ import { Home, Search, Settings } from 'lucide-vue-next'
 </template>
 ```
 
-### 动态组件
+### Dynamic Components
 
 ```vue
 <script setup>
@@ -101,39 +101,39 @@ const IconComponent = computed(() => iconMap[props.iconName])
 </template>
 ```
 
-## 纯 HTML + Iconify CDN
+## Plain HTML + Iconify CDN
 
-### Web Component 方式
+### Web Components
 
 ```html
-<!-- 引入 Iconify -->
+<!-- Load Iconify -->
 <script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
 
-<!-- 使用图标 -->
+<!-- Use an icon -->
 <span class="iconify" data-icon="lucide:home" data-width="24"></span>
 <span class="iconify" data-icon="mdi:settings" data-width="24" style="color: #333;"></span>
 <span class="iconify" data-icon="heroicons:bell" data-width="24"></span>
 ```
 
-### SVG URL 直接引用
+### Direct SVG URLs
 
 ```html
-<!-- 通过 Iconify API 获取 SVG -->
-<img src="https://api.iconify.design/lucide/home.svg?color=%23333&height=24" alt="首页" width="24" height="24" />
+<!-- Retrieve an SVG through the Iconify API -->
+<img src="https://api.iconify.design/lucide/home.svg?color=%23333&height=24" alt="Home" width="24" height="24" />
 
-<!-- 导航栏示例 -->
+<!-- Navigation example -->
 <nav style="display: flex; gap: 16px; align-items: center;">
-  <img src="https://api.iconify.design/lucide/home.svg?height=20" alt="首页" />
-  <img src="https://api.iconify.design/lucide/search.svg?height=20" alt="搜索" />
-  <img src="https://api.iconify.design/lucide/bell.svg?height=20" alt="通知" />
-  <img src="https://api.iconify.design/lucide/user.svg?height=20" alt="用户" />
+  <img src="https://api.iconify.design/lucide/home.svg?height=20" alt="Home" />
+  <img src="https://api.iconify.design/lucide/search.svg?height=20" alt="Search" />
+  <img src="https://api.iconify.design/lucide/bell.svg?height=20" alt="Notifications" />
+  <img src="https://api.iconify.design/lucide/user.svg?height=20" alt="User" />
 </nav>
 ```
 
-### 内联 SVG
+### Inline SVG
 
 ```html
-<!-- 最佳性能（无网络请求），但代码较多 -->
+<!-- Best performance (no network request), with more markup -->
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
      fill="none" stroke="currentColor" stroke-width="2"
      stroke-linecap="round" stroke-linejoin="round">
@@ -142,14 +142,14 @@ const IconComponent = computed(() => iconMap[props.iconName])
 </svg>
 ```
 
-## React + Heroicons（Tailwind 项目）
+## React + Heroicons (Tailwind Projects)
 
 ```tsx
-// 线条风格（Outline）
+// Outline style
 import { HomeIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
-// 实心风格（Solid）
+// Solid style
 import { HomeIcon, MagnifyingGlassIcon } from '@heroicons/react/24/solid'
-// 迷你风格（Mini）
+// Mini style
 import { HomeIcon, MagnifyingGlassIcon } from '@heroicons/react/20/solid'
 
 function Example() {
@@ -157,7 +157,7 @@ function Example() {
 }
 ```
 
-## React + Phosphor（多粗细）
+## React + Phosphor (Multiple Weights)
 
 ```tsx
 import { House, MagnifyingGlass, Gear } from '@phosphor-icons/react'
@@ -165,10 +165,10 @@ import { House, MagnifyingGlass, Gear } from '@phosphor-icons/react'
 function Example() {
   return (
     <>
-      {/* 支持 6 种粗细 */}
+      {/* Six supported weights */}
       <House size={24} weight="thin" />
       <House size={24} weight="light" />
-      <House size={24} weight="regular" />    {/* 默认 */}
+      <House size={24} weight="regular" />    {/* Default */}
       <House size={24} weight="bold" />
       <House size={24} weight="fill" />
       <House size={24} weight="duotone" />
@@ -177,7 +177,7 @@ function Example() {
 }
 ```
 
-## 图标按钮通用模式
+## Reusable Icon Button Pattern
 
 ```tsx
 interface IconButtonProps {

@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 
 /**
- * Iconify API 图标搜索辅助脚本
+ * Iconify API icon search helper
  *
- * 用法:
+ * Usage:
  *   node iconify-search.js search <query> [--prefix <prefix>] [--limit <n>]
  *   node iconify-search.js get <icon_id> [--color <color>] [--size <px>]
  *   node iconify-search.js collections [--search <keyword>]
  *
- * 示例:
+ * Examples:
  *   node iconify-search.js search arrow
  *   node iconify-search.js search home --prefix lucide --limit 5
  *   node iconify-search.js get lucide:home
@@ -21,7 +21,7 @@ import https from 'https';
 const API_BASE = 'https://api.iconify.design';
 
 // ============================================================
-// HTTP 请求工具
+// HTTP request helper
 // ============================================================
 
 function fetchJSON(url) {
@@ -33,7 +33,7 @@ function fetchJSON(url) {
                 try {
                     resolve(JSON.parse(data));
                 } catch (e) {
-                    reject(new Error(`JSON 解析失败: ${data.substring(0, 200)}`));
+                    reject(new Error(`Failed to parse JSON: ${data.substring(0, 200)}`));
                 }
             });
         }).on('error', reject);
@@ -51,7 +51,7 @@ function fetchText(url) {
 }
 
 // ============================================================
-// 命令实现
+// Command implementations
 // ============================================================
 
 async function searchIcons(query, options = {}) {
@@ -59,23 +59,23 @@ async function searchIcons(query, options = {}) {
     let url = `${API_BASE}/search?query=${encodeURIComponent(query)}&limit=${limit}`;
     if (prefix) url += `&prefix=${prefix}`;
 
-    console.log(`🔍 搜索: "${query}"${prefix ? ` (在 ${prefix} 中)` : ''}\n`);
+    console.log(`🔍 Search: "${query}"${prefix ? ` (in ${prefix})` : ''}\n`);
 
     const data = await fetchJSON(url);
 
     if (!data.icons || data.icons.length === 0) {
-        console.log('❌ 未找到匹配的图标');
+        console.log('❌ No matching icons found');
         return;
     }
 
-    console.log(`✅ 找到 ${data.total || data.icons.length} 个结果:\n`);
+    console.log(`✅ Found ${data.total || data.icons.length} results:\n`);
 
     data.icons.forEach((icon, i) => {
         console.log(`  ${String(i + 1).padStart(3)}. ${icon}`);
     });
 
-    console.log(`\n💡 获取图标: node iconify-search.js get ${data.icons[0]}`);
-    console.log(`💡 预览: ${API_BASE}/${data.icons[0].replace(':', '/')}.svg`);
+    console.log(`\n💡 Get an icon: node iconify-search.js get ${data.icons[0]}`);
+    console.log(`💡 Preview: ${API_BASE}/${data.icons[0].replace(':', '/')}.svg`);
 }
 
 async function getIcon(iconId, options = {}) {
@@ -83,7 +83,7 @@ async function getIcon(iconId, options = {}) {
     const [prefix, name] = iconId.split(':');
 
     if (!prefix || !name) {
-        console.error('❌ 图标 ID 格式错误，应为 "prefix:name"，例如 "lucide:home"');
+        console.error('❌ Invalid icon ID; use "prefix:name", such as "lucide:home"');
         process.exit(1);
     }
 
@@ -93,31 +93,31 @@ async function getIcon(iconId, options = {}) {
     if (size) params.push(`height=${size}`);
     if (params.length) url += `?${params.join('&')}`;
 
-    console.log(`📦 获取图标: ${iconId}\n`);
+    console.log(`📦 Get icon: ${iconId}\n`);
 
     const svg = await fetchText(url);
 
     if (svg.includes('404') || svg.includes('not found')) {
-        console.error('❌ 图标不存在');
+        console.error('❌ Icon not found');
         process.exit(1);
     }
 
-    console.log('SVG 代码:');
+    console.log('SVG code:');
     console.log('─'.repeat(50));
     console.log(svg);
     console.log('─'.repeat(50));
 
-    // React 组件代码
+    // React component code
     const componentName = name.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join('');
-    console.log(`\nReact 用法:  import { ${componentName} } from 'lucide-react'`);
-    console.log(`HTML 用法:   <img src="${url}" alt="${name}" />`);
+    console.log(`\nReact usage: import { ${componentName} } from 'lucide-react'`);
+    console.log(`HTML usage:  <img src="${url}" alt="${name}" />`);
     console.log(`Iconify:     <span class="iconify" data-icon="${iconId}"></span>`);
-    console.log(`预览 URL:    ${url}`);
+    console.log(`Preview URL: ${url}`);
 }
 
 async function listCollections(options = {}) {
     const { search } = options;
-    console.log('📚 图标集合列表\n');
+    console.log('📚 Icon collections\n');
 
     const data = await fetchJSON(`${API_BASE}/collections`);
 
@@ -132,7 +132,7 @@ async function listCollections(options = {}) {
     entries.sort((a, b) => (b[1].total || 0) - (a[1].total || 0));
     const top = entries.slice(0, 30);
 
-    console.log(`${'前缀'.padEnd(20)} ${'名称'.padEnd(30)} ${'图标数'}`);
+    console.log(`${'Prefix'.padEnd(20)} ${'Name'.padEnd(30)} ${'Icons'}`);
     console.log('─'.repeat(65));
 
     top.forEach(([prefix, info]) => {
@@ -140,11 +140,11 @@ async function listCollections(options = {}) {
         console.log(`${prefix.padEnd(20)} ${name.padEnd(30)} ${info.total || '?'}`);
     });
 
-    console.log(`\n共 ${entries.length} 个集合`);
+    console.log(`\n${entries.length} collections total`);
 }
 
 // ============================================================
-// CLI 参数解析
+// Parse CLI arguments
 // ============================================================
 
 function parseArgs(args) {
@@ -167,14 +167,14 @@ async function main() {
 
     if (!command) {
         console.log(`
-Iconify 图标搜索工具
+Iconify Icon Search Tool
 
-用法:
+Usage:
   node iconify-search.js search <query> [--prefix <prefix>] [--limit <n>]
   node iconify-search.js get <icon_id> [--color <color>] [--size <px>]
   node iconify-search.js collections [--search <keyword>]
 
-示例:
+Examples:
   node iconify-search.js search arrow
   node iconify-search.js search home --prefix lucide --limit 5
   node iconify-search.js get lucide:home
@@ -196,11 +196,11 @@ Iconify 图标搜索工具
                 await listCollections({ search: args.search });
                 break;
             default:
-                console.error(`❌ 未知命令: ${command}`);
+                console.error(`❌ Unknown command: ${command}`);
                 process.exit(1);
         }
     } catch (err) {
-        console.error(`❌ 错误: ${err.message}`);
+        console.error(`❌ Error: ${err.message}`);
         process.exit(1);
     }
 }

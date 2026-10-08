@@ -1,162 +1,162 @@
 ---
 name: ui-design-system
 description: |
-  全能 UI 设计系统。覆盖网站、APP、小程序、桌面端四大平台的 UI 设计，
-  包含配色方案、字体排版、CSS 动画、布局模式、组件规范、响应式策略。
+  Comprehensive UI design system for websites, mobile apps, mini programs, and desktop apps,
+  covering color palettes, typography, CSS animation, layout patterns, component conventions, and responsive strategies.
 
-  使用场景：任何 UI 设计相关任务——选配色方案、选字体、做动画效果、
-  设计网站/APP/小程序/桌面应用界面、处理响应式适配、生成设计系统时。
+  Use for any UI design task: choosing palettes or fonts, creating animations,
+  designing website/app/mini program/desktop interfaces, handling responsive behavior, or generating a design system.
 ---
 
-# 全能 UI 设计系统
+# Comprehensive UI Design System
 
-一站式解决所有 UI 设计问题：配色 · 字体 · 动画 · 网站 · APP · 小程序 · 桌面端。
-
----
-
-# AI 工作流：收到 UI 请求时按此流程执行
-
-## Step 1: 分析需求
-
-从用户请求中提取关键信息：
-- **产品类型**: SaaS、电商、Dashboard、Landing Page、博客、Portfolio……
-- **行业**: 科技、医疗、金融、教育、餐饮、游戏……
-- **风格关键词**: 极简、高端、活泼、暗黑、毛玻璃……
-- **目标平台**: 网站 / APP(iOS/Android) / 小程序 / 桌面端
-
-## Step 2: 生成设计系统（查下方决策树）
-
-根据 Step 1 的信息，组合推荐：配色 + 字体 + 设计风格 + 布局模式。
-
-## Step 3: 选择平台规范
-
-根据目标平台，查阅对应章节获取平台特有规范。
-
-## Step 4: 生成代码 + 交付检查
-
-编写代码后，**必须**执行末尾的 Pre-Delivery Checklist。
+A single resource for UI design: color · typography · animation · websites · mobile apps · mini programs · desktop apps.
 
 ---
 
-# Quick Reference（按优先级排序）
+# AI Workflow: Follow This Process for UI Requests
 
-## CRITICAL — 必须遵守
+## Step 1: Analyze Requirements
 
-| 规则 | 做法 | 不要 |
+Extract key information from the user's request:
+- **Product type**: SaaS, e-commerce, dashboard, landing page, blog, portfolio, etc.
+- **Industry**: technology, healthcare, finance, education, food service, gaming, etc.
+- **Style keywords**: minimal, premium, playful, dark, frosted glass, etc.
+- **Target platform**: website / iOS or Android app / mini program / desktop app
+
+## Step 2: Generate a Design System (See the Decision Tree Below)
+
+Use Step 1 to recommend a combination of palette, typography, visual style, and layout pattern.
+
+## Step 3: Choose Platform Conventions
+
+Consult the relevant section for platform-specific conventions.
+
+## Step 4: Generate Code and Verify Delivery
+
+After writing code, you **must** complete the Pre-Delivery Checklist at the end.
+
+---
+
+# Quick Reference (Ordered by Priority)
+
+## CRITICAL — Mandatory
+
+| Rule | Do | Avoid |
 |------|------|------|
-| 色彩对比度 | 正文 ≥ 4.5:1，大文本 ≥ 3:1 | 浅灰文字在白色背景上 |
-| 焦点状态 | 所有交互元素有可见 focus ring | 去掉 outline 不补偿 |
-| 触摸目标 | ≥ 44×44pt (iOS) / 48×48dp (Android) | 小于 40px 的可点击元素 |
-| cursor 指针 | 所有可点击元素加 `cursor: pointer` | 交互元素用默认光标 |
-| alt 文本 | 有意义的图片写描述性 alt | alt="" 用于装饰图 |
-| 键盘导航 | Tab 顺序与视觉顺序一致 | tabindex 随意乱设 |
-| 表单标签 | 每个 input 关联 label | 无 label 的孤立输入框 |
+| Color contrast | Body text ≥4.5:1, large text ≥3:1 | Light gray text on white |
+| Focus states | Visible focus rings on all interactive elements | Removing outlines without a replacement |
+| Touch targets | ≥44×44pt (iOS) / 48×48dp (Android) | Clickable targets below 40px |
+| Cursor | Add `cursor: pointer` to all clickable elements | Default cursor on interactive elements |
+| Alt text | Descriptive alt text for meaningful images | Reserve alt="" for decorative images |
+| Keyboard navigation | Tab order matches visual order | Arbitrary tabindex values |
+| Form labels | Associate every input with a label | Isolated, unlabeled inputs |
 
-## HIGH — 强烈建议
+## HIGH — Strongly Recommended
 
-| 规则 | 做法 | 不要 |
+| Rule | Do | Avoid |
 |------|------|------|
-| 响应式 | 测试 375px / 768px / 1024px / 1440px | 只在一个尺寸测试 |
-| 图片优化 | WebP + srcset + `loading="lazy"` | 无压缩大图直接用 |
-| 内容跳动 | 异步内容预留占位空间 | 加载完成后布局抖动 |
-| reduced-motion | 检查 `prefers-reduced-motion` | 忽略动画敏感用户 |
-| z-index 管理 | 定义层级 (10/20/30/50/999) | 随意写 z-index: 99999 |
-| 语义化标签 | `header/nav/main/section/footer` | 全部用 div 嵌套 |
-| 正文字号 | 移动端 ≥ 16px | 中文正文 < 14px |
+| Responsive layout | Test 375px / 768px / 1024px / 1440px | Testing only one size |
+| Image optimization | WebP + srcset + `loading="lazy"` | Large, uncompressed images |
+| Layout stability | Reserve space for asynchronous content | Layout shifts after loading |
+| Reduced motion | Check `prefers-reduced-motion` | Ignoring motion-sensitive users |
+| z-index management | Define levels (10/20/30/50/999) | Arbitrary z-index: 99999 |
+| Semantic elements | `header/nav/main/section/footer` | Nested divs for everything |
+| Body font size | Mobile ≥16px | Body text below 14px |
 
-## MEDIUM — 应当遵循
+## MEDIUM — Recommended
 
-| 规则 | 做法 | 不要 |
+| Rule | Do | Avoid |
 |------|------|------|
-| 行高 | 正文 1.5-1.75（中文 1.7-1.8） | 行高 < 1.4 |
-| 行宽 | 限制 60-75ch | 满屏宽度正文 |
-| 动画时长 | 微交互 150-300ms | 超过 1s 的过渡 |
-| 动画属性 | 只动画 transform/opacity | 动画 width/height/margin |
-| 图标 | SVG 图标 (Heroicons/Lucide) | Emoji 当图标 🎨🚀⚙️ |
-| hover 反馈 | 颜色/阴影变化 + smooth transition | 无反馈或瞬间变化 |
-| 配色数量 | ≤ 5 色，60-30-10 法则 | 页面超过 7 种颜色 |
+| Line height | Body text 1.5–1.75 | Line height below 1.4 |
+| Line length | Limit to 60–75ch | Full-screen-width body text |
+| Animation duration | Microinteractions 150–300ms | Transitions longer than 1s |
+| Animated properties | Animate only transform/opacity | Animating width/height/margin |
+| Icons | SVG icons (Heroicons/Lucide) | Emoji as icons 🎨🚀⚙️ |
+| Hover feedback | Color/shadow changes + smooth transitions | No feedback or abrupt changes |
+| Palette size | ≤5 colors, 60-30-10 rule | More than seven page colors |
 
 ---
 
-# 设计系统推理决策树
+# Design System Decision Tree
 
 ```text
-产品类型 → 风格 → 配色 → 字体
+Product type → Style → Palette → Typography
 
-SaaS/科技
-├─ 风格: Dark Premium / Glassmorphism / Minimalism
-├─ 配色: 靛蓝#6366F1 + 紫#8B5CF6 + 青#06B6D4
-├─ 字体: Inter + 思源黑体
-└─ 布局: Dashboard(侧栏+顶栏) / Landing(单列Hero)
+SaaS/technology
+├─ Style: Dark Premium / Glassmorphism / Minimalism
+├─ Palette: indigo #6366F1 + purple #8B5CF6 + cyan #06B6D4
+├─ Typography: Inter + Source Sans 3
+└─ Layout: dashboard (sidebar + top bar) / landing page (single-column hero)
 
-电商
-├─ 风格: Minimalism + 鲜明色彩
-├─ 配色: 红#EF4444 + 橙#F97316 + 金#FBBF24
-├─ 字体: Poppins + 思源黑体
-└─ 布局: Grid 商品网格 + 筛选侧栏
+E-commerce
+├─ Style: Minimalism + vivid colors
+├─ Palette: red #EF4444 + orange #F97316 + gold #FBBF24
+├─ Typography: Poppins + Source Sans 3
+└─ Layout: product grid + filter sidebar
 
-医疗健康
-├─ 风格: 柔和极简 / Soft UI
-├─ 配色: 绿#10B981 + 青#06B6D4 + 蓝#3B82F6
-├─ 字体: Plus Jakarta Sans + 思源黑体
-└─ 布局: 卡片式信息展示
+Healthcare
+├─ Style: soft minimalism / Soft UI
+├─ Palette: green #10B981 + cyan #06B6D4 + blue #3B82F6
+├─ Typography: Plus Jakarta Sans + Source Sans 3
+└─ Layout: card-based information
 
-金融理财
-├─ 风格: Dark Premium / 稳重极简
-├─ 配色: 深蓝#1E40AF + 墨绿#0F766E + 琥珀#D97706
-├─ 字体: Inter + 思源黑体
-└─ 布局: Dashboard(数据图表密集)
+Finance
+├─ Style: Dark Premium / understated minimalism
+├─ Palette: dark blue #1E40AF + deep green #0F766E + amber #D97706
+├─ Typography: Inter + Source Sans 3
+└─ Layout: dashboard with dense data charts
 
-教育学习
-├─ 风格: 明亮友好 / Claymorphism
-├─ 配色: 蓝#3B82F6 + 紫#8B5CF6 + 琥珀#F59E0B
-├─ 字体: Nunito + 思源黑体
-└─ 布局: 卡片式课程网格
+Education
+├─ Style: bright and friendly / Claymorphism
+├─ Palette: blue #3B82F6 + purple #8B5CF6 + amber #F59E0B
+├─ Typography: Nunito + Source Sans 3
+└─ Layout: course-card grid
 
-社交/娱乐
-├─ 风格: 渐变 + 动效丰富
-├─ 配色: 粉#EC4899 + 紫#8B5CF6 + 青#06B6D4
-├─ 字体: Poppins + 思源黑体
-└─ 布局: Feed流 / 瀑布流
+Social/entertainment
+├─ Style: gradients + rich motion
+├─ Palette: pink #EC4899 + purple #8B5CF6 + cyan #06B6D4
+├─ Typography: Poppins + Source Sans 3
+└─ Layout: feed / masonry
 
-文创/品牌
-├─ 风格: Brutalism / 大胆排版
-├─ 配色: 紫#7C3AED + 玫红#DB2777 + 金#F59E0B
-├─ 字体: Playfair Display + 思源宋体
-└─ 布局: Bento Grid / 全屏大图
+Creative/brand
+├─ Style: Brutalism / bold typography
+├─ Palette: purple #7C3AED + magenta #DB2777 + gold #F59E0B
+├─ Typography: Playfair Display + Source Serif 4
+└─ Layout: bento grid / full-screen imagery
 
-游戏
-├─ 风格: 暗黑 + 霓虹 + 渐变
-├─ 配色: 紫#7C3AED + 粉#EC4899 + 荧光青#22D3EE
-├─ 字体: Space Grotesk + 思源黑体
-└─ 布局: 沉浸式全屏
+Gaming
+├─ Style: dark + neon + gradients
+├─ Palette: purple #7C3AED + pink #EC4899 + neon cyan #22D3EE
+├─ Typography: Space Grotesk + Source Sans 3
+└─ Layout: immersive full screen
 ```
 
 ---
 
-# 配色方案
+# Color Palettes
 
-## 行业配色速查
+## Industry Palette Reference
 
-| 行业 | 主色 | 辅助色 | 强调色 |
+| Industry | Primary | Secondary | Accent |
 |------|------|--------|--------|
-| SaaS/科技 | `#6366F1` 靛蓝 | `#8B5CF6` 紫 | `#06B6D4` 青 |
-| 电商 | `#EF4444` 红 | `#F97316` 橙 | `#FBBF24` 金 |
-| 医疗 | `#10B981` 绿 | `#06B6D4` 青 | `#3B82F6` 蓝 |
-| 金融 | `#1E40AF` 深蓝 | `#0F766E` 墨绿 | `#D97706` 琥珀 |
-| 教育 | `#3B82F6` 蓝 | `#8B5CF6` 紫 | `#F59E0B` 琥珀 |
-| 社交 | `#EC4899` 粉 | `#8B5CF6` 紫 | `#06B6D4` 青 |
-| 企业 | `#1E3A5F` 藏蓝 | `#64748B` 灰蓝 | `#0EA5E9` 天蓝 |
-| 餐饮 | `#DC2626` 红 | `#EA580C` 橘红 | `#65A30D` 绿 |
-| 旅游 | `#0284C7` 天蓝 | `#059669` 翠绿 | `#F59E0B` 暖黄 |
-| 文创 | `#7C3AED` 紫 | `#DB2777` 玫红 | `#F59E0B` 金 |
-| 母婴 | `#F9A8D4` 粉 | `#93C5FD` 浅蓝 | `#FCD34D` 浅黄 |
-| 游戏 | `#7C3AED` 紫 | `#EC4899` 粉 | `#22D3EE` 荧光青 |
-| 政务 | `#DC2626` 红 | `#1D4ED8` 蓝 | `#CA8A04` 金 |
+| SaaS/technology | `#6366F1` Indigo | `#8B5CF6` Purple | `#06B6D4` Cyan |
+| E-commerce | `#EF4444` Red | `#F97316` Orange | `#FBBF24` Gold |
+| Healthcare | `#10B981` Green | `#06B6D4` Cyan | `#3B82F6` Blue |
+| Finance | `#1E40AF` Dark blue | `#0F766E` Deep green | `#D97706` Amber |
+| Education | `#3B82F6` Blue | `#8B5CF6` Purple | `#F59E0B` Amber |
+| Social | `#EC4899` Pink | `#8B5CF6` Purple | `#06B6D4` Cyan |
+| Enterprise | `#1E3A5F` Navy | `#64748B` Slate | `#0EA5E9` Sky blue |
+| Food service | `#DC2626` Red | `#EA580C` Red-orange | `#65A30D` Green |
+| Travel | `#0284C7` Sky blue | `#059669` Emerald | `#F59E0B` Warm yellow |
+| Creative | `#7C3AED` Purple | `#DB2777` Magenta | `#F59E0B` Gold |
+| Family/baby | `#F9A8D4` Pink | `#93C5FD` Light blue | `#FCD34D` Light yellow |
+| Gaming | `#7C3AED` Purple | `#EC4899` Pink | `#22D3EE` Neon cyan |
+| Government | `#DC2626` Red | `#1D4ED8` Blue | `#CA8A04` Gold |
 
-配色比例: `60% 背景 | 30% 辅助 | 10% 强调(CTA)`
+Color proportions: `60% background | 30% secondary | 10% accent (CTA)`
 
-## 中性色 + 暗色模式
+## Neutrals and Dark Mode
 
 ```css
 :root {
@@ -184,7 +184,7 @@ SaaS/科技
 ```
 
 ```javascript
-// 主题切换
+// Switch themes
 function toggleTheme() {
   const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
   document.documentElement.setAttribute('data-theme', next);
@@ -197,28 +197,28 @@ document.documentElement.setAttribute('data-theme', saved);
 
 ---
 
-# 字体排版
+# Typography
 
-## 字体搭配速查
+## Font Pairing Reference
 
-| 类型 | 西文 | 中文 | Google Fonts |
+| Type | Primary | Complementary | Google Fonts |
 |------|------|------|-------------|
-| **通用首选** | Inter | 思源黑体 Noto Sans SC | `Inter\|Noto+Sans+SC` |
-| SaaS | Plus Jakarta Sans | 思源黑体 | `Plus+Jakarta+Sans\|Noto+Sans+SC` |
-| 极客 | Space Grotesk | 思源黑体 | `Space+Grotesk\|Noto+Sans+SC` |
-| 高端品牌 | Playfair Display | 思源宋体 Noto Serif SC | `Playfair+Display\|Noto+Serif+SC` |
-| 古典文艺 | Cormorant Garamond | 霞鹜文楷 LXGW WenKai | `Cormorant+Garamond\|LXGW+WenKai` |
-| 友好圆润 | Poppins | 思源黑体 | `Poppins\|Noto+Sans+SC` |
-| 儿童教育 | Nunito | 圆体 | `Nunito` |
+| **General default** | Inter | Source Sans 3 | `Inter\|Source+Sans+3` |
+| SaaS | Plus Jakarta Sans | Source Sans 3 | `Plus+Jakarta+Sans\|Source+Sans+3` |
+| Technical | Space Grotesk | Source Sans 3 | `Space+Grotesk\|Source+Sans+3` |
+| Premium brands | Playfair Display | Source Serif 4 | `Playfair+Display\|Source+Serif+4` |
+| Classical/literary | Cormorant Garamond | Lora | `Cormorant+Garamond\|Lora` |
+| Friendly/rounded | Poppins | Source Sans 3 | `Poppins\|Source+Sans+3` |
+| Children's education | Nunito | Rounded sans serif | `Nunito` |
 
-导入模板:
+Import template:
 ```html
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;700&display=swap" rel="stylesheet">
 ```
 
-## 字号系统 (Major Third 1.25)
+## Type Scale (Major Third 1.25)
 
 ```css
 :root {
@@ -226,7 +226,7 @@ document.documentElement.setAttribute('data-theme', saved);
   --text-lg: 1.25rem;  --text-xl: 1.563rem; --text-2xl: 1.953rem;
   --text-3xl: 2.441rem; --text-4xl: 3.052rem;
 }
-/* 响应式 clamp */
+/* Responsive clamp */
 :root {
   --text-base: clamp(0.875rem, 0.8rem + 0.25vw, 1rem);
   --text-lg:   clamp(1.1rem, 1rem + 0.35vw, 1.25rem);
@@ -235,11 +235,11 @@ document.documentElement.setAttribute('data-theme', saved);
 }
 ```
 
-## 排版重置
+## Typography Reset
 
 ```css
 html { font-size: 16px; -webkit-font-smoothing: antialiased; }
-body { font-family: 'Inter','Noto Sans SC',system-ui,sans-serif; line-height: 1.7; color: var(--color-text); }
+body { font-family: 'Inter','Source Sans 3',system-ui,sans-serif; line-height: 1.7; color: var(--color-text); }
 h1,h2,h3,h4 { line-height: 1.3; font-weight: 700; letter-spacing: -0.02em; }
 h1 { font-size: var(--text-4xl); } h2 { font-size: var(--text-3xl); }
 h3 { font-size: var(--text-2xl); } h4 { font-size: var(--text-xl); }
@@ -249,9 +249,9 @@ code,pre { font-family: 'JetBrains Mono','Fira Code',monospace; font-size: 0.875
 
 ---
 
-# CSS 动画
+# CSS Animation
 
-## 按钮
+## Buttons
 
 ```css
 .btn-float { transition: transform 0.2s, box-shadow 0.2s; }
@@ -263,13 +263,13 @@ code,pre { font-family: 'JetBrains Mono','Fira Code',monospace; font-size: 0.875
 .btn-slide:hover::before { transform: translateX(0); }
 ```
 
-## 卡片
+## Cards
 
 ```css
 .card-hover { transition: transform 0.3s, box-shadow 0.3s; }
 .card-hover:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.15); }
 
-/* 交错入场 */
+/* Staggered entrance */
 .card-enter { opacity:0; transform:translateY(20px); animation:fadeInUp 0.5s ease forwards; }
 @keyframes fadeInUp { to { opacity:1; transform:translateY(0); } }
 .card-enter:nth-child(1) { animation-delay:0s; }
@@ -277,7 +277,7 @@ code,pre { font-family: 'JetBrains Mono','Fira Code',monospace; font-size: 0.875
 .card-enter:nth-child(3) { animation-delay:0.2s; }
 ```
 
-## 加载
+## Loading
 
 ```css
 .skeleton {
@@ -290,7 +290,7 @@ code,pre { font-family: 'JetBrains Mono','Fira Code',monospace; font-size: 0.875
 @keyframes spin { to{transform:rotate(360deg)} }
 ```
 
-## 反馈
+## Feedback
 
 ```css
 .shake { animation: shake 0.4s; }
@@ -300,7 +300,7 @@ code,pre { font-family: 'JetBrains Mono','Fira Code',monospace; font-size: 0.875
 @keyframes slideInRight { from{transform:translateX(100%);opacity:0} }
 ```
 
-## 滚动触发
+## Scroll Triggers
 
 ```javascript
 const observer = new IntersectionObserver((entries) => {
@@ -314,7 +314,7 @@ document.querySelectorAll('.animate-on-scroll').forEach(el => observer.observe(e
 .animate-on-scroll.visible { opacity:1; transform:translateY(0); }
 ```
 
-## prefers-reduced-motion（必须）
+## prefers-reduced-motion (Required)
 
 ```css
 @media (prefers-reduced-motion: reduce) {
@@ -324,21 +324,21 @@ document.querySelectorAll('.animate-on-scroll').forEach(el => observer.observe(e
 
 ---
 
-# 网站 / Web 应用
+# Websites / Web Apps
 
-## 布局决策树
+## Layout Decision Tree
 
 ```text
-页面类型？
-├─ Landing Page → 单列流式: Hero + 特性 + 社会证明 + CTA
-├─ SaaS 主页 → 全宽分区: 导航 + Hero + 功能卡片 + 定价 + FAQ
-├─ Dashboard → 侧边栏(240px) + 顶栏(64px) + 内容区
-├─ 博客/文档 → 居中内容(max-width:720px) + 右侧 TOC
-├─ 电商 → Grid 商品网格 + 筛选侧栏
+Page type?
+├─ Landing page → Single-column flow: hero + features + social proof + CTA
+├─ SaaS home → Full-width sections: navigation + hero + feature cards + pricing + FAQ
+├─ Dashboard → Sidebar (240px) + top bar (64px) + content
+├─ Blog/documentation → Centered content (max-width:720px) + right-side TOC
+├─ E-commerce → Product grid + filter sidebar
 └─ Portfolio → Bento Grid / Masonry
 ```
 
-## 布局模板
+## Layout Templates
 
 ```css
 /* Dashboard */
@@ -349,60 +349,60 @@ document.querySelectorAll('.animate-on-scroll').forEach(el => observer.observe(e
 .bento-grid { display:grid; grid-template-columns:repeat(4,1fr); grid-auto-rows:200px; gap:16px; }
 .bento-item.large { grid-column:span 2; grid-row:span 2; }
 
-/* 博客居中 */
+/* Centered blog */
 .article-layout { display:grid; grid-template-columns:1fr min(720px,calc(100%-2rem)) 1fr; }
 .article-layout>* { grid-column:2; }
 .article-layout>.full-width { grid-column:1/-1; }
 ```
 
-## 组件
+## Components
 
 ```css
-/* 表单输入 */
+/* Form inputs */
 .form-input { padding:10px 14px; border:1px solid var(--color-border); border-radius:8px; font-size:1rem; outline:none; transition:border-color 0.2s,box-shadow 0.2s; }
 .form-input:focus { border-color:var(--color-accent); box-shadow:0 0 0 3px rgba(99,102,241,0.15); }
 
-/* 模态框 */
+/* Dialogs */
 .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.5); display:grid; place-items:center; z-index:1000; }
 .modal-content { background:var(--color-bg); border-radius:16px; padding:24px; width:min(480px,calc(100vw-32px)); max-height:85vh; overflow-y:auto; }
 ```
 
-## 设计风格
+## Visual Styles
 
-| 风格 | CSS 关键 | 适合 |
+| Style | Key CSS | Best for |
 |------|---------|------|
-| Glassmorphism | `backdrop-filter:blur(20px); background:rgba(255,255,255,0.1)` | 科技、创意 |
-| Neumorphism | `box-shadow:8px 8px 16px #d1d1d1,-8px -8px 16px #fff` | 极简 |
-| Brutalism | `border:3px solid #000; box-shadow:4px 4px 0 #000` | 艺术 |
-| Dark Premium | 深色bg + 渐变强调 + 微光 | SaaS |
-| Minimalism | 大留白 + 少装饰 + 高对比 | 企业 |
+| Glassmorphism | `backdrop-filter:blur(20px); background:rgba(255,255,255,0.1)` | Technology, creative products |
+| Neumorphism | `box-shadow:8px 8px 16px #d1d1d1,-8px -8px 16px #fff` | Minimalism |
+| Brutalism | `border:3px solid #000; box-shadow:4px 4px 0 #000` | Art |
+| Dark Premium | Dark background + gradient accents + subtle glow | SaaS |
+| Minimalism | Generous whitespace + little decoration + strong contrast | Enterprise |
 
-## 间距 Token + 断点
+## Spacing Tokens and Breakpoints
 
 ```css
 :root { --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px; --space-6:24px; --space-8:32px; --space-12:48px; --space-16:64px; }
 
-/* 移动优先断点 */
-@media (min-width:640px) {/* 平板竖 */} @media (min-width:768px) {/* 平板横 */}
-@media (min-width:1024px) {/* 笔记本 */} @media (min-width:1280px) {/* 桌面 */}
+/* Mobile-first breakpoints */
+@media (min-width:640px) {/* Portrait tablets */} @media (min-width:768px) {/* Landscape tablets */}
+@media (min-width:1024px) {/* Laptops */} @media (min-width:1280px) {/* Desktop */}
 ```
 
 ---
 
-# 移动端 APP
+# Mobile Apps
 
 ## iOS vs Android
 
-| 维度 | iOS (HIG) | Android (M3) |
+| Dimension | iOS (HIG) | Android (M3) |
 |------|-----------|-------------|
-| 导航 | Tab Bar底部(≤5) | Bottom Nav / Drawer |
-| 返回 | 左上角+边缘右滑 | 系统返回键 |
-| 标题 | Large Title(滚动缩小) | Top App Bar |
-| 弹窗 | Action Sheet(底部) | Bottom Sheet/Dialog |
-| 字体 | SF Pro | Roboto |
-| 触摸最小 | 44×44pt | 48×48dp |
+| Navigation | Bottom tab bar (≤5) | Bottom Nav / Drawer |
+| Back | Upper-left + swipe from left edge | System back button |
+| Title | Large Title (shrinks on scroll) | Top App Bar |
+| Dialog | Bottom action sheet | Bottom Sheet/Dialog |
+| Font | SF Pro | Roboto |
+| Minimum touch target | 44×44pt | 48×48dp |
 
-## 安全区域
+## Safe Areas
 
 ```css
 .safe-page { padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
@@ -418,16 +418,16 @@ document.querySelectorAll('.animate-on-scroll').forEach(el => observer.observe(e
 // <SafeAreaView style={{ flex: 1 }}>{children}</SafeAreaView>
 ```
 
-## 手势
+## Gestures
 
-| 手势 | 操作 | 用途 |
+| Gesture | Action | Usage |
 |------|------|------|
-| 左滑 | 删除/归档 | 列表 |
-| 右滑 | 标记/已读 | 待办 |
-| 下拉 | 刷新 | Pull-to-refresh |
-| 捏合 | 缩放 | 图片/地图 |
+| Swipe left | Delete/archive | Lists |
+| Swipe right | Flag/mark read | Tasks |
+| Pull down | Refresh | Pull-to-refresh |
+| Pinch | Zoom | Images/maps |
 
-## 移动端组件
+## Mobile Components
 
 ```css
 .list-item { display:flex; align-items:center; gap:12px; padding:12px 16px; min-height:48px; border-bottom:0.5px solid var(--color-border); }
@@ -436,29 +436,29 @@ document.querySelectorAll('.animate-on-scroll').forEach(el => observer.observe(e
 
 ---
 
-# 小程序
+# Mini Programs
 
-## 平台差异
+## Platform Differences
 
-| 维度 | 微信 | 支付宝 | 抖音 |
+| Dimension | WeChat | Alipay | Douyin |
 |------|------|--------|------|
-| 规范 | WeUI | Ant Design Mini | 抖音规范 |
-| 标签 | WXML | AXML | TTML |
-| 样式 | WXSS | ACSS | TTSS |
+| Design system | WeUI | Ant Design Mini | Douyin conventions |
+| Markup | WXML | AXML | TTML |
+| Styles | WXSS | ACSS | TTSS |
 
-## rpx 适配
+## rpx Adaptation
 
-`rpx = 屏幕宽度/750` — 设计稿750px上的尺寸直接写rpx
+`rpx = screen width / 750` — use dimensions from a 750px design directly as rpx values.
 
-| 元素 | 推荐 |
+| Element | Recommendation |
 |------|------|
-| 按钮高度 | 88rpx |
-| 列表项 | ≥88rpx |
-| 页面padding | 32rpx |
-| 卡片圆角 | 16rpx |
-| 触摸最小 | 80×80rpx |
+| Button height | 88rpx |
+| List item | ≥88rpx |
+| Page padding | 32rpx |
+| Card radius | 16rpx |
+| Minimum touch target | 80×80rpx |
 
-## 页面模板
+## Page Template
 
 ```xml
 <view class="page">
@@ -470,7 +470,7 @@ document.querySelectorAll('.animate-on-scroll').forEach(el => observer.observe(e
       <view class="grid-item" wx:for="{{menus}}"><image src="{{item.icon}}"/><text>{{item.name}}</text></view>
     </view>
   </scroll-view>
-  <view class="bottom-bar safe-area-bottom"><button class="btn-primary">提交</button></view>
+  <view class="bottom-bar safe-area-bottom"><button class="btn-primary">Submit</button></view>
 </view>
 ```
 
@@ -481,35 +481,35 @@ page{background:#F5F5F5} .page{display:flex;flex-direction:column;min-height:100
 .btn-primary{width:100%;height:88rpx;line-height:88rpx;background:#07C160;color:#fff;border-radius:8rpx;font-size:32rpx;border:none}
 ```
 
-## WeUI 色彩
+## WeUI Colors
 
-微信绿`#07C160` · 链接蓝`#576B95` · 错误红`#FA5151` · 正文`#333` · 次要`#888` · 背景`#F5F5F5`
+WeChat green `#07C160` · Link blue `#576B95` · Error red `#FA5151` · Body `#333` · Secondary `#888` · Background `#F5F5F5`
 
-## 分享卡片
+## Share Cards
 
-好友 5:4 (500×400px) · 朋友圈 1:1 (500×500px)
+Direct shares 5:4 (500×400px) · Moments 1:1 (500×500px)
 
-## 小程序陷阱
+## Mini Program Pitfalls
 
-- swiper **必须**固定高度（height:auto 无效）
-- 不要在 scroll-view 内用 textarea
-- iOS 键盘弹起时 fixed 底部栏会 bug
-- 用 rpx 不用 px
+- swiper **requires** a fixed height; height:auto does not work.
+- Do not put textarea inside scroll-view.
+- Fixed bottom bars can misbehave when the iOS keyboard opens.
+- Use rpx rather than px.
 
 ---
 
-# 桌面端 APP
+# Desktop Apps
 
-## 平台风格
+## Platform Styles
 
-| 维度 | macOS | Windows 11 |
+| Dimension | macOS | Windows 11 |
 |------|-------|-----------|
-| 窗口控制 | 左上角(红黄绿) | 右上角(最小化/最大化/关闭) |
-| 菜单栏 | 全局顶部 | 窗口内 |
-| 字体 | SF Pro 13px | Segoe UI 14px |
-| 动画 | 0.3-0.5s | 0.15-0.3s |
+| Window controls | Upper-left (red/yellow/green) | Upper-right (minimize/maximize/close) |
+| Menu bar | Global, at the top | Inside the window |
+| Font | SF Pro 13px | Segoe UI 14px |
+| Animation | 0.3–0.5s | 0.15–0.3s |
 
-## Electron 标题栏
+## Electron Title Bar
 
 ```css
 .titlebar { display:flex; align-items:center; height:32px; -webkit-app-region:drag; user-select:none; }
@@ -523,7 +523,7 @@ page{background:#F5F5F5} .page{display:flex;flex-direction:column;min-height:100
 new BrowserWindow({ frame:false, titleBarStyle:'hidden', titleBarOverlay:{height:32}, minWidth:800, minHeight:600 });
 ```
 
-## 侧边栏
+## Sidebar
 
 ```css
 .sidebar { width:240px; min-width:240px; background:var(--color-bg-secondary); border-right:1px solid var(--color-border); transition:width 0.2s; }
@@ -533,21 +533,21 @@ new BrowserWindow({ frame:false, titleBarStyle:'hidden', titleBarOverlay:{height
 .sidebar-item.active { background:var(--color-accent); color:white; }
 ```
 
-## 快捷键
+## Keyboard Shortcuts
 
-| 操作 | macOS | Windows |
+| Action | macOS | Windows |
 |------|-------|---------|
-| 保存 | ⌘+S | Ctrl+S |
-| 搜索 | ⌘+F | Ctrl+F |
-| 命令面板 | ⌘+Shift+P | Ctrl+Shift+P |
-| 设置 | ⌘+, | Ctrl+, |
+| Save | ⌘+S | Ctrl+S |
+| Search | ⌘+F | Ctrl+F |
+| Command palette | ⌘+Shift+P | Ctrl+Shift+P |
+| Settings | ⌘+, | Ctrl+, |
 
 ```javascript
 const MOD = navigator.platform.includes('Mac') ? 'metaKey' : 'ctrlKey';
 document.addEventListener('keydown', e => { if(e[MOD]&&e.key==='s'){e.preventDefault();saveFile()} });
 ```
 
-## 右键菜单
+## Context Menus
 
 ```css
 .context-menu { position:fixed; min-width:180px; background:var(--color-bg); border:1px solid var(--color-border); border-radius:8px; box-shadow:0 8px 24px rgba(0,0,0,0.15); padding:4px; z-index:9999; }
@@ -557,40 +557,40 @@ document.addEventListener('keydown', e => { if(e[MOD]&&e.key==='s'){e.preventDef
 
 ---
 
-# Pre-Delivery Checklist（交付前必须验证）
+# Pre-Delivery Checklist (Required Before Delivery)
 
-## 视觉品质
-- [ ] 未使用 Emoji 当图标（用 SVG: Heroicons/Lucide）
-- [ ] 图标尺寸统一（viewBox 24x24）
-- [ ] hover 状态不导致布局偏移
-- [ ] 配色不超过 5 种，符合 60-30-10
+## Visual Quality
+- [ ] SVG icons (Heroicons/Lucide) are used instead of emoji icons
+- [ ] Icon sizes are consistent (24×24 viewBox)
+- [ ] Hover states do not shift layout
+- [ ] Palette has no more than five colors and follows 60-30-10
 
-## 交互
-- [ ] 所有可点击元素有 `cursor: pointer`
-- [ ] hover 有视觉反馈（颜色/阴影变化）
-- [ ] transition 时长 150-300ms
-- [ ] focus 州可见（键盘导航）
+## Interaction
+- [ ] Every clickable element has `cursor: pointer`
+- [ ] Hover provides visual feedback (color/shadow changes)
+- [ ] Transitions last 150–300ms
+- [ ] Focus states are visible for keyboard navigation
 
-## 明暗模式
-- [ ] 浅色模式文字对比度 ≥ 4.5:1
-- [ ] 暗色模式下半透明元素仍可见
-- [ ] 边框在两种模式下都可见
-- [ ] 两种模式都已测试
+## Light and Dark Modes
+- [ ] Light-mode text contrast is ≥4.5:1
+- [ ] Translucent elements remain visible in dark mode
+- [ ] Borders are visible in both modes
+- [ ] Both modes have been tested
 
-## 布局
-- [ ] 响应式: 375px / 768px / 1024px / 1440px
-- [ ] 无水平滚动（移动端）
-- [ ] 固定元素不遮挡内容
-- [ ] 容器 max-width 一致
+## Layout
+- [ ] Responsive at 375px / 768px / 1024px / 1440px
+- [ ] No horizontal scrolling on mobile
+- [ ] Fixed elements do not obscure content
+- [ ] Container max-width values are consistent
 
-## 无障碍
-- [ ] 所有图片有 alt 文本
-- [ ] 表单输入有 label
-- [ ] 颜色不是唯一的信息传达方式
-- [ ] `prefers-reduced-motion` 已处理
+## Accessibility
+- [ ] Every image has alt text
+- [ ] Form inputs have labels
+- [ ] Color is not the only way information is conveyed
+- [ ] `prefers-reduced-motion` is handled
 
-## 平台特有
-- [ ] 移动端: 触摸目标 ≥ 44pt/48dp
-- [ ] 小程序: 使用 rpx 而非 px
-- [ ] 小程序: 安全区域已处理
-- [ ] 桌面端: macOS 窗口控制在左，Windows 在右
+## Platform-Specific Checks
+- [ ] Mobile: touch targets are ≥44pt/48dp
+- [ ] Mini programs: use rpx rather than px
+- [ ] Mini programs: safe areas are handled
+- [ ] Desktop: macOS window controls are on the left, Windows controls on the right

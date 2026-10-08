@@ -1,125 +1,125 @@
 ---
 name: icon-generator
 description: |
-  综合图标生成与管理工具。支持从 200K+ 图标库搜索、中文语义映射、多框架导出（React/Vue/SVG/HTML）、
-  Favicon 全流程生成、自定义 SVG 图标制作。
+  Comprehensive icon generation and management. Search 200K+ icons, map natural-language concepts, export for multiple frameworks (React/Vue/SVG/HTML),
+  generate a full favicon set, and create custom SVG icons.
 
-  使用场景：构建 UI 时需要选择图标、为网站生成 Favicon、创建自定义 SVG 图标、
-  查找 AI/科技品牌图标，或需要图标使用最佳实践指导时。
+  Use when choosing icons for a UI, generating website favicons, creating custom SVG icons,
+  finding AI/technology brand icons, or applying icon best practices.
 ---
 
-# 综合图标生成器
+# Comprehensive Icon Generator
 
-搜索、推荐、创建、导出图标的一站式 Skill。
+A single skill for searching, recommending, creating, and exporting icons.
 
-## 快速参考：中文概念 → 图标
+## Quick Reference: Concepts → Icons
 
-| 概念 | Lucide | Heroicons | 用途 |
+| Concept | Lucide | Heroicons | Usage |
 | ------ | -------- | ----------- | ------ |
-| 首页 | `Home` | `home` | 导航、主页入口 |
-| 搜索 | `Search` | `magnifying-glass` | 搜索栏、全局搜索 |
-| 设置 | `Settings` | `cog-6-tooth` | 系统设置、偏好 |
-| 用户 | `User` | `user` | 个人中心、头像 |
-| 团队 | `Users` | `user-group` | 团队、成员管理 |
-| 通知 | `Bell` | `bell` | 消息提醒、通知中心 |
-| 购物车 | `ShoppingCart` | `shopping-cart` | 电商、结算 |
-| 收藏 | `Heart` | `heart` | 点赞、收藏夹 |
-| 安全 | `Shield` | `shield-check` | 安全设置、权限 |
-| 闪电/快速 | `Zap` | `bolt` | 极速、性能 |
-| 日历 | `Calendar` | `calendar` | 日程、预约 |
-| 时钟 | `Clock` | `clock` | 时间、倒计时 |
-| 邮件 | `Mail` | `envelope` | 邮箱、消息 |
-| 电话 | `Phone` | `phone` | 联系方式 |
-| 位置 | `MapPin` | `map-pin` | 地图、定位 |
-| 下载 | `Download` | `arrow-down-tray` | 文件下载 |
-| 上传 | `Upload` | `arrow-up-tray` | 文件上传 |
-| 编辑 | `Pencil` | `pencil` | 编辑、修改 |
-| 删除 | `Trash2` | `trash` | 删除操作 |
-| 添加 | `Plus` | `plus` | 新增、创建 |
-| 成功 | `CheckCircle` | `check-circle` | 操作成功 |
-| 警告 | `AlertTriangle` | `exclamation-triangle` | 风险提示 |
-| 错误 | `XCircle` | `x-circle` | 操作失败 |
-| 信息 | `Info` | `information-circle` | 提示信息 |
-| 刷新 | `RefreshCw` | `arrow-path` | 刷新、重试 |
-| 筛选 | `Filter` | `funnel` | 过滤、筛选 |
-| 分享 | `Share2` | `share` | 社交分享 |
-| 链接 | `Link` | `link` | 超链接 |
-| 图表 | `BarChart3` | `chart-bar` | 数据统计 |
-| 文件 | `File` | `document` | 文档、文件 |
+| Home | `Home` | `home` | Navigation, home entry |
+| Search | `Search` | `magnifying-glass` | Search bar, global search |
+| Settings | `Settings` | `cog-6-tooth` | System settings, preferences |
+| User | `User` | `user` | Profile, avatar |
+| Team | `Users` | `user-group` | Teams, member management |
+| Notifications | `Bell` | `bell` | Alerts, notification center |
+| Cart | `ShoppingCart` | `shopping-cart` | Shopping, checkout |
+| Favorites | `Heart` | `heart` | Likes, favorites |
+| Security | `Shield` | `shield-check` | Security settings, permissions |
+| Lightning/speed | `Zap` | `bolt` | Speed, performance |
+| Calendar | `Calendar` | `calendar` | Schedules, appointments |
+| Clock | `Clock` | `clock` | Time, countdown |
+| Mail | `Mail` | `envelope` | Email, messages |
+| Phone | `Phone` | `phone` | Contact information |
+| Location | `MapPin` | `map-pin` | Maps, positioning |
+| Download | `Download` | `arrow-down-tray` | File downloads |
+| Upload | `Upload` | `arrow-up-tray` | File uploads |
+| Edit | `Pencil` | `pencil` | Editing, updates |
+| Delete | `Trash2` | `trash` | Deletion |
+| Add | `Plus` | `plus` | Add, create |
+| Success | `CheckCircle` | `check-circle` | Successful actions |
+| Warning | `AlertTriangle` | `exclamation-triangle` | Risk alerts |
+| Error | `XCircle` | `x-circle` | Failed actions |
+| Information | `Info` | `information-circle` | Information messages |
+| Refresh | `RefreshCw` | `arrow-path` | Refresh, retry |
+| Filter | `Filter` | `funnel` | Filtering |
+| Share | `Share2` | `share` | Social sharing |
+| Link | `Link` | `link` | Hyperlinks |
+| Chart | `BarChart3` | `chart-bar` | Data statistics |
+| File | `File` | `document` | Documents, files |
 
-> 完整映射参见 `references/semantic-mapping.md`
+> See `references/semantic-mapping.md` for the complete mapping.
 
-## 图标搜索流程
+## Icon Search Workflow
 
-### 方式一：Iconify API 搜索（推荐）
+### Method 1: Iconify API Search (Recommended)
 
-通过 Iconify REST API 搜索 200,000+ 图标，覆盖 150+ 图标集合：
+Search 200,000+ icons across 150+ collections through the Iconify REST API:
 
 ```bash
-# 搜索图标
+# Search icons
 curl "https://api.iconify.design/search?query=arrow&limit=10"
 
-# 获取特定图标 SVG
+# Get an icon's SVG
 curl "https://api.iconify.design/lucide/home.svg"
 curl "https://api.iconify.design/mdi/home.svg?color=%23333&height=24"
 
-# 获取图标集合列表
+# Get the collection list
 curl "https://api.iconify.design/collections"
 ```
 
-**图标 ID 格式**：`前缀:名称`，例如 `lucide:home`、`mdi:arrow-right`、`heroicons:check`
+**Icon ID format**: `prefix:name`, such as `lucide:home`, `mdi:arrow-right`, or `heroicons:check`.
 
-### 方式二：使用辅助脚本
+### Method 2: Helper Script
 
 ```bash
-# 搜索图标
+# Search icons
 node scripts/iconify-search.js search arrow
 node scripts/iconify-search.js search home --prefix lucide --limit 5
 
-# 获取图标 SVG
+# Get an icon SVG
 node scripts/iconify-search.js get lucide:home
 node scripts/iconify-search.js get mdi:settings --color "#333" --size 24
 ```
 
-### 方式三：AI 品牌图标
+### Method 3: AI Brand Icons
 
-从 lobe-icons 获取 AI/科技品牌图标：
+Get AI/technology brand icons from lobe-icons:
 
 ```bash
-# CDN URL 模式
+# CDN URL pattern
 # SVG: https://raw.githubusercontent.com/lobehub/lobe-icons/refs/heads/master/packages/static-svg/{light|dark}/{name}.svg
 # PNG: https://raw.githubusercontent.com/lobehub/lobe-icons/refs/heads/master/packages/static-png/{light|dark}/{name}.png
 
-# 例如
+# Examples
 curl -o claude.svg "https://raw.githubusercontent.com/lobehub/lobe-icons/refs/heads/master/packages/static-svg/dark/claude.svg"
 ```
 
-常见 AI 图标名：`openai`、`claude`、`gemini`、`chatglm`（智谱）、`moonshot`（月之暗面）
+Common AI icon names: `openai`, `claude`, `gemini`, `chatglm` (Zhipu), `moonshot` (Moonshot AI).
 
-## 图标推荐决策树
+## Icon Recommendation Decision Tree
 
 ```text
-需要什么类型的图标？
-├─ 具体概念/操作 → 查 "中文概念→图标" 映射表
-├─ 行业/业务相关 → 搜索 Iconify API
-├─ AI/科技品牌 → 使用 lobe-icons CDN
-├─ 网站标签图标 → 走 Favicon 生成流程
-└─ 完全自定义 → 手写 SVG 图标
-    ├─ 简单几何形状 → 使用基础 SVG 元素
-    └─ 复杂图案 → 使用 path 元素 + 贝塞尔曲线
+What type of icon is needed?
+├─ Specific concept/action → Consult the concept-to-icon mapping
+├─ Industry/business concept → Search the Iconify API
+├─ AI/technology brand → Use the lobe-icons CDN
+├─ Browser tab icon → Follow the favicon generation workflow
+└─ Fully custom → Write an SVG icon
+    ├─ Simple geometry → Use basic SVG elements
+    └─ Complex shape → Use path elements and Bézier curves
 ```
 
-## 多框架导出模板
+## Framework Export Templates
 
 ### React（Lucide）
 
 ```tsx
 import { Home, Search, Settings, type LucideIcon } from 'lucide-react'
 
-// ✅ 明确映射，支持 Tree-Shaking
+// ✅ Explicit mapping supports tree shaking
 const ICON_MAP: Record<string, LucideIcon> = { Home, Search, Settings }
 
-// 使用
+// Usage
 <Home className="w-5 h-5" />
 ```
 
@@ -134,10 +134,10 @@ import { Home, Search, Settings } from 'lucide-vue-next'
 </template>
 ```
 
-### 纯 HTML + SVG URL
+### Plain HTML + SVG URL
 
 ```html
-<img src="https://api.iconify.design/lucide/home.svg?color=%23333&height=24" alt="首页" />
+<img src="https://api.iconify.design/lucide/home.svg?color=%23333&height=24" alt="Home" />
 ```
 
 ### Iconify Web Component
@@ -147,13 +147,13 @@ import { Home, Search, Settings } from 'lucide-vue-next'
 <span class="iconify" data-icon="lucide:home" data-width="24"></span>
 ```
 
-> 更多模板参见 `references/icon-templates.md`
+> See `references/icon-templates.md` for more templates.
 
-## Favicon 快速生成
+## Quick Favicon Generation
 
-### 1. 创建源 SVG（32×32 viewBox）
+### 1. Create a Source SVG (32×32 viewBox)
 
-**字母类型**：
+**Letter-based**:
 
 ```xml
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
@@ -163,7 +163,7 @@ import { Home, Search, Settings } from 'lucide-vue-next'
 </svg>
 ```
 
-**图形类型**：
+**Shape-based**:
 
 ```xml
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
@@ -173,17 +173,17 @@ import { Home, Search, Settings } from 'lucide-vue-next'
 </svg>
 ```
 
-### 2. 生成全套文件
+### 2. Generate the Full File Set
 
 ```bash
-# 使用 ImageMagick（如已安装）
+# Use ImageMagick if installed
 convert favicon.svg -define icon:auto-resize=16,32 favicon.ico
 convert favicon.svg -resize 180x180 -background "#0066cc" -alpha remove apple-touch-icon.png
 convert favicon.svg -resize 192x192 icon-192.png
 convert favicon.svg -resize 512x512 icon-512.png
 ```
 
-### 3. HTML 集成
+### 3. HTML Integration
 
 ```html
 <link rel="icon" href="/favicon.ico" sizes="32x32">
@@ -192,53 +192,53 @@ convert favicon.svg -resize 512x512 icon-512.png
 <link rel="manifest" href="/site.webmanifest">
 ```
 
-> 完整 Favicon 指南参见 `references/favicon-guide.md`
+> See `references/favicon-guide.md` for the complete favicon guide.
 
-## SVG 图标设计规则
+## SVG Icon Design Rules
 
-### 基本规范
+### Basic Conventions
 
-| 规则 | 说明 |
+| Rule | Description |
 | ------ | ------ |
-| viewBox | 始终使用 `0 0 24 24`（标准图标）或 `0 0 32 32`（Favicon） |
-| 描边 | 使用 `stroke="currentColor"` 继承文字颜色 |
-| 描边宽度 | 线条图标统一 `stroke-width="2"` |
-| 填充 | 线条图标 `fill="none"`，实心图标 `fill="currentColor"` |
-| 圆角 | `stroke-linecap="round"` + `stroke-linejoin="round"` |
+| viewBox | Always use `0 0 24 24` for standard icons or `0 0 32 32` for favicons |
+| Stroke | Use `stroke="currentColor"` to inherit the text color |
+| Stroke width | Use `stroke-width="2"` consistently for outline icons |
+| Fill | Use `fill="none"` for outline icons and `fill="currentColor"` for solid icons |
+| Rounded ends | Use `stroke-linecap="round"` + `stroke-linejoin="round"` |
 
-### 尺寸规范
+### Sizing
 
-| 场景 | 推荐尺寸 | CSS 类 |
+| Context | Recommended size | CSS classes |
 | ------ | ---------- | -------- |
-| 行内文字旁 | 16-20px | `w-4 h-4` / `w-5 h-5` |
-| 卡片/按钮 | 24-32px | `w-6 h-6` / `w-8 h-8` |
-| 英雄区域 | 40-48px | `w-10 h-10` / `w-12 h-12` |
-| 大装饰性 | 64px | `w-16 h-16` |
+| Inline with text | 16–20px | `w-4 h-4` / `w-5 h-5` |
+| Cards/buttons | 24–32px | `w-6 h-6` / `w-8 h-8` |
+| Hero sections | 40–48px | `w-10 h-10` / `w-12 h-12` |
+| Large decorative icons | 64px | `w-16 h-16` |
 
-### ❌ 禁止事项
+### ❌ Prohibited Practices
 
-1. **不要使用 Emoji 代替图标** — Emoji 不可控，跨平台不一致
-2. **不要 `import * as Icons`** — 会导致所有图标打包，破坏 Tree-Shaking
-3. **不要混合使用线条和实心风格** — 同一区域保持视觉一致性
-4. **不要使用硬编码颜色** — 使用 `currentColor` 或 CSS 变量
+1. **Do not replace icons with emoji** — emoji are difficult to control and inconsistent across platforms.
+2. **Do not use `import * as Icons`** — it bundles every icon and defeats tree shaking.
+3. **Do not mix outline and solid styles** — keep each region visually consistent.
+4. **Do not hardcode colors** — use `currentColor` or CSS variables.
 
-## 图标库选择建议
+## Choosing an Icon Library
 
-| 图标库 | 最适合 | 图标数量 | 包名 |
+| Library | Best for | Icon count | Package |
 | -------- | -------- | ---------- | ------ |
-| **Lucide** | React 通用项目 | 1,400+ | `lucide-react` |
-| **Heroicons** | Tailwind 项目 | 300+ | `@heroicons/react` |
-| **Phosphor** | 需要多种粗细 | 7,000+ | `@phosphor-icons/react` |
-| **Material Design** | 安卓风格 | 10,000+ | `@mdi/js` |
-| **Tabler** | 功能全面 | 4,500+ | `@tabler/icons-react` |
+| **Lucide** | General React projects | 1,400+ | `lucide-react` |
+| **Heroicons** | Tailwind projects | 300+ | `@heroicons/react` |
+| **Phosphor** | Multiple weights | 7,000+ | `@phosphor-icons/react` |
+| **Material Design** | Android styling | 10,000+ | `@mdi/js` |
+| **Tabler** | Broad feature coverage | 4,500+ | `@tabler/icons-react` |
 
-**默认推荐**：Lucide（体积小、质量高、React 集成好）
+**Default recommendation**: Lucide (small footprint, high quality, strong React integration).
 
-## 附加资源
+## Additional Resources
 
-- `references/semantic-mapping.md` — 完整中文概念→图标映射表
-- `references/icon-templates.md` — 各框架图标代码模板
-- `references/favicon-guide.md` — Favicon 生成完整指南
-- `references/popular-collections.md` — 热门图标库速查对比
-- `examples/search-workflow.md` — 图标搜索工作流示例
-- `examples/svg-creation.md` — SVG 图标创建示例
+- `references/semantic-mapping.md` — Complete concept-to-icon mapping
+- `references/icon-templates.md` — Framework-specific icon templates
+- `references/favicon-guide.md` — Complete favicon generation guide
+- `references/popular-collections.md` — Popular icon library comparison
+- `examples/search-workflow.md` — Icon search workflow examples
+- `examples/svg-creation.md` — SVG creation examples
