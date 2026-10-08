@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-Semantic Actions — 语义操作 API
+Semantic Actions — semantic interaction API
 
-提供类 Midscene.js 风格的语义化测试操作：
-- ai_action(page, instruction) → "点击登录按钮"
-- ai_assert(page, assertion)   → "页面显示欢迎消息"
-- ai_query(page, query)        → "获取表格第一行数据"
-- ai_wait(page, condition)     → "等待加载完成"
+Provide semantic test operations in the style of Midscene.js:
+- ai_action(page, instruction) → "Click the sign-in button"
+- ai_assert(page, assertion)   → "The page displays a welcome message"
+- ai_query(page, query)        → "Get data from the first table row"
+- ai_wait(page, condition)     → "Wait for loading to finish"
 """
 
 from typing import Dict, Any, Optional
@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 async def _run_callable(fn, *args, **kwargs):
-    """兼容 sync/async Playwright 调用。"""
+    """Support sync and async Playwright calls."""
     if inspect.iscoroutinefunction(fn):
         return await fn(*args, **kwargs)
 
@@ -32,12 +32,12 @@ async def _run_callable(fn, *args, **kwargs):
 
 async def ai_action(page, instruction: str, timeout: float = 30.0) -> Dict[str, Any]:
     """
-    执行语义化操作。
+    Execute a semantic action.
 
     Examples:
-        await ai_action(page, "点击登录按钮")
-        await ai_action(page, "在搜索框中输入'AI测试'")
-        await ai_action(page, "选择下拉菜单中的'中文'选项")
+        await ai_action(page, "Click the sign-in button")
+        await ai_action(page, "Fill the search field with 'AI testing'")
+        await ai_action(page, "Select 'English' in the dropdown")
     """
     start = time.time()
     logger.info(f"🎯 Semantic Action: {instruction}")
@@ -47,20 +47,20 @@ async def ai_action(page, instruction: str, timeout: float = 30.0) -> Dict[str, 
 
         locator = get_semantic_locator()
 
-        # 解析操作类型和目标
+        # Parse the action type and target
         action_type, target_desc, value = _parse_instruction(instruction)
 
-        # 语义定位元素
+        # Locate the element semantically
         element = await locator.locate(page, target_desc or instruction)
 
         if not element:
             return {
                 "success": False,
-                "error": f"无法找到匹配的元素: {instruction}",
+                "error": f"Cannot find a matching element: {instruction}",
                 "duration_ms": (time.time() - start) * 1000,
             }
 
-        # 执行操作
+        # Execute the action
         result = await _execute_semantic_action(page, element, action_type, value)
 
         elapsed = (time.time() - start) * 1000
@@ -68,12 +68,12 @@ async def ai_action(page, instruction: str, timeout: float = 30.0) -> Dict[str, 
         result["element"] = element.to_dict()
         result["instruction"] = instruction
 
-        logger.info(f"✅ Semantic Action 完成: {instruction} ({elapsed:.0f}ms)")
+        logger.info(f"✅ Semantic Action completed: {instruction} ({elapsed:.0f}ms)")
         return result
 
     except Exception as e:
         elapsed = (time.time() - start) * 1000
-        logger.error(f"❌ Semantic Action 失败: {instruction} - {e}")
+        logger.error(f"❌ Semantic Action failed: {instruction} - {e}")
         return {
             "success": False,
             "error": str(e),
@@ -84,12 +84,12 @@ async def ai_action(page, instruction: str, timeout: float = 30.0) -> Dict[str, 
 
 async def ai_assert(page, assertion: str) -> Dict[str, Any]:
     """
-    执行语义化断言。
+    Execute a semantic assertion.
 
     Examples:
-        await ai_assert(page, "页面显示'登录成功'")
-        await ai_assert(page, "搜索结果包含至少5条记录")
-        await ai_assert(page, "当前URL包含'/dashboard'")
+        await ai_assert(page, "The page displays 'Signed in successfully'")
+        await ai_assert(page, "Search results contain at least 5 records")
+        await ai_assert(page, "The current URL contains '/dashboard'")
     """
     start = time.time()
     logger.info(f"🔍 Semantic Assert: {assertion}")
@@ -97,34 +97,34 @@ async def ai_assert(page, assertion: str) -> Dict[str, Any]:
     try:
         from core.llm_manager import get_llm_for_role
 
-        # 获取页面信息
+        # Get page information
         page_text = await _run_callable(page.evaluate, "() => document.body.innerText.substring(0, 3000)")
         url = page.url
         title = await _run_callable(page.title)
 
-        prompt = f"""判断以下断言是否成立：
+        prompt = f"""Determine whether the following assertion holds:
 
-## 断言
+## Assertion
 {assertion}
 
-## 页面信息
+## Page information
 - URL: {url}
-- 标题: {title}
-- 页面文本（前3000字符）:
+- Title: {title}
+- Page text (first 3,000 characters):
 {page_text}
 
-请输出JSON格式（不要markdown包裹）：
+Return JSON without Markdown fences:
 {{
     "passed": true/false,
-    "reasoning": "<判断理由>",
-    "evidence": "<支持判断的页面内容>"
+    "reasoning": "<reasoning>",
+    "evidence": "<page content supporting the judgment>"
 }}"""
 
         llm = get_llm_for_role("executor", temperature=0.0)
         result = await asyncio.to_thread(llm.invoke, prompt)
         content = result.content if hasattr(result, "content") else str(result)
 
-        # 解析结果
+        # Parse the result
         text = content.strip()
         if text.startswith("```"):
             text = text.split("\n", 1)[1] if "\n" in text else text[3:]
@@ -135,7 +135,7 @@ async def ai_assert(page, assertion: str) -> Dict[str, Any]:
         elapsed = (time.time() - start) * 1000
 
         passed = data.get("passed", False)
-        logger.info(f"{'✅' if passed else '❌'} Semantic Assert {'通过' if passed else '失败'}: {assertion}")
+        logger.info(f"{'✅' if passed else '❌'} Semantic Assert {'passed' if passed else 'failed'}: {assertion}")
 
         return {
             "success": True,
@@ -148,7 +148,7 @@ async def ai_assert(page, assertion: str) -> Dict[str, Any]:
 
     except Exception as e:
         elapsed = (time.time() - start) * 1000
-        logger.error(f"断言执行失败: {e}")
+        logger.error(f"Assertion execution failed: {e}")
         return {
             "success": False,
             "passed": False,
@@ -160,12 +160,12 @@ async def ai_assert(page, assertion: str) -> Dict[str, Any]:
 
 async def ai_query(page, query: str) -> Dict[str, Any]:
     """
-    从页面提取数据。
+    Extract data from the page.
 
     Examples:
-        data = await ai_query(page, "获取搜索结果的标题列表")
-        data = await ai_query(page, "获取表格第一行的所有数据")
-        data = await ai_query(page, "获取购物车中的商品数量")
+        data = await ai_query(page, "Get the list of search result titles")
+        data = await ai_query(page, "Get all data from the first table row")
+        data = await ai_query(page, "Get the number of items in the shopping cart")
     """
     start = time.time()
     logger.info(f"📊 Semantic Query: {query}")
@@ -176,22 +176,22 @@ async def ai_query(page, query: str) -> Dict[str, Any]:
         page_text = await _run_callable(page.evaluate, "() => document.body.innerText.substring(0, 5000)")
         url = page.url
 
-        prompt = f"""从页面中提取以下信息：
+        prompt = f"""Extract the following information from the page:
 
-## 查询
+## Query
 {query}
 
-## 页面 URL
+## Page URL
 {url}
 
-## 页面文本内容
+## Page text content
 {page_text}
 
-请输出JSON格式（不要markdown包裹）：
+Return JSON without Markdown fences:
 {{
-    "data": <提取到的数据，可以是字符串、数组或对象>,
-    "source": "<数据来源描述>",
-    "confidence": <0.0-1.0的置信度>
+    "data": <extracted data: a string, array, or object>,
+    "source": "<description of the data source>",
+    "confidence": <confidence from 0.0 to 1.0>
 }}"""
 
         llm = get_llm_for_role("executor", temperature=0.0)
@@ -207,7 +207,7 @@ async def ai_query(page, query: str) -> Dict[str, Any]:
         data = json.loads(text.strip())
         elapsed = (time.time() - start) * 1000
 
-        logger.info(f"✅ Semantic Query 完成: {query} ({elapsed:.0f}ms)")
+        logger.info(f"✅ Semantic Query completed: {query} ({elapsed:.0f}ms)")
 
         return {
             "success": True,
@@ -220,7 +220,7 @@ async def ai_query(page, query: str) -> Dict[str, Any]:
 
     except Exception as e:
         elapsed = (time.time() - start) * 1000
-        logger.error(f"数据提取失败: {e}")
+        logger.error(f"Data extraction failed: {e}")
         return {
             "success": False,
             "error": str(e),
@@ -231,12 +231,12 @@ async def ai_query(page, query: str) -> Dict[str, Any]:
 
 async def ai_wait(page, condition: str, timeout: float = 30.0, interval: float = 1.0) -> Dict[str, Any]:
     """
-    等待页面满足某个语义条件。
+    Wait for the page to satisfy a semantic condition.
 
     Examples:
-        await ai_wait(page, "页面加载完成")
-        await ai_wait(page, "弹窗出现")
-        await ai_wait(page, "表格数据显示至少3行")
+        await ai_wait(page, "The page has finished loading")
+        await ai_wait(page, "An alert appears")
+        await ai_wait(page, "The table displays at least 3 rows")
     """
     start = time.time()
     logger.info(f"⏳ Semantic Wait: {condition}")
@@ -249,7 +249,7 @@ async def ai_wait(page, condition: str, timeout: float = 30.0, interval: float =
             result = await ai_assert(page, condition)
             if result.get("passed"):
                 elapsed = (time.time() - start) * 1000
-                logger.info(f"✅ Semantic Wait 满足: {condition} ({elapsed:.0f}ms, {attempts+1}次检查)")
+                logger.info(f"✅ Semantic Wait satisfied: {condition} ({elapsed:.0f}ms, {attempts+1} checks)")
                 return {
                     "success": True,
                     "met": True,
@@ -263,7 +263,7 @@ async def ai_wait(page, condition: str, timeout: float = 30.0, interval: float =
         await asyncio.sleep(interval)
 
     elapsed = (time.time() - start) * 1000
-    logger.warning(f"⏰ Semantic Wait 超时: {condition} ({elapsed:.0f}ms)")
+    logger.warning(f"⏰ Semantic Wait timed out: {condition} ({elapsed:.0f}ms)")
     return {
         "success": True,
         "met": False,
@@ -273,7 +273,7 @@ async def ai_wait(page, condition: str, timeout: float = 30.0, interval: float =
     }
 
 
-# ── 辅助函数 ──────────────────────────────────────────────────────────────────
+# ── Helper functions ──────────────────────────────────────────────────────────────────
 
 def _extract_quoted_value(text: str) -> str:
     for open_quote, close_quote in (("'", "'"), ('"', '"'), ("“", "”"), ("‘", "’")):
@@ -288,10 +288,10 @@ def _extract_quoted_value(text: str) -> str:
 
 
 def _parse_instruction(instruction: str):
-    """解析自然语言指令为 (action_type, target, value)"""
+    """Parse a natural-language instruction into (action_type, target, value)"""
     inst_lower = instruction.lower()
 
-    # 输入/填写
+    # Input/fill
     for keyword in ["输入", "填写", "type", "input", "fill"]:
         if keyword in inst_lower:
             value = _extract_quoted_value(instruction)
@@ -301,12 +301,12 @@ def _parse_instruction(instruction: str):
                     target = target.split(quote, 1)[0]
             return "fill", target.strip(), value
 
-    # 点击
+    # Click
     for keyword in ["点击", "click", "按", "press", "tap"]:
         if keyword in inst_lower:
             return "click", instruction, ""
 
-    # 选择
+    # Select
     for keyword in ["选择", "select", "choose"]:
         if keyword in inst_lower:
             value = ""
@@ -318,17 +318,17 @@ def _parse_instruction(instruction: str):
                     break
             return "select", instruction, value
 
-    # 导航
+    # Navigate
     for keyword in ["打开", "访问", "navigate", "open", "go to"]:
         if keyword in inst_lower:
             return "navigate", instruction, ""
 
-    # 默认为点击
+    # Default to click
     return "click", instruction, ""
 
 
 async def _execute_semantic_action(page, element, action_type: str, value: str = "") -> Dict:
-    """执行具体的语义操作"""
+    """Execute the specific semantic action"""
     bbox = element.bounding_box
     x = bbox.get("x", 0)
     y = bbox.get("y", 0)
@@ -342,7 +342,7 @@ async def _execute_semantic_action(page, element, action_type: str, value: str =
                     return {"success": True, "method": "selector_click"}
                 except Exception:
                     pass
-            # 回退到坐标点击
+            # Fall back to clicking coordinates
             await _run_callable(page.mouse.click, x, y)
             return {"success": True, "method": "coordinate_click"}
 
@@ -353,7 +353,7 @@ async def _execute_semantic_action(page, element, action_type: str, value: str =
                     return {"success": True, "method": "selector_fill", "value": value}
                 except Exception:
                     pass
-            # 回退：点击 + 键盘输入
+            # Fallback: click and keyboard input
             await _run_callable(page.mouse.click, x, y)
             await asyncio.sleep(0.3)
             await _run_callable(page.keyboard.type, value)
@@ -366,13 +366,13 @@ async def _execute_semantic_action(page, element, action_type: str, value: str =
                     return {"success": True, "method": "select_option", "value": value}
                 except Exception:
                     pass
-            return {"success": False, "error": f"无法选择选项: {value}"}
+            return {"success": False, "error": f"Cannot select option: {value}"}
 
         elif action_type == "navigate":
-            return {"success": True, "method": "skipped", "note": "导航由外层处理"}
+            return {"success": True, "method": "skipped", "note": "Navigation is handled by the caller"}
 
         else:
-            return {"success": False, "error": f"未知操作类型: {action_type}"}
+            return {"success": False, "error": f"Unknown action type: {action_type}"}
 
     except Exception as e:
         return {"success": False, "error": str(e)}

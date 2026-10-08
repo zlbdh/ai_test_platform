@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
 """
-Semantic Engine — 语义驱动测试引擎
+Semantic Engine — semantic testing engine
 
-核心组件：
-- SemanticLocator: 基于自然语言意图定位元素
-- VisualContextAnalyzer: 截图→元素语义理解
-- ElementRelationGraph: 元素关系图谱
-- SemanticCache: 视觉特征缓存加速
+Core components:
+- SemanticLocator: Locate elements from natural-language intent
+- VisualContextAnalyzer: Screenshot-to-element semantic understanding
+- ElementRelationGraph: Element relationship graph
+- SemanticCache: Acceleration through visual feature caching
 
-对标 Midscene.js 的三层架构：
-1. 底层视觉特征提取
-2. 中层语义理解
-3. 顶层任务规划
+Three-layer architecture comparable to Midscene.js:
+1. Low-level visual feature extraction
+2. Intermediate semantic understanding
+3. High-level task planning
 """
 
 from typing import Dict, Any, List, Optional, Tuple
@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 
 async def _run_page_callable(fn, *args, **kwargs):
-    """兼容 sync/async Playwright API，统一在 async 代码里调用。"""
+    """Call both sync and async Playwright APIs from async code."""
     if inspect.iscoroutinefunction(fn):
         return await fn(*args, **kwargs)
 
@@ -40,20 +40,20 @@ async def _run_page_callable(fn, *args, **kwargs):
     return result
 
 
-# ── 数据结构 ──────────────────────────────────────────────────────────────────
+# ── Data structures ──────────────────────────────────────────────────────────────────
 
 @dataclass
 class SemanticElement:
-    """语义化的页面元素"""
+    """Semantic page element"""
     element_id: str = ""
     text: str = ""
     role: str = ""                  # button, input, link, heading, etc.
-    description: str = ""           # LLM 生成的语义描述
-    selector: str = ""              # CSS/XPath 选择器
+    description: str = ""           # LLM-generated semantic description
+    selector: str = ""              # CSS/XPath selector
     bounding_box: Dict[str, float] = field(default_factory=dict)  # x, y, width, height
-    visual_hash: str = ""           # 视觉特征哈希
+    visual_hash: str = ""           # Visual feature hash
     attributes: Dict[str, str] = field(default_factory=dict)
-    confidence: float = 0.0         # 匹配置信度
+    confidence: float = 0.0         # Match confidence
 
     def to_dict(self) -> Dict:
         return {
@@ -69,7 +69,7 @@ class SemanticElement:
 
 @dataclass
 class SemanticContext:
-    """页面语义上下文"""
+    """Page semantic context"""
     page_title: str = ""
     page_url: str = ""
     elements: List[SemanticElement] = field(default_factory=list)
@@ -78,16 +78,16 @@ class SemanticContext:
     timestamp: float = field(default_factory=time.time)
 
 
-# ── 语义缓存 ──────────────────────────────────────────────────────────────────
+# ── Semantic cache ──────────────────────────────────────────────────────────────────
 
 class SemanticCache:
     """
-    语义特征缓存 — 避免重复调用 LLM 分析相同页面。
+    Semantic feature cache that avoids repeated LLM analysis of the same page.
 
-    缓存策略：
-    - 以 URL + DOM hash 为键
-    - 有效期 300 秒（5分钟）
-    - 最多缓存 100 条
+    Cache policy:
+    - Keyed by URL + DOM hash
+    - Valid for 300 seconds (5 minutes)
+    - Cache at most 100 entries
     """
 
     def __init__(self, max_entries: int = 100, ttl_seconds: float = 300):
@@ -111,7 +111,7 @@ class SemanticCache:
 
     def set(self, key: str, value: Any):
         if len(self._cache) >= self._max_entries:
-            # 淘汰最旧的
+            # Evict the oldest entry
             oldest = min(self._cache, key=lambda k: self._cache[k][0])
             del self._cache[oldest]
         self._cache[key] = (time.time(), value)
@@ -125,48 +125,48 @@ class SemanticCache:
         return {"hits": self._hits, "misses": self._misses, "size": len(self._cache)}
 
 
-# ── 语义定位器 ────────────────────────────────────────────────────────────────
+# ── Semantic locator ────────────────────────────────────────────────────────────────
 
 class SemanticLocator:
     """
-    基于自然语言意图定位页面元素。
+    Locate page elements from natural-language intent.
 
-    工作流程：
-    1. 接收自然语言描述（如"点击登录按钮"）
-    2. 截图 + 获取 DOM
-    3. 调用 VLM 理解页面布局
-    4. 匹配最佳元素
-    5. 返回坐标或选择器
+    Workflow:
+    1. Receive a natural-language description such as "Click the sign-in button"
+    2. Take a screenshot and retrieve the DOM
+    3. Use a VLM to understand the page layout
+    4. Match the best element
+    5. Return coordinates or a selector
     """
 
-    LOCATE_PROMPT = """你是一个精确的UI元素定位专家。
+    LOCATE_PROMPT = """You are an expert in precise UI element location.
 
-## 任务
-根据用户的自然语言描述，在页面中找到目标元素。
+## Task
+Find the target page element from the user's natural-language description.
 
-## 用户描述
+## User description
 {instruction}
 
-## 当前页面信息
+## Current page information
 - URL: {url}
 - Title: {title}
 
-## 页面可交互元素列表
+## Interactive page elements
 {elements_list}
 
-## 要求
-请找到最匹配用户描述的元素，输出JSON格式（不要markdown包裹）：
+## Requirements
+Find the element that best matches the description and return JSON without Markdown fences:
 {{
-    "element_index": <元素索引号，从0开始>,
-    "confidence": <0.0-1.0的置信度>,
-    "reasoning": "<选择该元素的理由>"
+    "element_index": <zero-based element index>,
+    "confidence": <confidence from 0.0 to 1.0>,
+    "reasoning": "<reason for selecting this element>"
 }}
 
-如果没有匹配的元素，输出：
+If no element matches, return:
 {{
     "element_index": -1,
     "confidence": 0.0,
-    "reasoning": "<没找到的原因>"
+    "reasoning": "<reason no match was found>"
 }}"""
 
     def __init__(self):
@@ -179,33 +179,33 @@ class SemanticLocator:
         use_vision: bool = True,
     ) -> Optional[SemanticElement]:
         """
-        在页面中定位匹配自然语言描述的元素。
+        Locate a page element matching the natural-language description.
 
         Args:
-            page: Playwright Page 对象
-            instruction: 自然语言描述
-            use_vision: 是否使用视觉模型
+            page: Playwright Page object
+            instruction: Natural-language description
+            use_vision: Whether to use a vision model
 
         Returns:
-            匹配的 SemanticElement，或 None
+            Matching SemanticElement, or None
         """
         try:
-            # 1. 收集页面元素
+            # 1. Collect page elements
             elements = await self._extract_elements(page)
             if not elements:
-                logger.warning("页面无可交互元素")
+                logger.warning("No interactive page elements")
                 return None
 
-            # 2. 检查缓存
+            # 2. Check the cache
             url = page.url
             dom_hash = hashlib.md5(str([e.text + e.role for e in elements]).encode()).hexdigest()[:8]
             cache_key = f"{SemanticCache.make_key(url, dom_hash)}:{instruction}"
             cached = self._cache.get(cache_key)
             if cached:
-                logger.info(f"语义缓存命中: {instruction}")
+                logger.info(f"Semantic cache hit: {instruction}")
                 return cached
 
-            # 3. LLM 语义匹配
+            # 3. LLM semantic matching
             page_title = await _run_page_callable(page.title)
             matched = await self._llm_match(instruction, url, page_title, elements)
 
@@ -215,11 +215,11 @@ class SemanticLocator:
             return matched
 
         except Exception as e:
-            logger.error(f"语义定位失败: {e}")
+            logger.error(f"Semantic location failed: {e}")
             return None
 
     async def _extract_elements(self, page) -> List[SemanticElement]:
-        """从页面提取可交互元素"""
+        """Extract interactive elements from the page"""
         try:
             elements_data = await _run_page_callable(page.evaluate, """() => {
                 const interactive = document.querySelectorAll(
@@ -248,7 +248,7 @@ class SemanticLocator:
                         });
                     }
                 });
-                return results.slice(0, 50);  // 限制数量
+                return results.slice(0, 50);  // Limit the count
             }""")
 
             elements = []
@@ -268,7 +268,7 @@ class SemanticLocator:
 
             return elements
         except Exception as e:
-            logger.error(f"元素提取失败: {e}")
+            logger.error(f"Element extraction failed: {e}")
             return []
 
     async def _llm_match(
@@ -278,12 +278,12 @@ class SemanticLocator:
         title: str,
         elements: List[SemanticElement],
     ) -> Optional[SemanticElement]:
-        """使用 LLM 进行语义匹配"""
+        """Use an LLM for semantic matching"""
         try:
             from core.llm_manager import get_llm_for_role
             llm = get_llm_for_role("executor", temperature=0.0)
 
-            # 构建元素列表文本
+            # Build the element list text
             el_lines = []
             for i, el in enumerate(elements):
                 label = el.text or el.attributes.get("placeholder", "") or el.attributes.get("ariaLabel", "")
@@ -303,7 +303,7 @@ class SemanticLocator:
             result = await asyncio.to_thread(llm.invoke, prompt)
             content = result.content if hasattr(result, "content") else str(result)
 
-            # 解析
+            # Parse
             text = content.strip()
             if text.startswith("```"):
                 text = text.split("\n", 1)[1] if "\n" in text else text[3:]
@@ -318,19 +318,19 @@ class SemanticLocator:
                 matched = elements[idx]
                 matched.confidence = confidence
                 matched.description = data.get("reasoning", "")
-                logger.info(f"语义匹配成功: '{instruction}' → [{idx}] {matched.text} (置信度: {confidence})")
+                logger.info(f"Semantic match succeeded: '{instruction}' → [{idx}] {matched.text} (confidence: {confidence})")
                 return matched
             else:
-                logger.warning(f"语义匹配失败: {data.get('reasoning', 'unknown')}")
+                logger.warning(f"Semantic matching failed: {data.get('reasoning', 'unknown')}")
                 return None
 
         except Exception as e:
-            logger.error(f"LLM 语义匹配失败: {e}")
+            logger.error(f"LLM semantic matching failed: {e}")
             return None
 
     @staticmethod
     def _build_selector(data: Dict) -> str:
-        """构建最佳选择器"""
+        """Build the best selector"""
         if data.get("id"):
             return f"#{data['id']}"
         if data.get("name"):
@@ -342,28 +342,28 @@ class SemanticLocator:
         return ""
 
 
-# ── 视觉上下文分析器 ──────────────────────────────────────────────────────────
+# ── Visual context analyzer ──────────────────────────────────────────────────────────
 
 class VisualContextAnalyzer:
     """
-    截图→语义理解。
+    Screenshot-to-semantic understanding.
 
-    使用多模态LLM分析页面截图，提取：
-    - 页面类型（登录、搜索、列表等）
-    - 主要功能区域
-    - 关键UI元素描述
+    Analyze a page screenshot with a multimodal LLM and extract:
+    - Page type (sign-in, search, list, and others)
+    - Main functional areas
+    - Key UI element descriptions
     """
 
-    ANALYSIS_PROMPT = """分析这个网页截图，简洁输出JSON格式（不要markdown包裹）：
+    ANALYSIS_PROMPT = """Analyze this webpage screenshot and return concise JSON without Markdown fences:
 {{
-    "page_type": "<页面类型：login/search/dashboard/form/list/article/other>",
-    "main_actions": ["<可执行的主要操作1>", "<操作2>"],
-    "key_elements": ["<关键UI元素描述1>", "<描述2>"],
-    "state": "<页面当前状态描述>"
+    "page_type": "<page type: login/search/dashboard/form/list/article/other>",
+    "main_actions": ["<main available action 1>", "<action 2>"],
+    "key_elements": ["<key UI element description 1>", "<description 2>"],
+    "state": "<description of the current page state>"
 }}"""
 
     async def analyze(self, screenshot_b64: str) -> Dict[str, Any]:
-        """分析页面截图"""
+        """Analyze a page screenshot"""
         try:
             from core.llm_manager import LLMManager
             from langchain_core.messages import HumanMessage
@@ -390,11 +390,11 @@ class VisualContextAnalyzer:
 
             return json.loads(text.strip())
         except Exception as e:
-            logger.error(f"视觉上下文分析失败: {e}")
+            logger.error(f"Visual context analysis failed: {e}")
             return {"page_type": "unknown", "error": str(e)}
 
 
-# ── 单例 ──────────────────────────────────────────────────────────────────────
+# ── Singleton ──────────────────────────────────────────────────────────────────────
 
 _locator: Optional[SemanticLocator] = None
 _visual_analyzer: Optional[VisualContextAnalyzer] = None

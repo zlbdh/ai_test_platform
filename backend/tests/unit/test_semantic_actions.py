@@ -15,12 +15,12 @@ class SyncPageStub:
 
     def evaluate(self, script):
         if "document.body.innerText" in script:
-            return "登录成功 欢迎回来"
+            return "Signed in successfully. Welcome back"
         return [
             {
                 "index": 0,
                 "tag": "button",
-                "text": "登录",
+                "text": "Sign in",
                 "placeholder": "",
                 "ariaLabel": "",
                 "role": "button",
@@ -37,7 +37,7 @@ class SyncPageStub:
         ]
 
     def title(self):
-        return "登录页"
+        return "Sign-in page"
 
 
 class AsyncMouseStub:
@@ -63,10 +63,10 @@ class AsyncPageStub:
         self.keyboard = AsyncKeyboardStub()
 
     async def evaluate(self, script):
-        return "结果A\n结果B\n结果C"
+        return "Result A\nResult B\nResult C"
 
     async def title(self):
-        return "控制台"
+        return "Dashboard"
 
     def locator(self, selector):
         raise AssertionError(f"unexpected selector lookup: {selector}")
@@ -88,7 +88,7 @@ async def test_semantic_locator_extract_elements_supports_sync_page():
     elements = await locator._extract_elements(SyncPageStub())
 
     assert len(elements) == 1
-    assert elements[0].text == "登录"
+    assert elements[0].text == "Sign in"
     assert elements[0].selector == "#login-btn"
 
 
@@ -96,33 +96,31 @@ async def test_semantic_locator_extract_elements_supports_sync_page():
 async def test_ai_assert_supports_sync_page():
     fake_llm = SimpleNamespace(
         invoke=lambda prompt: SimpleNamespace(
-            content='{"passed": true, "reasoning": "文本命中", "evidence": "欢迎回来"}'
+            content='{"passed": true, "reasoning": "Text matched", "evidence": "Welcome back"}'
         )
     )
-    fake_manager = SimpleNamespace(get_llm=lambda temperature=0.0: fake_llm)
+    with patch("core.llm_manager.get_llm_for_role", return_value=fake_llm) as get_llm:
+        result = await ai_assert(SyncPageStub(), "The page displays a welcome message")
 
-    with patch("core.llm_manager.LLMManager", return_value=fake_manager):
-        result = await ai_assert(SyncPageStub(), "页面显示欢迎消息")
-
+    get_llm.assert_called_once_with("executor", temperature=0.0)
     assert result["success"] is True
     assert result["passed"] is True
-    assert result["evidence"] == "欢迎回来"
+    assert result["evidence"] == "Welcome back"
 
 
 @pytest.mark.asyncio
 async def test_ai_query_supports_async_page():
     fake_llm = SimpleNamespace(
         invoke=lambda prompt: SimpleNamespace(
-            content='{"data": ["结果A", "结果B"], "source": "页面文本", "confidence": 0.92}'
+            content='{"data": ["Result A", "Result B"], "source": "Page text", "confidence": 0.92}'
         )
     )
-    fake_manager = SimpleNamespace(get_llm=lambda temperature=0.0: fake_llm)
+    with patch("core.llm_manager.get_llm_for_role", return_value=fake_llm) as get_llm:
+        result = await ai_query(AsyncPageStub(), "Get the first two results")
 
-    with patch("core.llm_manager.LLMManager", return_value=fake_manager):
-        result = await ai_query(AsyncPageStub(), "获取前两条结果")
-
+    get_llm.assert_called_once_with("executor", temperature=0.0)
     assert result["success"] is True
-    assert result["data"] == ["结果A", "结果B"]
+    assert result["data"] == ["Result A", "Result B"]
     assert result["confidence"] == 0.92
 
 
@@ -131,7 +129,7 @@ async def test_ai_action_supports_async_page_coordinate_click():
     page = AsyncPageStub()
     element = SemanticElement(
         element_id="el_1",
-        text="提交",
+        text="Submit",
         role="button",
         selector="",
         bounding_box={"x": 88, "y": 42, "width": 90, "height": 32},
@@ -142,7 +140,7 @@ async def test_ai_action_supports_async_page_coordinate_click():
             return element
 
     with patch("core.semantic_engine.get_semantic_locator", return_value=FakeLocator()):
-        result = await ai_action(page, "点击提交按钮")
+        result = await ai_action(page, "Click the submit button")
 
     assert result["success"] is True
     assert result["method"] == "coordinate_click"
@@ -156,5 +154,5 @@ async def test_resolve_page_attr_supports_async_method_and_property():
     title = await _resolve_page_attr(page, "title", default="unknown")
     url = await _resolve_page_attr(page, "url", default="unknown")
 
-    assert title == "控制台"
+    assert title == "Dashboard"
     assert url == "https://example.com/dashboard"

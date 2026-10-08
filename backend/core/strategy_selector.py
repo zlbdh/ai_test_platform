@@ -1,11 +1,11 @@
 """
-AI Test Strategy Selector - 智能测试策略选择器
+AI Test Strategy Selector
 
-根据输入自动选择最佳测试策略，实现 AI 100% 自动化决策：
-- 分析目标类型 (Web/API/Database)
-- 自动选择测试类型组合
-- 动态调整并发和超时
-- 智能优先级排序
+Select the best test strategy automatically from the input for fully automated AI decisions:
+- Analyze the target type (Web/API/Database)
+- Select a combination of test types automatically
+- Adjust concurrency and timeouts dynamically
+- Intelligent priority ordering
 """
 
 from typing import Dict, Any, List, Optional
@@ -41,7 +41,7 @@ class Priority(Enum):
 
 @dataclass
 class TestStrategy:
-    """测试策略"""
+    """Test strategy"""
     __test__ = False
     test_types: List[TestType]
     priority: Priority
@@ -55,7 +55,7 @@ class TestStrategy:
 
 
 class AITestStrategySelector:
-    """AI 驱动的测试策略选择器"""
+    """AI-powered test strategy selector"""
     
     def __init__(self):
         self.patterns = self._init_patterns()
@@ -65,14 +65,14 @@ class AITestStrategySelector:
 
     @staticmethod
     def _get_db_path() -> str:
-        """获取 SQLite 数据库路径"""
+        """Get the SQLite database path"""
         import os
         db_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data')
         os.makedirs(db_dir, exist_ok=True)
         return os.path.join(db_dir, 'strategy_history.db')
 
     def _init_db(self):
-        """初始化策略历史表"""
+        """Initialize the strategy history table"""
         try:
             conn = sqlite3.connect(self._db_path)
             conn.execute('''
@@ -88,10 +88,10 @@ class AITestStrategySelector:
             conn.commit()
             conn.close()
         except Exception as e:
-            logger.warning(f"策略历史 DB 初始化失败: {e}")
+            logger.warning(f"Strategy history database initialization failed: {e}")
     
     def _init_patterns(self) -> Dict:
-        """初始化模式识别规则"""
+        """Initialize pattern recognition rules"""
         return {
             "api_keywords": [
                 "api", "接口", "endpoint", "rest", "graphql", "grpc",
@@ -121,7 +121,7 @@ class AITestStrategySelector:
         }
     
     def analyze_target(self, target: str) -> Dict[str, Any]:
-        """分析测试目标"""
+        """Analyze the test target"""
         result = {
             "is_url": False,
             "is_api_endpoint": False,
@@ -131,7 +131,7 @@ class AITestStrategySelector:
             "protocol": None
         }
         
-        # URL 分析
+        # URL analysis
         try:
             parsed = urlparse(target)
             if parsed.scheme in ["http", "https"]:
@@ -140,14 +140,14 @@ class AITestStrategySelector:
                 result["path"] = parsed.path
                 result["protocol"] = parsed.scheme
                 
-                # API 端点检测
+                # API endpoint detection
                 api_patterns = ["/api/", "/v1/", "/v2/", "/graphql", "/rest/"]
                 if any(p in parsed.path.lower() for p in api_patterns):
                     result["is_api_endpoint"] = True
         except Exception:
             pass
         
-        # 数据库连接字符串检测
+        # Database connection string detection
         db_patterns = ["mysql://", "postgres://", "sqlite://", "mongodb://"]
         if any(target.lower().startswith(p) for p in db_patterns):
             result["is_database"] = True
@@ -155,7 +155,7 @@ class AITestStrategySelector:
         return result
     
     def analyze_requirement(self, requirement: str, target_url: str = "") -> Dict[str, float]:
-        """分析需求文本，返回各测试类型的匹配分数（规则 + LLM fallback）"""
+        """Analyze requirement text and return test-type match scores using rules and an LLM fallback"""
         scores = {
             TestType.UI_E2E: 0.0,
             TestType.API_REST: 0.0,
@@ -172,7 +172,7 @@ class AITestStrategySelector:
         
         req_lower = requirement.lower()
         
-        # 关键词匹配
+        # Keyword matching
         for kw in self.patterns["ui_keywords"]:
             if kw in req_lower:
                 scores[TestType.UI_E2E] += 1.0
@@ -200,15 +200,15 @@ class AITestStrategySelector:
             if kw in req_lower:
                 scores[TestType.VISUAL_REGRESSION] += 1.0
         
-        # 归一化
+        # Normalize
         max_score = max(scores.values()) if max(scores.values()) > 0 else 1
         rule_scores = {k: v / max_score for k, v in scores.items()}
 
-        # ── LLM fallback: 当规则匹配置信度低时调用 LLM 深度分析 ──
-        if max_score < 1.5:  # 低置信度阈值
+        # ── LLM fallback: use deeper LLM analysis when rule confidence is low ──
+        if max_score < 1.5:  # Low-confidence threshold
             llm_scores = self._llm_analyze(requirement, target_url)
             if llm_scores:
-                # 加权合并: rule 0.4 + llm 0.6
+                # Weighted merge: rule 0.4 + llm 0.6
                 merged = {}
                 for tt in rule_scores:
                     r_val = rule_scores.get(tt, 0.0)
@@ -219,7 +219,7 @@ class AITestStrategySelector:
         return rule_scores
 
     def _llm_analyze(self, requirement: str, target_url: str = "") -> Optional[Dict[TestType, float]]:
-        """使用 LLM 深度分析需求文本（fallback）"""
+        """Use an LLM for deeper requirement analysis as a fallback"""
         try:
             from langchain_core.prompts import ChatPromptTemplate
             from langchain_core.output_parsers import JsonOutputParser
@@ -230,7 +230,7 @@ class AITestStrategySelector:
             chain = prompt | get_llm_for_role("planner") | JsonOutputParser()
             result = chain.invoke({
                 "requirement": requirement,
-                "target_info": target_url or "无"
+                "target_info": target_url or "None"
             })
 
             type_map = {t.value: t for t in TestType}
@@ -239,10 +239,10 @@ class AITestStrategySelector:
                 tt = type_map.get(item.get("type"))
                 if tt:
                     scores[tt] = float(item.get("confidence", 0.0))
-            logger.info(f"[StrategySelector] LLM 分析完成: {result.get('reasoning', '')}")
+            logger.info(f"[StrategySelector] LLM analysis completed: {result.get('reasoning', '')}")
             return scores
         except Exception as e:
-            logger.warning(f"[StrategySelector] LLM fallback 失败, 降级到纯规则: {e}")
+            logger.warning(f"[StrategySelector] LLM fallback failed; using rules only: {e}")
             return None
 
     
@@ -253,25 +253,25 @@ class AITestStrategySelector:
         context: Optional[Dict] = None
     ) -> TestStrategy:
         """
-        AI 智能选择测试策略
+        Select a test strategy with AI
         
         Args:
-            requirement: 测试需求描述
-            target_url: 目标 URL
-            context: 额外上下文 (历史记录、项目配置等)
+            requirement: Test requirement description
+            target_url: Target URL
+            context: Additional context (history, project configuration, and more)
         
         Returns:
-            TestStrategy: 推荐的测试策略
+            TestStrategy: Recommended test strategy
         """
-        # 分析需求
+        # Analyze requirements
         scores = self.analyze_requirement(requirement)
         
-        # 分析目标
+        # Analyze the target
         target_info = {}
         if target_url:
             target_info = self.analyze_target(target_url)
         
-        # 选择测试类型
+        # Select test types
         selected_types = []
         threshold = 0.3
         
@@ -279,7 +279,7 @@ class AITestStrategySelector:
             if score >= threshold:
                 selected_types.append(test_type)
         
-        # 如果没有明确匹配，根据目标类型推断
+        # Infer from the target type when there is no clear match
         if not selected_types:
             if target_info.get("is_api_endpoint"):
                 selected_types = [TestType.API_REST]
@@ -288,13 +288,13 @@ class AITestStrategySelector:
             elif target_info.get("is_url"):
                 selected_types = [TestType.UI_E2E]
             else:
-                # 默认 UI 测试
+                # Default to UI testing
                 selected_types = [TestType.UI_E2E]
         
-        # 计算 AI 置信度
+        # Calculate AI confidence
         confidence = max(scores.values()) if scores else 0.5
         
-        # 确定优先级
+        # Determine priority
         if any(t in selected_types for t in [TestType.SECURITY]):
             priority = Priority.CRITICAL
         elif any(t in selected_types for t in [TestType.API_REST, TestType.DATABASE]):
@@ -302,7 +302,7 @@ class AITestStrategySelector:
         else:
             priority = Priority.MEDIUM
         
-        # 推荐 Agent
+        # Recommend agents
         agent_map = {
             TestType.UI_E2E: ["UIAgent", "ExecutorAgent"],
             TestType.API_REST: ["APIAgent"],
@@ -318,7 +318,7 @@ class AITestStrategySelector:
             recommended_agents.extend(agent_map.get(t, []))
         recommended_agents = list(set(recommended_agents))
         
-        # 生成策略
+        # Generate the strategy
         strategy = TestStrategy(
             test_types=selected_types,
             priority=priority,
@@ -331,7 +331,7 @@ class AITestStrategySelector:
             recommended_agents=recommended_agents
         )
         
-        # 记录历史
+        # Record history
         self.history.append({
             "requirement": requirement,
             "strategy": strategy,
@@ -346,15 +346,15 @@ class AITestStrategySelector:
         selected_types: List[TestType],
         scores: Dict[TestType, float]
     ) -> str:
-        """生成决策推理说明"""
+        """Generate decision reasoning"""
         type_names = [t.value for t in selected_types]
         top_scores = sorted(scores.items(), key=lambda x: -x[1])[:3]
         
-        reasoning = f"基于需求分析，识别到以下测试类型需求：\n"
+        reasoning = f"Requirement analysis identified the following test-type needs:\n"
         for t, s in top_scores:
             if s > 0:
-                reasoning += f"  - {t.value}: {s:.1%} 匹配度\n"
-        reasoning += f"\n推荐执行: {', '.join(type_names)}"
+                reasoning += f"  - {t.value}: {s:.1%} match\n"
+        reasoning += f"\nRecommended execution: {', '.join(type_names)}"
         
         return reasoning
     
@@ -365,15 +365,15 @@ class AITestStrategySelector:
         success: bool,
         feedback: Optional[str] = None
     ):
-        """从测试结果学习，持久化到 SQLite"""
-        # 内存记录
+        """Learn from test results and persist to SQLite"""
+        # Record in memory
         self.history.append({
             "requirement": requirement,
             "strategy": strategy,
             "success": success,
             "feedback": feedback
         })
-        # SQLite 持久化
+        # SQLite persistence
         try:
             strategy_json = json.dumps({
                 "test_types": [t.value for t in strategy.test_types],
@@ -388,12 +388,12 @@ class AITestStrategySelector:
             )
             conn.commit()
             conn.close()
-            logger.info(f"[StrategySelector] 学习结果已持久化 (success={success})")
+            logger.info(f"[StrategySelector] Learning results persisted (success={success})")
         except Exception as e:
-            logger.warning(f"[StrategySelector] 持久化失败: {e}")
+            logger.warning(f"[StrategySelector] Persistence failed: {e}")
 
     def get_statistics(self) -> Dict[str, Any]:
-        """获取策略选择统计数据"""
+        """Get strategy selection statistics"""
         try:
             conn = sqlite3.connect(self._db_path)
             cursor = conn.execute('SELECT COUNT(*), SUM(success) FROM strategy_history')
@@ -410,11 +410,11 @@ class AITestStrategySelector:
             return {"total_decisions": 0, "success_count": 0, "success_rate": 0.0}
 
 
-# 单例
+# Singleton
 _strategy_selector: Optional[AITestStrategySelector] = None
 
 def get_strategy_selector() -> AITestStrategySelector:
-    """获取策略选择器单例"""
+    """Get the strategy selector singleton"""
     global _strategy_selector
     if _strategy_selector is None:
         _strategy_selector = AITestStrategySelector()
