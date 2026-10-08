@@ -76,7 +76,7 @@ const SecurityScanning: React.FC = () => {
                     target_url: targetUrl,
                     scan_type: scanType,
                     vuln_types: vulnTypes.length > 0 ? vulnTypes : undefined,
-                    ...ensureExecutionContextPayload('安全专项测试', { targetUrl }),
+                    ...ensureExecutionContextPayload("Security test suite", { targetUrl }),
                 })
             });
 
@@ -104,7 +104,7 @@ const SecurityScanning: React.FC = () => {
     };
 
     const deleteHistory = async (scanId: string) => {
-        if (!confirm('确定删除此条记录？')) return;
+        if (!confirm("Delete this record?")) return;
         try {
             await fetch(API_ENDPOINTS.security.delete(scanId), { method: 'DELETE' });
             fetchHistory();
@@ -114,7 +114,7 @@ const SecurityScanning: React.FC = () => {
     };
 
     const clearHistory = async () => {
-        if (!confirm('确定清空全部扫描历史？此操作不可恢复。')) return;
+        if (!confirm("Clear all scan history? This cannot be undone.")) return;
         try {
             await fetch(API_ENDPOINTS.security.clear, { method: 'DELETE' });
             setHistory([]);
@@ -136,20 +136,20 @@ const SecurityScanning: React.FC = () => {
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
-            <ExecutionBatchBanner standaloneHint="安全扫描结果会统一沉淀到执行中心；若当前没有测试批次，首次执行时会自动创建一个专项测试批次。" />
+            <ExecutionBatchBanner standaloneHint={"Security scan results are saved in the execution center. The first run creates a specialized test batch if none is active."} />
 
-            {/* 配置面板 */}
+            {/* Configuration panel*/}
             <div className="relative overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md p-6 transition-all hover:border-slate-300 dark:hover:border-slate-700">
                 <h2 className="text-xl font-bold text-slate-900 dark:text-red-400 mb-6 flex items-center gap-2">
                     <div className="p-2 rounded-lg bg-red-500/10">
                         <Shield className="w-5 h-5 text-red-500" />
                     </div>
-                    安全扫描配置
+                    Security scan configuration
                 </h2>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">目标 URL</label>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Target URL</label>
                         <input
                             type="text"
                             value={targetUrl}
@@ -159,16 +159,16 @@ const SecurityScanning: React.FC = () => {
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">扫描类型</label>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Scan type</label>
                         <select
                             value={scanType}
                             onChange={(e) => setScanType(e.target.value)}
                             className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all outline-none"
                             disabled={isScanning}
                         >
-                            <option value="quick">快速扫描</option>
-                            <option value="standard">标准扫描</option>
-                            <option value="full">完整扫描</option>
+                            <option value="quick">Quick scan</option>
+                            <option value="standard">Standard scan</option>
+                            <option value="full">Full scan</option>
                         </select>
                     </div>
                 </div>
@@ -176,18 +176,18 @@ const SecurityScanning: React.FC = () => {
                 {/* Vulnerability Type Selection */}
                 <div className="mt-4">
                     <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1.5">
-                        <Bug className="w-3.5 h-3.5" /> 漏洞检测类型
+                        <Bug className="w-3.5 h-3.5" /> Vulnerability types
                     </label>
                     <div className="flex flex-wrap gap-2">
                         {[
-                            { key: 'xss', label: 'XSS 跨站脚本', color: 'red' },
-                            { key: 'sqli', label: 'SQL 注入', color: 'orange' },
+                            { key: 'xss', label: "Cross-site scripting (XSS)", color: 'red' },
+                            { key: 'sqli', label: "SQL injection", color: 'orange' },
                             { key: 'csrf', label: 'CSRF', color: 'amber' },
-                            { key: 'traversal', label: '目录遍历', color: 'yellow' },
-                            { key: 'info_leak', label: '信息泄露', color: 'blue' },
-                            { key: 'headers', label: '安全头缺失', color: 'purple' },
+                            { key: 'traversal', label: "Directory traversal", color: 'yellow' },
+                            { key: 'info_leak', label: "Information disclosure", color: 'blue' },
+                            { key: 'headers', label: "Missing security headers", color: 'purple' },
                             { key: 'ssl', label: 'SSL/TLS', color: 'teal' },
-                            { key: 'sensitive', label: '敏感文件', color: 'pink' },
+                            { key: 'sensitive', label: "Sensitive files", color: 'pink' },
                         ].map(vt => {
                             const active = vulnTypes.includes(vt.key);
                             return (
@@ -205,9 +205,9 @@ const SecurityScanning: React.FC = () => {
                     </div>
                     <div className="mt-2 flex gap-2">
                         <button onClick={() => setVulnTypes(['xss', 'sqli', 'csrf', 'traversal', 'info_leak', 'headers', 'ssl', 'sensitive'])} disabled={isScanning}
-                            className="text-[11px] text-slate-400 hover:text-slate-600 transition-colors disabled:opacity-50">全选</button>
+                            className="text-[11px] text-slate-400 hover:text-slate-600 transition-colors disabled:opacity-50">Select all</button>
                         <button onClick={() => setVulnTypes([])} disabled={isScanning}
-                            className="text-[11px] text-slate-400 hover:text-slate-600 transition-colors disabled:opacity-50">全不选</button>
+                            className="text-[11px] text-slate-400 hover:text-slate-600 transition-colors disabled:opacity-50">Deselect all</button>
                     </div>
                 </div>
 
@@ -218,7 +218,7 @@ const SecurityScanning: React.FC = () => {
                             className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white rounded-lg font-medium shadow-lg shadow-red-500/20 hover:shadow-red-500/40 active:scale-95 transition-all duration-200"
                         >
                             <Play className="w-4 h-4 fill-current" />
-                            开始扫描
+                            Start scan
                         </button>
                     ) : (
                         <button
@@ -226,7 +226,7 @@ const SecurityScanning: React.FC = () => {
                             className="flex items-center gap-2 px-6 py-2.5 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600 rounded-lg font-medium active:scale-95 transition-all duration-200"
                         >
                             <Square className="w-4 h-4 fill-current" />
-                            停止扫描
+                            Stop scan
                         </button>
                     )}
                 </div>
@@ -239,7 +239,7 @@ const SecurityScanning: React.FC = () => {
                 )}
             </div>
 
-            {/* 结果面板 */}
+            {/* Results panel*/}
             {result && result.stats && (
                 <div className="relative overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md p-6">
                     <div className="absolute top-0 right-0 p-6 pointer-events-none">
@@ -250,28 +250,28 @@ const SecurityScanning: React.FC = () => {
                         <div className="p-2 rounded-lg bg-green-500/10">
                             <CheckCircle className="w-5 h-5 text-green-500" />
                         </div>
-                        扫描结果
+                        Scan results
                     </h2>
 
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                         <div className="bg-slate-50 dark:bg-slate-900/50 rounded-xl p-5 border border-slate-100 dark:border-slate-800 relative overflow-hidden group">
                             <div className="absolute top-0 left-0 w-1 h-full bg-red-500 group-hover:w-1.5 transition-all" />
-                            <div className="text-sm text-slate-500 dark:text-slate-400 mb-1 pl-2">高风险</div>
+                            <div className="text-sm text-slate-500 dark:text-slate-400 mb-1 pl-2">High risk</div>
                             <div className="text-3xl font-bold text-red-500 pl-2">{result.stats.high}</div>
                         </div>
                         <div className="bg-slate-50 dark:bg-slate-900/50 rounded-xl p-5 border border-slate-100 dark:border-slate-800 relative overflow-hidden group">
                             <div className="absolute top-0 left-0 w-1 h-full bg-orange-500 group-hover:w-1.5 transition-all" />
-                            <div className="text-sm text-slate-500 dark:text-slate-400 mb-1 pl-2">中风险</div>
+                            <div className="text-sm text-slate-500 dark:text-slate-400 mb-1 pl-2">Medium risk</div>
                             <div className="text-3xl font-bold text-orange-500 pl-2">{result.stats.medium}</div>
                         </div>
                         <div className="bg-slate-50 dark:bg-slate-900/50 rounded-xl p-5 border border-slate-100 dark:border-slate-800 relative overflow-hidden group">
                             <div className="absolute top-0 left-0 w-1 h-full bg-blue-500 group-hover:w-1.5 transition-all" />
-                            <div className="text-sm text-slate-500 dark:text-slate-400 mb-1 pl-2">低风险</div>
+                            <div className="text-sm text-slate-500 dark:text-slate-400 mb-1 pl-2">Low risk</div>
                             <div className="text-3xl font-bold text-blue-500 pl-2">{result.stats.low}</div>
                         </div>
                         <div className="bg-slate-50 dark:bg-slate-900/50 rounded-xl p-5 border border-slate-100 dark:border-slate-800 relative overflow-hidden group">
                             <div className="absolute top-0 left-0 w-1 h-full bg-slate-400 group-hover:w-1.5 transition-all" />
-                            <div className="text-sm text-slate-500 dark:text-slate-400 mb-1 pl-2">信息</div>
+                            <div className="text-sm text-slate-500 dark:text-slate-400 mb-1 pl-2">Informational</div>
                             <div className="text-3xl font-bold text-slate-500 pl-2">{result.stats.info || 0}</div>
                         </div>
                         {/* Security Score */}
@@ -279,7 +279,7 @@ const SecurityScanning: React.FC = () => {
                             <div className={`absolute top-0 left-0 w-1 h-full group-hover:w-1.5 transition-all ${result.stats.high === 0 && result.stats.medium === 0 ? 'bg-emerald-500' : result.stats.high === 0 ? 'bg-amber-500' : 'bg-red-500'
                                 }`} />
                             <div className="text-sm text-slate-500 dark:text-slate-400 mb-1 pl-2 flex items-center gap-1">
-                                <ShieldCheck className="w-3.5 h-3.5" /> 安全评分
+                                <ShieldCheck className="w-3.5 h-3.5" /> Security score
                             </div>
                             <div className={`text-3xl font-bold pl-2 ${result.stats.high === 0 && result.stats.medium === 0 ? 'text-emerald-500' : result.stats.high === 0 ? 'text-amber-500' : 'text-red-500'
                                 }`}>
@@ -291,7 +291,7 @@ const SecurityScanning: React.FC = () => {
                     {/* Severity Distribution Bar */}
                     {result.stats.total_alerts > 0 && (
                         <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
-                            <div className="text-xs font-medium text-slate-500 mb-2">风险分布</div>
+                            <div className="text-xs font-medium text-slate-500 mb-2">Risk distribution</div>
                             <div className="flex h-3 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800">
                                 {result.stats.high > 0 && (
                                     <div className="bg-red-500 transition-all" style={{ width: `${(result.stats.high / result.stats.total_alerts) * 100}%` }} />
@@ -307,17 +307,17 @@ const SecurityScanning: React.FC = () => {
                                 )}
                             </div>
                             <div className="flex gap-4 mt-2">
-                                <span className="flex items-center gap-1 text-[11px] text-slate-400"><span className="w-2 h-2 rounded-full bg-red-500" />高</span>
-                                <span className="flex items-center gap-1 text-[11px] text-slate-400"><span className="w-2 h-2 rounded-full bg-orange-500" />中</span>
-                                <span className="flex items-center gap-1 text-[11px] text-slate-400"><span className="w-2 h-2 rounded-full bg-blue-500" />低</span>
-                                <span className="flex items-center gap-1 text-[11px] text-slate-400"><span className="w-2 h-2 rounded-full bg-slate-400" />信息</span>
+                                <span className="flex items-center gap-1 text-[11px] text-slate-400"><span className="w-2 h-2 rounded-full bg-red-500" />High</span>
+                                <span className="flex items-center gap-1 text-[11px] text-slate-400"><span className="w-2 h-2 rounded-full bg-orange-500" />Medium</span>
+                                <span className="flex items-center gap-1 text-[11px] text-slate-400"><span className="w-2 h-2 rounded-full bg-blue-500" />Low</span>
+                                <span className="flex items-center gap-1 text-[11px] text-slate-400"><span className="w-2 h-2 rounded-full bg-slate-400" />Informational</span>
                             </div>
                         </div>
                     )}
                 </div>
             )}
 
-            {/* 历史记录 */}
+            {/* History*/}
             {history.length > 0 && (
                 <div className="relative overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md p-6">
                     <div className="flex items-center justify-between mb-6">
@@ -325,14 +325,14 @@ const SecurityScanning: React.FC = () => {
                             <div className="p-2 rounded-lg bg-slate-500/10">
                                 <FileText className="w-5 h-5 text-slate-500" />
                             </div>
-                            扫描历史
+                            Scan history
                         </h2>
                         <button
                             onClick={clearHistory}
                             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-lg transition-colors"
                         >
                             <Trash2 className="w-3.5 h-3.5" />
-                            清空全部
+                            Clear all
                         </button>
                     </div>
 
@@ -362,14 +362,14 @@ const SecurityScanning: React.FC = () => {
                                         <button
                                             onClick={(e) => { e.stopPropagation(); deleteHistory(h.scan_id); }}
                                             className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded-md transition-colors ml-1"
-                                            title="删除"
+                                            title={"Delete"}
                                         >
                                             <Trash2 className="w-3.5 h-3.5" />
                                         </button>
                                     </div>
                                 </div>
 
-                                {/* 展开的告警详情 */}
+                                {/* Expanded alert details*/}
                                 {selectedScan?.scan_id === h.scan_id && h.alerts && h.alerts.length > 0 && (
                                     <div className="mt-4 space-y-2 border-t border-slate-200 dark:border-slate-700 pt-4 animate-in slide-in-from-top-2 duration-200">
                                         {h.alerts.map((alert, i) => (
@@ -396,7 +396,7 @@ const SecurityScanning: React.FC = () => {
                                                         </div>
                                                         {alert.solution && (
                                                             <div className="mt-2 text-xs bg-white/50 dark:bg-black/20 p-2 rounded border border-slate-200 dark:border-slate-700/50">
-                                                                <span className="font-semibold text-slate-700 dark:text-slate-300">建议修复：</span>
+                                                                <span className="font-semibold text-slate-700 dark:text-slate-300">Suggested fix:</span>
                                                                 <span className="text-slate-600 dark:text-slate-400">{alert.solution}</span>
                                                             </div>
                                                         )}

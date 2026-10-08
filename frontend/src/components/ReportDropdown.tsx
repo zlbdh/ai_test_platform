@@ -1,8 +1,5 @@
-/**
- * ReportDropdown — 报告操作组件
- * 
- * 嵌入 ExecutionHistory 工具栏，提供「生成报告」按钮 + 报告历史下拉。
- * 支持：生成报告 → Toast 反馈 → 自动刷新历史 → 查看报告
+/** ReportDropdown: report actions embedded in the ExecutionHistory toolbar.
+ * Generate a report, show toast feedback, refresh history automatically, and open reports.
  */
 import React, { useState, useEffect, useRef } from 'react';
 import {
@@ -31,12 +28,12 @@ interface ReportItem {
 }
 
 function getScopeLabel(scope?: ReportItem['report_scope']) {
-    if (scope === 'record') return '专属报告';
-    if (scope === 'batch') return '批次报告';
-    return '汇总报告';
+    if (scope === 'record') return "Dedicated report";
+    if (scope === 'batch') return "Batch report";
+    return "Summary report";
 }
 
-/** 简单 Toast 消息 */
+/* Simple toast message*/
 const Toast: React.FC<{ message: string; type: 'success' | 'error'; onClose: () => void }> = ({ message, type, onClose }) => {
     useEffect(() => {
         const timer = setTimeout(onClose, 4000);
@@ -91,11 +88,11 @@ const ReportDropdown: React.FC = () => {
             const data = await res.json();
 
             if (!res.ok || data.status === 'error') {
-                setToast({ message: data.message || '报告生成失败', type: 'error' });
+                setToast({ message: data.message || "Report generation failed", type: 'error' });
                 return;
             }
 
-            // 刷新历史
+            // Refresh history.
             await loadReports();
 
             const recordCount = data.record_count || 0;
@@ -106,48 +103,48 @@ const ReportDropdown: React.FC = () => {
             const scopeLabel = getScopeLabel(data.report_scope);
 
             if (recordCount === 0 && caseCount === 0) {
-                setToast({ message: `${scopeLabel}已生成（暂无测试数据）`, type: 'success' });
+                setToast({ message: `${scopeLabel}Generated (no test data yet)`, type: 'success' });
             } else {
                 setToast({
-                    message: `${scopeLabel}已生成：${recordCount} 条记录，${caseCount} 个用例，${platformIssueCount} 个平台问题${failed > 0 ? `，${failed} 个失败用例` : ''}${passed > 0 ? `，${passed} 个通过用例` : ''}`,
+                    message: `${scopeLabel}Generated: ${recordCount} records, ${caseCount} test cases, ${platformIssueCount} platform issues${failed > 0 ? `，${failed} failed test cases` : ''}${passed > 0 ? `，${passed} passed test cases` : ''}`,
                     type: 'success'
                 });
             }
 
-            // 自动打开报告历史
+            // Open report history automatically.
             setIsOpen(true);
         } catch (err) {
-            setToast({ message: `报告生成失败: ${err instanceof Error ? err.message : '网络错误'}`, type: 'error' });
+            setToast({ message: `Report generation failed: ${err instanceof Error ? err.message : "Network error"}`, type: 'error' });
         } finally {
             setGenerating(false);
         }
     };
 
     const handleClear = async () => {
-        if (!confirm('确定清除所有测试报告？')) return;
+        if (!confirm("Clear all test reports?")) return;
         try {
             await fetch(API_ENDPOINTS.report.clear, { method: 'POST' });
             setReports([]);
-            setToast({ message: '已清除所有报告', type: 'success' });
+            setToast({ message: "All reports cleared", type: 'success' });
         } catch {
-            setToast({ message: '清除失败', type: 'error' });
+            setToast({ message: "Failed to clear", type: 'error' });
         }
     };
 
     const handleDelete = async (e: React.MouseEvent, id?: string) => {
         e.stopPropagation();
         if (!id) return;
-        if (!confirm('确定删除此报告？')) return;
+        if (!confirm("Delete this report?")) return;
         try {
             const res = await fetch(API_ENDPOINTS.report.delete(id), { method: 'DELETE' });
             if (res.ok) {
                 setReports(prev => prev.filter(r => r.id !== id));
-                setToast({ message: '报告已删除', type: 'success' });
+                setToast({ message: "Report deleted", type: 'success' });
             } else {
-                setToast({ message: '删除失败', type: 'error' });
+                setToast({ message: "Failed to delete", type: 'error' });
             }
         } catch {
-            setToast({ message: '网络错误，删除失败', type: 'error' });
+            setToast({ message: "Network error: deletion failed", type: 'error' });
         }
     };
 
@@ -169,9 +166,9 @@ const ReportDropdown: React.FC = () => {
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(objUrl);
-            setToast({ message: '开始下载报告...', type: 'success' });
+            setToast({ message: "Starting report download...", type: 'success' });
         } catch {
-            setToast({ message: '下载失败', type: 'error' });
+            setToast({ message: "Download failed", type: 'error' });
         }
     };
 
@@ -195,7 +192,7 @@ const ReportDropdown: React.FC = () => {
                     className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white rounded-lg text-xs font-medium transition-all shadow-md shadow-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {generating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileText className="w-3.5 h-3.5" />}
-                    {generating ? '生成中...' : '生成汇总报告'}
+                    {generating ? "Generating..." : "Generate summary report"}
                 </button>
 
                 {/* Dropdown Toggle */}
@@ -206,7 +203,7 @@ const ReportDropdown: React.FC = () => {
                         : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
                         }`}
                 >
-                    测试报告
+                    Test reports
                     {reports.length > 0 && <span className="px-1.5 py-0.5 text-[10px] bg-slate-100 dark:bg-slate-700 rounded-full">{reports.length}</span>}
                     <ChevronDown className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                 </button>
@@ -217,7 +214,7 @@ const ReportDropdown: React.FC = () => {
                         {reports.length === 0 ? (
                             <div className="py-8 text-center text-xs text-slate-400">
                                 <FileText className="w-8 h-8 mx-auto mb-2 opacity-20" />
-                                暂无测试报告，点击「生成汇总报告」开始
+                                No test reports yet. Click Generate summary report to begin.
                             </div>
                         ) : (
                             <>
@@ -244,14 +241,14 @@ const ReportDropdown: React.FC = () => {
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <p className="text-xs font-medium text-slate-700 dark:text-slate-200 truncate">
-                                                        {r.title || `报告 #${reports.length - i}`}
+                                                        {r.title || `Report #${reports.length - i}`}
                                                     </p>
                                                     <div className="flex items-center gap-2 mt-0.5 text-[10px] text-slate-400">
-                                                        <span className="flex items-center gap-0.5"><Clock className="w-2.5 h-2.5" />{new Date(r.timestamp).toLocaleString('zh-CN')}</span>
+                                                        <span className="flex items-center gap-0.5"><Clock className="w-2.5 h-2.5" />{new Date(r.timestamp).toLocaleString('en-US')}</span>
                                                         <span>{formatDuration(r.duration_ms)}</span>
                                                         <span>{getScopeLabel(r.report_scope)}</span>
-                                                        {recordCount > 0 && <span>{recordCount} 条记录</span>}
-                                                        {platformIssueCount > 0 && <span>{platformIssueCount} 个问题</span>}
+                                                        {recordCount > 0 && <span>{recordCount} records</span>}
+                                                        {platformIssueCount > 0 && <span>{platformIssueCount} issues</span>}
                                                     </div>
                                                 </div>
                                                 {total > 0 && (
@@ -262,20 +259,20 @@ const ReportDropdown: React.FC = () => {
                                                     </div>
                                                 )}
                                                 {total === 0 && (
-                                                    <span className="text-[10px] text-slate-400 shrink-0">空</span>
+                                                    <span className="text-[10px] text-slate-400 shrink-0">Empty</span>
                                                 )}
                                                 {(r.report_url || r.allure_url) && (
                                                     <a href={r.allure_url || r.report_url} target="_blank" rel="noreferrer"
                                                         className="p-1.5 rounded-lg text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-colors shrink-0"
-                                                        onClick={(e) => e.stopPropagation()} title="在新标签页查看">
+                                                        onClick={(e) => e.stopPropagation()} title={"Open in new tab"}>
                                                         <ExternalLink className="w-3.5 h-3.5" />
                                                     </a>
                                                 )}
-                                                <button onClick={(e) => handleDownloadReport(e, r)} title="下载离线报告"
+                                                <button onClick={(e) => handleDownloadReport(e, r)} title={"Download offline report"}
                                                     className="p-1.5 rounded-lg text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors shrink-0">
                                                     <Download className="w-3.5 h-3.5" />
                                                 </button>
-                                                <button onClick={(e) => handleDelete(e, r.id)} title="删除"
+                                                <button onClick={(e) => handleDelete(e, r.id)} title={"Delete"}
                                                     className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors shrink-0">
                                                     <Trash2 className="w-3.5 h-3.5" />
                                                 </button>
@@ -286,7 +283,7 @@ const ReportDropdown: React.FC = () => {
                                 <div className="px-4 py-2 border-t border-slate-100 dark:border-slate-700/50">
                                     <button onClick={handleClear}
                                         className="flex items-center gap-1 text-[10px] text-red-500 hover:text-red-600 transition-colors">
-                                        <Trash2 className="w-3 h-3" /> 清除所有报告
+                                        <Trash2 className="w-3 h-3" /> Clear all reports
                                     </button>
                                 </div>
                             </>

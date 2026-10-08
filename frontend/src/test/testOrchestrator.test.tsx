@@ -43,7 +43,7 @@ vi.mock('../components/TestConfigPanel', () => ({
         <div>
             <button onClick={() => setRequirement('登录流程测试')}>填写需求</button>
             <button onClick={() => setProbeMode?.(!probeMode)}>切换探针</button>
-            <button onClick={onGeneratePlan}>生成计划</button>
+            <button onClick={onGeneratePlan}>Generate plan</button>
         </div>
     ),
 }));
@@ -51,7 +51,7 @@ vi.mock('../components/TestConfigPanel', () => ({
 vi.mock('../components/PlanPreview', () => ({
     default: ({ testPlan, stepStatuses, onExecute }: MockPlanPreviewProps) => (
         <div>
-            <button onClick={onExecute}>执行计划</button>
+            <button onClick={onExecute}>Execution plan</button>
             <div data-testid="step-statuses">
                 {testPlan.map((_, idx) => `${idx}:${stepStatuses.get(idx) || 'pending'}`).join('|')}
             </div>
@@ -156,14 +156,14 @@ describe('TestOrchestrator', () => {
         );
 
         fireEvent.click(screen.getByText('填写需求'));
-        fireEvent.click(screen.getByText('生成计划'));
+        fireEvent.click(screen.getByText("Generate plan"));
 
         await waitFor(() => {
             expect(mockGenerateTestPlanWithCoverage).toHaveBeenCalledWith('登录流程测试', '', 'default', 'default');
         });
         expect(screen.getByTestId('step-statuses')).toHaveTextContent('0:pending|1:pending');
 
-        fireEvent.click(screen.getByText('执行计划'));
+        fireEvent.click(screen.getByText("Execution plan"));
 
         await waitFor(() => {
             expect(mockStartExecution).toHaveBeenCalledTimes(1);
@@ -259,13 +259,13 @@ describe('TestOrchestrator', () => {
 
         fireEvent.click(screen.getByText('填写需求'));
         fireEvent.click(screen.getByText('切换探针'));
-        fireEvent.click(screen.getByText('生成计划'));
+        fireEvent.click(screen.getByText("Generate plan"));
 
         await waitFor(() => {
             expect(mockGenerateTestPlanWithCoverage).toHaveBeenCalledWith('登录流程测试', '', 'probe', 'read_only');
         });
 
-        fireEvent.click(screen.getByText('执行计划'));
+        fireEvent.click(screen.getByText("Execution plan"));
 
         await waitFor(() => {
             expect(mockStartExecution).toHaveBeenCalledWith(
@@ -281,7 +281,7 @@ describe('TestOrchestrator', () => {
             );
         });
 
-        expect(screen.getByText('当前执行模式：')).toBeInTheDocument();
-        expect(screen.getByText('只读探针')).toBeInTheDocument();
+        expect(screen.getByText("Current execution mode:")).toBeInTheDocument();
+        expect(screen.getByText("Read-only probe")).toBeInTheDocument();
     });
 });

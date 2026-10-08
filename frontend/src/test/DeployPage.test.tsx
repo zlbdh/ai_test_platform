@@ -503,14 +503,14 @@ describe('DeployPage', () => {
         expect(await screen.findByText('示例项目')).toBeInTheDocument();
 
         fireEvent.click(screen.getAllByTitle('批准')[0]);
-        expect(await screen.findByText('批准部署审批')).toBeInTheDocument();
+        expect(await screen.findByText('Approve deployment')).toBeInTheDocument();
 
-        fireEvent.change(screen.getByPlaceholderText('例如：已确认发布时间窗，可以执行。'), {
+        fireEvent.change(screen.getByPlaceholderText('Example: The deployment window is confirmed. Proceed.'), {
             target: { value: '窗口已确认' },
         });
         vi.useFakeTimers();
         try {
-            fireEvent.click(screen.getByRole('button', { name: '确认批准' }));
+            fireEvent.click(screen.getByRole('button', { name: 'Confirm approval' }));
 
             await act(async () => {
                 await Promise.resolve();
@@ -518,7 +518,7 @@ describe('DeployPage', () => {
             });
 
             expect(deployServiceMocks.approveDeployApproval).toHaveBeenCalledWith('approval-1', '窗口已确认');
-            expect(screen.getByText('直接部署 · 后端服务')).toBeInTheDocument();
+            expect(screen.getByText('Direct deployment · 后端服务')).toBeInTheDocument();
             expect(screen.getByText('✅ 审批已通过，部署任务已启动...')).toBeInTheDocument();
 
             await act(async () => {
@@ -658,7 +658,7 @@ describe('DeployPage', () => {
             });
 
             expect(deployServiceMocks.getRecordDetail).toHaveBeenCalledWith('record-9');
-            expect(screen.getByText('直接部署 · 后端服务')).toBeInTheDocument();
+            expect(screen.getByText('Direct deployment · 后端服务')).toBeInTheDocument();
             expect(screen.getByText('🔍 从审计详情打开部署记录...')).toBeInTheDocument();
             expect(screen.getByText('已定位记录 record-9')).toBeInTheDocument();
 

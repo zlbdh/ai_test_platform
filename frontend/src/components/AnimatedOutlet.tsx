@@ -1,10 +1,4 @@
-/**
- * AnimatedOutlet — 页面切换过渡动画 (P2-1)
- * 
- * 纯 CSS 方案（无需 framer-motion 依赖）
- * 使用 React Router 的 useLocation 检测路由变化
- * 每次路由切换时触发 fade + slide-up 入场动画
- */
+/* AnimatedOutlet: CSS route transitions.*/
 import React, { useEffect, useState, useRef } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 
@@ -20,7 +14,7 @@ const AnimatedOutlet: React.FC<AnimatedOutletProps> = ({ context }) => {
 
     useEffect(() => {
         if (location.pathname !== prevPathRef.current) {
-            // 路由变化 → 触发退出动画
+            // A route change starts the exit transition.
             // eslint-disable-next-line react-hooks/set-state-in-effect
             setTransitionStage('exit');
             prevPathRef.current = location.pathname;
@@ -29,7 +23,7 @@ const AnimatedOutlet: React.FC<AnimatedOutletProps> = ({ context }) => {
 
     const handleAnimationEnd = () => {
         if (transitionStage === 'exit') {
-            // 退出动画完成 → 切换内容 → 触发入场动画
+            // Enter the new content after the exit finishes.
             setDisplayLocation(location);
             setTransitionStage('enter');
         }

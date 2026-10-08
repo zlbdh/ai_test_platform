@@ -1,23 +1,20 @@
-/**
- * useHotkeys — 全局快捷键 Hook (P2-1)
- * 
- * 支持:
- *   Ctrl+K  →  打开命令面板
- *   Ctrl+.  →  打开设置
- *   Ctrl+Enter → 执行当前任务
- *   /   → 聚焦搜索栏 (非输入框时)
- *   Escape → 关闭弹窗
+/** useHotkeys: global keyboard shortcuts (P2-1).
+ * Ctrl+K: open the command palette.
+ * Ctrl+.: open settings.
+ * Ctrl+Enter: execute the current task.
+ * /: focus search when outside an input field.
+ * Escape: close the dialog.
  */
 import { useEffect, useCallback, useRef } from 'react';
 
 export interface HotkeyBinding {
-  /** 快捷键组合，如 'ctrl+k', 'ctrl+enter', 'escape', '/' */
+  /** Shortcut combination, such as 'ctrl+k', 'ctrl+enter', 'escape', or '/'. */
   key: string;
-  /** 触发回调 */
+  /** Trigger callback. */
   handler: (e: KeyboardEvent) => void;
-  /** 是否在输入框中也生效，默认 false */
+  /** Whether the shortcut works inside input fields; defaults to false. */
   enableInInput?: boolean;
-  /** 描述（用于命令面板显示） */
+  /** Description displayed in the command palette. */
   description?: string;
 }
 
@@ -51,8 +48,7 @@ function isInputElement(el: EventTarget | null): boolean {
   );
 }
 
-/**
- * 注册全局快捷键
+/** Register global keyboard shortcuts.
  */
 export function useHotkeys(bindings: HotkeyBinding[]): void {
   const bindingsRef = useRef(bindings);
@@ -63,7 +59,7 @@ export function useHotkeys(bindings: HotkeyBinding[]): void {
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     for (const binding of bindingsRef.current) {
       if (matchesKey(e, binding.key)) {
-        // 如果在输入框中且 binding 不允许，跳过
+        // Skip input fields unless the binding allows them.
         if (!binding.enableInInput && isInputElement(e.target)) {
           continue;
         }

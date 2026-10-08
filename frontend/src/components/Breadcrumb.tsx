@@ -4,7 +4,7 @@ import { ChevronRight, Home } from './icons';
 import type { NavItemConfig } from './ui/NavItem';
 
 // ============================================================================
-// Breadcrumb — 面包屑导航，根据当前路由自动显示层级
+// Breadcrumbs reflect the route hierarchy.
 // ============================================================================
 interface BreadcrumbProps {
     navItems: NavItemConfig[];
@@ -16,7 +16,7 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ navItems }) => {
 
     if (currentPath.startsWith('/tasks/')) {
         return (
-            <nav className="flex items-center gap-1.5 text-sm animate-in fade-in duration-300" aria-label="面包屑导航">
+            <nav className="flex items-center gap-1.5 text-sm animate-in fade-in duration-300" aria-label={"Breadcrumb navigation"}>
                 <Link
                     to="/"
                     className="text-slate-400 dark:text-slate-500 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors"
@@ -24,13 +24,13 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ navItems }) => {
                     <Home className="w-3.5 h-3.5" />
                 </Link>
                 <ChevronRight className="w-3 h-3 text-slate-300 dark:text-slate-600" />
-                <span className="text-slate-400 dark:text-slate-500">主入口</span>
+                <span className="text-slate-400 dark:text-slate-500">Main entry</span>
                 <ChevronRight className="w-3 h-3 text-slate-300 dark:text-slate-600" />
                 <Link to="/" className="text-slate-400 dark:text-slate-500 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors">
-                    统一测试
+                    Unified testing
                 </Link>
                 <ChevronRight className="w-3 h-3 text-slate-300 dark:text-slate-600" />
-                <span className="font-medium text-slate-700 dark:text-slate-300 gradient-text">任务结果</span>
+                <span className="font-medium text-slate-700 dark:text-slate-300 gradient-text">Task results</span>
             </nav>
         );
     }
@@ -45,13 +45,13 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ navItems }) => {
         return (
             <div className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
                 <Home className="w-3.5 h-3.5" />
-                <span className="font-medium text-slate-700 dark:text-slate-300">控制中心</span>
+                <span className="font-medium text-slate-700 dark:text-slate-300">Control center</span>
             </div>
         );
     }
 
     return (
-        <nav className="flex items-center gap-1.5 text-sm animate-in fade-in duration-300" aria-label="面包屑导航">
+        <nav className="flex items-center gap-1.5 text-sm animate-in fade-in duration-300" aria-label={"Breadcrumb navigation"}>
             <Link
                 to="/"
                 className="text-slate-400 dark:text-slate-500 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors"

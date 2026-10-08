@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 /* ============================================================================
-   Design Tokens — 统一设计变量
+   Design Tokens — Shared design variables
    ============================================================================ */
 @layer base {
   :root {
@@ -42,7 +42,7 @@
     --shadow-glow-lg: 0 0 40px rgb(99 102 241 / 0.2), 0 0 80px rgb(139 92 246 / 0.1);
 
     /* Typography */
-    --font-sans: 'Inter', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
     --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
     --text-xs: 0.75rem;
     --text-sm: 0.875rem;
@@ -103,7 +103,7 @@
     @apply bg-slate-900 text-slate-200;
   }
 
-  /* 全局交互元素 focus ring */
+  /* Global focus ring for interactive elements */
   button:focus-visible,
   a:focus-visible,
   input:focus-visible,
@@ -122,7 +122,7 @@
 }
 
 /* ============================================================================
-   Custom Scrollbar — 精致窄滚动条
+   Custom Scrollbar — Compact scrollbar
    ============================================================================ */
 ::-webkit-scrollbar {
   width: 6px;
@@ -157,10 +157,10 @@
 }
 
 /* ============================================================================
-   Micro-Animation Utilities — 全局微交互工具类
+   Micro-Animation Utilities — Global micro-interaction utilities
    ============================================================================ */
 
-/* ── 卡片悬浮浮起 + 光晕 ── */
+/* ── Card hover lift and glow ── */
 .card-hover-lift {
   transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
     box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
@@ -177,7 +177,7 @@
     0 4px 10px -4px rgb(0 0 0 / 0.3);
 }
 
-/* ── 毛玻璃面板 ── */
+/* ── Frosted glass panel ── */
 .glass-panel {
   background: rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(20px) saturate(180%);
@@ -190,7 +190,7 @@
   border-color: rgba(51, 65, 85, 0.5);
 }
 
-/* ── 按钮光晕 hover ── */
+/* ── Button hover glow ── */
 .btn-glow {
   position: relative;
   transition: transform 0.2s, box-shadow 0.2s;
@@ -205,7 +205,7 @@
   transform: translateY(0);
 }
 
-/* ── 按钮滑入高光 ── */
+/* ── Sliding button highlight ── */
 .btn-slide {
   position: relative;
   overflow: hidden;
@@ -226,7 +226,7 @@
   transform: translateX(100%);
 }
 
-/* ── 渐变文字 ── */
+/* ── Gradient text ── */
 .gradient-text {
   background: var(--gradient-brand);
   -webkit-background-clip: text;
@@ -234,7 +234,7 @@
   background-clip: text;
 }
 
-/* ── 轻微浮动呼吸 ── */
+/* ── Subtle floating animation ── */
 .float-subtle {
   animation: float-subtle 3s ease-in-out infinite;
 }
@@ -244,7 +244,7 @@
   50% { transform: translateY(-4px); }
 }
 
-/* ── 边框光晕 ── */
+/* ── Border glow ── */
 .glow-border {
   position: relative;
 }
@@ -264,7 +264,7 @@
   opacity: 0.15;
 }
 
-/* ── Shimmer 骨架屏加载 ── */
+/* ── Shimmer skeleton loading ── */
 .shimmer {
   background: linear-gradient(90deg,
       var(--color-surface-alt) 25%,
@@ -284,7 +284,7 @@
   }
 }
 
-/* ── 呼吸灯脉冲 ── */
+/* ── Breathing pulse ── */
 .pulse-glow {
   animation: pulse-glow 2s ease-in-out infinite;
 }
@@ -301,7 +301,7 @@
   }
 }
 
-/* ── 交错入场动画 ── */
+/* ── Staggered entrance animation ── */
 .stagger-enter>* {
   opacity: 0;
   transform: translateY(12px);
@@ -339,7 +339,7 @@
   }
 }
 
-/* ── 侧边栏活跃指示条 ── */
+/* ── Active sidebar indicator ── */
 .nav-active-bar {
   position: relative;
 }
@@ -388,7 +388,7 @@
 }
 
 /* ============================================================================
-   Page Transition — 页面切换过渡动画
+   Page Transition — Page navigation transitions
    ============================================================================ */
 .page-transition {
   will-change: opacity, transform;
@@ -427,7 +427,7 @@
 }
 
 /* ============================================================================
-   Dashboard Grid Layout — CSS Grid 页面骨架
+   Dashboard Grid Layout — CSS Grid page structure
    ============================================================================ */
 .dashboard-grid {
   display: grid;
@@ -487,17 +487,17 @@
 }
 
 /* ============================================================================
-   Responsive Utilities — 响应式全局优化
+   Responsive Utilities — Global responsive adjustments
    ============================================================================ */
 
-/* 移动端 viewport 高度修复 (iOS Safari 地址栏) */
+/* Mobile viewport height fix for the iOS Safari address bar */
 @supports (height: 100dvh) {
   .h-screen {
     height: 100dvh !important;
   }
 }
 
-/* 移动端触摸目标最小尺寸 44x44 */
+/* Minimum mobile touch target: 44x44 */
 @media (max-width: 768px) {
 
   button,
@@ -535,7 +535,7 @@
   }
 }
 
-/* 平板端微调 */
+/* Tablet adjustments */
 @media (min-width: 769px) and (max-width: 1024px) {
   .gap-6 {
     gap: 1.25rem !important;
@@ -563,7 +563,7 @@
   -webkit-box-orient: vertical;
 }
 
-/* 安全区域适配 (iPhone 刘海屏) */
+/* Safe-area support for notched iPhone screens */
 @supports (padding: env(safe-area-inset-bottom)) {
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom);

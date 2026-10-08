@@ -25,7 +25,7 @@ const sizeClasses = {
 };
 
 const Select: React.FC<SelectProps> = ({
-    value, onChange, options, placeholder = '请选择...', label, disabled = false, className = '', size = 'md',
+    value, onChange, options, placeholder = "Select...", label, disabled = false, className = '', size = 'md',
 }) => (
     <div className={className}>
         {label && (

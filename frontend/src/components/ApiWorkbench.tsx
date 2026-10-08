@@ -47,11 +47,11 @@ const HttpPanel: React.FC = () => {
         try { const res = await fetch(API_ENDPOINTS.workbench.collection(collectionId)); const data = await res.json(); setCollections(prev => prev.map(c => c.id === collectionId ? { ...c, ...data.collection } : c)); } catch (e) { console.error('Failed:', e); }
     };
     const createCollection = async () => {
-        const name = prompt('输入集合名称:'); if (!name) return;
+        const name = prompt("Enter a collection name:"); if (!name) return;
         try { const res = await fetch(API_ENDPOINTS.workbench.collections, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, description: '' }) }); if (res.ok) fetchCollections(); } catch (e) { console.error('Failed:', e); }
     };
     const deleteCollection = async (collectionId: string) => {
-        if (!confirm('确定删除这个集合?')) return;
+        if (!confirm("Delete this collection?")) return;
         try { await fetch(API_ENDPOINTS.workbench.collection(collectionId), { method: 'DELETE' }); fetchCollections(); if (activeCollectionId === collectionId) { setActiveCollectionId(null); setActiveRequestId(null); setCurrentRequest(null); } } catch (e) { console.error('Failed:', e); }
     };
     const addRequest = async (collectionId: string) => {
@@ -62,7 +62,7 @@ const HttpPanel: React.FC = () => {
         try { await fetch(API_ENDPOINTS.workbench.request(activeCollectionId, activeRequestId), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(currentRequest) }); fetchCollectionDetails(activeCollectionId); } catch (e) { console.error('Failed:', e); }
     };
     const deleteRequest = async (collectionId: string, requestId: string) => {
-        if (!confirm('确定删除这个请求?')) return;
+        if (!confirm("Delete this request?")) return;
         try { await fetch(API_ENDPOINTS.workbench.request(collectionId, requestId), { method: 'DELETE' }); fetchCollectionDetails(collectionId); if (activeRequestId === requestId) { setActiveRequestId(null); setCurrentRequest(null); } } catch (e) { console.error('Failed:', e); }
     };
     const executeRequest = async () => {
@@ -86,7 +86,7 @@ const HttpPanel: React.FC = () => {
                 body: JSON.stringify({
                     request: resolvedRequest,
                     extra_vars: activeEnv?.variables || {},
-                    ...ensureExecutionContextPayload('API 专项测试', { targetUrl: resolvedRequest.url }),
+                    ...ensureExecutionContextPayload("API test suite", { targetUrl: resolvedRequest.url }),
                 }),
             });
             const data = await res.json();
@@ -119,7 +119,7 @@ const HttpPanel: React.FC = () => {
             <div className="w-72 flex-shrink-0 flex flex-col rounded-xl border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md overflow-hidden">
                 <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
                     <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                        <Folder className="w-4 h-4 text-indigo-500" /> 集合
+                        <Folder className="w-4 h-4 text-indigo-500" /> Collections
                     </h3>
                     <button onClick={createCollection} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-indigo-500 transition">
                         <Plus className="w-4 h-4" />
@@ -153,8 +153,8 @@ const HttpPanel: React.FC = () => {
                     {collections.length === 0 && (
                         <div className="text-center py-8 text-slate-400">
                             <FileJson className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                            <p className="text-sm">暂无集合</p>
-                            <button onClick={createCollection} className="mt-2 text-xs text-indigo-500 hover:underline">创建第一个集合</button>
+                            <p className="text-sm">No collections yet</p>
+                            <button onClick={createCollection} className="mt-2 text-xs text-indigo-500 hover:underline">Create your first collection</button>
                         </div>
                     )}
                 </div>
@@ -164,7 +164,7 @@ const HttpPanel: React.FC = () => {
                     <button onClick={() => setEnvPanelOpen(!envPanelOpen)}
                         className="w-full p-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800 transition">
                         <span className="flex items-center gap-2 text-sm font-bold text-slate-700 dark:text-white">
-                            <Database className="w-4 h-4 text-emerald-500" /> 环境变量
+                            <Database className="w-4 h-4 text-emerald-500" /> Environment variables
                         </span>
                         <Settings className={`w-3.5 h-3.5 text-slate-400 transition-transform ${envPanelOpen ? 'rotate-90' : ''}`} />
                     </button>
@@ -180,7 +180,7 @@ const HttpPanel: React.FC = () => {
                                         {env.name}
                                     </button>
                                 ))}
-                                {environments.length === 0 && <span className="text-[11px] text-slate-400">暂无环境</span>}
+                                {environments.length === 0 && <span className="text-[11px] text-slate-400">No environments yet</span>}
                             </div>
                             {/* Active Env Variables */}
                             {activeEnvId && (() => {
@@ -195,7 +195,7 @@ const HttpPanel: React.FC = () => {
                                                 <span className="font-mono text-slate-600 dark:text-slate-400 truncate">{v}</span>
                                             </div>
                                         ))}
-                                        {Object.keys(env.variables).length === 0 && <span className="text-[10px] text-slate-400">无变量</span>}
+                                        {Object.keys(env.variables).length === 0 && <span className="text-[10px] text-slate-400">No variables</span>}
                                     </div>
                                 );
                             })()}
@@ -208,7 +208,7 @@ const HttpPanel: React.FC = () => {
                     <button onClick={() => setShowHistory(!showHistory)}
                         className="w-full p-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800 transition">
                         <span className="flex items-center gap-2 text-sm font-bold text-slate-700 dark:text-white">
-                            <History className="w-4 h-4 text-amber-500" /> 请求历史
+                            <History className="w-4 h-4 text-amber-500" /> Request history
                             {requestHistory.length > 0 && <span className="text-[10px] bg-amber-100 dark:bg-amber-900/30 text-amber-600 px-1.5 rounded-full">{requestHistory.length}</span>}
                         </span>
                         <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${showHistory ? 'rotate-180' : ''}`} />
@@ -224,7 +224,7 @@ const HttpPanel: React.FC = () => {
                                     </div>
                                     <div className="flex items-center gap-2 text-[10px] text-slate-400 mt-0.5">
                                         <span>{h.time.toFixed(0)}ms</span>
-                                        <span>{new Date(h.ts).toLocaleTimeString('zh-CN')}</span>
+                                        <span>{new Date(h.ts).toLocaleTimeString('en-US')}</span>
                                     </div>
                                 </div>
                             ))}
@@ -245,16 +245,16 @@ const HttpPanel: React.FC = () => {
                                     {['GET', 'POST', 'PUT', 'PATCH', 'DELETE'].map(m => <option key={m} value={m}>{m}</option>)}
                                 </select>
                                 <input type="text" value={currentRequest.url} onChange={(e) => setCurrentRequest({ ...currentRequest, url: e.target.value })}
-                                    placeholder="输入请求 URL..." className="flex-1 px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" />
-                                <button onClick={saveRequest} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition" title="保存"><Save className="w-5 h-5" /></button>
+                                    placeholder={"Enter request URL..."} className="flex-1 px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" />
+                                <button onClick={saveRequest} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition" title={"Save"}><Save className="w-5 h-5" /></button>
                                 <button onClick={executeRequest} disabled={isLoading}
                                     className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-lg font-medium shadow-lg shadow-indigo-500/20 active:scale-95 transition-all disabled:opacity-50">
-                                    {isLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />} 发送
+                                    {isLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />} Send
                                 </button>
                             </div>
                             <div className="px-4 py-2 border-b border-slate-200 dark:border-slate-800">
                                 <input type="text" value={currentRequest.name} onChange={(e) => setCurrentRequest({ ...currentRequest, name: e.target.value })}
-                                    className="text-lg font-semibold bg-transparent border-0 outline-none w-full text-slate-900 dark:text-white" placeholder="请求名称" />
+                                    className="text-lg font-semibold bg-transparent border-0 outline-none w-full text-slate-900 dark:text-white" placeholder={"Request name"} />
                             </div>
                             <div className="flex border-b border-slate-200 dark:border-slate-800">
                                 {(['params', 'headers', 'body', 'assertions'] as const).map(tab => (
@@ -276,7 +276,7 @@ const HttpPanel: React.FC = () => {
                                                 <button onClick={() => removeKeyValue('params', key)} className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition"><Trash2 className="w-4 h-4" /></button>
                                             </div>
                                         ))}
-                                        <button onClick={() => addKeyValue('params')} className="flex items-center gap-1 text-sm text-indigo-500 hover:underline"><Plus className="w-4 h-4" /> 添加参数</button>
+                                        <button onClick={() => addKeyValue('params')} className="flex items-center gap-1 text-sm text-indigo-500 hover:underline"><Plus className="w-4 h-4" /> Add parameter</button>
                                     </div>
                                 )}
                                 {activeTab === 'headers' && (
@@ -288,7 +288,7 @@ const HttpPanel: React.FC = () => {
                                                 <button onClick={() => removeKeyValue('headers', key)} className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition"><Trash2 className="w-4 h-4" /></button>
                                             </div>
                                         ))}
-                                        <button onClick={() => addKeyValue('headers')} className="flex items-center gap-1 text-sm text-indigo-500 hover:underline"><Plus className="w-4 h-4" /> 添加 Header</button>
+                                        <button onClick={() => addKeyValue('headers')} className="flex items-center gap-1 text-sm text-indigo-500 hover:underline"><Plus className="w-4 h-4" /> Add header</button>
                                     </div>
                                 )}
                                 {activeTab === 'body' && (
@@ -306,8 +306,8 @@ const HttpPanel: React.FC = () => {
                                 )}
                                 {activeTab === 'assertions' && (
                                     <div className="text-sm text-slate-500">
-                                        <p>断言配置功能开发中...</p>
-                                        <p className="mt-2 text-xs">支持的断言类型: status, json_path, header, response_time</p>
+                                        <p>Assertion configuration is under development...</p>
+                                        <p className="mt-2 text-xs">Supported assertions: status, json_path, header, response_time</p>
                                     </div>
                                 )}
                             </div>
@@ -316,7 +316,7 @@ const HttpPanel: React.FC = () => {
                         {/* Response Panel */}
                         <div className="flex-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md overflow-hidden flex flex-col min-h-0">
                             <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                                <h3 className="font-bold text-slate-900 dark:text-white">响应</h3>
+                                <h3 className="font-bold text-slate-900 dark:text-white">Response</h3>
                                 {result && (
                                     <div className="flex items-center gap-4 text-sm">
                                         <span className={`font-mono font-bold ${result.status_code >= 200 && result.status_code < 300 ? 'text-green-500' : result.status_code >= 400 ? 'text-red-500' : 'text-yellow-500'}`}>{result.status_code}</span>
@@ -341,7 +341,7 @@ const HttpPanel: React.FC = () => {
                             )}
                             <div className="flex-1 overflow-auto p-4">
                                 {isLoading ? (
-                                    <div className="flex items-center justify-center h-full text-slate-400"><RefreshCw className="w-6 h-6 animate-spin mr-2" />发送请求中...</div>
+                                    <div className="flex items-center justify-center h-full text-slate-400"><RefreshCw className="w-6 h-6 animate-spin mr-2" />Sending request...</div>
                                 ) : result ? (
                                     <>
                                         {result.error ? (
@@ -358,7 +358,7 @@ const HttpPanel: React.FC = () => {
                                                 )}
                                                 {responseTab === 'assertions' && (
                                                     <div className="space-y-2">
-                                                        {result.assertion_details.length === 0 ? <p className="text-slate-400 text-sm">无断言配置</p> : (
+                                                        {result.assertion_details.length === 0 ? <p className="text-slate-400 text-sm">No assertions configured</p> : (
                                                             result.assertion_details.map((a, i) => (
                                                                 <div key={i} className={`p-3 rounded-lg border ${a.passed ? 'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-900/50' : 'bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-900/50'}`}>
                                                                     <div className="flex items-center gap-2">{a.passed ? <Check className="w-4 h-4 text-green-500" /> : <X className="w-4 h-4 text-red-500" />}<span className="font-medium text-sm">{a.type}</span>{a.path && <span className="text-xs text-slate-500">({a.path})</span>}</div>
@@ -372,7 +372,7 @@ const HttpPanel: React.FC = () => {
                                         )}
                                     </>
                                 ) : (
-                                    <div className="flex flex-col items-center justify-center h-full text-slate-400"><Send className="w-12 h-12 mb-4 opacity-30" /><p>点击发送按钮执行请求</p></div>
+                                    <div className="flex flex-col items-center justify-center h-full text-slate-400"><Send className="w-12 h-12 mb-4 opacity-30" /><p>Click Send to execute the request</p></div>
                                 )}
                             </div>
                         </div>
@@ -381,8 +381,8 @@ const HttpPanel: React.FC = () => {
                     <div className="flex-1 flex items-center justify-center rounded-xl border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md">
                         <div className="text-center text-slate-400">
                             <FileJson className="w-16 h-16 mx-auto mb-4 opacity-30" />
-                            <p className="text-lg font-medium">选择或创建一个请求</p>
-                            <p className="text-sm mt-2">从左侧面板选择一个现有请求，或创建新的 API 集合</p>
+                            <p className="text-lg font-medium">Select or create a request</p>
+                            <p className="text-sm mt-2">Select an existing request in the sidebar or create an API collection</p>
                         </div>
                     </div>
                 )}
@@ -399,7 +399,7 @@ const ApiWorkbench: React.FC = () => {
 
     return (
         <div className="flex flex-col h-full gap-4 animate-in fade-in duration-500">
-            <ExecutionBatchBanner standaloneHint="在这里执行的 HTTP / GraphQL / WebSocket / gRPC 测试会作为独立记录保存。" />
+            <ExecutionBatchBanner standaloneHint={"HTTP, GraphQL, WebSocket, and gRPC tests run here are saved as separate records"} />
 
             {/* Protocol Tabs */}
             <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-800/50 w-fit">

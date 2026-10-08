@@ -39,6 +39,6 @@ export function normalizeBackendConfig(config?: Partial<AIBackendConfig>): AIBac
         provider_locked: config?.provider_locked ?? true,
         model_locked: config?.model_locked ?? true,
         allowed_models: config?.allowed_models?.length ? config.allowed_models : [RESOURCE_PACK_MODEL],
-        profile_name: config?.profile_name || '接口AI资源包',
+        profile_name: config?.profile_name || "JieKou AI resource package",
     };
 }

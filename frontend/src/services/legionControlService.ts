@@ -6,7 +6,7 @@ async function ensureJsonResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
         const detail = typeof payload === 'object' && payload && 'detail' in payload
             ? String((payload as Record<string, unknown>).detail)
-            : `请求失败 (${response.status})`;
+            : `Request failed (${response.status})`;
         throw new Error(detail);
     }
     return payload as T;

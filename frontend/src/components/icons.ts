@@ -1,12 +1,6 @@
-/**
- * ── 集中式图标注册表 ──────────────────────────────────────────
- *
- * 所有 lucide-react 图标的唯一出口。
- * 项目中的所有组件和页面都应从此文件导入图标，
- * 而非直接从 'lucide-react' 导入，以方便统一管理和替换。
- *
- * 注意: re-export 方式完全兼容 tree-shaking，
- * 未使用的图标不会被打包到最终产物中。
+/** Central icon registry.
+ * All components and pages must import lucide-react icons here so they can be managed and replaced centrally.
+ * Re-exports support tree shaking; unused icons are excluded from the final bundle.
  */
 
 export {

@@ -220,7 +220,7 @@ export const API_ENDPOINTS = {
             stream: (missionId: string) => `${API_BASE_URL}/api/commander/prototype/stream/${missionId}`,
         },
     },
-    // 项目部署
+    // Project deployment
     deploy: {
         projects: `${API_BASE_URL}/api/deploy/projects`,
         project: (key: string) => `${API_BASE_URL}/api/deploy/projects/${key}`,

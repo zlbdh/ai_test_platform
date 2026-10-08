@@ -1,8 +1,5 @@
-/**
- * useNotifications — 通知状态管理 Hook (P2-1)
- * 
- * 管理通知列表、已读状态、桌面通知推送
- * 支持与 SSE/WebSocket 事件集成
+/** useNotifications: notification state management (P2-1).
+ * Manage notifications, read state, and desktop delivery, with SSE/WebSocket integration.
  */
 import { useState, useCallback } from 'react';
 import type { AppNotification } from '../components/NotificationCenter';
@@ -29,9 +26,9 @@ export function useNotifications() {
             url,
         };
 
-        setNotifications(prev => [notif, ...prev].slice(0, 50)); // 最多保留 50 条
+        setNotifications(prev => [notif, ...prev].slice(0, 50)); // Keep at most 50 notifications.
 
-        // 桌面通知
+        // Desktop notification
         if ('Notification' in window && Notification.permission === 'granted') {
             try {
                 new Notification(title, {
@@ -40,7 +37,7 @@ export function useNotifications() {
                     tag: id,
                 });
             } catch {
-                // 静默失败
+                // Fail silently.
             }
         }
 

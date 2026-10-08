@@ -9,17 +9,15 @@ interface PageHeaderProps {
     actions?: React.ReactNode;
 }
 
-/**
- * 统一的页面标题组件 — 确保所有页面外观一致。
- *
- * 用法:
+/** Shared page header for a consistent appearance.
+ * Usage:
  * ```tsx
  * <PageHeader
  *   icon={<Webhook className="w-5 h-5" />}
- *   title="CI/CD 集成"
- *   description="配置 Webhook、查看触发历史"
+ *   title="CI/CD integration"
+ *   description="Configure webhooks and view trigger history"
  *   accent="indigo"
- *   actions={<button>刷新</button>}
+ *   actions={<button>Refresh</button>}
  * />
  * ```
  */

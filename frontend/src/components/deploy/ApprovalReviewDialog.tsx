@@ -25,10 +25,10 @@ const ApprovalReviewDialog: React.FC<ApprovalReviewDialogProps> = ({
     if (!open) return null;
 
     const isApprove = action === 'approve';
-    const title = isApprove ? '批准部署审批' : '驳回部署审批';
+    const title = isApprove ? "Approve deployment" : "Reject deployment";
     const desc = isApprove
-        ? '填写审批备注后，系统会立即创建部署任务并进入执行跟踪。'
-        : '填写驳回原因后，审批单会被关闭，部署不会继续执行。';
+        ? "After you enter an approval note, the system immediately creates a deployment task and starts tracking its execution."
+        : "After you enter a rejection reason, the approval request closes and deployment does not continue.";
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md animate-in fade-in duration-300" onClick={submitting ? undefined : onCancel}>
@@ -48,7 +48,7 @@ const ApprovalReviewDialog: React.FC<ApprovalReviewDialogProps> = ({
                         onClick={onCancel}
                         disabled={submitting}
                         className="text-white/70 hover:text-white transition disabled:opacity-40"
-                        title="关闭"
+                        title={"Close"}
                     >
                         <X className="w-4 h-4" />
                     </button>
@@ -56,20 +56,20 @@ const ApprovalReviewDialog: React.FC<ApprovalReviewDialogProps> = ({
 
                 <div className="p-6 space-y-4">
                     <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/80 dark:bg-slate-800/60 px-4 py-3">
-                        <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">目标</div>
-                        <div className="text-sm font-semibold text-slate-800 dark:text-slate-100">{targetLabel || '未命名目标'}</div>
+                        <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Target</div>
+                        <div className="text-sm font-semibold text-slate-800 dark:text-slate-100">{targetLabel || "Unnamed target"}</div>
                         <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">{desc}</p>
                     </div>
 
                     <div>
                         <label className="block text-[11px] font-semibold text-slate-500 mb-2">
-                            {isApprove ? '审批备注' : '驳回原因'}
+                            {isApprove ? "Approval note" : "Rejection reason"}
                         </label>
                         <textarea
                             value={comment}
                             onChange={e => onCommentChange(e.target.value)}
                             rows={4}
-                            placeholder={isApprove ? '例如：已确认发布时间窗，可以执行。' : '例如：变更窗口未到，请稍后重新申请。'}
+                            placeholder={isApprove ? "Example: The deployment window is confirmed. Proceed." : "Example: The change window has not started. Submit again later."}
                             className="w-full px-3 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/70 text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-400 transition resize-none"
                         />
                     </div>
@@ -82,7 +82,7 @@ const ApprovalReviewDialog: React.FC<ApprovalReviewDialogProps> = ({
                         disabled={submitting}
                         className="px-4 py-2 rounded-xl text-xs font-medium border border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
                     >
-                        取消
+                        Cancel
                     </button>
                     <button
                         type="button"
@@ -94,7 +94,7 @@ const ApprovalReviewDialog: React.FC<ApprovalReviewDialogProps> = ({
                             }`}
                     >
                         {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : (isApprove ? <CheckCircle2 className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />)}
-                        {isApprove ? '确认批准' : '确认驳回'}
+                        {isApprove ? "Confirm approval" : "Confirm rejection"}
                     </button>
                 </div>
             </div>

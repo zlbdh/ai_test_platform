@@ -30,7 +30,7 @@ const WebSocketPanel: React.FC = () => {
             const res = await fetch(API_ENDPOINTS.wsTest.quickTest, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url, message: msgData, is_json: typeof msgData === 'object', ...ensureExecutionContextPayload('WebSocket 专项测试', { targetUrl: url }) })
+                body: JSON.stringify({ url, message: msgData, is_json: typeof msgData === 'object', ...ensureExecutionContextPayload("WebSocket test suite", { targetUrl: url }) })
             });
             const data = await res.json();
             if (data.error) setError(data.error);
@@ -57,7 +57,7 @@ const WebSocketPanel: React.FC = () => {
             const res = await fetch(API_ENDPOINTS.wsTest.scenario, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url, scenario, ...ensureExecutionContextPayload('WebSocket 专项测试', { targetUrl: url }) })
+                body: JSON.stringify({ url, scenario, ...ensureExecutionContextPayload("WebSocket test suite", { targetUrl: url }) })
             });
             const data = await res.json();
             if (data.error) setError(data.error);
@@ -80,7 +80,7 @@ const WebSocketPanel: React.FC = () => {
                     placeholder="ws://localhost:8080/ws"
                     className="flex-1 px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500" />
                 <button onClick={() => { setMessages([]); setError(null); }}
-                    className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="清空">
+                    className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition" title={"Clear"}>
                     <Trash2 className="w-4 h-4" />
                 </button>
             </div>
@@ -88,10 +88,10 @@ const WebSocketPanel: React.FC = () => {
             {/* Messages Timeline */}
             <div className="flex-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md overflow-hidden flex flex-col min-h-0">
                 <div className="p-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                    <span className="text-sm font-bold text-slate-700 dark:text-white">消息时间线</span>
+                    <span className="text-sm font-bold text-slate-700 dark:text-white">Message timeline</span>
                     <div className="flex items-center gap-3 text-xs text-slate-500">
                         {totalTime > 0 && <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {totalTime}ms</span>}
-                        <span>{messages.length} 条</span>
+                        <span>{messages.length} entries</span>
                     </div>
                 </div>
                 <div className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -115,7 +115,7 @@ const WebSocketPanel: React.FC = () => {
                     {messages.length === 0 && !error && (
                         <div className="flex flex-col items-center justify-center h-full text-slate-400">
                             <Radio className="w-10 h-10 mb-3 opacity-30" />
-                            <p className="text-sm">发送消息以开始测试</p>
+                            <p className="text-sm">Send a message to start testing</p>
                         </div>
                     )}
                     <div ref={messagesEndRef} />
@@ -125,12 +125,12 @@ const WebSocketPanel: React.FC = () => {
                 <div className="p-3 border-t border-slate-200 dark:border-slate-800 flex items-center gap-2">
                     <input type="text" value={message} onChange={(e) => setMessage(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && quickTest()}
-                        placeholder='输入消息 (文本或 JSON)...'
+                        placeholder={"Enter a message (text or JSON)..."}
                         className="flex-1 px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm outline-none" />
                     <button onClick={quickTest} disabled={loading}
                         className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-lg text-sm font-medium shadow-lg shadow-emerald-500/20 active:scale-95 transition-all disabled:opacity-50">
                         {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                        发送
+                        Send
                     </button>
                 </div>
             </div>

@@ -4,7 +4,7 @@ import { ToastProvider } from './components/ui/Toast';
 import Layout from './components/Layout';
 import ErrorBoundary from './components/ErrorBoundary';
 
-// Lazy-loaded pages — 路由级代码分割
+// Lazy-loaded pages: split bundles by route.
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 const TaskFrontDoorPage = lazy(() => import('./pages/TaskFrontDoorPage'));
 const TaskResultPage = lazy(() => import('./pages/TaskResultPage'));
@@ -46,7 +46,7 @@ function PageLoader() {
     );
 }
 
-/** 页面级 ErrorBoundary + Suspense 包裹器 — 单页面崩溃不影响其他页面和导航 */
+/* PageErrorBoundary and Suspense isolate page failures.*/
 function SafePage({ children }: { children: React.ReactNode }) {
     return (
         <ErrorBoundary>
@@ -77,7 +77,7 @@ function App() {
                         <Route path="security" element={<SafePage><SecurityPage /></SafePage>} />
                         <Route path="knowledge" element={<SafePage><KnowledgePage /></SafePage>} />
                         <Route path="settings" element={<SafePage><SettingsPage /></SafePage>} />
-                        {/* 旧路由重定向 */}
+                        {/* Redirect legacy routes.*/}
                         <Route path="commander" element={<Navigate to="/legion" replace />} />
                         <Route path="warroom" element={<Navigate to="/legion" replace />} />
                         <Route path="batch" element={<SafePage><BatchPage /></SafePage>} />

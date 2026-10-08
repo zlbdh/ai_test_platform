@@ -253,14 +253,14 @@ describe('ExecutionHistory task context', () => {
             </MemoryRouter>,
         );
 
-        await waitFor(() => expect(screen.getByText('当前任务上下文')).toBeInTheDocument());
+        await waitFor(() => expect(screen.getByText("Current task context")).toBeInTheDocument());
         expect(screen.getAllByText('对订单原型做统一核查').length).toBeGreaterThan(0);
-        expect(screen.getByText('复跑链摘要')).toBeInTheDocument();
-        expect(screen.getByText('链路时间线')).toBeInTheDocument();
-        expect(screen.getByText('最近一次可比任务：task000')).toBeInTheDocument();
-        expect(screen.getByText('同任务类型参考')).toBeInTheDocument();
+        expect(screen.getByText("Rerun chain summary")).toBeInTheDocument();
+        expect(screen.getByText("Chain timeline")).toBeInTheDocument();
+        expect(screen.getByText('Most recent comparable task: task000')).toBeInTheDocument();
+        expect(screen.getByText("Same task type reference")).toBeInTheDocument();
         expect(screen.getByText('同类型参考任务')).toBeInTheDocument();
-        expect(screen.getByText('当前任务执行组')).toBeInTheDocument();
-        expect(screen.getByText('第 2 次')).toBeInTheDocument();
+        expect(screen.getByText("Current task execution group")).toBeInTheDocument();
+        expect(screen.getByText('Run 2')).toBeInTheDocument();
     });
 });

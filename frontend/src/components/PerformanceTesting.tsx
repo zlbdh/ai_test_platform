@@ -95,7 +95,7 @@ const PerformanceTesting: React.FC = () => {
                     spawn_rate: Math.max(1, Math.ceil(users / 5)),
                     duration,
                     custom_headers: Object.keys(headersObj).length > 0 ? headersObj : undefined,
-                    ...ensureExecutionContextPayload('性能专项测试', { targetUrl }),
+                    ...ensureExecutionContextPayload("Performance test suite", { targetUrl }),
                 })
             });
             const data = await res.json();
@@ -118,13 +118,13 @@ const PerformanceTesting: React.FC = () => {
     };
 
     const deleteHistory = async (testId: string) => {
-        if (!confirm('确定删除此条记录？')) return;
+        if (!confirm("Delete this record?")) return;
         try { await fetch(API_ENDPOINTS.performance.delete(testId), { method: 'DELETE' }); fetchHistory(); }
         catch (e) { console.error('Failed to delete:', e); }
     };
 
     const clearHistory = async () => {
-        if (!confirm('确定清空全部历史记录？')) return;
+        if (!confirm("Clear all history?")) return;
         try { await fetch(API_ENDPOINTS.performance.clear, { method: 'DELETE' }); setHistory([]); }
         catch (e) { console.error('Failed to clear:', e); }
     };
@@ -143,7 +143,7 @@ const PerformanceTesting: React.FC = () => {
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
-            <ExecutionBatchBanner standaloneHint="当前页面首次执行时会自动创建专项测试批次；若先在编排页发起总任务，这里的结果会自动挂到那次测试下面。" />
+            <ExecutionBatchBanner standaloneHint={"The first run on this page creates a specialized test batch. If you start an overall task from orchestration first, these results are added to that task."} />
 
             {/* Config Panel */}
             <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md p-6">
@@ -151,7 +151,7 @@ const PerformanceTesting: React.FC = () => {
                     <div className="p-2 rounded-lg bg-cyan-500/10">
                         <Zap className="w-5 h-5 text-cyan-500" />
                     </div>
-                    性能测试配置
+                    Performance test configuration
                 </h2>
 
                 {/* URL + Method Row */}
@@ -175,21 +175,21 @@ const PerformanceTesting: React.FC = () => {
                 {/* Load Config Row */}
                 <div className="grid grid-cols-3 gap-4 mb-4">
                     <div>
-                        <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">并发用户数</label>
+                        <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Concurrent users</label>
                         <input type="number" value={users} onChange={e => setUsers(parseInt(e.target.value) || 10)}
                             disabled={isRunning} min={1} max={500}
                             className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-cyan-500/20 outline-none" />
                     </div>
                     <div>
-                        <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">持续时间 (秒)</label>
+                        <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Duration (seconds)</label>
                         <input type="number" value={duration} onChange={e => setDuration(parseInt(e.target.value) || 30)}
                             disabled={isRunning} min={5} max={600}
                             className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-cyan-500/20 outline-none" />
                     </div>
                     <div>
-                        <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">发起速率 (用户/秒)</label>
+                        <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Spawn rate (users/second)</label>
                         <div className="w-full bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-500 dark:text-slate-400">
-                            {Math.max(1, Math.ceil(users / 5))} /s (自动)
+                            {Math.max(1, Math.ceil(users / 5))} /s (automatic)
                         </div>
                     </div>
                 </div>
@@ -199,7 +199,7 @@ const PerformanceTesting: React.FC = () => {
                     <button onClick={() => setShowAdvanced(!showAdvanced)}
                         className="flex items-center gap-2 text-xs font-medium text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors">
                         <Settings className={`w-3.5 h-3.5 transition-transform ${showAdvanced ? 'rotate-90' : ''}`} />
-                        高级配置 (Headers)
+                        Advanced configuration (headers)
                     </button>
                     {showAdvanced && (
                         <div className="mt-3 space-y-2 animate-in slide-in-from-top-2 duration-200">
@@ -218,7 +218,7 @@ const PerformanceTesting: React.FC = () => {
                             ))}
                             <button onClick={addHeader} disabled={isRunning}
                                 className="flex items-center gap-1.5 text-xs text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 transition-colors disabled:opacity-50">
-                                <Plus className="w-3 h-3" /> 添加 Header
+                                <Plus className="w-3 h-3" /> Add header
                             </button>
                         </div>
                     )}
@@ -229,17 +229,17 @@ const PerformanceTesting: React.FC = () => {
                     {!isRunning ? (
                         <button onClick={runTest}
                             className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-lg font-medium shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 active:scale-95 transition-all">
-                            <Play className="w-4 h-4 fill-current" /> 开始性能测试
+                            <Play className="w-4 h-4 fill-current" /> Start performance test
                         </button>
                     ) : (
                         <button onClick={stopTest}
                             className="flex items-center gap-2 px-6 py-2.5 bg-red-500/10 text-red-500 border border-red-500/50 hover:bg-red-500/20 rounded-lg font-medium active:scale-95 transition-all">
-                            <Square className="w-4 h-4 fill-current" /> 停止测试
+                            <Square className="w-4 h-4 fill-current" /> Stop test
                         </button>
                     )}
                     <div className="flex items-center gap-2 text-xs text-slate-400">
                         <span className={`w-2 h-2 rounded-full ${isRunning ? 'bg-cyan-500 animate-pulse' : 'bg-slate-300 dark:bg-slate-600'}`} />
-                        {isRunning ? '测试进行中...' : '就绪'}
+                        {isRunning ? "Test in progress..." : "Ready"}
                     </div>
                 </div>
 
@@ -255,50 +255,50 @@ const PerformanceTesting: React.FC = () => {
                 <div className="space-y-4">
                     {/* Top Stats Cards */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <StatCard label="总请求数" value={(stats.total_requests || 0).toLocaleString()}
+                        <StatCard label={"Total requests"} value={(stats.total_requests || 0).toLocaleString()}
                             icon={<Activity className="w-5 h-5 text-white/80" />}
                             gradient="bg-gradient-to-br from-indigo-500 to-indigo-700"
-                            subValue={`成功 ${stats.success || 0} / 失败 ${stats.failures || 0}`} />
-                        <StatCard label="RPS 吞吐量" value={stats.requests_per_second?.toFixed(1) || '0'} unit="req/s"
+                            subValue={`Passed ${stats.success || 0} / Failed ${stats.failures || 0}`} />
+                        <StatCard label={"Throughput (RPS)"} value={stats.requests_per_second?.toFixed(1) || '0'} unit="req/s"
                             icon={<TrendingUp className="w-5 h-5 text-white/80" />}
                             gradient="bg-gradient-to-br from-purple-500 to-purple-700" />
-                        <StatCard label="成功率" value={`${stats.success_rate ?? 0}`} unit="%"
+                        <StatCard label={"Success rate"} value={`${stats.success_rate ?? 0}`} unit="%"
                             icon={<CheckCircle className="w-5 h-5 text-white/80" />}
                             gradient={`bg-gradient-to-br ${(stats.success_rate ?? 0) >= 99 ? 'from-emerald-500 to-emerald-700' : (stats.success_rate ?? 0) >= 90 ? 'from-amber-500 to-amber-700' : 'from-red-500 to-red-700'}`} />
-                        <StatCard label="平均延迟" value={stats.avg_response_time?.toFixed(0) || '0'} unit="ms"
+                        <StatCard label={"Average latency"} value={stats.avg_response_time?.toFixed(0) || '0'} unit="ms"
                             icon={<Timer className="w-5 h-5 text-white/80" />}
                             gradient="bg-gradient-to-br from-cyan-500 to-cyan-700"
-                            subValue={`范围 ${stats.min_response_time?.toFixed(0) || 0} - ${stats.max_response_time?.toFixed(0) || 0} ms`} />
+                            subValue={`Range ${stats.min_response_time?.toFixed(0) || 0} - ${stats.max_response_time?.toFixed(0) || 0} ms`} />
                     </div>
 
                     {/* Response Time Distribution */}
                     <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md p-6">
                         <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-4 flex items-center gap-2">
-                            <BarChart3 className="w-4 h-4 text-cyan-500" /> 响应时间分布
+                            <BarChart3 className="w-4 h-4 text-cyan-500" /> Response time distribution
                         </h3>
                         <div className="space-y-3">
-                            <MetricBar label="最小响应时间" value={stats.min_response_time || 0} max={stats.max_response_time || 100} color="bg-emerald-500" />
-                            <MetricBar label="平均响应时间" value={stats.avg_response_time || 0} max={stats.max_response_time || 100} color="bg-cyan-500" />
-                            <MetricBar label="P95 响应时间" value={stats.p95_response_time || stats.avg_response_time * 1.5 || 0} max={stats.max_response_time || 100} color="bg-amber-500" />
-                            <MetricBar label="P99 响应时间" value={stats.p99_response_time || stats.max_response_time * 0.9 || 0} max={stats.max_response_time || 100} color="bg-red-500" />
-                            <MetricBar label="最大响应时间" value={stats.max_response_time || 0} max={stats.max_response_time || 100} color="bg-red-600" />
+                            <MetricBar label={"Minimum response time"} value={stats.min_response_time || 0} max={stats.max_response_time || 100} color="bg-emerald-500" />
+                            <MetricBar label={"Average response time"} value={stats.avg_response_time || 0} max={stats.max_response_time || 100} color="bg-cyan-500" />
+                            <MetricBar label={"P95 response time"} value={stats.p95_response_time || stats.avg_response_time * 1.5 || 0} max={stats.max_response_time || 100} color="bg-amber-500" />
+                            <MetricBar label={"P99 response time"} value={stats.p99_response_time || stats.max_response_time * 0.9 || 0} max={stats.max_response_time || 100} color="bg-red-500" />
+                            <MetricBar label={"Maximum response time"} value={stats.max_response_time || 0} max={stats.max_response_time || 100} color="bg-red-600" />
                         </div>
 
                         {/* Summary Row */}
                         <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 grid grid-cols-3 gap-4">
                             <div className="flex items-center gap-2 text-xs">
                                 <ArrowDown className="w-3.5 h-3.5 text-emerald-500" />
-                                <span className="text-slate-500">最小</span>
+                                <span className="text-slate-500">Minimum</span>
                                 <span className="font-mono font-bold text-slate-900 dark:text-white">{stats.min_response_time?.toFixed(0)}ms</span>
                             </div>
                             <div className="flex items-center gap-2 text-xs">
                                 <Activity className="w-3.5 h-3.5 text-cyan-500" />
-                                <span className="text-slate-500">平均</span>
+                                <span className="text-slate-500">Average</span>
                                 <span className="font-mono font-bold text-slate-900 dark:text-white">{stats.avg_response_time?.toFixed(0)}ms</span>
                             </div>
                             <div className="flex items-center gap-2 text-xs">
                                 <ArrowUp className="w-3.5 h-3.5 text-red-500" />
-                                <span className="text-slate-500">最大</span>
+                                <span className="text-slate-500">Maximum</span>
                                 <span className="font-mono font-bold text-slate-900 dark:text-white">{stats.max_response_time?.toFixed(0)}ms</span>
                             </div>
                         </div>
@@ -311,11 +311,11 @@ const PerformanceTesting: React.FC = () => {
                 <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md p-6">
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
-                            <BarChart3 className="w-4 h-4 text-slate-500" /> 测试历史 ({history.length})
+                            <BarChart3 className="w-4 h-4 text-slate-500" /> Test history ( {history.length})
                         </h3>
                         <button onClick={clearHistory}
                             className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-red-600 dark:text-red-400 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-lg transition-colors">
-                            <Trash2 className="w-3 h-3" /> 清空
+                            <Trash2 className="w-3 h-3" /> Clear
                         </button>
                     </div>
                     <div className="overflow-x-auto">
@@ -323,12 +323,12 @@ const PerformanceTesting: React.FC = () => {
                             <thead>
                                 <tr className="text-slate-400 border-b border-slate-200 dark:border-slate-800">
                                     <th className="py-2 px-3 text-left text-xs font-medium">ID</th>
-                                    <th className="py-2 px-3 text-left text-xs font-medium">状态</th>
-                                    <th className="py-2 px-3 text-right text-xs font-medium">请求数</th>
-                                    <th className="py-2 px-3 text-right text-xs font-medium">成功率</th>
+                                    <th className="py-2 px-3 text-left text-xs font-medium">Status</th>
+                                    <th className="py-2 px-3 text-right text-xs font-medium">Requests</th>
+                                    <th className="py-2 px-3 text-right text-xs font-medium">Success rate</th>
                                     <th className="py-2 px-3 text-right text-xs font-medium">RPS</th>
-                                    <th className="py-2 px-3 text-right text-xs font-medium">平均延迟</th>
-                                    <th className="py-2 px-3 text-right text-xs font-medium">耗时</th>
+                                    <th className="py-2 px-3 text-right text-xs font-medium">Average latency</th>
+                                    <th className="py-2 px-3 text-right text-xs font-medium">Duration</th>
                                     <th className="py-2 px-3 text-right text-xs font-medium"></th>
                                 </tr>
                             </thead>
@@ -350,7 +350,7 @@ const PerformanceTesting: React.FC = () => {
                                         <td className="py-2.5 px-3 text-right text-slate-400">{h.duration?.toFixed(1)}s</td>
                                         <td className="py-2.5 px-3 text-right">
                                             <button onClick={() => deleteHistory(h.test_id)}
-                                                className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded transition-colors" title="删除">
+                                                className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded transition-colors" title={"Delete"}>
                                                 <Trash2 className="w-3 h-3" />
                                             </button>
                                         </td>

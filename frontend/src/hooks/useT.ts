@@ -1,8 +1,6 @@
-/**
- * useT — React hook，从 Zustand store 读取 locale 并返回绑定的翻译函数
- * 
- * 单独文件，以避免 i18n.ts ↔ stores 的循环依赖
- * 使用方式: const tt = useT(); tt('nav.dashboard') => '仪表盘' | 'Dashboard'
+/** useT reads the locale from Zustand and returns a bound translation function.
+ * Kept separate to avoid circular dependencies between i18n.ts and stores.
+ * Usage: const tt = useT(); tt('nav.dashboard') => 'Control Center'.
  */
 import { useAppStore } from '../stores';
 import { t, type Locale, translateGroupName } from '../i18n';

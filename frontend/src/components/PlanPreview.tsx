@@ -22,10 +22,10 @@ const PlanPreview: React.FC<PlanPreviewProps> = ({
         <div className="flex-1 min-h-0 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 p-6 backdrop-blur-md overflow-hidden flex flex-col">
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                    <h2 className="text-lg font-bold text-slate-900 dark:text-white">执行计划</h2>
+                    <h2 className="text-lg font-bold text-slate-900 dark:text-white">Execution plan</h2>
                     {testPlan.length > 0 && (
                         <span className="text-xs bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded-full font-medium">
-                            {testPlan.length} 步
+                            {testPlan.length} steps
                         </span>
                     )}
                 </div>
@@ -35,12 +35,12 @@ const PlanPreview: React.FC<PlanPreviewProps> = ({
                         <button
                             onClick={onExecute}
                             className="flex items-center gap-1.5 text-xs bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-full transition-colors font-medium">
-                            <Play className="w-3 h-3" /> 运行
+                            <Play className="w-3 h-3" /> Run
                         </button>
                     )}
                     {isExecuting && (
                         <button onClick={onStop} className="flex items-center gap-1.5 text-xs bg-red-600 px-3 py-1.5 rounded-full text-white animate-pulse">
-                            <Square className="w-3 h-3" /> 停止
+                            <Square className="w-3 h-3" /> Stop
                         </button>
                     )}
                 </div>
@@ -51,7 +51,7 @@ const PlanPreview: React.FC<PlanPreviewProps> = ({
                 <div className="mb-3 p-3 rounded-lg bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20">
                     <div className="flex items-center gap-4 text-xs">
                         <div className="flex items-center gap-1.5">
-                            <span className="text-slate-500">场景</span>
+                            <span className="text-slate-500">Scenario</span>
                             <span className="font-bold text-indigo-400">{coverageSummary.total_scenarios}</span>
                         </div>
                         <div className="flex items-center gap-1">
@@ -67,7 +67,7 @@ const PlanPreview: React.FC<PlanPreviewProps> = ({
                         </div>
                         {coverageSummary.dimensions_covered.length > 0 && (
                             <div className="flex items-center gap-1 flex-wrap">
-                                <span className="text-slate-500">覆盖:</span>
+                                <span className="text-slate-500">Coverage:</span>
                                 {coverageSummary.dimensions_covered.slice(0, 4).map((dim, i) => (
                                     <span key={i} className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px]">{dim}</span>
                                 ))}
@@ -99,8 +99,8 @@ const PlanPreview: React.FC<PlanPreviewProps> = ({
                 {testPlan.length === 0 && (
                     <div className="text-slate-500 text-center text-sm mt-8 flex flex-col items-center gap-2">
                         <ClipboardList className="w-8 h-8 text-slate-300" />
-                        <span>暂无执行计划</span>
-                        <span className="text-xs text-slate-600">请输入测试需求后点击「自动化生成测试计划」</span>
+                        <span>No execution plan yet</span>
+                        <span className="text-xs text-slate-600">Enter test requirements, then click Generate test plan</span>
                     </div>
                 )}
             </div>

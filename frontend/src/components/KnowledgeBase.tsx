@@ -73,12 +73,16 @@ const KnowledgeBase: React.FC = () => {
             const res = await fetch(API_ENDPOINTS.knowledge.content(doc.id));
             if (res.ok) {
                 const data = await res.json();
-                setPreviewContent(data.content || '无法加载内容');
+                setPreviewContent(data.content || "Unable to load content");
             } else {
-                setPreviewContent(`文档: ${doc.title}\n类型: ${doc.type}\n状态: ${doc.status}\n\n(预览接口暂未对接，请通过后端 API 实现)`);
+                setPreviewContent(`Document: ${doc.title}
+Type: ${doc.type}
+Status: ${doc.status}
+
+(The preview endpoint is not connected yet. Implement it through the backend API.)`);
             }
         } catch {
-            setPreviewContent('加载失败');
+            setPreviewContent("Failed to load");
         }
         setPreviewLoading(false);
     };
@@ -153,7 +157,7 @@ const KnowledgeBase: React.FC = () => {
     });
 
     const docTypes = ['all', ...Array.from(new Set(docs.map(d => d.type)))];
-    const tagLabels: Record<string, string> = { all: '全部', markdown: 'Markdown', pdf: 'PDF', text: '文本', unknown: '其他' };
+    const tagLabels: Record<string, string> = { all: "All", markdown: 'Markdown', pdf: 'PDF', text: "Text", unknown: "Other" };
 
     return (
         <div className="flex flex-col h-full gap-6 animate-in fade-in duration-500">
@@ -166,10 +170,10 @@ const KnowledgeBase: React.FC = () => {
                         </div>
                         <div>
                             <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-                                知识库管理
+                                Knowledge base management
                             </h2>
                             <p className="text-sm text-slate-500 mt-0.5">
-                                管理用于 RAG 增强生成的文档上下文
+                                Manage document context for retrieval-augmented generation
                             </p>
                         </div>
                     </div>
@@ -177,7 +181,7 @@ const KnowledgeBase: React.FC = () => {
                         <button
                             onClick={() => { void fetchDocs(); }}
                             className="p-2 text-slate-500 hover:text-indigo-600 transition-colors rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
-                            title="刷新列表"
+                            title={"Refresh list"}
                         >
                             <RefreshCw className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
                         </button>
@@ -196,7 +200,7 @@ const KnowledgeBase: React.FC = () => {
                             className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-lg text-sm font-medium transition-all shadow-lg shadow-indigo-500/20 active:scale-95 disabled:opacity-50"
                         >
                             {isUploading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <UploadCloud className="w-4 h-4" />}
-                            {isUploading ? '上传中...' : '上传文件'}
+                            {isUploading ? "Uploading..." : "Upload file"}
                         </button>
                     </div>
                 </div>
@@ -206,7 +210,7 @@ const KnowledgeBase: React.FC = () => {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                     <input
                         type="text"
-                        placeholder="搜索文档..."
+                        placeholder={"Search documents..."}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:outline-none transition-all text-sm"
@@ -230,10 +234,10 @@ const KnowledgeBase: React.FC = () => {
             {/* Document List */}
             <div className="flex-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md overflow-hidden flex flex-col shadow-sm transition-all hover:border-slate-300 dark:hover:border-slate-700">
                 <div className="grid grid-cols-12 gap-4 p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 text-xs font-semibold text-slate-500 uppercase tracking-wider backdrop-blur-sm">
-                    <div className="col-span-6">文件名称</div>
-                    <div className="col-span-2">类型</div>
-                    <div className="col-span-2">状态</div>
-                    <div className="col-span-2 text-right">操作</div>
+                    <div className="col-span-6">File name</div>
+                    <div className="col-span-2">Type</div>
+                    <div className="col-span-2">Status</div>
+                    <div className="col-span-2 text-right">Actions</div>
                 </div>
 
                 <div className="flex-1 overflow-y-auto">
@@ -263,7 +267,7 @@ const KnowledgeBase: React.FC = () => {
                                     <span className={`text-sm ${doc.status === 'indexed' ? 'text-emerald-600' :
                                         doc.status === 'indexing' ? 'text-amber-600' : 'text-red-600'
                                         }`}>
-                                        {doc.status === 'indexed' ? '已索引' : doc.status === 'indexing' ? '索引中...' : '失败'}
+                                        {doc.status === 'indexed' ? "Indexed" : doc.status === 'indexing' ? "Indexing..." : "Failed"}
                                     </span>
                                 </div>
                             </div>
@@ -271,7 +275,7 @@ const KnowledgeBase: React.FC = () => {
                                 <button
                                     onClick={(e) => handleDelete(doc.id, e)}
                                     className="p-2 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-lg transition-colors"
-                                    title="删除文档"
+                                    title={"Delete document"}
                                 >
                                     <Trash2 className="w-4 h-4" />
                                 </button>
@@ -282,7 +286,7 @@ const KnowledgeBase: React.FC = () => {
                     {filteredDocs.length === 0 && !isLoading && (
                         <div className="flex flex-col items-center justify-center h-64 text-slate-400">
                             <AlertCircle className="w-12 h-12 mb-4 opacity-20" />
-                            <p>暂无文档，请上传.</p>
+                            <p>No documents yet. Upload one to get started.</p>
                         </div>
                     )}
                 </div>
@@ -294,7 +298,7 @@ const KnowledgeBase: React.FC = () => {
                     <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-800">
                         <div className="flex items-center gap-2">
                             <Eye className="w-4 h-4 text-indigo-500" />
-                            <h3 className="text-sm font-bold text-slate-900 dark:text-white truncate">文档预览</h3>
+                            <h3 className="text-sm font-bold text-slate-900 dark:text-white truncate">Document preview</h3>
                         </div>
                         <button onClick={() => setPreviewDoc(null)}
                             className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition">
@@ -309,14 +313,14 @@ const KnowledgeBase: React.FC = () => {
                                 }`}>{previewDoc.type.toUpperCase()}</span>
                             <span>{previewDoc.updatedAt}</span>
                             <span className={`${previewDoc.status === 'indexed' ? 'text-emerald-500' : 'text-amber-500'}`}>
-                                {previewDoc.status === 'indexed' ? '✅ 已索引' : '⏳ 索引中'}
+                                {previewDoc.status === 'indexed' ? "✅ Indexed" : "⏳ Indexing"}
                             </span>
                         </div>
                     </div>
                     <div className="flex-1 overflow-y-auto px-5 py-4">
                         {previewLoading ? (
                             <div className="flex items-center gap-2 text-slate-400">
-                                <RefreshCw className="w-4 h-4 animate-spin" /> 加载中...
+                                <RefreshCw className="w-4 h-4 animate-spin" /> Loading...
                             </div>
                         ) : (
                             <pre className="text-xs font-mono text-slate-600 dark:text-slate-400 whitespace-pre-wrap break-words leading-relaxed">

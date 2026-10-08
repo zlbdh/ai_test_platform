@@ -24,7 +24,7 @@ const GrpcPanel: React.FC = () => {
             const res = await fetch(API_ENDPOINTS.grpc.services, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ host, port: parseInt(port), ...ensureExecutionContextPayload('gRPC 专项测试', { targetUrl: `${host}:${port}` }) })
+                body: JSON.stringify({ host, port: parseInt(port), ...ensureExecutionContextPayload("gRPC test suite", { targetUrl: `${host}:${port}` }) })
             });
             const data = await res.json();
             setServices(data.services || []);
@@ -44,7 +44,7 @@ const GrpcPanel: React.FC = () => {
             const res = await fetch(API_ENDPOINTS.grpc.call, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ host, port: parseInt(port), service, method, data, ...ensureExecutionContextPayload('gRPC 专项测试', { targetUrl: `${host}:${port}` }) })
+                body: JSON.stringify({ host, port: parseInt(port), service, method, data, ...ensureExecutionContextPayload("gRPC test suite", { targetUrl: `${host}:${port}` }) })
             });
             const result = await res.json();
             setResponse(result);
@@ -68,12 +68,12 @@ const GrpcPanel: React.FC = () => {
                     className="w-20 px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm outline-none text-center" />
                 <button onClick={listServices} disabled={loading}
                     className="px-3 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition flex items-center gap-1.5">
-                    <ArrowDownUp className="w-4 h-4" /> 反射
+                    <ArrowDownUp className="w-4 h-4" /> Reflection
                 </button>
                 <button onClick={callMethod} disabled={loading}
                     className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white rounded-lg font-medium shadow-lg shadow-orange-500/20 active:scale-95 transition-all disabled:opacity-50">
                     {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-                    调用
+                    Invoke
                 </button>
             </div>
 
@@ -84,7 +84,7 @@ const GrpcPanel: React.FC = () => {
                     {services.length > 0 ? (
                         <select value={service} onChange={(e) => setService(e.target.value)}
                             className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm outline-none">
-                            <option value="">选择服务...</option>
+                            <option value="">Select a service...</option>
                             {services.map(s => <option key={s} value={s}>{s}</option>)}
                         </select>
                     ) : (
@@ -123,7 +123,7 @@ const GrpcPanel: React.FC = () => {
                         )}
                     </div>
                     <pre className="flex-1 overflow-auto px-4 py-3 text-sm font-mono text-slate-700 dark:text-slate-300 whitespace-pre-wrap">
-                        {response ? JSON.stringify(response, null, 2) : '调用方法以查看响应...'}
+                        {response ? JSON.stringify(response, null, 2) : "Invoke a method to view its response..."}
                     </pre>
                 </div>
             </div>

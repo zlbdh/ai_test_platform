@@ -1,27 +1,22 @@
 import React from 'react';
 
-/**
- * StatCard — 统一的统计卡片组件
- *
- * 从 6 个页面中提取的共享 UI 组件，支持基础和增强两种模式。
- *
- * @example 基础模式
- *   <StatCard icon={<Activity />} label="总数" value={42}
+/** StatCard: shared statistics card extracted from six pages, with basic and enhanced modes.
+ * @example Basic mode
+ *   <StatCard icon={<Activity />} label="Total" value={42}
  *            gradient="bg-gradient-to-br from-indigo-500 to-indigo-700" />
- *
- * @example 增强模式（带单位和副标题）
- *   <StatCard icon={<Timer />} label="平均延迟" value="120" unit="ms"
+ * @example Enhanced mode with a unit and subtitle
+ *   <StatCard icon={<Timer />} label="Average latency" value="120" unit="ms"
  *            gradient="bg-gradient-to-br from-cyan-500 to-cyan-700"
- *            subValue="范围 10 - 500 ms" />
+ *            subValue="Range: 10–500 ms" />
  */
 export const StatCard: React.FC<{
     icon: React.ReactNode;
     label: string;
     value: string | number;
     gradient: string;
-    /** 可选：数值单位（如 ms、req/s、%） */
+    /** Optional value unit, such as ms, req/s, or %. */
     unit?: string;
-    /** 可选：副标题描述 */
+    /** Optional subtitle. */
     subValue?: string;
 }> = ({ icon, label, value, gradient, unit, subValue }) => (
     <div className={`relative overflow-hidden rounded-2xl p-5 text-white shadow-lg ${gradient}`}>

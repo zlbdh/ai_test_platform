@@ -95,12 +95,12 @@ const PlanStepItem: React.FC<PlanStepItemProps> = ({ step, idx, status }) => {
             <div className="flex items-center gap-2 pl-6 text-xs">
                 {step.target && (
                     <span className="text-slate-700 dark:text-slate-300">
-                        <span className="text-slate-500">目标:</span> {String(step.target)}
+                        <span className="text-slate-500">Target:</span> {String(step.target)}
                     </span>
                 )}
                 {step.value && (
                     <span className="text-indigo-400">
-                        <span className="text-slate-500">值:</span> {step.value}
+                        <span className="text-slate-500">Value:</span> {step.value}
                     </span>
                 )}
             </div>

@@ -75,23 +75,23 @@ type ModeFilter = 'all' | 'smart' | 'quick' | 'special';
 type DetailTab = 'log' | 'gallery';
 
 const MODE_LABELS: Record<string, string> = {
-    commander: '军团中心',
+    commander: "Agent hub",
     smart: 'Smart Agent',
     quick: 'Quick Plan',
-    api_rest: 'API 测试',
-    api_graphql: 'GraphQL 测试',
-    performance: '性能测试',
-    security: '安全扫描',
-    accessibility: '无障碍测试',
-    i18n: 'i18n 测试',
-    compliance: '合规审计',
-    database: '数据库测试',
-    api_workbench: 'API 工作台',
-    graphql: 'GraphQL 测试',
-    grpc: 'gRPC 测试',
-    websocket: 'WebSocket 测试',
-    chaos: '混沌测试',
-    mobile: '移动端测试',
+    api_rest: "API testing",
+    api_graphql: "GraphQL testing",
+    performance: "Performance testing",
+    security: "Security scanning",
+    accessibility: "Accessibility testing",
+    i18n: "Internationalization testing",
+    compliance: "Compliance audit",
+    database: "Database testing",
+    api_workbench: "API workbench",
+    graphql: "GraphQL testing",
+    grpc: "gRPC testing",
+    websocket: "WebSocket testing",
+    chaos: "Chaos testing",
+    mobile: "Mobile testing",
 };
 
 export function resolveFocusedGroupPage(groups: Array<{ group_id: string }>, groupId: string, pageSize: number): number | null {
@@ -126,9 +126,9 @@ function formatDuration(ms: number): string {
 }
 
 function formatTime(dateStr: string): string {
-    if (!dateStr) return '未知时间';
+    if (!dateStr) return "Unknown time";
     try {
-        return new Date(dateStr.replace(' ', 'T')).toLocaleString('zh-CN', {
+        return new Date(dateStr.replace(' ', 'T')).toLocaleString('en-US', {
             month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit'
         });
     } catch {
@@ -161,19 +161,19 @@ const SummaryCards: React.FC<{ groups: HistoryGroup[] }> = ({ groups }) => {
     const rate = total > 0 ? Math.round((successCount / total) * 100) : 0;
     const avgDuration = total > 0 ? Math.round(groups.reduce((sum, group) => sum + (group.duration_ms || 0), 0) / total) : 0;
     const cards = [
-        { label: '总测试批次', value: `${total}`, icon: <Layers className="w-4 h-4" />, color: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-50 dark:bg-indigo-500/10' },
-        { label: '批次成功率', value: `${rate}%`, icon: <CheckCircle2 className="w-4 h-4" />, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-500/10' },
-        { label: '平均批次时长', value: formatDuration(avgDuration), icon: <Timer className="w-4 h-4" />, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-500/10' },
+        { label: "Total test batches", value: `${total}`, icon: <Layers className="w-4 h-4" />, color: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-50 dark:bg-indigo-500/10' },
+        { label: "Batch success rate", value: `${rate}%`, icon: <CheckCircle2 className="w-4 h-4" />, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-500/10' },
+        { label: "Average batch duration", value: formatDuration(avgDuration), icon: <Timer className="w-4 h-4" />, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-500/10' },
     ];
     return <div className="grid grid-cols-3 gap-4 mb-6">{cards.map(card => <div key={card.label} className={`${card.bg} rounded-xl p-4 border border-transparent`}><div className={`flex items-center gap-2 ${card.color} mb-1`}>{card.icon}<span className="text-xs font-medium uppercase tracking-wider">{card.label}</span></div><div className="text-2xl font-bold text-slate-900 dark:text-white">{card.value}</div></div>)}</div>;
 };
 
 const StatusFilter: React.FC<{ filter: FilterStatus; onChange: (value: FilterStatus) => void; counts: { all: number; success: number; healed: number; failed: number } }> = ({ filter, onChange, counts }) => {
     const tabs: { key: FilterStatus; label: string; count: number }[] = [
-        { key: 'all', label: '全部', count: counts.all },
-        { key: 'success', label: '✓ 成功', count: counts.success },
-        { key: 'healed', label: '♡ 自愈', count: counts.healed },
-        { key: 'failed', label: '✗ 失败', count: counts.failed },
+        { key: 'all', label: "All", count: counts.all },
+        { key: 'success', label: "✓ Passed", count: counts.success },
+        { key: 'healed', label: "♡ Self-healed", count: counts.healed },
+        { key: 'failed', label: "✗ Failed", count: counts.failed },
     ];
     return <div className="flex gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">{tabs.map(tab => <button key={tab.key} onClick={() => onChange(tab.key)} className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${filter === tab.key ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'}`}>{tab.label} ({tab.count})</button>)}</div>;
 };
@@ -190,17 +190,17 @@ const LogPanel: React.FC<{ taskId: string; isOpen: boolean }> = ({ taskId, isOpe
             .finally(() => setLoading(false));
     }, [isOpen, taskId]);
     if (!isOpen) return null;
-    if (loading) return <div className="text-xs text-slate-400 p-3">加载日志中...</div>;
-    if (!detail?.logs?.length) return <div className="text-xs text-slate-500 p-3 bg-slate-100 dark:bg-slate-800/50 rounded-lg">暂无日志数据</div>;
+    if (loading) return <div className="text-xs text-slate-400 p-3">Loading logs...</div>;
+    if (!detail?.logs?.length) return <div className="text-xs text-slate-500 p-3 bg-slate-100 dark:bg-slate-800/50 rounded-lg">No logs available</div>;
     return (
         <div className="bg-slate-950 rounded-lg p-3 max-h-64 overflow-y-auto custom-scrollbar border border-slate-800">
             <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-800">
                 <FileText className="w-3 h-3 text-slate-500" />
-                <span className="text-[10px] text-slate-500 uppercase tracking-wider">执行日志 · {detail.logs.length} 条 · {detail.error_count} 错误</span>
+                <span className="text-[10px] text-slate-500 uppercase tracking-wider">Execution logs · {detail.logs.length} entries · {detail.error_count} errors</span>
                 {detail.task_text_state === 'broken_fallback' && (
                     <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] text-amber-300">
                         <AlertTriangle className="w-3 h-3" />
-                        编码已回退显示
+                        Fallback text encoding is in use
                     </span>
                 )}
             </div>
@@ -350,17 +350,17 @@ const ExecutionHistory: React.FC = () => {
         });
         const data = await res.json();
         if (!res.ok || data.status === 'error') {
-            alert(`生成失败: ${data.message || '未知错误'}`);
+            alert(`Generation failed: ${data.message || "Unknown error"}`);
             return;
         }
         await loadReportMap();
         const reportUrl = buildReportUrl({ report_url: data.report_url, allure_url: data.allure_url, timestamp: new Date().toISOString() });
         if (reportUrl) window.open(reportUrl, '_blank', 'noopener,noreferrer');
-        alert(`${hasExistingReport ? '重新生成' : '生成'}成功。${reportUrl ? '\n已自动打开最新测试报告。' : ''}`);
+        alert(`${hasExistingReport ? "Regenerate" : "Generate"} succeeded.${reportUrl ? "\nThe latest test report opened automatically." : ''}`);
     };
 
     const handleDelete = async (id: string, label: string) => {
-        const ok = await confirm('删除记录', `确定要删除这条${label}吗？`);
+        const ok = await confirm("Delete record", `Delete this ${label}?`);
         if (!ok) return;
         await fetch(API_ENDPOINTS.history.delete(id), { method: 'DELETE' });
         await loadHistory();
@@ -370,7 +370,7 @@ const ExecutionHistory: React.FC = () => {
     };
 
     const handleClearAll = async () => {
-        const ok = await confirm('清空全部', `确定要清空全部 ${groups.length} 个测试批次吗？此操作不可恢复。`);
+        const ok = await confirm("Clear all", `Clear all ${groups.length} test batches? This cannot be undone.`);
         if (!ok) return;
         await fetch(API_ENDPOINTS.history.clear, { method: 'DELETE' });
         setGroups([]);
@@ -453,8 +453,8 @@ const ExecutionHistory: React.FC = () => {
         failed: groups.filter(group => !isSuccessfulStatus(group.status)).length,
     };
 
-    if (loading) return <div className="flex items-center justify-center h-full"><div className="text-center text-slate-500"><Activity className="w-10 h-10 mx-auto mb-3 opacity-30 animate-spin" /><p className="text-sm">加载执行中心...</p></div></div>;
-    if (groups.length === 0) return <div className="flex items-center justify-center h-full text-slate-500"><div className="text-center"><Activity className="w-12 h-12 mx-auto mb-4 opacity-15" /><p className="font-medium">暂无执行记录</p><p className="text-sm text-slate-400 mt-2">执行测试后，这里会按“测试批次 / 单条记录”结构展示</p></div></div>;
+    if (loading) return <div className="flex items-center justify-center h-full"><div className="text-center text-slate-500"><Activity className="w-10 h-10 mx-auto mb-3 opacity-30 animate-spin" /><p className="text-sm">Loading execution center...</p></div></div>;
+    if (groups.length === 0) return <div className="flex items-center justify-center h-full text-slate-500"><div className="text-center"><Activity className="w-12 h-12 mx-auto mb-4 opacity-15" /><p className="font-medium">No execution records yet</p><p className="text-sm text-slate-400 mt-2">After a test runs, results appear as test batches and individual records</p></div></div>;
 
     return (
         <div className="space-y-4 h-full flex flex-col animate-in fade-in duration-500">
@@ -466,39 +466,39 @@ const ExecutionHistory: React.FC = () => {
                         <div className="space-y-2">
                             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-violet-500">
                                 <RotateCcw className="w-3.5 h-3.5" />
-                                当前任务上下文
+                                Current task context
                             </div>
                             {taskContextLoading && !taskContext ? (
-                                <div className="text-sm text-slate-500 dark:text-slate-300">正在从统一任务链恢复当前上下文…</div>
+                                <div className="text-sm text-slate-500 dark:text-slate-300">Restoring the current context from the unified task chain…</div>
                             ) : taskContext ? (
                                 <>
                                     <div className="text-sm font-semibold text-slate-900 dark:text-white">{taskContext.user_goal}</div>
                                     <div className="flex flex-wrap gap-2 text-xs text-slate-500 dark:text-slate-300">
-                                        <span>任务 ID：{taskContext.task_id}</span>
-                                        <span>执行组：{taskContext.execution_group_id || '-'}</span>
-                                        <span>复跑链：{taskContext.lineage_root_id || focusedLineageRootId || '-'}</span>
-                                        <span>{taskContext.rerun_from_task_id ? `来自复跑：${taskContext.rerun_from_task_id}` : '当前为首轮任务'}</span>
+                                        <span>Task ID: {taskContext.task_id}</span>
+                                        <span>Execution group: {taskContext.execution_group_id || '-'}</span>
+                                        <span>Rerun chain: {taskContext.lineage_root_id || focusedLineageRootId || '-'}</span>
+                                        <span>{taskContext.rerun_from_task_id ? `Rerun of: ${taskContext.rerun_from_task_id}` : "This is the initial task"}</span>
                                     </div>
                                     <div className="flex flex-wrap gap-3 text-xs text-slate-500 dark:text-slate-300">
-                                        <span>任务状态：{statusMeta(taskContext.status).label}</span>
-                                        <span>门禁结论：{gateMeta(taskContext.gate_summary?.status || '').label}</span>
+                                        <span>Task status: {statusMeta(taskContext.status).label}</span>
+                                        <span>Gate result: {gateMeta(taskContext.gate_summary?.status || '').label}</span>
                                         {lineageContext.currentIndex >= 0 && (
-                                            <span>当前位于复跑链第 {lineageContext.currentIndex + 1} / {lineageContext.sortedTasks.length} 个任务</span>
+                                            <span>Current position in rerun chain: {lineageContext.currentIndex + 1} / {lineageContext.sortedTasks.length} tasks</span>
                                         )}
                                     </div>
                                     {(lineageContext.olderTask || lineageContext.newerTask || lineageContext.comparableTask) && (
                                         <div className="rounded-xl border border-violet-200/60 bg-white/80 px-3 py-3 text-xs text-slate-600 dark:border-violet-500/20 dark:bg-slate-900/60 dark:text-slate-300">
-                                            <div className="font-semibold text-slate-700 dark:text-slate-100">复跑链摘要</div>
+                                            <div className="font-semibold text-slate-700 dark:text-slate-100">Rerun chain summary</div>
                                             <div className="mt-2 flex flex-wrap gap-3">
-                                                {lineageContext.olderTask && <span>前一次：{lineageContext.olderTask.task_id}</span>}
-                                                {lineageContext.newerTask && <span>后一次：{lineageContext.newerTask.task_id}</span>}
-                                                {lineageContext.comparableTask && <span>最近一次可比任务：{lineageContext.comparableTask.task_id}</span>}
+                                                {lineageContext.olderTask && <span>Previous: {lineageContext.olderTask.task_id}</span>}
+                                                {lineageContext.newerTask && <span>Next: {lineageContext.newerTask.task_id}</span>}
+                                                {lineageContext.comparableTask && <span>Most recent comparable task: {lineageContext.comparableTask.task_id}</span>}
                                             </div>
                                         </div>
                                     )}
                                     {lineageContext.sortedTasks.length > 0 && (
                                         <div className="rounded-xl border border-violet-200/60 bg-white/80 px-3 py-3 text-xs text-slate-600 dark:border-violet-500/20 dark:bg-slate-900/60 dark:text-slate-300">
-                                            <div className="font-semibold text-slate-700 dark:text-slate-100">链路时间线</div>
+                                            <div className="font-semibold text-slate-700 dark:text-slate-100">Chain timeline</div>
                                             <div className="mt-2 space-y-2">
                                                 {lineageContext.sortedTasks.map((task, index) => {
                                                     const isCurrent = task.task_id === (taskContext?.task_id || focusedTaskId);
@@ -516,11 +516,11 @@ const ExecutionHistory: React.FC = () => {
                                                             <div className="min-w-0">
                                                                 <div className="flex flex-wrap items-center gap-2">
                                                                     <span className="font-medium text-slate-700 dark:text-slate-100">
-                                                                        第 {lineageContext.sortedTasks.length - index} 次
+                                                                        Run {lineageContext.sortedTasks.length - index} 
                                                                     </span>
                                                                     {isCurrent && (
                                                                         <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[10px] text-violet-700 dark:bg-violet-500/20 dark:text-violet-300">
-                                                                            当前任务
+                                                                            Current task
                                                                         </span>
                                                                     )}
                                                                 </div>
@@ -543,7 +543,7 @@ const ExecutionHistory: React.FC = () => {
                                     )}
                                     {sameTaskKindReferences.length > 0 && (
                                         <div className="rounded-xl border border-violet-200/60 bg-white/80 px-3 py-3 text-xs text-slate-600 dark:border-violet-500/20 dark:bg-slate-900/60 dark:text-slate-300">
-                                            <div className="font-semibold text-slate-700 dark:text-slate-100">同任务类型参考</div>
+                                            <div className="font-semibold text-slate-700 dark:text-slate-100">Same task type reference</div>
                                             <div className="mt-2 space-y-2">
                                                 {sameTaskKindReferences.map((task) => (
                                                     <button
@@ -571,7 +571,7 @@ const ExecutionHistory: React.FC = () => {
                                     )}
                                 </>
                             ) : (
-                                <div className="text-sm text-slate-500 dark:text-slate-300">当前没有可恢复的统一任务上下文。</div>
+                                <div className="text-sm text-slate-500 dark:text-slate-300">No unified task context is available to restore.</div>
                             )}
                         </div>
                         {taskContext && (
@@ -581,14 +581,14 @@ const ExecutionHistory: React.FC = () => {
                                     onClick={() => navigate(`/tasks/${taskContext.task_id}`)}
                                     className="rounded-lg border border-violet-200 bg-white px-3 py-2 text-sm text-violet-700 transition-colors hover:bg-violet-50 dark:border-violet-500/30 dark:bg-slate-900 dark:text-violet-300 dark:hover:bg-violet-500/10"
                                 >
-                                    返回任务结果
+                                    Return to task results
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => navigate(taskContext.quality_gate_path)}
                                     className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 transition-colors hover:text-violet-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
                                 >
-                                    查看质量门禁
+                                    View quality gate
                                 </button>
                             </div>
                         )}
@@ -598,21 +598,21 @@ const ExecutionHistory: React.FC = () => {
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <div>
-                        <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2"><div className="p-2 rounded-lg bg-indigo-500/10"><Layers className="w-5 h-5 text-indigo-500" /></div>执行中心</h2>
-                        <div className="mt-1 text-xs text-slate-400">统一查看当前任务、复跑链、执行组与同任务类型参考</div>
+                        <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2"><div className="p-2 rounded-lg bg-indigo-500/10"><Layers className="w-5 h-5 text-indigo-500" /></div>Execution center</h2>
+                        <div className="mt-1 text-xs text-slate-400">View the current task, rerun chain, execution group, and references of the same task type</div>
                     </div>
                     <StatusFilter filter={filter} onChange={(value) => { setFilter(value); setPage(1); }} counts={counts} />
                 </div>
-                <div className="flex items-center gap-2"><ReportDropdown /><button onClick={handleClearAll} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"><Trash2 className="w-3.5 h-3.5" />清空全部</button></div>
+                <div className="flex items-center gap-2"><ReportDropdown /><button onClick={handleClearAll} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"><Trash2 className="w-3.5 h-3.5" />Clear all</button></div>
             </div>
 
             <div className="flex items-center gap-3 flex-wrap">
-                <div className="relative flex-1 min-w-[200px] max-w-[300px]"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" /><input type="text" placeholder="搜索批次或单条记录..." value={keyword} onChange={(e) => { setKeyword(e.target.value); setPage(1); }} className="w-full pl-9 pr-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 outline-none transition-all" /></div>
-                <div className="relative min-w-[180px] max-w-[250px]"><Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" /><input type="text" placeholder="筛选目标 URL..." value={urlFilter} onChange={(e) => { setUrlFilter(e.target.value); setPage(1); }} className="w-full pl-9 pr-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 outline-none transition-all" /></div>
-                <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5"><CalendarDays className="w-3.5 h-3.5 text-slate-400 ml-2" />{([['all', '全部'], ['today', '今天'], ['3d', '3天'], ['7d', '7天'], ['30d', '30天']] as [DateRange, string][]).map(([key, label]) => <button key={key} onClick={() => { setDateRange(key); setPage(1); }} className={`px-2 py-1 rounded-md text-[11px] font-medium transition-all ${dateRange === key ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>{label}</button>)}</div>
-                <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5"><Cpu className="w-3.5 h-3.5 text-slate-400 ml-2" />{([['all', '全部'], ['smart', 'Smart'], ['quick', 'Quick'], ['special', '专项']] as [ModeFilter, string][]).map(([key, label]) => <button key={key} onClick={() => { setModeFilter(key); setPage(1); }} className={`px-2 py-1 rounded-md text-[11px] font-medium transition-all ${modeFilter === key ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>{label}</button>)}</div>
-                {(keyword || urlFilter || dateRange !== 'all' || modeFilter !== 'all') && <button onClick={() => { setKeyword(''); setUrlFilter(''); setDateRange('all'); setModeFilter('all'); setPage(1); }} className="text-xs text-slate-500 hover:text-indigo-500 transition-colors">清除筛选</button>}
-                <span className="text-[10px] text-slate-400 ml-auto">共 {filtered.length} 个测试批次</span>
+                <div className="relative flex-1 min-w-[200px] max-w-[300px]"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" /><input type="text" placeholder={"Search batches or individual records..."} value={keyword} onChange={(e) => { setKeyword(e.target.value); setPage(1); }} className="w-full pl-9 pr-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 outline-none transition-all" /></div>
+                <div className="relative min-w-[180px] max-w-[250px]"><Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" /><input type="text" placeholder={"Filter by target URL..."} value={urlFilter} onChange={(e) => { setUrlFilter(e.target.value); setPage(1); }} className="w-full pl-9 pr-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 outline-none transition-all" /></div>
+                <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5"><CalendarDays className="w-3.5 h-3.5 text-slate-400 ml-2" />{([['all', "All"], ['today', "Today"], ['3d', "3 days"], ['7d', "7 days"], ['30d', "30 days"]] as [DateRange, string][]).map(([key, label]) => <button key={key} onClick={() => { setDateRange(key); setPage(1); }} className={`px-2 py-1 rounded-md text-[11px] font-medium transition-all ${dateRange === key ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>{label}</button>)}</div>
+                <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5"><Cpu className="w-3.5 h-3.5 text-slate-400 ml-2" />{([['all', "All"], ['smart', 'Smart'], ['quick', 'Quick'], ['special', "Specialized"]] as [ModeFilter, string][]).map(([key, label]) => <button key={key} onClick={() => { setModeFilter(key); setPage(1); }} className={`px-2 py-1 rounded-md text-[11px] font-medium transition-all ${modeFilter === key ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>{label}</button>)}</div>
+                {(keyword || urlFilter || dateRange !== 'all' || modeFilter !== 'all') && <button onClick={() => { setKeyword(''); setUrlFilter(''); setDateRange('all'); setModeFilter('all'); setPage(1); }} className="text-xs text-slate-500 hover:text-indigo-500 transition-colors">Clear filters</button>}
+                <span className="text-[10px] text-slate-400 ml-auto">Total: {filtered.length} test batches</span>
             </div>
 
             <div className="flex-1 overflow-y-auto space-y-3 pr-1 custom-scrollbar">
@@ -628,32 +628,32 @@ const ExecutionHistory: React.FC = () => {
                             <div className="flex items-center gap-4 p-4 cursor-pointer select-none" onClick={() => { setExpandedGroupId(groupExpanded ? null : group.group_id); setExpandedRecordId(null); setDetailTab('log'); }}>
                                 <div className="text-slate-400 shrink-0">{groupExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}</div>
                                 <div className="shrink-0">{groupSuccess ? <CheckCircle2 className="w-5 h-5 text-emerald-500" /> : groupHealed ? <Shield className="w-5 h-5 text-teal-500" /> : <XCircle className="w-5 h-5 text-red-500" />}</div>
-                                <div className="flex-1 min-w-0"><h3 className="text-sm font-semibold text-slate-900 dark:text-white truncate">{group.title || group.requirement_display || '未命名测试批次'}</h3><div className="flex items-center gap-3 mt-1 text-xs text-slate-400"><span className="flex items-center gap-1"><Layers className="w-3 h-3" />单次记录</span><span className="flex items-center gap-1"><Cpu className="w-3 h-3" />{MODE_LABELS[group.mode || 'smart'] || group.mode || 'Smart Agent'}</span>{group.target_url && <span className="flex items-center gap-1 truncate max-w-[220px]" title={group.target_url}><Globe className="w-3 h-3" />{group.target_url.replace(/^https?:\/\//, '')}</span>}</div></div>
+                                <div className="flex-1 min-w-0"><h3 className="text-sm font-semibold text-slate-900 dark:text-white truncate">{group.title || group.requirement_display || "Unnamed test batch"}</h3><div className="flex items-center gap-3 mt-1 text-xs text-slate-400"><span className="flex items-center gap-1"><Layers className="w-3 h-3" />Individual record</span><span className="flex items-center gap-1"><Cpu className="w-3 h-3" />{MODE_LABELS[group.mode || 'smart'] || group.mode || 'Smart Agent'}</span>{group.target_url && <span className="flex items-center gap-1 truncate max-w-[220px]" title={group.target_url}><Globe className="w-3 h-3" />{group.target_url.replace(/^https?:\/\//, '')}</span>}</div></div>
                                 <div className="shrink-0 flex items-center gap-2">
-                                    {groupTagSummary.isCurrentTaskGroup && <span className="flex items-center gap-1 text-xs text-violet-600 dark:text-violet-300 bg-violet-50 dark:bg-violet-500/10 px-2 py-0.5 rounded-full">当前任务执行组</span>}
-                                    {groupTagSummary.isSameLineageGroup && <span className="flex items-center gap-1 text-xs text-sky-600 dark:text-sky-300 bg-sky-50 dark:bg-sky-500/10 px-2 py-0.5 rounded-full">同复跑链</span>}
-                                    {groupTagSummary.isSameTaskKindReferenceGroup && <span className="flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded-full">同任务类型参考</span>}
-                                    {groupReport && <span className="flex items-center gap-1 text-xs text-indigo-600 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 rounded-full"><FileText className="w-3 h-3" />测试报告</span>}
-                                    <span className="text-xs text-slate-500 bg-slate-100 dark:bg-slate-700/50 px-2 py-0.5 rounded-full">{group.record_count} 条单条记录</span>
+                                    {groupTagSummary.isCurrentTaskGroup && <span className="flex items-center gap-1 text-xs text-violet-600 dark:text-violet-300 bg-violet-50 dark:bg-violet-500/10 px-2 py-0.5 rounded-full">Current task execution group</span>}
+                                    {groupTagSummary.isSameLineageGroup && <span className="flex items-center gap-1 text-xs text-sky-600 dark:text-sky-300 bg-sky-50 dark:bg-sky-500/10 px-2 py-0.5 rounded-full">Same rerun chain</span>}
+                                    {groupTagSummary.isSameTaskKindReferenceGroup && <span className="flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded-full">Same task type reference</span>}
+                                    {groupReport && <span className="flex items-center gap-1 text-xs text-indigo-600 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 rounded-full"><FileText className="w-3 h-3" />Test report</span>}
+                                    <span className="text-xs text-slate-500 bg-slate-100 dark:bg-slate-700/50 px-2 py-0.5 rounded-full">{group.record_count} individual records</span>
                                     {group.error_count > 0 && <span className="flex items-center gap-1 text-xs text-red-500 bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded-full"><AlertTriangle className="w-3 h-3" />{group.error_count}</span>}
                                 </div>
                                 <div className="shrink-0 text-right text-xs text-slate-400"><div className="flex items-center gap-1"><Timer className="w-3 h-3" />{formatDuration(group.duration_ms)}</div><div className="flex items-center gap-1 mt-1"><Clock className="w-3 h-3" />{formatTime(group.updated_at || group.created_at)}</div></div>
-                                {groupReportUrl && <a href={groupReportUrl} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} className="shrink-0 p-1.5 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/20 text-indigo-500 hover:text-indigo-600 transition-colors" title="查看该测试批次报告"><ExternalLink className="w-3.5 h-3.5" /></a>}
-                                <button onClick={(e) => handleGenerateReport(e, group.group_id, Boolean(groupReport))} className="shrink-0 p-1.5 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/20 text-indigo-400 hover:text-indigo-600 transition-colors" title="为该测试批次生成专属报告"><FileText className="w-3.5 h-3.5" /></button>
-                                <button onClick={(e) => { e.stopPropagation(); handleDelete(group.group_id, '测试批次'); }} className="shrink-0 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-300 hover:text-red-500 transition-colors" title="删除测试批次"><Trash2 className="w-3.5 h-3.5" /></button>
+                                {groupReportUrl && <a href={groupReportUrl} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} className="shrink-0 p-1.5 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/20 text-indigo-500 hover:text-indigo-600 transition-colors" title={"View this batch report"}><ExternalLink className="w-3.5 h-3.5" /></a>}
+                                <button onClick={(e) => handleGenerateReport(e, group.group_id, Boolean(groupReport))} className="shrink-0 p-1.5 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/20 text-indigo-400 hover:text-indigo-600 transition-colors" title={"Generate a report for this batch"}><FileText className="w-3.5 h-3.5" /></button>
+                                <button onClick={(e) => { e.stopPropagation(); handleDelete(group.group_id, "Test batch"); }} className="shrink-0 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-300 hover:text-red-500 transition-colors" title={"Delete test batch"}><Trash2 className="w-3.5 h-3.5" /></button>
                             </div>
-                            {groupExpanded && <div className="px-4 pb-4 space-y-3"><div className="text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/30 rounded-lg px-3 py-2">该测试批次共包含 {group.record_count} 条单条记录。下面每条记录对应一次具体测试动作，例如 Smart Agent 执行、性能测试、安全扫描、数据库验证等。</div>{group.records.map(record => {
+                            {groupExpanded && <div className="px-4 pb-4 space-y-3"><div className="text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/30 rounded-lg px-3 py-2">This batch contains {group.record_count} individual records. Each record below represents a test action, such as a Smart Agent run, performance test, security scan, or database check.</div>{group.records.map(record => {
                                 const recordExpanded = expandedRecordId === record.task_id;
                                 const recordSuccess = isPureSuccessStatus(record.status);
                                 const recordHealed = isRecoveredStatus(record.status);
                                 const recordReport = reportMap[record.task_id];
                                 const recordReportUrl = buildReportUrl(recordReport);
-                                return <div key={record.task_id} className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-900/30 overflow-hidden"><div className="flex items-center gap-3 px-4 py-3 cursor-pointer" onClick={() => { setExpandedRecordId(recordExpanded ? null : record.task_id); setDetailTab('log'); }}><div className="text-slate-400 shrink-0">{recordExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}</div><div className="shrink-0">{recordSuccess ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : recordHealed ? <Shield className="w-4 h-4 text-teal-500" /> : <XCircle className="w-4 h-4 text-red-500" />}</div><div className="flex-1 min-w-0"><div className="text-sm text-slate-900 dark:text-white truncate">{record.requirement_display || record.requirement || '未命名单条记录'}</div><div className="flex items-center gap-3 mt-1 text-xs text-slate-400"><span className="flex items-center gap-1"><FileText className="w-3 h-3" />单条记录</span><span className="flex items-center gap-1"><Cpu className="w-3 h-3" />{MODE_LABELS[record.mode || 'smart'] || record.mode || 'Smart Agent'}</span>{record.target_url && <span className="flex items-center gap-1 truncate max-w-[220px]" title={record.target_url}><Globe className="w-3 h-3" />{record.target_url.replace(/^https?:\/\//, '')}</span>}</div></div><span className="text-xs text-slate-400 whitespace-nowrap">{formatDuration(record.duration_ms)}</span>{recordReport && <span className="flex items-center gap-1 text-xs text-indigo-600 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 rounded-full"><FileText className="w-3 h-3" />测试报告</span>}{recordReportUrl && <a href={recordReportUrl} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} className="shrink-0 p-1.5 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/20 text-indigo-500 hover:text-indigo-600 transition-colors" title="查看该单条记录报告"><ExternalLink className="w-3.5 h-3.5" /></a>}<button onClick={(e) => handleGenerateReport(e, record.task_id, Boolean(recordReport))} className="shrink-0 p-1.5 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/20 text-indigo-400 hover:text-indigo-600 transition-colors" title="生成该单条记录报告"><FileText className="w-3.5 h-3.5" /></button><button onClick={(e) => { e.stopPropagation(); handleDelete(record.task_id, '单条记录'); }} className="shrink-0 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-300 hover:text-red-500 transition-colors" title="删除单条记录"><Trash2 className="w-3.5 h-3.5" /></button></div>{recordExpanded && <div className="px-4 pb-4"><div className="flex items-center gap-1 mb-3 bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5 w-fit"><button onClick={(e) => { e.stopPropagation(); setDetailTab('log'); }} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${detailTab === 'log' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'}`}><FileText className="w-3 h-3" />执行日志</button><button onClick={(e) => { e.stopPropagation(); setDetailTab('gallery'); }} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${detailTab === 'gallery' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'}`}><Camera className="w-3 h-3" />步骤截图</button></div>{detailTab === 'log' ? <LogPanel taskId={record.task_id} isOpen={recordExpanded} /> : <GalleryPanel taskId={record.task_id} isOpen={recordExpanded} />}</div>}</div>;
+                                return <div key={record.task_id} className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-900/30 overflow-hidden"><div className="flex items-center gap-3 px-4 py-3 cursor-pointer" onClick={() => { setExpandedRecordId(recordExpanded ? null : record.task_id); setDetailTab('log'); }}><div className="text-slate-400 shrink-0">{recordExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}</div><div className="shrink-0">{recordSuccess ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : recordHealed ? <Shield className="w-4 h-4 text-teal-500" /> : <XCircle className="w-4 h-4 text-red-500" />}</div><div className="flex-1 min-w-0"><div className="text-sm text-slate-900 dark:text-white truncate">{record.requirement_display || record.requirement || "Unnamed record"}</div><div className="flex items-center gap-3 mt-1 text-xs text-slate-400"><span className="flex items-center gap-1"><FileText className="w-3 h-3" />Individual record</span><span className="flex items-center gap-1"><Cpu className="w-3 h-3" />{MODE_LABELS[record.mode || 'smart'] || record.mode || 'Smart Agent'}</span>{record.target_url && <span className="flex items-center gap-1 truncate max-w-[220px]" title={record.target_url}><Globe className="w-3 h-3" />{record.target_url.replace(/^https?:\/\//, '')}</span>}</div></div><span className="text-xs text-slate-400 whitespace-nowrap">{formatDuration(record.duration_ms)}</span>{recordReport && <span className="flex items-center gap-1 text-xs text-indigo-600 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 rounded-full"><FileText className="w-3 h-3" />Test report</span>}{recordReportUrl && <a href={recordReportUrl} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} className="shrink-0 p-1.5 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/20 text-indigo-500 hover:text-indigo-600 transition-colors" title={"View this record's report"}><ExternalLink className="w-3.5 h-3.5" /></a>}<button onClick={(e) => handleGenerateReport(e, record.task_id, Boolean(recordReport))} className="shrink-0 p-1.5 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/20 text-indigo-400 hover:text-indigo-600 transition-colors" title={"Generate this record's report"}><FileText className="w-3.5 h-3.5" /></button><button onClick={(e) => { e.stopPropagation(); handleDelete(record.task_id, "Individual record"); }} className="shrink-0 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-300 hover:text-red-500 transition-colors" title={"Delete record"}><Trash2 className="w-3.5 h-3.5" /></button></div>{recordExpanded && <div className="px-4 pb-4"><div className="flex items-center gap-1 mb-3 bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5 w-fit"><button onClick={(e) => { e.stopPropagation(); setDetailTab('log'); }} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${detailTab === 'log' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'}`}><FileText className="w-3 h-3" />Execution logs</button><button onClick={(e) => { e.stopPropagation(); setDetailTab('gallery'); }} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${detailTab === 'gallery' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'}`}><Camera className="w-3 h-3" />Step screenshots</button></div>{detailTab === 'log' ? <LogPanel taskId={record.task_id} isOpen={recordExpanded} /> : <GalleryPanel taskId={record.task_id} isOpen={recordExpanded} />}</div>}</div>;
                             })}</div>}
                         </div>
                     );
                 })}
-                {filtered.length === 0 && <div className="text-center text-slate-400 py-8"><Filter className="w-8 h-8 mx-auto mb-2 opacity-30" /><p className="text-sm">当前筛选无匹配测试批次</p></div>}
+                {filtered.length === 0 && <div className="text-center text-slate-400 py-8"><Filter className="w-8 h-8 mx-auto mb-2 opacity-30" /><p className="text-sm">No test batches match the current filters</p></div>}
             </div>
 
             {totalPages > 1 && <div className="flex items-center justify-center gap-2 pt-2 border-t border-slate-200 dark:border-slate-800"><button onClick={() => setPage(current => Math.max(1, current - 1))} disabled={safePage <= 1} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"><PageLeft className="w-4 h-4" /></button>{Array.from({ length: totalPages }, (_, index) => index + 1).filter(current => current === 1 || current === totalPages || Math.abs(current - safePage) <= 2).map((current, index, array) => <React.Fragment key={current}>{index > 0 && array[index - 1] !== current - 1 && <span className="text-[10px] text-slate-400">...</span>}<button onClick={() => setPage(current)} className={`w-7 h-7 rounded-lg text-xs font-medium transition-all ${current === safePage ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>{current}</button></React.Fragment>)}<button onClick={() => setPage(current => Math.min(totalPages, current + 1))} disabled={safePage >= totalPages} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"><PageRight className="w-4 h-4" /></button></div>}

@@ -77,7 +77,7 @@ const ChaosPanel: React.FC<{ url: string }> = ({ url }) => {
             const res = await fetch(API_ENDPOINTS.chaos.run, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url, scenarios: Array.from(selected), ...ensureExecutionContextPayload('混沌专项测试', { targetUrl: url }) })
+                body: JSON.stringify({ url, scenarios: Array.from(selected), ...ensureExecutionContextPayload("Chaos test suite", { targetUrl: url }) })
             });
             const data = await res.json();
             setResults(data.results || []);
@@ -94,19 +94,19 @@ const ChaosPanel: React.FC<{ url: string }> = ({ url }) => {
             <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md p-4">
                 <div className="flex items-center justify-between mb-3">
                     <h3 className="text-sm font-bold text-slate-700 dark:text-white flex items-center gap-2">
-                        <Flame className="w-4 h-4 text-orange-500" /> 混沌场景 ({selected.size}/{scenarios.length})
+                        <Flame className="w-4 h-4 text-orange-500" /> Chaos scenarios ( {selected.size}/{scenarios.length})
                     </h3>
                     <button onClick={runChaos} disabled={loading || !url || selected.size === 0}
                         className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white rounded-lg text-sm font-medium shadow-lg shadow-orange-500/20 active:scale-95 transition-all disabled:opacity-50">
                         {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Flame className="w-4 h-4" />}
-                        启动混沌测试
+                        Start chaos test
                     </button>
                 </div>
 
                 {/* Select All / Deselect All */}
                 <div className="flex gap-2 mb-2">
-                    <button onClick={() => setSelected(new Set(scenarios.map(s => s.id)))} className="text-[11px] text-slate-400 hover:text-orange-500 transition-colors">全选</button>
-                    <button onClick={() => setSelected(new Set())} className="text-[11px] text-slate-400 hover:text-orange-500 transition-colors">全不选</button>
+                    <button onClick={() => setSelected(new Set(scenarios.map(s => s.id)))} className="text-[11px] text-slate-400 hover:text-orange-500 transition-colors">Select all</button>
+                    <button onClick={() => setSelected(new Set())} className="text-[11px] text-slate-400 hover:text-orange-500 transition-colors">Deselect all</button>
                 </div>
                 <div className="grid grid-cols-2 xl:grid-cols-4 gap-2">
                     {scenarios.map(s => (
@@ -129,27 +129,27 @@ const ChaosPanel: React.FC<{ url: string }> = ({ url }) => {
                     <button onClick={() => setShowCustom(!showCustom)}
                         className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-orange-500 font-medium transition-colors w-full">
                         <Plus className={`w-3 h-3 ${showCustom ? 'rotate-45' : ''} transition-transform`} />
-                        自定义混沌场景
+                        Custom chaos scenario
                         <Settings className={`w-3 h-3 ml-auto ${showCustom ? 'rotate-90' : ''} transition-transform`} />
                     </button>
                     {showCustom && (
                         <div className="mt-2 space-y-2 animate-in slide-in-from-top-2 duration-200">
                             <input type="text" value={customName} onChange={e => setCustomName(e.target.value)}
-                                placeholder="场景名称，例如: 随机延迟峰值"
+                                placeholder={"Scenario name, for example: Random latency spike"}
                                 className="w-full text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-1.5 outline-none focus:ring-2 focus:ring-orange-500/30 placeholder-slate-400" />
                             <div className="grid grid-cols-3 gap-2">
                                 <div>
-                                    <label className="block text-[10px] text-slate-400 mb-0.5">延迟 (ms)</label>
+                                    <label className="block text-[10px] text-slate-400 mb-0.5">Latency (ms)</label>
                                     <input type="number" value={customLatency} onChange={e => setCustomLatency(Number(e.target.value))} min={0} max={30000}
                                         className="w-full text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-1 outline-none focus:ring-2 focus:ring-orange-500/30" />
                                 </div>
                                 <div>
-                                    <label className="block text-[10px] text-slate-400 mb-0.5">错误率 (%)</label>
+                                    <label className="block text-[10px] text-slate-400 mb-0.5">Error rate (%)</label>
                                     <input type="number" value={customErrorRate} onChange={e => setCustomErrorRate(Number(e.target.value))} min={0} max={100}
                                         className="w-full text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-1 outline-none focus:ring-2 focus:ring-orange-500/30" />
                                 </div>
                                 <div>
-                                    <label className="block text-[10px] text-slate-400 mb-0.5">超时 (s)</label>
+                                    <label className="block text-[10px] text-slate-400 mb-0.5">Timeout (s)</label>
                                     <input type="number" value={customTimeout} onChange={e => setCustomTimeout(Number(e.target.value))} min={1} max={120}
                                         className="w-full text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-1 outline-none focus:ring-2 focus:ring-orange-500/30" />
                                 </div>
@@ -157,14 +157,14 @@ const ChaosPanel: React.FC<{ url: string }> = ({ url }) => {
                             <button onClick={() => {
                                 if (!customName.trim()) return;
                                 const newId = `custom_${Date.now()}`;
-                                setScenarios(prev => [...prev, { id: newId, name: customName, description: `延迟 ${customLatency}ms, 错误率 ${customErrorRate}%, 超时 ${customTimeout}s` }]);
+                                setScenarios(prev => [...prev, { id: newId, name: customName, description: `Latency ${customLatency} ms, error rate ${customErrorRate}%, timeout ${customTimeout}s` }]);
                                 setSelected(prev => new Set([...prev, newId]));
                                 setCustomName('');
                                 setShowCustom(false);
                             }}
                                 disabled={!customName.trim()}
                                 className="w-full px-3 py-1.5 text-xs font-medium bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/30 rounded-lg hover:bg-orange-500/20 transition-colors disabled:opacity-50">
-                                + 添加场景
+                                + Add scenario
                             </button>
                         </div>
                     )}
@@ -175,14 +175,14 @@ const ChaosPanel: React.FC<{ url: string }> = ({ url }) => {
             <div className="flex-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md overflow-hidden flex flex-col min-h-0">
                 <div className="p-3 border-b border-slate-200 dark:border-slate-800">
                     <span className="text-sm font-bold text-slate-700 dark:text-white">
-                        测试结果 ({results.length})
+                        Test results ( {results.length})
                     </span>
                 </div>
                 <div className="flex-1 overflow-y-auto p-3 space-y-2">
                     {results.length === 0 ? (
                         <div className="p-8 text-center text-slate-400">
                             <Flame className="w-10 h-10 mx-auto mb-3 opacity-20" />
-                            <p className="text-sm">选择场景并点击启动</p>
+                            <p className="text-sm">Select scenarios and click Start</p>
                         </div>
                     ) : results.map((r, i) => (
                         <div key={i} className={`p-4 rounded-lg border ${r.status === 'passed' ? 'bg-green-50 dark:bg-green-500/5 border-green-200 dark:border-green-800'
@@ -269,7 +269,7 @@ const MobilePanel: React.FC<{ url: string }> = ({ url }) => {
             const res = await fetch(API_ENDPOINTS.mobile.test, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url, devices: Array.from(selected), ...ensureExecutionContextPayload('移动专项测试', { targetUrl: url }) })
+                body: JSON.stringify({ url, devices: Array.from(selected), ...ensureExecutionContextPayload("Mobile test suite", { targetUrl: url }) })
             });
             const data = await res.json();
             setResults(data.results || []);
@@ -296,12 +296,12 @@ const MobilePanel: React.FC<{ url: string }> = ({ url }) => {
             <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md p-4">
                 <div className="flex items-center justify-between mb-3">
                     <h3 className="text-sm font-bold text-slate-700 dark:text-white flex items-center gap-2">
-                        <Smartphone className="w-4 h-4 text-sky-500" /> 设备选择 ({selected.size}/{devices.length})
+                        <Smartphone className="w-4 h-4 text-sky-500" /> Device selection ( {selected.size}/{devices.length})
                     </h3>
                     <button onClick={runMobile} disabled={loading || !url || selected.size === 0}
                         className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white rounded-lg text-sm font-medium shadow-lg shadow-sky-500/20 active:scale-95 transition-all disabled:opacity-50">
                         {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <MonitorSmartphone className="w-4 h-4" />}
-                        启动设备测试
+                        Start device test
                     </button>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -322,14 +322,14 @@ const MobilePanel: React.FC<{ url: string }> = ({ url }) => {
             <div className="flex-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md overflow-hidden flex flex-col min-h-0">
                 <div className="p-3 border-b border-slate-200 dark:border-slate-800">
                     <span className="text-sm font-bold text-slate-700 dark:text-white">
-                        设备测试结果 ({results.length})
+                        Device test results ( {results.length})
                     </span>
                 </div>
                 <div className="flex-1 overflow-y-auto p-3 space-y-3">
                     {results.length === 0 ? (
                         <div className="p-8 text-center text-slate-400">
                             <Smartphone className="w-10 h-10 mx-auto mb-3 opacity-20" />
-                            <p className="text-sm">选择设备并点击启动</p>
+                            <p className="text-sm">Select devices and click Start</p>
                         </div>
                     ) : results.map((r, i) => (
                         <div key={i} className="rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
@@ -342,9 +342,9 @@ const MobilePanel: React.FC<{ url: string }> = ({ url }) => {
                                 </div>
                                 <div className="flex items-center gap-2">
                                     {r.issues.length === 0 ? (
-                                        <span className="text-xs text-green-500 flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5" /> 无问题</span>
+                                        <span className="text-xs text-green-500 flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5" /> No issues</span>
                                     ) : (
-                                        <span className="text-xs text-orange-500">{r.issues.length} 个问题</span>
+                                        <span className="text-xs text-orange-500">{r.issues.length} issues</span>
                                     )}
                                     <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${expanded.has(i) ? 'rotate-180' : ''}`} />
                                 </div>
@@ -352,7 +352,7 @@ const MobilePanel: React.FC<{ url: string }> = ({ url }) => {
                             {expanded.has(i) && (
                                 <div className="p-3 space-y-2">
                                     {r.issues.length === 0 ? (
-                                        <p className="text-xs text-green-500 text-center">✓ 该设备测试通过</p>
+                                        <p className="text-xs text-green-500 text-center">✓ This device passed</p>
                                     ) : r.issues.map((issue, j) => (
                                         <div key={j} className={`p-2 rounded text-xs ${issue.severity === 'critical' ? 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400'
                                             : issue.severity === 'major' ? 'bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400'
@@ -364,7 +364,7 @@ const MobilePanel: React.FC<{ url: string }> = ({ url }) => {
                                     ))}
                                     {r.metrics && Object.keys(r.metrics).length > 0 && (
                                         <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-                                            <p className="text-[10px] font-medium text-slate-400 mb-1">指标</p>
+                                            <p className="text-[10px] font-medium text-slate-400 mb-1">Metrics</p>
                                             <div className="flex flex-wrap gap-2">
                                                 {Object.entries(r.metrics).filter(([k]) => typeof r.metrics[k] !== 'object').map(([k, v]) => (
                                                     <span key={k} className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 font-mono">
@@ -393,7 +393,7 @@ const ResilienceTesting: React.FC = () => {
 
     return (
         <div className="flex flex-col h-full gap-4 animate-in fade-in duration-500">
-            <ExecutionBatchBanner standaloneHint="这里的混沌测试和移动端测试会作为独立子记录写入执行中心。" />
+            <ExecutionBatchBanner standaloneHint={"Chaos and mobile tests run here are saved as individual child records in the execution center."} />
 
             {/* Mode Tabs + URL Bar */}
             <div className="flex items-center gap-3">
@@ -403,18 +403,18 @@ const ResilienceTesting: React.FC = () => {
                             ? 'text-orange-500 bg-orange-500/10 border border-orange-500/30 shadow-sm'
                             : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 border border-transparent'
                             }`}>
-                        <Flame className="w-4 h-4" /> 混沌工程
+                        <Flame className="w-4 h-4" /> Chaos engineering
                     </button>
                     <button onClick={() => setMode('mobile')}
                         className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${mode === 'mobile'
                             ? 'text-sky-500 bg-sky-500/10 border border-sky-500/30 shadow-sm'
                             : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 border border-transparent'
                             }`}>
-                        <Smartphone className="w-4 h-4" /> 移动端模拟
+                        <Smartphone className="w-4 h-4" /> Mobile emulation
                     </button>
                 </div>
                 <input type="text" value={url} onChange={(e) => setUrl(e.target.value)}
-                    placeholder="输入要测试的 URL"
+                    placeholder={"Enter a URL to test"}
                     className="flex-1 px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500/20" />
             </div>
 

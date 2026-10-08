@@ -27,8 +27,8 @@ const buildInitialRepos = (initialRepos?: RepoFormItem[]) => (
     initialRepos && initialRepos.length > 0
         ? initialRepos.map(repo => ({ ...repo }))
         : [
-            { ...emptyRepo(), label: '前端' },
-            { ...emptyRepo(), label: '后端' },
+            { ...emptyRepo(), label: "Frontend" },
+            { ...emptyRepo(), label: "Backend" },
         ]
 );
 
@@ -61,7 +61,7 @@ const ProjectDialogForm: React.FC<ProjectDialogFormProps> = ({ onClose, onSubmit
                 <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-cyan-500/10 to-transparent shrink-0">
                     <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
                         {mode === 'add' ? <Plus className="w-4 h-4 text-cyan-500" /> : <Pencil className="w-4 h-4 text-amber-500" />}
-                        {mode === 'add' ? '添加待测项目' : '编辑项目'}
+                        {mode === 'add' ? "Add project to test" : "Edit project"}
                     </h3>
                     <button onClick={onClose} className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400"><X className="w-4 h-4" /></button>
                 </div>
@@ -70,19 +70,19 @@ const ProjectDialogForm: React.FC<ProjectDialogFormProps> = ({ onClose, onSubmit
                     <div className="p-6 overflow-y-auto flex-1 space-y-5">
                         {/* Project Name */}
                         <div>
-                            <label className="block text-[11px] font-semibold text-slate-500 mb-1.5">项目名称 *</label>
+                            <label className="block text-[11px] font-semibold text-slate-500 mb-1.5">Project name *</label>
                             <input required value={name} onChange={e => setName(e.target.value)}
-                                placeholder="例如：示例项目管理系统"
+                                placeholder={"Example: Sample project management system"}
                                 className="w-full text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2.5 outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-400 transition-all" />
                         </div>
 
                         {/* Git Token */}
                         <div>
                             <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 flex items-center gap-1">
-                                <Key className="w-3 h-3" /> Git 令牌 {token ? <span className="text-emerald-500">(已配置)</span> : <span className="text-slate-400">(可选)</span>}
+                                <Key className="w-3 h-3" /> Git token {token ? <span className="text-emerald-500">(Configured)</span> : <span className="text-slate-400">(Optional)</span>}
                             </label>
                             <input type="password" value={token} onChange={e => setToken(e.target.value)}
-                                placeholder="私有仓库填写访问令牌（Git/GitHub/GitLab 通用）"
+                                placeholder={"Enter an access token for private repositories (Git, GitHub, or GitLab)"}
                                 className="w-full text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2.5 outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-400 font-mono transition-all" />
                         </div>
 
@@ -90,11 +90,11 @@ const ProjectDialogForm: React.FC<ProjectDialogFormProps> = ({ onClose, onSubmit
                         <div>
                             <div className="flex items-center justify-between mb-2">
                                 <label className="text-[11px] font-semibold text-slate-500 flex items-center gap-1">
-                                    <Layers className="w-3 h-3" /> 仓库列表（前端/后端/其他）
+                                    <Layers className="w-3 h-3" /> Repositories (frontend, backend, or other)
                                 </label>
                                 <button type="button" onClick={addRepoRow}
                                     className="flex items-center gap-1 text-[10px] text-cyan-500 hover:text-cyan-600 font-medium">
-                                    <Plus className="w-3 h-3" /> 添加仓库
+                                    <Plus className="w-3 h-3" /> Add repository
                                 </button>
                             </div>
 
@@ -103,19 +103,19 @@ const ProjectDialogForm: React.FC<ProjectDialogFormProps> = ({ onClose, onSubmit
                                     <div key={idx} className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-4 space-y-3 relative group">
                                         {repos.length > 1 && (
                                             <button type="button" onClick={() => removeRepoRow(idx)}
-                                                className="absolute top-2 right-2 p-1 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 hover:text-red-500 transition-all" title="移除">
+                                                className="absolute top-2 right-2 p-1 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 hover:text-red-500 transition-all" title={"Remove"}>
                                                 <Trash2 className="w-3 h-3" />
                                             </button>
                                         )}
                                         <div className="grid grid-cols-[100px_1fr] gap-3">
                                             <div>
-                                                <label className="block text-[10px] text-slate-400 mb-1">标签</label>
+                                                <label className="block text-[10px] text-slate-400 mb-1">Label</label>
                                                 <input value={repo.label} onChange={e => updateRepo(idx, 'label', e.target.value)}
-                                                    placeholder="前端"
+                                                    placeholder={"Frontend"}
                                                     className="w-full text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2.5 py-2 outline-none focus:ring-2 focus:ring-cyan-500/30 transition-all" />
                                             </div>
                                             <div>
-                                                <label className="block text-[10px] text-slate-400 mb-1">Git 仓库地址 *</label>
+                                                <label className="block text-[10px] text-slate-400 mb-1">Git repository URL *</label>
                                                 <input value={repo.repo_url} onChange={e => updateRepo(idx, 'repo_url', e.target.value)}
                                                     placeholder="https://github.com/user/repo.git"
                                                     className="w-full text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2.5 py-2 outline-none focus:ring-2 focus:ring-cyan-500/30 font-mono transition-all" />
@@ -125,37 +125,37 @@ const ProjectDialogForm: React.FC<ProjectDialogFormProps> = ({ onClose, onSubmit
                                         <details className="group/adv">
                                             <summary className="flex items-center gap-1 text-[10px] text-slate-400 cursor-pointer hover:text-cyan-500">
                                                 <ChevronDown className="w-2.5 h-2.5 transition-transform group-open/adv:rotate-180" />
-                                                高级选项
+                                                Advanced options
                                             </summary>
                                             <div className="mt-2 grid grid-cols-3 gap-2">
                                                 <div>
-                                                    <label className="block text-[10px] text-slate-400 mb-1">分支</label>
+                                                    <label className="block text-[10px] text-slate-400 mb-1">Branch</label>
                                                     <input value={repo.branch} onChange={e => updateRepo(idx, 'branch', e.target.value)}
                                                         placeholder="master"
                                                         className="w-full text-[11px] rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-1.5 outline-none transition-all" />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-[10px] text-slate-400 mb-1">端口</label>
+                                                    <label className="block text-[10px] text-slate-400 mb-1">Port</label>
                                                     <input type="number" value={repo.port || ''} onChange={e => updateRepo(idx, 'port', parseInt(e.target.value) || 0)}
-                                                        placeholder="自动"
+                                                        placeholder={"Automatic"}
                                                         className="w-full text-[11px] rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-1.5 outline-none transition-all" />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-[10px] text-slate-400 mb-1">技术栈</label>
+                                                    <label className="block text-[10px] text-slate-400 mb-1">Technology stack</label>
                                                     <input value={repo.tech_stack} onChange={e => updateRepo(idx, 'tech_stack', e.target.value)}
-                                                        placeholder="自动探测"
+                                                        placeholder={"Auto-detect"}
                                                         className="w-full text-[11px] rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-1.5 outline-none transition-all" />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-[10px] text-slate-400 mb-1">安装命令</label>
+                                                    <label className="block text-[10px] text-slate-400 mb-1">Install command</label>
                                                     <input value={repo.install_cmd} onChange={e => updateRepo(idx, 'install_cmd', e.target.value)}
-                                                        placeholder="自动探测"
+                                                        placeholder={"Auto-detect"}
                                                         className="w-full text-[11px] rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-1.5 outline-none font-mono transition-all" />
                                                 </div>
                                                 <div className="col-span-2">
-                                                    <label className="block text-[10px] text-slate-400 mb-1">启动命令</label>
+                                                    <label className="block text-[10px] text-slate-400 mb-1">Start command</label>
                                                     <input value={repo.start_cmd} onChange={e => updateRepo(idx, 'start_cmd', e.target.value)}
-                                                        placeholder="自动探测"
+                                                        placeholder={"Auto-detect"}
                                                         className="w-full text-[11px] rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-1.5 outline-none font-mono transition-all" />
                                                 </div>
                                             </div>
@@ -166,18 +166,18 @@ const ProjectDialogForm: React.FC<ProjectDialogFormProps> = ({ onClose, onSubmit
                         </div>
 
                         <div className="rounded-lg bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-800 px-3 py-2 text-[11px] text-cyan-700 dark:text-cyan-300">
-                            💡 每个仓库只需填写 <b>Git 地址</b>，技术栈和命令克隆后自动探测。<b>Git 令牌</b>对该项目下所有仓库生效。
+                            💡 Each repository only requires a <b>Git URL</b>. Its technology stack and commands are detected after cloning.<b>Git token</b>applies to all repositories in this project.
                         </div>
                     </div>
 
                     <div className="flex justify-end gap-2 px-6 py-4 border-t border-slate-100 dark:border-slate-800 shrink-0">
                         <button type="button" onClick={onClose}
                             className="px-4 py-2 rounded-lg text-xs font-medium border border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                            取消
+                            Cancel
                         </button>
                         <button type="submit"
                             className="px-5 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white text-xs font-semibold shadow-sm transition-all">
-                            {mode === 'add' ? '添加项目' : '保存修改'}
+                            {mode === 'add' ? "Add project" : "Save changes"}
                         </button>
                     </div>
                 </form>

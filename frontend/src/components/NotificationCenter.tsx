@@ -1,8 +1,5 @@
-/**
- * NotificationCenter — 通知中心 (P2-1)
- * 
- * 收集测试完成/失败/自愈等事件的通知
- * 支持桌面通知、已读/未读、清空
+/** NotificationCenter (P2-1): collect test completion, failure, and self-healing notifications.
+ * Supports desktop notifications, read/unread state, and clearing notifications.
  */
 import React, { useState, useEffect, useRef } from 'react';
 import { Bell, CheckCheck, Trash2, X, Zap, AlertTriangle, CheckCircle, Info } from './icons';
@@ -15,7 +12,7 @@ export interface AppNotification {
     message: string;
     timestamp: number;
     read: boolean;
-    url?: string; // 点击跳转
+    url?: string; // Navigate on click.
 }
 
 interface NotificationCenterProps {
@@ -55,7 +52,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
 
     const unreadCount = notifications.filter(n => !n.read).length;
 
-    // 点击外部关闭
+    // Close when clicking outside.
     useEffect(() => {
         const handleClick = (e: MouseEvent) => {
             if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
@@ -66,7 +63,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
         return () => document.removeEventListener('mousedown', handleClick);
     }, [isOpen]);
 
-    // 桌面通知权限
+    // Desktop notification permission
     useEffect(() => {
         if ('Notification' in window && Notification.permission === 'default') {
             Notification.requestPermission();

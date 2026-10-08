@@ -20,7 +20,7 @@ import { normalizeAISettings, normalizeBackendConfig } from '../config/aiModelCo
 import { AIProvider } from '../types';
 
 // ============================================================================
-// Layout Component — 使用 Zustand store（无 Context）
+// Layout component: Zustand store, without Context.
 // ============================================================================
 const Layout: React.FC = () => {
     // Zustand stores
@@ -32,30 +32,30 @@ const Layout: React.FC = () => {
     const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
     const [showCommandPalette, setShowCommandPalette] = useState(false);
     const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({
-        '主入口': false,
-        '专家入口（深挖）': true,
-        '治理入口（后座）': true,
+        "Main entry": false,
+        "Expert tools": true,
+        "Governance tools": true,
     });
 
     // P2-1: Notifications
     const { notifications, markRead, markAllRead, clearAll, removeOne } = useNotifications();
 
-    // P2-1: 全局快捷键
+    // P2-1: global keyboard shortcuts
     useHotkeys([
         {
             key: 'ctrl+k',
-            description: '打开命令面板',
+            description: "Open command palette",
             handler: () => setShowCommandPalette(true),
             enableInInput: true,
         },
         {
             key: 'ctrl+.',
-            description: '打开设置',
+            description: "Open settings",
             handler: () => setShowSettings(true),
         },
         {
             key: 'escape',
-            description: '关闭弹窗',
+            description: "Close dialog",
             handler: () => {
                 if (showCommandPalette) setShowCommandPalette(false);
                 else if (showSettings) setShowSettings(false);
@@ -161,11 +161,11 @@ const Layout: React.FC = () => {
                         <button
                             onClick={toggleSidebar}
                             className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 hover:bg-indigo-50/50 dark:hover:bg-indigo-500/10 transition-all duration-200 group/collapse"
-                            title={sidebarCollapsed ? '展开侧边栏' : '收起侧边栏'}
+                            title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
                         >
                             {sidebarCollapsed
                                 ? <PanelLeftOpen className="w-4 h-4 mx-auto group-hover/collapse:scale-110 transition-transform" />
-                                : <><PanelLeftClose className="w-4 h-4 group-hover/collapse:scale-110 transition-transform" /><span>收起</span></>
+                                : <><PanelLeftClose className="w-4 h-4 group-hover/collapse:scale-110 transition-transform" /><span>Collapse</span></>
                             }
                         </button>
                     </div>
@@ -193,7 +193,7 @@ const Layout: React.FC = () => {
                             onClick={() => setShowCommandPalette(true)}
                             className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:bg-indigo-50/50 dark:hover:bg-indigo-500/10 bg-slate-50/50 dark:bg-slate-800/50 transition-all duration-200 hover:shadow-sm"
                             style={{ borderColor: 'var(--color-border)' }}
-                            title="搜索页面和操作 (Ctrl+K)"
+                            title={"Search pages and actions (Ctrl+K)"}
                         >
                             <Search className="w-3.5 h-3.5" />
                             <span>{tt('common.search')}</span>
@@ -207,7 +207,7 @@ const Layout: React.FC = () => {
                             onRemove={removeOne}
                         />
                         {/* Language switcher */}
-                        <button
+                        {SUPPORTED_LOCALES.length > 1 && (<button
                             onClick={() => {
                                 const currentIdx = SUPPORTED_LOCALES.findIndex(l => l.code === locale);
                                 const nextIdx = (currentIdx + 1) % SUPPORTED_LOCALES.length;
@@ -218,11 +218,11 @@ const Layout: React.FC = () => {
                         >
                             <Globe className="w-4 h-4" />
                             <span className="text-[10px] font-medium hidden sm:inline">{SUPPORTED_LOCALES.find(l => l.code === locale)?.flag}</span>
-                        </button>
+                        </button>)}
                         <button
                             onClick={toggleDarkMode}
                             className="p-2 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200"
-                            title={darkMode ? '切换亮色模式' : '切换暗色模式'}
+                            title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
                         >
                             {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
                         </button>

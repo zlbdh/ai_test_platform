@@ -68,7 +68,7 @@ const TestOrchestrator: React.FC<TestOrchestratorProps> = ({
 }) => {
     const [isExecuting, setIsExecuting] = useState(false);
     const [logs, setLogs] = useState<LogEntry[]>([]);
-    const [currentAction, setCurrentAction] = useState('等待任务...');
+    const [currentAction, setCurrentAction] = useState("Waiting for a task...");
     const [executionState, setExecutionState] = useState<ExecutionState>(ExecutionState.IDLE);
     const { showToast } = useToast();
 
@@ -243,7 +243,7 @@ const TestOrchestrator: React.FC<TestOrchestratorProps> = ({
                 if (data.is_running === false && isExecuting) {
                     setExecutionState(ExecutionState.IDLE);
                     setIsExecuting(false);
-                    setCurrentAction('任务已完成');
+                    setCurrentAction("Task completed");
                 } else if (data.signal === 'PAUSED') {
                     if (executionState !== ExecutionState.PAUSED) setExecutionState(ExecutionState.PAUSED);
                 } else if (data.signal === 'RUNNING') {
@@ -283,10 +283,10 @@ const TestOrchestrator: React.FC<TestOrchestratorProps> = ({
                     const logEntry: StreamLogPayload = typeof logData === 'string' ? { content: logData } : logData;
 
                     if (logEntry.type === 'done') {
-                        addLog(AgentType.PLANNER, 'SUCCESS', '✅[完成] 测试任务已完成');
+                        addLog(AgentType.PLANNER, 'SUCCESS', "✅[Completed] Test task completed");
                         setExecutionState(ExecutionState.IDLE);
                         setIsExecuting(false);
-                        setCurrentAction('任务已完成');
+                        setCurrentAction("Task completed");
                         eventSource?.close();
                         return;
                     }
@@ -319,7 +319,7 @@ const TestOrchestrator: React.FC<TestOrchestratorProps> = ({
                         }
                     }
 
-                    if (content.includes('Mission Accomplished') || content.includes('任务已完成')) {
+                    if (content.includes('Mission Accomplished') || (content.includes('任务已完成') || content.includes("Task completed"))) {
                         markRemainingStepsSkipped();
                     }
 
@@ -367,18 +367,18 @@ const TestOrchestrator: React.FC<TestOrchestratorProps> = ({
             setTestPlan(result.steps);
             setCoverageSummary(result.coverage_summary);
             if (result.steps.length === 0) {
-                addLog(AgentType.PLANNER, 'ERROR', 'Plan Generation Failed: LLM 返回空计划，请检查 API 配置');
-                showToast('error', '计划生成失败：LLM 未返回有效步骤，请检查 API Key 或网络连接');
+                addLog(AgentType.PLANNER, 'ERROR', "Plan generation failed: the LLM returned an empty plan. Check the API configuration.");
+                showToast('error', "Plan generation failed: the LLM returned no valid steps. Check the API key or network connection.");
             } else {
                 const cs = result.coverage_summary;
-                const coverageInfo = cs ? ` | P0:${cs.by_priority.P0} P1:${cs.by_priority.P1} P2:${cs.by_priority.P2} | ${cs.dimensions_covered.length}维覆盖` : '';
+                const coverageInfo = cs ? ` | P0:${cs.by_priority.P0} P1:${cs.by_priority.P1} P2:${cs.by_priority.P2} | ${cs.dimensions_covered.length} dimensional coverage` : '';
                 addLog(AgentType.PLANNER, 'SUCCESS', `Plan Generated: ${result.steps.length} steps.${coverageInfo}`);
-                showToast('success', `计划生成成功：${result.steps.length} 个步骤`);
+                showToast('success', `Plan generated: ${result.steps.length} steps`);
             }
         } catch (e: unknown) {
-            const errMsg = e instanceof Error ? e.message : '未知错误';
+            const errMsg = e instanceof Error ? e.message : "Unknown error";
             addLog(AgentType.PLANNER, 'ERROR', `Plan Generation Failed: ${errMsg}`);
-            showToast('error', `计划生成失败：${errMsg}`);
+            showToast('error', `Plan generation failed: ${errMsg}`);
         } finally {
             setIsPlanning(false);
         }
@@ -394,15 +394,15 @@ const TestOrchestrator: React.FC<TestOrchestratorProps> = ({
         activeStepRef.current = -1;
 
         const modeLabel = useMultiAgent ? "Multi-Agent System (v1.3.0)" : "Legacy ReAct Engine";
-        addLog(AgentType.PLANNER, 'INFO', `[启动] Dispatching Task to ${modeLabel}... (Vision: ${enableVision ? 'ON' : 'OFF'})`);
+        addLog(AgentType.PLANNER, 'INFO', `[Starting] Dispatching task to ${modeLabel}... (Vision: ${enableVision ? 'ON' : 'OFF'})`);
 
-        let taskToExecute = requirement || "未命名测试任务";
+        let taskToExecute = requirement || "Unnamed test task";
         if (testPlan.length > 0) {
             const planText = testPlan.map((step, i) =>
-                `步骤${i + 1}: ${step.action}(${step.target}${step.value ? ', ' + step.value : ''})`
+                `Step ${i + 1}: ${step.action}(${step.target}${step.value ? ', ' + step.value : ''})`
             ).join('\n');
             taskToExecute += `\n\n[Guiding Plan]:\n${planText}`;
-            addLog(AgentType.PLANNER, 'INFO', `[计划] 已将 ${testPlan.length} 步执行计划附加到任务上下文。`);
+            addLog(AgentType.PLANNER, 'INFO', `[Plan] Attached a ${testPlan.length}-step execution plan to the task context.`);
         }
 
         const campaignTitle = summarizeExecutionTitle(requirement || taskToExecute);
@@ -411,7 +411,7 @@ const TestOrchestrator: React.FC<TestOrchestratorProps> = ({
             targetUrl,
             source: 'orchestrator',
         });
-        addLog(AgentType.PLANNER, 'INFO', `[批次] 当前测试批次：${executionCampaign.title} (${executionCampaign.id})`);
+        addLog(AgentType.PLANNER, 'INFO', `[Batch] Current test batch: ${executionCampaign.title} (${executionCampaign.id})`);
 
         try {
             const executionMode = probeMode ? 'probe' : 'default';
@@ -430,12 +430,12 @@ const TestOrchestrator: React.FC<TestOrchestratorProps> = ({
             setRuntimeExecutionMode(executionMode);
             setRuntimeInteractionPolicy(interactionPolicy);
             setRuntimeStepBudget(executionMode === 'probe' ? 8 : null);
-            showToast('info', '测试任务已启动');
+            showToast('info', "Test task started");
         } catch (e: unknown) {
-            const errMsg = e instanceof Error ? e.message : '未知错误';
+            const errMsg = e instanceof Error ? e.message : "Unknown error";
             clearExecutionCampaign(sessionId);
             addLog(AgentType.PLANNER, 'ERROR', `Execution Start Failed: ${errMsg}`);
-            showToast('error', `启动失败：${errMsg}`);
+            showToast('error', `Failed to start: ${errMsg}`);
             setIsExecuting(false);
             setExecutionState(ExecutionState.IDLE);
         }
@@ -446,18 +446,18 @@ const TestOrchestrator: React.FC<TestOrchestratorProps> = ({
             await stopExecution(sessionId);
             setExecutionState(ExecutionState.STOPPED);
             setIsExecuting(false);
-            addLog(AgentType.PLANNER, 'WARN', '[停止] Requested Stop');
-            showToast('warning', '任务已停止');
+            addLog(AgentType.PLANNER, 'WARN', "[Stop] Stop requested");
+            showToast('warning', "Task stopped");
         } catch (e: unknown) {
-            showToast('error', `停止失败：${e instanceof Error ? e.message : '网络错误'}`);
+            showToast('error', `Failed to stop: ${e instanceof Error ? e.message : "Network error"}`);
         }
     };
 
     const handleQuickDiagnose = () => {
         if (!targetUrl) return;
-        const diagRequirement = `视觉诊断：打开 ${targetUrl}，检查页面布局、元素可见性、文本可读性、响应式设计，截图并报告发现的问题`;
+        const diagRequirement = `Visual diagnostics: open ${targetUrl}, check the layout, element visibility, text readability, and responsive design, then take screenshots and report any issues`;
         setRequirement(diagRequirement);
-        showToast('info', '快速诊断已填充，请点击生成计划');
+        showToast('info', "Quick diagnostics filled in. Click Generate test plan.");
     };
 
     // ── Render ──
@@ -491,14 +491,14 @@ const TestOrchestrator: React.FC<TestOrchestratorProps> = ({
                     onStop={handleStop}
                 />
                 <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 px-4 py-3 text-xs text-slate-600 dark:text-slate-300">
-                    当前执行模式：
+                    Current execution mode:
                     <span className="ml-1 font-semibold text-slate-900 dark:text-white">
-                        {runtimeExecutionMode === 'probe' ? '只读探针' : '默认执行'}
+                        {runtimeExecutionMode === 'probe' ? "Read-only probe" : "Default execution"}
                     </span>
                     {runtimeInteractionPolicy === 'read_only' && (
-                        <span className="ml-2 text-emerald-600 dark:text-emerald-400">只读策略已生效</span>
+                        <span className="ml-2 text-emerald-600 dark:text-emerald-400">Read-only policy is active</span>
                     )}
-                    {runtimeStepBudget !== null && <span className="ml-2">步骤预算：{runtimeStepBudget}</span>}
+                    {runtimeStepBudget !== null && <span className="ml-2">Step budget: {runtimeStepBudget}</span>}
                 </div>
             </div>
 

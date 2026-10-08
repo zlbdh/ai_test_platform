@@ -104,7 +104,7 @@ const DatabaseTesting: React.FC = () => {
     const [snapshotCondition, setSnapshotCondition] = useState('1=1');
     const [diffResult, setDiffResult] = useState<Record<string, unknown> | null>(null);
 
-    // 连接配置弹窗
+    // Connection settings dialog
     const [showConfig, setShowConfig] = useState(false);
     const [dbConnStr, setDbConnStr] = useState('');
     const [dbConnName, setDbConnName] = useState('');
@@ -162,7 +162,7 @@ const DatabaseTesting: React.FC = () => {
     const runManagedQuery = async (connId: string, sqlText: string, limit: number = 100) => {
         const controller = new AbortController();
         const timer = window.setTimeout(() => controller.abort(), 60_000);
-        const context = resolveExecutionPayload('数据库专项测试');
+        const context = resolveExecutionPayload("Database test suite");
         try {
             const res = await fetch(API_ENDPOINTS.db.query(connId), {
                 method: 'POST',
@@ -180,7 +180,7 @@ const DatabaseTesting: React.FC = () => {
             if (!res.ok) {
                 return {
                     success: false,
-                    error: data.error || data.detail || data.message || `请求失败 (${res.status})`,
+                    error: data.error || data.detail || data.message || `Request failed (${res.status})`,
                     rows: [],
                 };
             }
@@ -189,13 +189,13 @@ const DatabaseTesting: React.FC = () => {
             if (error instanceof DOMException && error.name === 'AbortError') {
                 return {
                     success: false,
-                    error: '查询超时（60 秒）。请缩小查询范围或稍后重试。',
+                    error: "Query timed out after 60 seconds. Narrow the query or try again later.",
                     rows: [],
                 };
             }
             return {
                 success: false,
-                error: error instanceof Error ? error.message : '查询失败',
+                error: error instanceof Error ? error.message : "Query failed",
                 rows: [],
             };
         } finally {
@@ -230,11 +230,11 @@ const DatabaseTesting: React.FC = () => {
         setLoading(true);
         setError(null);
         setResult(null);
-        const connectionLabel = activeConnection ? activeConnection.name || activeConnection.id : '内置 SQLite';
+        const connectionLabel = activeConnection ? activeConnection.name || activeConnection.id : "Built-in SQLite";
         const executedAt = new Date().toLocaleTimeString();
         setQuerySummary({
             status: 'running',
-            message: `正在查询 ${connectionLabel}...`,
+            message: `Querying ${connectionLabel}...`,
             connectionLabel,
             executedAt,
         });
@@ -242,7 +242,7 @@ const DatabaseTesting: React.FC = () => {
             if (activeConnection) {
                 const data = await runManagedQuery(activeConnection.id, sql);
                 if (!data.success) {
-                    const message = data.error || '执行失败';
+                    const message = data.error || "Execution failed";
                     setError(message);
                     setQuerySummary({
                         status: 'error',
@@ -261,7 +261,7 @@ const DatabaseTesting: React.FC = () => {
                     });
                     setQuerySummary({
                         status: 'success',
-                        message: data.message || '查询成功',
+                        message: data.message || "Query succeeded",
                         connectionLabel,
                         executedAt,
                         elapsedMs: data.elapsed_ms,
@@ -272,11 +272,11 @@ const DatabaseTesting: React.FC = () => {
                 const res = await fetch(API_ENDPOINTS.db.execute, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(withExecutionContext({ sql, allow_unsafe: false }, '数据库专项测试'))
+                    body: JSON.stringify(withExecutionContext({ sql, allow_unsafe: false }, "Database test suite"))
                 });
                 const data = await res.json();
                 if (data.status === 'error') {
-                    const message = data.error || data.message || '执行失败';
+                    const message = data.error || data.message || "Execution failed";
                     setError(message);
                     setQuerySummary({
                         status: 'error',
@@ -288,7 +288,7 @@ const DatabaseTesting: React.FC = () => {
                     setResult(data);
                     setQuerySummary({
                         status: 'success',
-                        message: data.message || '查询成功',
+                        message: data.message || "Query succeeded",
                         connectionLabel,
                         executedAt,
                         elapsedMs: data.elapsed_ms,
@@ -312,7 +312,7 @@ const DatabaseTesting: React.FC = () => {
 
     const takeSnapshot = async () => {
         if (activeConnection) {
-            setError('远端只读连接暂不支持快照与 Diff，请切回内置数据库。');
+            setError("Snapshots and diffs are unavailable for remote read-only connections. Switch to the built-in database.");
             return;
         }
         if (!snapshotTable) return;
@@ -321,7 +321,7 @@ const DatabaseTesting: React.FC = () => {
             const res = await fetch(API_ENDPOINTS.db.snapshot, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(withExecutionContext({ table: snapshotTable, condition: snapshotCondition || '1=1' }, '数据库专项测试'))
+                body: JSON.stringify(withExecutionContext({ table: snapshotTable, condition: snapshotCondition || '1=1' }, "Database test suite"))
             });
             const data = await res.json();
             if (data.status === 'success') {
@@ -341,7 +341,7 @@ const DatabaseTesting: React.FC = () => {
 
     const compareSnapshot = async (snapshot: SnapshotData) => {
         if (activeConnection) {
-            setError('远端只读连接暂不支持快照与 Diff，请切回内置数据库。');
+            setError("Snapshots and diffs are unavailable for remote read-only connections. Switch to the built-in database.");
             return;
         }
         setLoading(true);
@@ -353,7 +353,7 @@ const DatabaseTesting: React.FC = () => {
                     table: snapshot.table,
                     condition: snapshot.condition,
                     snapshot_data: snapshot.data,
-                    ...resolveExecutionPayload('数据库专项测试'),
+                    ...resolveExecutionPayload("Database test suite"),
                 })
             });
             const data = await res.json();
@@ -367,7 +367,7 @@ const DatabaseTesting: React.FC = () => {
 
     const backupDB = async () => {
         if (activeConnection) {
-            setError('远端连接不支持平台内置备份；当前仅允许只读元数据和 SELECT 查询。');
+            setError("Remote connections support only read-only metadata and SELECT queries, not built-in backups.");
             return;
         }
         setLoading(true);
@@ -375,14 +375,14 @@ const DatabaseTesting: React.FC = () => {
             const res = await fetch(API_ENDPOINTS.db.backup, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(withExecutionContext({}, '数据库专项测试'))
+                body: JSON.stringify(withExecutionContext({}, "Database test suite"))
             });
             const data = await res.json();
             if (data.status === 'success') {
                 setError(null);
-                alert(data.message || '备份成功');
+                alert(data.message || "Backup completed");
             } else {
-                setError(data.message || '备份失败');
+                setError(data.message || "Backup failed");
             }
         } catch (e: unknown) {
             setError((e as Error).message);
@@ -397,7 +397,7 @@ const DatabaseTesting: React.FC = () => {
 
     return (
         <div className="flex flex-col h-full gap-4 animate-in fade-in duration-500">
-            <ExecutionBatchBanner standaloneHint="数据库测试结果现在也会统一进入执行中心；如果当前没有测试批次，首次执行连接测试、查询、快照、Diff 或备份时会自动创建专项测试批次。" />
+            <ExecutionBatchBanner standaloneHint={" Database test results appear in the execution center. The first connection, query, snapshot, diff, or backup creates a dedicated batch if none is active."} />
 
             {/* Header */}
             <div className="flex items-center justify-between">
@@ -408,28 +408,28 @@ const DatabaseTesting: React.FC = () => {
                                 ? 'text-violet-500 bg-violet-500/10 border border-violet-500/30 shadow-sm'
                                 : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 border border-transparent'
                                 }`}>
-                            {tab === 'query' && <><Play className="w-4 h-4" /> SQL 查询</>}
+                            {tab === 'query' && <><Play className="w-4 h-4" /> SQL query</>}
                             {tab === 'schema' && <><Table className="w-4 h-4" /> Schema</>}
-                            {tab === 'snapshot' && <><Camera className="w-4 h-4" /> 快照 & Diff</>}
+                            {tab === 'snapshot' && <><Camera className="w-4 h-4" /> Snapshots and diffs</>}
                         </button>
                     ))}
                 </div>
                     <div className="flex items-center gap-2">
-                        {/* 当前连接指示器 */}
+                        {/* Current connection indicator*/}
                         <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 mr-1">
                         <span className="relative flex h-2 w-2">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                         </span>
                         <span className="text-xs font-medium text-emerald-700 dark:text-emerald-400">
-                            {activeConnection ? activeConnection.name || activeConnection.id : '内置 SQLite'}
+                            {activeConnection ? activeConnection.name || activeConnection.id : "Built-in SQLite"}
                         </span>
                         <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 font-mono">
                             {activeConnection ? activeConnection.db_type.toUpperCase() : 'SQLite'}
                         </span>
                         {activeConnection?.read_only && (
                             <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300">
-                                只读
+                                Read-only
                             </span>
                         )}
                     </div>
@@ -438,25 +438,25 @@ const DatabaseTesting: React.FC = () => {
                         onChange={(e) => setSelectedConnectionId(e.target.value)}
                         className="px-3 py-2 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg outline-none"
                     >
-                        <option value="builtin">内置 SQLite</option>
+                        <option value="builtin">Built-in SQLite</option>
                         {connections.map((conn) => (
                             <option key={conn.id} value={conn.id}>
-                                {conn.name} {conn.read_only ? '· 只读' : ''}
+                                {conn.name} {conn.read_only ? "· Read-only" : ''}
                             </option>
                         ))}
                     </select>
                     <button onClick={() => { setShowConfig(true); loadConnections(); }}
                         className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-lg transition border border-indigo-200 dark:border-indigo-500/30">
-                        <Settings className="w-4 h-4" /> 连接配置
+                        <Settings className="w-4 h-4" /> Connection settings
                     </button>
                     <button onClick={backupDB} disabled={loading || !usingBuiltinConnection}
                         className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition border border-slate-200 dark:border-slate-700">
-                        <Download className="w-4 h-4" /> 备份
+                        <Download className="w-4 h-4" /> Backup
                     </button>
                 </div>
             </div>
 
-            {/* 连接配置弹窗 */}
+            {/* Connection settings dialog*/}
             {showConfig && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
                     <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl shadow-black/20 dark:shadow-black/50 border border-slate-200/80 dark:border-slate-700/80 w-full max-w-lg p-6 relative animate-in zoom-in-95 duration-300">
@@ -464,13 +464,13 @@ const DatabaseTesting: React.FC = () => {
                             <X className="w-5 h-5" />
                         </button>
                         <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
-                            <Database className="w-5 h-5 text-violet-500" /> 数据库连接配置
+                            <Database className="w-5 h-5 text-violet-500" /> Database connection settings
                         </h3>
 
-                        {/* 已有连接 */}
+                        {/* Existing connection*/}
                         {connections.length > 0 && (
                             <div className="mb-4">
-                                <div className="text-xs font-medium text-slate-500 mb-2">已保存的连接</div>
+                                <div className="text-xs font-medium text-slate-500 mb-2">Saved connections</div>
                                 <div className="space-y-1.5">
                                     {connections.map(c => (
                                         <button
@@ -485,7 +485,7 @@ const DatabaseTesting: React.FC = () => {
                                             <div className="min-w-0">
                                                 <div className="font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
                                                     <span>{c.name || c.id}</span>
-                                                    {c.read_only && <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300">只读</span>}
+                                                    {c.read_only && <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300">Read-only</span>}
                                                 </div>
                                                 <div className="text-xs text-slate-400 font-mono truncate max-w-[320px]">{c.connection_string}</div>
                                             </div>
@@ -497,20 +497,20 @@ const DatabaseTesting: React.FC = () => {
                         )}
 
                         <div className="rounded-lg border border-amber-200 bg-amber-50/80 dark:border-amber-500/30 dark:bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-300">
-                            外部数据库连接默认按只读保存。平台只允许连接测试、元数据读取和 SELECT 查询，不会通过这个入口执行写操作。
+                            External database connections are saved as read-only by default. This entry point permits connection tests, metadata reads, and SELECT queries only; it does not execute writes.
                         </div>
 
                         <div className="space-y-3">
                             <div>
-                                <label className="text-xs font-medium text-slate-500 dark:text-slate-400">连接名称</label>
+                                <label className="text-xs font-medium text-slate-500 dark:text-slate-400">Connection name</label>
                                 <input type="text" value={dbConnName} onChange={e => setDbConnName(e.target.value)}
-                                    placeholder="例如：生产环境 MySQL" className="w-full mt-1 px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 text-sm outline-none" />
+                                    placeholder={"Example: Production MySQL"} className="w-full mt-1 px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 text-sm outline-none" />
                             </div>
                             <div>
-                                <label className="text-xs font-medium text-slate-500 dark:text-slate-400">连接字符串 (SQLAlchemy 格式)</label>
+                                <label className="text-xs font-medium text-slate-500 dark:text-slate-400">Connection string (SQLAlchemy format)</label>
                                 <input type="text" value={dbConnStr} onChange={e => { setDbConnStr(e.target.value); setConnTestResult(null); }}
                                     placeholder="mysql+pymysql://user:pass@host:3306/db" className="w-full mt-1 px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 text-sm font-mono outline-none" />
-                                <p className="text-xs text-slate-400 mt-1">支持 MySQL / PostgreSQL / SQLite 等</p>
+                                <p className="text-xs text-slate-400 mt-1">Supports MySQL, PostgreSQL, SQLite, and more</p>
                             </div>
 
                             {connTestResult && (
@@ -534,27 +534,27 @@ const DatabaseTesting: React.FC = () => {
                                             const createData = await createRes.json();
                                             const testId = createData.connection?.id;
                                             if (testId) {
-                                                const testRes = await fetch(buildContextQueryUrl(`${API_BASE_URL}/api/db/connections/${testId}/test`, '数据库连接测试'), { method: 'POST' });
+                                                const testRes = await fetch(buildContextQueryUrl(`${API_BASE_URL}/api/db/connections/${testId}/test`, "Test database connection"), { method: 'POST' });
                                                 const testData = await testRes.json();
-                                                setConnTestResult({ ok: !!testData.success, msg: testData.message || (testData.success ? '连接成功' : testData.error || '连接失败') });
+                                                setConnTestResult({ ok: !!testData.success, msg: testData.message || (testData.success ? "Connected" : testData.error || "Connection failed") });
                                                 setSelectedConnectionId(testId);
                                             } else {
-                                                setConnTestResult({ ok: false, msg: '连接保存失败' });
+                                                setConnTestResult({ ok: false, msg: "Failed to save connection" });
                                             }
                                             loadConnections();
                                         } catch (e) {
-                                            setConnTestResult({ ok: false, msg: `测试失败: ${e instanceof Error ? e.message : '网络错误'}` });
+                                            setConnTestResult({ ok: false, msg: `Test failed: ${e instanceof Error ? e.message : "Network error"}` });
                                         } finally { setTestingConn(false); }
                                     }}
                                     disabled={testingConn || !dbConnStr.trim()}
                                     className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-violet-500 to-purple-500 text-white rounded-lg text-sm font-medium disabled:opacity-50 transition-all"
                                 >
                                     {testingConn ? <Loader2 className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4" />}
-                                    {testingConn ? '测试中...' : '测试并保存'}
+                                    {testingConn ? "Testing..." : "Test and save"}
                                 </button>
                                 <button onClick={() => setShowConfig(false)}
                                     className="px-4 py-2.5 text-sm text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition">
-                                    关闭
+                                    Close
                                 </button>
                             </div>
                         </div>
@@ -570,10 +570,10 @@ const DatabaseTesting: React.FC = () => {
                         <div className="p-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <Database className="w-4 h-4 text-violet-500" />
-                                <span className="text-sm font-bold text-slate-700 dark:text-white">SQL 编辑器</span>
+                                <span className="text-sm font-bold text-slate-700 dark:text-white">SQL editor</span>
                                 {activeConnection && (
                                     <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300">
-                                        远端只读连接
+                                        Remote read-only connection
                                     </span>
                                 )}
                             </div>
@@ -581,14 +581,14 @@ const DatabaseTesting: React.FC = () => {
                                 {tables.length > 0 && (
                                     <select onChange={(e) => { if (e.target.value) setSql(`SELECT * FROM ${e.target.value} LIMIT 50`); }}
                                         className="px-2 py-1 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none">
-                                        <option value="">快速查询表...</option>
+                                        <option value="">Quick table query...</option>
                                         {tables.map(t => <option key={t} value={t}>{t}</option>)}
                                     </select>
                                 )}
                                 <button onClick={executeSQL} disabled={loading}
                                     className="flex items-center gap-1.5 px-4 py-1.5 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white rounded-lg text-sm font-medium shadow-lg shadow-violet-500/20 active:scale-95 transition-all disabled:opacity-50">
                                     {loading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
-                                    执行
+                                    Run
                                 </button>
                             </div>
                         </div>
@@ -603,7 +603,7 @@ const DatabaseTesting: React.FC = () => {
                             <textarea value={sql} onChange={(e) => setSql(e.target.value)}
                                 onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) executeSQL(); }}
                                 className="relative w-full h-32 px-4 py-3 bg-transparent text-sm font-mono outline-none resize-none text-transparent caret-slate-700 dark:caret-slate-300 leading-[1.625]"
-                                spellCheck={false} placeholder="输入 SQL 查询... (Ctrl+Enter 执行)" />
+                                spellCheck={false} placeholder={"Enter a SQL query... (Ctrl+Enter to run)"} />
                             {/* Inline CSS for syntax colors */}
                             <style>{`
                                 .sql-keyword { color: #8b5cf6; font-weight: 600; }
@@ -622,7 +622,7 @@ const DatabaseTesting: React.FC = () => {
 
                     {activeConnection && (
                         <div className="p-3 rounded-xl border border-amber-200 bg-amber-50/80 text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300 text-sm">
-                            当前正在查询外部连接 `{activeConnection.name}`。平台已强制限制为只读模式，只允许元数据读取和 `SELECT` 查询。
+                            Querying external connection ` {activeConnection.name} `. Read-only mode is enforced: only metadata reads and `SELECT` queries are allowed.
                         </div>
                     )}
 
@@ -635,13 +635,13 @@ const DatabaseTesting: React.FC = () => {
                             }`}>
                             <div className="flex flex-wrap items-center gap-2">
                                 <span className="font-semibold">
-                                    {querySummary.status === 'success' ? '最近查询成功' : querySummary.status === 'error' ? '最近查询失败' : '查询进行中'}
+                                    {querySummary.status === 'success' ? "Last query succeeded" : querySummary.status === 'error' ? "Last query failed" : "Query in progress"}
                                 </span>
                                 <span className="text-xs opacity-80">{querySummary.connectionLabel}</span>
                                 <span className="text-xs opacity-70">{querySummary.executedAt}</span>
                                 {querySummary.rowCount !== undefined && (
                                     <span className="text-xs px-2 py-0.5 rounded-full bg-white/60 dark:bg-slate-900/30">
-                                        {querySummary.rowCount} 行
+                                        {querySummary.rowCount} rows
                                     </span>
                                 )}
                                 {querySummary.elapsedMs !== undefined && (
@@ -668,17 +668,17 @@ const DatabaseTesting: React.FC = () => {
                                 <div>
                                     <span className="text-sm font-bold text-slate-700 dark:text-white flex items-center gap-2">
                                         <Check className="w-4 h-4 text-green-500" />
-                                        结果 {result.count !== undefined && `(${result.count} 行)`}
-                                        {result.affected_rows !== undefined && `(${result.affected_rows} 行受影响)`}
+                                        Results {result.count !== undefined && `(${result.count} rows)`}
+                                        {result.affected_rows !== undefined && `(${result.affected_rows} rows affected)`}
                                     </span>
                                     {(result.message || result.elapsed_ms !== undefined) && (
                                         <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                                            {result.message || `查询完成，用时 ${result.elapsed_ms} ms`}
+                                            {result.message || `Query completed in ${result.elapsed_ms} ms`}
                                         </p>
                                     )}
                                 </div>
                                 <button onClick={() => copyToClipboard(JSON.stringify(result.data, null, 2))}
-                                    className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="复制 JSON">
+                                    className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition" title={"Copy JSON"}>
                                     <Copy className="w-4 h-4" />
                                 </button>
                             </div>
@@ -705,7 +705,7 @@ const DatabaseTesting: React.FC = () => {
                                         </tbody>
                                     </table>
                                 ) : (
-                                    <div className="p-4 text-center text-slate-400 text-sm">无数据</div>
+                                    <div className="p-4 text-center text-slate-400 text-sm">No data</div>
                                 )}
                             </div>
                         </div>
@@ -718,7 +718,7 @@ const DatabaseTesting: React.FC = () => {
                 <div className="flex-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md overflow-hidden flex flex-col min-h-0">
                     <div className="p-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
                         <span className="text-sm font-bold text-slate-700 dark:text-white flex items-center gap-2">
-                            <Table className="w-4 h-4 text-violet-500" /> 数据库 Schema
+                            <Table className="w-4 h-4 text-violet-500" /> Database schema
                         </span>
                         <button onClick={fetchSchema} className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition">
                             <RefreshCw className="w-4 h-4" />
@@ -726,7 +726,7 @@ const DatabaseTesting: React.FC = () => {
                     </div>
                     <div className="flex-1 overflow-auto p-4">
                         <pre className="text-sm font-mono text-slate-700 dark:text-slate-300 whitespace-pre-wrap">
-                                    {schema || '加载中...'}
+                                    {schema || "Loading..."}
                         </pre>
                     </div>
                     {tables.length > 0 && (
@@ -750,19 +750,19 @@ const DatabaseTesting: React.FC = () => {
                     {/* Create Snapshot */}
                     <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md p-4">
                         <h3 className="text-sm font-bold text-slate-700 dark:text-white mb-3 flex items-center gap-2">
-                            <Camera className="w-4 h-4 text-violet-500" /> 创建数据快照
+                            <Camera className="w-4 h-4 text-violet-500" /> Create data snapshot
                         </h3>
                         <div className="flex items-center gap-3">
                             <select value={snapshotTable} onChange={(e) => setSnapshotTable(e.target.value)}
                                 className="px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm outline-none">
-                                <option value="">选择表...</option>
+                                <option value="">Select a table...</option>
                                 {tables.map(t => <option key={t} value={t}>{t}</option>)}
                             </select>
                             <input type="text" value={snapshotCondition} onChange={(e) => setSnapshotCondition(e.target.value)}
-                                placeholder="WHERE 条件 (默认 1=1)" className="flex-1 px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm outline-none font-mono" />
+                                placeholder={"WHERE clause (default: 1=1)"} className="flex-1 px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm outline-none font-mono" />
                             <button onClick={takeSnapshot} disabled={loading || !snapshotTable}
                                 className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-lg text-sm font-medium shadow-lg shadow-violet-500/20 active:scale-95 transition-all disabled:opacity-50">
-                                <Camera className="w-4 h-4" /> 快照
+                                <Camera className="w-4 h-4" /> Snapshot
                             </button>
                         </div>
                     </div>
@@ -770,13 +770,13 @@ const DatabaseTesting: React.FC = () => {
                     {/* Snapshots List */}
                     <div className="flex-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md overflow-hidden flex flex-col min-h-0">
                         <div className="p-3 border-b border-slate-200 dark:border-slate-800">
-                            <span className="text-sm font-bold text-slate-700 dark:text-white">已保存快照 ({snapshots.length})</span>
+                            <span className="text-sm font-bold text-slate-700 dark:text-white">Saved snapshots ( {snapshots.length})</span>
                         </div>
                         <div className="flex-1 overflow-auto">
                             {snapshots.length === 0 ? (
                                 <div className="p-8 text-center text-slate-400">
                                     <Camera className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                                    <p className="text-sm">暂无快照，先创建一个吧</p>
+                                    <p className="text-sm">No snapshots yet. Create one to get started.</p>
                                 </div>
                             ) : (
                                 <div className="p-3 space-y-2">
@@ -787,7 +787,7 @@ const DatabaseTesting: React.FC = () => {
                                                     <span className="font-mono text-violet-500">{snap.table}</span>
                                                     <span className="text-slate-400 text-xs ml-2">WHERE {snap.condition}</span>
                                                 </div>
-                                                <div className="text-xs text-slate-400 mt-0.5">{snap.timestamp} · {snap.data.length} 行</div>
+                                                <div className="text-xs text-slate-400 mt-0.5">{snap.timestamp} · {snap.data.length} rows</div>
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <button onClick={() => compareSnapshot(snap)}
@@ -809,7 +809,7 @@ const DatabaseTesting: React.FC = () => {
                         {diffResult && (
                             <div className="border-t border-slate-200 dark:border-slate-800 p-4">
                                 <h4 className="text-sm font-bold text-slate-700 dark:text-white mb-2 flex items-center gap-2">
-                                    <GitCompare className="w-4 h-4" /> Diff 结果
+                                    <GitCompare className="w-4 h-4" /> Diff results
                                 </h4>
                                 <div className={`p-3 rounded-lg text-sm ${diffResult && typeof diffResult === 'object' && 'status' in diffResult && (diffResult as any).status === 'same'
                                     ? 'bg-green-50 dark:bg-green-900/10 text-green-600 dark:text-green-400 border border-green-200 dark:border-green-800'

@@ -29,7 +29,7 @@ const RemoteBrowserView: React.FC<RemoteBrowserViewProps> = ({ url, isActive, cu
             await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                // suspend 需要传递 body
+                // Suspend requires a request body.
                 body: action === 'suspend' ? JSON.stringify({ session_id: sessionId, reason: 'User Intervention' }) : undefined
             });
             setAlertState(null); // Clear alert locally immediately
@@ -72,16 +72,16 @@ const RemoteBrowserView: React.FC<RemoteBrowserViewProps> = ({ url, isActive, cu
                     } else if (data.type === 'viewport') {
                         setViewport(data.data);
                     } else if (data.type === 'status') {
-                        setStatusMessage(data.message || '等待中...');
+                        setStatusMessage(data.message || "Waiting...");
                     }
                 } catch (e) {
-                    console.warn('WebSocket 消息解析失败:', e);
+                    console.warn("Failed to parse WebSocket message:", e);
                 }
             };
 
             ws.onclose = () => {
                 setIsConnected(false);
-                // 不清空 frameSrc — 保留最后一帧画面
+                // Keep frameSrc to preserve the last frame.
                 if (isActive) {
                     retryTimeoutRef.current = setTimeout(connect, 3000);
                 }
@@ -151,7 +151,7 @@ const RemoteBrowserView: React.FC<RemoteBrowserViewProps> = ({ url, isActive, cu
                 <div className="flex items-center gap-2">
                     <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : frameSrc ? 'bg-amber-500' : 'bg-red-500'}`} />
                     <div className="text-[10px] text-slate-400 font-bold uppercase">
-                        {isConnected ? 'LIVE VIEW (WS)' : frameSrc ? '会话已结束 (最后画面)' : isActive ? <><RefreshCw className="w-3 h-3 inline animate-spin" /> 重连中...</> : <><Pause className="w-3 h-3 inline" /> 待命中</>}
+                        {isConnected ? 'LIVE VIEW (WS)' : frameSrc ? "Session ended (last frame)" : isActive ? <><RefreshCw className="w-3 h-3 inline animate-spin" /> Reconnecting...</> : <><Pause className="w-3 h-3 inline" /> Standby</>}
                     </div>
                 </div>
             </div>
@@ -169,7 +169,7 @@ const RemoteBrowserView: React.FC<RemoteBrowserViewProps> = ({ url, isActive, cu
                         {isActive ? (
                             <>
                                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
-                                <span className="text-xs">{statusMessage || '正在连接...'}</span>
+                                <span className="text-xs">{statusMessage || "Connecting..."}</span>
                             </>
                         ) : (
                             <>
@@ -177,15 +177,15 @@ const RemoteBrowserView: React.FC<RemoteBrowserViewProps> = ({ url, isActive, cu
                                     <div className="w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center">
                                         <Monitor className="w-6 h-6 text-slate-400" />
                                     </div>
-                                    <span className="text-xs text-slate-500">等待测试任务启动...</span>
-                                    <span className="text-[10px] text-slate-600 dark:text-slate-600">启动后将自动连接浏览器实时画面</span>
+                                    <span className="text-xs text-slate-500">Waiting for a test task to start...</span>
+                                    <span className="text-[10px] text-slate-600 dark:text-slate-600">The live browser view connects automatically when the task starts</span>
                                 </div>
                             </>
                         )}
                     </div>
                 )}
 
-                {/* 操作标注叠加层 */}
+                {/* Action annotation overlay*/}
                 <ActionOverlay currentAction={currentAction} isActive={isActive} />
 
                 {/* Footer Log (Overlay) */}
@@ -212,9 +212,9 @@ const RemoteBrowserView: React.FC<RemoteBrowserViewProps> = ({ url, isActive, cu
                         <div className="bg-amber-500/20 p-4 rounded-full mb-4 animate-bounce">
                             <AlertTriangle className="w-10 h-10 text-amber-400" />
                         </div>
-                        <h3 className="text-xl font-bold mb-2 text-amber-400">需要人工介入</h3>
+                        <h3 className="text-xl font-bold mb-2 text-amber-400">Human assistance required</h3>
                         <p className="text-sm text-slate-300 mb-6 max-w-sm bg-black/50 p-4 rounded border border-white/10">
-                            AI 遇到困难: {alertState.reason}
+                            AI needs help: {alertState.reason}
                         </p>
 
                         {alertState.screenshot && (
@@ -226,26 +226,26 @@ const RemoteBrowserView: React.FC<RemoteBrowserViewProps> = ({ url, isActive, cu
                                 onClick={() => handleIntervention('resume')}
                                 className="w-full px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-medium transition-all shadow-lg shadow-emerald-600/20 border border-emerald-500 flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-emerald-400/50"
                             >
-                                <span><Wrench className="w-3.5 h-3.5 inline" /> 我已解决 (继续运行)</span>
+                                <span><Wrench className="w-3.5 h-3.5 inline" /> Resolved (resume)</span>
                             </button>
 
                             <button
                                 onClick={() => handleIntervention('suspend')}
                                 className="w-full px-6 py-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-medium transition-all border border-amber-500 flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-amber-400/50"
                             >
-                                <span><Pause className="w-3.5 h-3.5 inline" /> 挂起 (稍后处理)</span>
+                                <span><Pause className="w-3.5 h-3.5 inline" /> Suspend (handle later)</span>
                             </button>
 
                             <button
                                 onClick={() => handleIntervention('stop')}
                                 className="w-full px-6 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-medium transition-all border border-slate-600 flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-slate-400/50"
                             >
-                                <span><XCircle className="w-3.5 h-3.5 inline" /> 取消任务</span>
+                                <span><XCircle className="w-3.5 h-3.5 inline" /> Cancel task</span>
                             </button>
                         </div>
 
                         <div className="mt-4 text-xs text-slate-500">
-                            点击“挂起”后，AI 将保持暂停状态，窗口消失，您可以自由操作。之后请在控制栏点击“继续”以恢复。
+                            Suspend keeps the AI paused and closes this window so you can work freely. Click Resume in the control bar when you are ready.
                         </div>
                     </div>
                 )}

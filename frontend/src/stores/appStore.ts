@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import type { Locale } from '../i18n';
 
 // ============================================================================
-// App Store — 全局控制参数 + 主题管理
+// App store: global controls and theme management
 // ============================================================================
 
 const DARK_MODE_KEY = 'ai-test-dark-mode';
@@ -10,43 +10,43 @@ const SIDEBAR_KEY = 'ai-test-sidebar-collapsed';
 const LOCALE_KEY = 'ai-test-locale';
 
 interface AppStoreState {
-    // 执行控制
+    // Execution controls
     enableVision: boolean;
     setEnableVision: (v: boolean) => void;
     useMultiAgent: boolean;
     setUseMultiAgent: (v: boolean) => void;
 
-    // 全局设置弹窗
+    // Global settings dialog
     showSettings: boolean;
     setShowSettings: (v: boolean) => void;
 
-    // 主题
+    // Theme
     darkMode: boolean;
     setDarkMode: (v: boolean) => void;
     toggleDarkMode: () => void;
 
-    // 侧边栏
+    // Sidebar
     sidebarCollapsed: boolean;
     setSidebarCollapsed: (v: boolean) => void;
     toggleSidebar: () => void;
 
-    // 国际化 (P2-1)
+    // Interface locale (P2-1)
     locale: Locale;
     setLocale: (v: Locale) => void;
 }
 
 export const useAppStore = create<AppStoreState>((set) => ({
-    // 执行控制
+    // Execution controls
     enableVision: true,
     setEnableVision: (v) => set({ enableVision: v }),
     useMultiAgent: true,
     setUseMultiAgent: (v) => set({ useMultiAgent: v }),
 
-    // 全局设置弹窗
+    // Global settings dialog
     showSettings: false,
     setShowSettings: (v) => set({ showSettings: v }),
 
-    // 主题 (从 localStorage 初始化)
+    // Theme initialized from localStorage
     darkMode: (() => {
         const saved = localStorage.getItem(DARK_MODE_KEY);
         return saved !== null ? saved === 'true' : true;
@@ -63,7 +63,7 @@ export const useAppStore = create<AppStoreState>((set) => ({
         return { darkMode: next };
     }),
 
-    // 侧边栏
+    // Sidebar
     sidebarCollapsed: localStorage.getItem(SIDEBAR_KEY) === 'true',
     setSidebarCollapsed: (v) => {
         localStorage.setItem(SIDEBAR_KEY, String(v));
@@ -75,8 +75,8 @@ export const useAppStore = create<AppStoreState>((set) => ({
         return { sidebarCollapsed: next };
     }),
 
-    // 国际化 (P2-1)
-    locale: (localStorage.getItem(LOCALE_KEY) as Locale) || 'zh-CN',
+    // Interface locale (P2-1)
+    locale: 'en-US',
     setLocale: (v) => {
         localStorage.setItem(LOCALE_KEY, v);
         document.documentElement.lang = v;

@@ -29,7 +29,7 @@ describe('LogTerminal', () => {
 
     it('should render empty state when no logs', () => {
         render(<LogTerminal logs={[]} />);
-        expect(screen.getByText('暂无活动记录...')).toBeInTheDocument();
+        expect(screen.getByText("No activity yet...")).toBeInTheDocument();
     });
 
     it('should render log messages', () => {
@@ -52,7 +52,7 @@ describe('LogTerminal', () => {
             { timestamp: '12:02', agent: AgentType.PLANNER, level: 'ERROR', message: 'err2' },
         ];
         render(<LogTerminal logs={logs} />);
-        expect(screen.getByText('2错误')).toBeInTheDocument();
+        expect(screen.getByText('2 Errors')).toBeInTheDocument();
     });
 
     it('should filter logs by level when filter button is clicked', () => {
@@ -68,7 +68,7 @@ describe('LogTerminal', () => {
         expect(screen.getByText('info msg')).toBeInTheDocument();
 
         // Click ERROR filter
-        fireEvent.click(screen.getByText('错误'));
+        fireEvent.click(screen.getByText("Error"));
         expect(screen.getByText('error msg')).toBeInTheDocument();
         expect(screen.queryByText('info msg')).not.toBeInTheDocument();
         expect(screen.queryByText('success msg')).not.toBeInTheDocument();
@@ -82,14 +82,14 @@ describe('LogTerminal', () => {
         expect(screen.getByText('Log message 0')).toBeInTheDocument();
 
         // Find collapse button (ChevronDown) and click
-        const collapseBtn = screen.getByTitle('折叠日志');
+        const collapseBtn = screen.getByTitle("Collapse logs");
         fireEvent.click(collapseBtn);
 
         // Logs should be hidden
         expect(screen.queryByText('Log message 0')).not.toBeInTheDocument();
 
         // Expand again
-        const expandBtn = screen.getByTitle('展开日志');
+        const expandBtn = screen.getByTitle("Expand logs");
         fireEvent.click(expandBtn);
 
         expect(screen.getByText('Log message 0')).toBeInTheDocument();
@@ -100,7 +100,7 @@ describe('LogTerminal', () => {
         const logs = makeLogs(1);
         render(<LogTerminal logs={logs} onClear={onClear} />);
 
-        fireEvent.click(screen.getByTitle('清空日志'));
+        fireEvent.click(screen.getByTitle("Clear logs"));
         expect(onClear).toHaveBeenCalledTimes(1);
     });
 
@@ -144,22 +144,22 @@ describe('AgentCard', () => {
 
     it('should display IDLE status label', () => {
         render(<AgentCard stat={baseStat} />);
-        expect(screen.getByText('空闲')).toBeInTheDocument();
+        expect(screen.getByText("Idle")).toBeInTheDocument();
     });
 
     it('should display BUSY status label', () => {
         render(<AgentCard stat={{ ...baseStat, status: 'BUSY' }} />);
-        expect(screen.getByText('忙碌')).toBeInTheDocument();
+        expect(screen.getByText("Busy")).toBeInTheDocument();
     });
 
     it('should display ERROR status label', () => {
         render(<AgentCard stat={{ ...baseStat, status: 'ERROR' }} />);
-        expect(screen.getByText('异常')).toBeInTheDocument();
+        expect(screen.getByText("Error")).toBeInTheDocument();
     });
 
     it('should display HEALING status label', () => {
         render(<AgentCard stat={{ ...baseStat, status: 'HEALING' }} />);
-        expect(screen.getByText('自愈中')).toBeInTheDocument();
+        expect(screen.getByText("Self-healing")).toBeInTheDocument();
     });
 
 });

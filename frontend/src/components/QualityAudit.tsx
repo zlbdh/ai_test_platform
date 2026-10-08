@@ -43,16 +43,16 @@ interface AuditReport {
 }
 
 const SEVERITY_CONFIG: Record<string, { icon: React.ReactNode; color: string; label: string }> = {
-    critical: { icon: <XCircle className="w-4 h-4" />, color: 'text-red-500 bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-800', label: '严重' },
-    major: { icon: <AlertTriangle className="w-4 h-4" />, color: 'text-orange-500 bg-orange-50 dark:bg-orange-500/10 border-orange-200 dark:border-orange-800', label: '重要' },
-    minor: { icon: <Info className="w-4 h-4" />, color: 'text-blue-500 bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-800', label: '轻微' },
-    info: { icon: <Info className="w-4 h-4" />, color: 'text-slate-500 bg-slate-50 dark:bg-slate-500/10 border-slate-200 dark:border-slate-800', label: '信息' },
+    critical: { icon: <XCircle className="w-4 h-4" />, color: 'text-red-500 bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-800', label: "Critical" },
+    major: { icon: <AlertTriangle className="w-4 h-4" />, color: 'text-orange-500 bg-orange-50 dark:bg-orange-500/10 border-orange-200 dark:border-orange-800', label: "Major" },
+    minor: { icon: <Info className="w-4 h-4" />, color: 'text-blue-500 bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-800', label: "Minor" },
+    info: { icon: <Info className="w-4 h-4" />, color: 'text-slate-500 bg-slate-50 dark:bg-slate-500/10 border-slate-200 dark:border-slate-800', label: "Informational" },
 };
 
 const AUDIT_TABS: Record<AuditType, { label: string; icon: React.ReactNode; color: string; desc: string }> = {
-    accessibility: { label: '无障碍', icon: <Eye className="w-4 h-4" />, color: 'text-teal-500 bg-teal-500/10 border-teal-500/30', desc: 'WCAG 2.1 AA 级别自动化审计' },
-    i18n: { label: '国际化', icon: <Globe className="w-4 h-4" />, color: 'text-sky-500 bg-sky-500/10 border-sky-500/30', desc: '多语言支持与本地化检测' },
-    compliance: { label: '合规性', icon: <ShieldCheck className="w-4 h-4" />, color: 'text-amber-500 bg-amber-500/10 border-amber-500/30', desc: 'GDPR / SOC2 / PCI-DSS 合规检查' },
+    accessibility: { label: "Accessibility", icon: <Eye className="w-4 h-4" />, color: 'text-teal-500 bg-teal-500/10 border-teal-500/30', desc: "Automated WCAG 2.1 AA audit" },
+    i18n: { label: "Internationalization", icon: <Globe className="w-4 h-4" />, color: 'text-sky-500 bg-sky-500/10 border-sky-500/30', desc: "Multilingual support and localization checks" },
+    compliance: { label: "Compliance", icon: <ShieldCheck className="w-4 h-4" />, color: 'text-amber-500 bg-amber-500/10 border-amber-500/30', desc: "GDPR, SOC 2, and PCI DSS compliance checks" },
 };
 
 // ============================================================
@@ -97,7 +97,7 @@ const IssueList: React.FC<{ issues: AuditIssue[] }> = ({ issues }) => {
         return (
             <div className="p-8 text-center text-slate-400">
                 <CheckCircle className="w-10 h-10 mx-auto mb-3 text-green-400 opacity-50" />
-                <p className="text-sm">未发现问题</p>
+                <p className="text-sm">No issues found</p>
             </div>
         );
     }
@@ -121,9 +121,9 @@ const IssueList: React.FC<{ issues: AuditIssue[] }> = ({ issues }) => {
                                 </div>
                                 {expanded.has(i) && (
                                     <div className="mt-2 space-y-1 text-xs opacity-80">
-                                        {issue.element && <p><span className="font-medium">元素: </span><code className="bg-white/30 dark:bg-black/20 px-1 rounded">{issue.element}</code></p>}
-                                        {issue.selector && <p><span className="font-medium">选择器: </span><code className="bg-white/30 dark:bg-black/20 px-1 rounded">{issue.selector}</code></p>}
-                                        {issue.suggestion && <p className="text-emerald-700 dark:text-emerald-300"><span className="font-medium">建议: </span>{issue.suggestion}</p>}
+                                        {issue.element && <p><span className="font-medium">Element: </span><code className="bg-white/30 dark:bg-black/20 px-1 rounded">{issue.element}</code></p>}
+                                        {issue.selector && <p><span className="font-medium">Selector: </span><code className="bg-white/30 dark:bg-black/20 px-1 rounded">{issue.selector}</code></p>}
+                                        {issue.suggestion && <p className="text-emerald-700 dark:text-emerald-300"><span className="font-medium">Suggestion: </span>{issue.suggestion}</p>}
                                     </div>
                                 )}
                             </div>
@@ -159,7 +159,7 @@ const QualityAudit: React.FC = () => {
         try {
             let endpoint = '';
             let body: Record<string, unknown> = {};
-            const executionPayload = ensureExecutionContextPayload(`质量专项测试 · ${activeType}`, { targetUrl: url });
+            const executionPayload = ensureExecutionContextPayload(`Quality test suite · ${activeType}`, { targetUrl: url });
 
             switch (activeType) {
                 case 'accessibility':
@@ -188,7 +188,7 @@ const QualityAudit: React.FC = () => {
             const data = await res.json();
             setReport(data);
         } catch (e: unknown) {
-            setReport({ total_issues: 0, score: -1, issues: [], summary: `请求失败: ${(e as Error).message}` });
+            setReport({ total_issues: 0, score: -1, issues: [], summary: `Request failed: ${(e as Error).message}` });
         } finally {
             setLoading(false);
         }
@@ -200,7 +200,7 @@ const QualityAudit: React.FC = () => {
         setReport(null);
         try {
             let endpoint = '';
-            const executionPayload = ensureExecutionContextPayload(`质量专项测试 · ${activeType}`, { targetUrl: url });
+            const executionPayload = ensureExecutionContextPayload(`Quality test suite · ${activeType}`, { targetUrl: url });
             let body: Record<string, unknown> = { url, ...executionPayload };
             if (activeType === 'accessibility') endpoint = API_ENDPOINTS.accessibility.quickCheck;
             else if (activeType === 'i18n') {
@@ -223,10 +223,10 @@ const QualityAudit: React.FC = () => {
                 total_issues: data.total || 0,
                 score: data.total === 0 ? 100 : Math.max(0, 100 - data.total * 15),
                 issues: data.issues || [],
-                summary: `快速检查完成: ${data.total || 0} 个问题 (${data.mode || 'quick'} 模式)`
+                summary: `Quick check completed: ${data.total || 0} issues (${data.mode || 'quick'} mode)`
             });
         } catch (e: unknown) {
-            setReport({ total_issues: 0, score: -1, issues: [], summary: `请求失败: ${(e as Error).message}` });
+            setReport({ total_issues: 0, score: -1, issues: [], summary: `Request failed: ${(e as Error).message}` });
         } finally {
             setLoading(false);
         }
@@ -236,7 +236,7 @@ const QualityAudit: React.FC = () => {
 
     return (
         <div className="flex flex-col h-full gap-4 animate-in fade-in duration-500">
-            <ExecutionBatchBanner standaloneHint="质量审计的结果也会进入执行中心；如果当前没有测试批次，首次执行时会自动创建专项测试批次。" />
+            <ExecutionBatchBanner standaloneHint={"Quality audit results also appear in the execution center. The first run creates a specialized test batch if none is active."} />
 
             {/* Type Tabs */}
             <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-800/50 w-fit">
@@ -259,16 +259,16 @@ const QualityAudit: React.FC = () => {
                         {tabConfig.label}
                     </div>
                     <input type="text" value={url} onChange={(e) => setUrl(e.target.value)}
-                        placeholder="输入要审计的 URL (如 https://example.com)"
+                        placeholder={"Enter a URL to audit (for example, https://example.com)"}
                         className="flex-1 px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500/20" />
                     <button onClick={quickCheck} disabled={loading}
                         className="px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition border border-slate-200 dark:border-slate-700">
-                        快速检查
+                        Quick check
                     </button>
                     <button onClick={runAudit} disabled={loading}
                         className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-lg font-medium shadow-lg shadow-indigo-500/20 active:scale-95 transition-all disabled:opacity-50">
                         {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-                        完整审计
+                        Full audit
                     </button>
                 </div>
 
@@ -276,7 +276,7 @@ const QualityAudit: React.FC = () => {
                 <div className="flex items-center gap-4 mt-3 text-sm">
                     {activeType === 'accessibility' && (
                         <div className="flex items-center gap-2">
-                            <span className="text-slate-500">WCAG 级别:</span>
+                            <span className="text-slate-500">WCAG level:</span>
                             {['A', 'AA', 'AAA'].map(l => (
                                 <button key={l} onClick={() => setWcagLevel(l)}
                                     className={`px-2 py-1 rounded text-xs font-medium ${wcagLevel === l ? 'bg-teal-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
@@ -287,7 +287,7 @@ const QualityAudit: React.FC = () => {
                     )}
                     {activeType === 'i18n' && (
                         <div className="flex items-center gap-2 flex-1">
-                            <span className="text-slate-500">语言列表:</span>
+                            <span className="text-slate-500">Languages:</span>
                             <input type="text" value={locales} onChange={(e) => setLocales(e.target.value)}
                                 placeholder="zh-CN, en-US, ja-JP"
                                 className="flex-1 max-w-md px-3 py-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm outline-none font-mono" />
@@ -295,7 +295,7 @@ const QualityAudit: React.FC = () => {
                     )}
                     {activeType === 'compliance' && (
                         <div className="flex items-center gap-2">
-                            <span className="text-slate-500">标准:</span>
+                            <span className="text-slate-500">Standards:</span>
                             {['GDPR', 'SOC2', 'PCI-DSS'].map(s => (
                                 <button key={s} onClick={() => setStandards(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])}
                                     className={`px-2 py-1 rounded text-xs font-medium ${standards.includes(s) ? 'bg-amber-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
@@ -321,31 +321,31 @@ const QualityAudit: React.FC = () => {
                             <div className="w-full space-y-2 mt-2">
                                 {report.critical !== undefined && report.critical > 0 && (
                                     <div className="flex items-center justify-between text-sm">
-                                        <span className="flex items-center gap-1.5 text-red-500"><XCircle className="w-3.5 h-3.5" />严重</span>
+                                        <span className="flex items-center gap-1.5 text-red-500"><XCircle className="w-3.5 h-3.5" />Critical</span>
                                         <span className="font-bold text-red-500">{report.critical}</span>
                                     </div>
                                 )}
                                 {report.major !== undefined && report.major > 0 && (
                                     <div className="flex items-center justify-between text-sm">
-                                        <span className="flex items-center gap-1.5 text-orange-500"><AlertTriangle className="w-3.5 h-3.5" />重要</span>
+                                        <span className="flex items-center gap-1.5 text-orange-500"><AlertTriangle className="w-3.5 h-3.5" />Major</span>
                                         <span className="font-bold text-orange-500">{report.major}</span>
                                     </div>
                                 )}
                                 {report.minor !== undefined && report.minor > 0 && (
                                     <div className="flex items-center justify-between text-sm">
-                                        <span className="flex items-center gap-1.5 text-blue-500"><Info className="w-3.5 h-3.5" />轻微</span>
+                                        <span className="flex items-center gap-1.5 text-blue-500"><Info className="w-3.5 h-3.5" />Minor</span>
                                         <span className="font-bold text-blue-500">{report.minor}</span>
                                     </div>
                                 )}
                                 {report.passed_rules !== undefined && (
                                     <div className="flex items-center justify-between text-sm pt-2 border-t border-slate-200 dark:border-slate-700">
-                                        <span className="text-green-500">通过规则</span>
+                                        <span className="text-green-500">Rules passed</span>
                                         <span className="font-bold text-green-500">{report.passed_rules}</span>
                                     </div>
                                 )}
                                 {report.passed_checks !== undefined && (
                                     <div className="flex items-center justify-between text-sm pt-2 border-t border-slate-200 dark:border-slate-700">
-                                        <span className="text-green-500">通过检查</span>
+                                        <span className="text-green-500">Checks passed</span>
                                         <span className="font-bold text-green-500">{report.passed_checks}</span>
                                     </div>
                                 )}
@@ -356,7 +356,7 @@ const QualityAudit: React.FC = () => {
                         <div className="flex-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md overflow-hidden flex flex-col min-h-0">
                             <div className="p-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
                                 <span className="text-sm font-bold text-slate-700 dark:text-white">
-                                    问题列表 ({report.total_issues})
+                                    Issues ( {report.total_issues})
                                 </span>
                             </div>
                             <div className="flex-1 overflow-y-auto p-3">
@@ -370,15 +370,15 @@ const QualityAudit: React.FC = () => {
                             {loading ? (
                                 <>
                                     <RefreshCw className="w-12 h-12 mx-auto mb-4 animate-spin opacity-30" />
-                                    <p className="text-lg font-medium">正在审计中...</p>
-                                    <p className="text-sm mt-1">这可能需要几秒钟</p>
+                                    <p className="text-lg font-medium">Audit in progress...</p>
+                                    <p className="text-sm mt-1">This may take a few seconds</p>
                                 </>
                             ) : (
                                 <>
                                     {activeType === 'accessibility' && <Eye className="w-12 h-12 mx-auto mb-4 opacity-30" />}
                                     {activeType === 'i18n' && <Globe className="w-12 h-12 mx-auto mb-4 opacity-30" />}
                                     {activeType === 'compliance' && <ShieldCheck className="w-12 h-12 mx-auto mb-4 opacity-30" />}
-                                    <p className="text-lg font-medium">输入 URL 开始{tabConfig.label}审计</p>
+                                    <p className="text-lg font-medium">Enter a URL to begin {tabConfig.label} Audit</p>
                                     <p className="text-sm mt-1">{tabConfig.desc}</p>
                                 </>
                             )}

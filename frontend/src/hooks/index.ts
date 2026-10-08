@@ -1,6 +1,4 @@
-/**
- * Hooks Barrel Export — 统一导出所有自定义 Hooks
- *
+/** Barrel exports for custom hooks.
  * @usage import { useAsync, usePolling, useHotkeys, useToast } from '@/hooks';
  */
 export { useAsync } from './useAsync';

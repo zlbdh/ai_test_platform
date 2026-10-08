@@ -3,18 +3,18 @@ import { NavLink } from 'react-router-dom';
 import { useT } from '../../hooks/useT';
 
 // ============================================================================
-// NavItem Types — 导出供 Layout.tsx 使用
+// NavItem types exported for Layout.tsx.
 // ============================================================================
 export interface NavItemConfig {
     path: string;
-    label: string;        // 中文默认值（回退）
-    labelKey?: string;     // i18n 翻译键，如 'nav.dashboard'
+    label: string;        // English fallback label
+    labelKey?: string;     // i18n translation key, for example 'nav.dashboard'
     icon: React.ReactNode;
     group: string;
 }
 
 // ============================================================================
-// NavItem Component — 可复用的侧边栏导航按钮（集成 i18n）
+// NavItem: reusable sidebar navigation button with i18n support.
 // ============================================================================
 interface NavItemProps {
     item: NavItemConfig;
@@ -24,7 +24,7 @@ interface NavItemProps {
 const NavItem: React.FC<NavItemProps> = ({ item, collapsed }) => {
     const tt = useT();
     const displayLabel = item.labelKey ? tt(item.labelKey) : item.label;
-    // 如果 tt 返回原 key（翻译缺失），回退到 label
+    // Fall back to label when tt returns the original key for a missing translation.
     const finalLabel = displayLabel === item.labelKey ? item.label : displayLabel;
 
     return (

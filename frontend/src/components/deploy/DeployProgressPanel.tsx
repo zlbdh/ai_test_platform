@@ -43,7 +43,7 @@ const DeployProgressPanel: React.FC<{ state: ProgressState; onClose: () => void 
                 <div className={`px-6 py-4 flex items-center justify-between ${headerClass}`}>
                     <h3 className="text-white text-sm font-bold flex items-center gap-2">
                         {!isDone ? <Loader2 className="w-4 h-4 animate-spin" /> : isSuccess ? <CheckCircle2 className="w-4 h-4" /> : isCancelled ? <Clock className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
-                        直接部署 · {state.repoLabel}
+                        Direct deployment · {state.repoLabel}
                     </h3>
                     {isDone && <button onClick={onClose} className="text-white/70 hover:text-white transition"><X className="w-4 h-4" /></button>}
                 </div>
@@ -96,8 +96,8 @@ const DeployProgressPanel: React.FC<{ state: ProgressState; onClose: () => void 
 
                 {/* Live Logs */}
                 <div className="flex-1 max-h-64 overflow-auto bg-slate-950 p-4 font-mono text-[11px] text-green-400 leading-relaxed">
-                    {state.logs.length === 0 ? <span className="text-slate-500">等待直接部署开始...</span> : state.logs.map((l, i) => (
-                        <div key={i} className={`whitespace-pre-wrap break-all ${l.includes('🔧 自愈') ? 'text-amber-400' :
+                    {state.logs.length === 0 ? <span className="text-slate-500">Waiting for direct deployment to start...</span> : state.logs.map((l, i) => (
+                        <div key={i} className={`whitespace-pre-wrap break-all ${(l.includes('🔧 自愈') || l.includes("🔧 Self-healing")) ? 'text-amber-400' :
                             l.includes('❌') || l.includes('ERROR') ? 'text-red-400' :
                                 l.includes('✅') ? 'text-emerald-400' : ''
                             }`}>

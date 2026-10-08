@@ -40,7 +40,7 @@ const BatchTesting: React.FC = () => {
 
     const handleFileSelect = useCallback((file: File) => {
         if (!file.name.match(/\.(csv|tsv|txt)$/i)) {
-            alert('请选择 .csv / .tsv / .txt 文件');
+            alert("Select a .csv, .tsv, or .txt file");
             return;
         }
         setCsvFile(file);
@@ -116,12 +116,12 @@ const BatchTesting: React.FC = () => {
                         <div className="p-2 rounded-lg bg-indigo-500/10">
                             <Layers className="w-5 h-5 text-indigo-500" />
                         </div>
-                        批量测试配置
+                        Batch test configuration
                     </h3>
 
                     <div className="space-y-5">
                         <div>
-                            <label className="text-xs font-semibold text-slate-500 uppercase mb-2 block tracking-wider">批次名称</label>
+                            <label className="text-xs font-semibold text-slate-500 uppercase mb-2 block tracking-wider">Batch name</label>
                             <input
                                 type="text"
                                 className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none"
@@ -131,7 +131,7 @@ const BatchTesting: React.FC = () => {
                         </div>
 
                         <div>
-                            <label className="text-xs font-semibold text-slate-500 uppercase mb-2 block tracking-wider">任务模板 (Task Template)</label>
+                            <label className="text-xs font-semibold text-slate-500 uppercase mb-2 block tracking-wider">Task template (TaskTemplate)</label>
                             <textarea
                                 className="w-full h-24 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none"
                                 value={taskTemplate}
@@ -140,13 +140,13 @@ const BatchTesting: React.FC = () => {
                             />
                             <p className="text-xs text-slate-400 mt-2 flex items-center gap-1">
                                 <span className="bg-slate-200 dark:bg-slate-700 px-1 rounded text-[10px] font-mono">VAR</span>
-                                支持变量替换，例如: <code>Login as {"{user}"}</code>
+                                Supports variable substitution, for example: <code>Login as {"{user}"}</code>
                             </p>
                         </div>
 
                         <div>
                             <label className="text-xs font-semibold text-slate-500 uppercase mb-2 flex items-center gap-2 tracking-wider">
-                                <FileJson className="w-3 h-3" /> 数据集 (JSON Array)
+                                <FileJson className="w-3 h-3" /> Dataset (JSON array)
                             </label>
                             <textarea
                                 className="w-full h-32 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm font-mono text-slate-900 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none"
@@ -159,7 +159,7 @@ const BatchTesting: React.FC = () => {
                         {/* CSV Upload */}
                         <div>
                             <label className="text-xs font-semibold text-slate-500 uppercase mb-2 flex items-center gap-2 tracking-wider">
-                                <FileSpreadsheet className="w-3 h-3" /> 或从 CSV 文件导入
+                                <FileSpreadsheet className="w-3 h-3" /> Or import a CSV file
                             </label>
                             <div
                                 onDragOver={e => { e.preventDefault(); setIsDragOver(true); }}
@@ -184,7 +184,7 @@ const BatchTesting: React.FC = () => {
                                     <div className="flex items-center justify-center gap-2">
                                         <FileSpreadsheet className="w-4 h-4 text-emerald-500" />
                                         <span className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">{csvFile.name}</span>
-                                        <span className="text-[10px] text-slate-400">({csvPreview.length} 行)</span>
+                                        <span className="text-[10px] text-slate-400">({csvPreview.length} rows)</span>
                                         <button onClick={e => { e.stopPropagation(); clearCsv(); }}
                                             className="p-1 hover:bg-red-100 dark:hover:bg-red-900/20 rounded transition-colors">
                                             <X className="w-3 h-3 text-red-500" />
@@ -193,8 +193,8 @@ const BatchTesting: React.FC = () => {
                                 ) : (
                                     <div>
                                         <Upload className="w-6 h-6 text-slate-400 mx-auto mb-1" />
-                                        <p className="text-xs text-slate-400">拖拽 CSV 文件到此处，或点击选择</p>
-                                        <p className="text-[10px] text-slate-300 dark:text-slate-500 mt-0.5">支持 .csv .tsv .txt</p>
+                                        <p className="text-xs text-slate-400">Drop a CSV file here or click to browse</p>
+                                        <p className="text-[10px] text-slate-300 dark:text-slate-500 mt-0.5">Supports .csv, .tsv, and .txt</p>
                                     </div>
                                 )}
                             </div>
@@ -219,7 +219,7 @@ const BatchTesting: React.FC = () => {
                                                 </tr>
                                             ))}
                                             {csvPreview.length > 5 && (
-                                                <tr><td colSpan={Object.keys(csvPreview[0]).length} className="px-2 py-1 text-center text-slate-400">... 还有 {csvPreview.length - 5} 行</td></tr>
+                                                <tr><td colSpan={Object.keys(csvPreview[0]).length} className="px-2 py-1 text-center text-slate-400">...and {csvPreview.length - 5} rows</td></tr>
                                             )}
                                         </tbody>
                                     </table>
@@ -238,7 +238,7 @@ const BatchTesting: React.FC = () => {
                                     Running...
                                 </div>
                             ) : (
-                                <><Play className="w-4 h-4 fill-current" /> 开始批量执行</>
+                                <><Play className="w-4 h-4 fill-current" /> Run batch</>
                             )}
                         </button>
                     </div>
@@ -250,7 +250,7 @@ const BatchTesting: React.FC = () => {
                 <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-center backdrop-blur-sm">
                     <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
                         <CheckCircle className="w-5 h-5 text-emerald-500" />
-                        执行结果
+                        Execution results
                     </h3>
                     <span className="text-xs font-mono px-2 py-1 rounded bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400">{summary}</span>
                 </div>
@@ -258,7 +258,7 @@ const BatchTesting: React.FC = () => {
                 <div className="flex-1 overflow-y-auto p-4 space-y-3">
                     {results.length === 0 && !isRunning && (
                         <div className="text-center text-slate-400 mt-10">
-                            等待执行...
+                            Waiting to run...
                             <div className="mt-4 flex justify-center text-slate-300">
                                 <AlertTriangle className="w-12 h-12" />
                             </div>

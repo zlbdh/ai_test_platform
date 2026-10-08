@@ -10,8 +10,7 @@ interface State {
     error: Error | null;
 }
 
-/**
- * 全局 Error Boundary — 防止子组件 JS 崩溃导致白屏
+/** Global error boundary: prevent child component failures from leaving a blank page.
  */
 class ErrorBoundary extends React.Component<Props, State> {
     constructor(props: Props) {
@@ -44,17 +43,17 @@ class ErrorBoundary extends React.Component<Props, State> {
                         </svg>
                     </div>
                     <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-2">
-                        页面加载出错
+                        Page failed to load
                     </h2>
                     <p className="text-sm text-slate-500 dark:text-slate-400 mb-4 max-w-md">
-                        {this.state.error?.message || '发生了一个未预期的错误'}
+                        {this.state.error?.message || "An unexpected error occurred"}
                     </p>
                     <button
                         onClick={this.handleRetry}
                         className="px-4 py-2 rounded-lg bg-indigo-500 text-white text-sm font-medium
                                    hover:bg-indigo-600 transition-colors"
                     >
-                        重试
+                        Retry
                     </button>
                 </div>
             );

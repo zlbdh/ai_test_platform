@@ -1,8 +1,5 @@
-/**
- * GalleryPanel — 任务截图面板（从 VisualGallery 提取）
- * 
- * 嵌入 ExecutionHistory 的展开面板中，展示单个任务的步骤截图时间线。
- * 支持：列表/网格切换、Lightbox 全屏预览、截图对比 Diff。
+/** GalleryPanel: task screenshot panel extracted from VisualGallery.
+ * Embedded in ExecutionHistory to show step screenshots, with list/grid views, a full-screen lightbox, and screenshot diffs.
  */
 import React, { useState, useEffect, useCallback } from 'react';
 import {
@@ -37,7 +34,7 @@ function formatDuration(s: number): string {
 }
 
 // ============================================================================
-// Lightbox — 全屏大图预览
+// Lightbox: full-screen image preview
 // ============================================================================
 const Lightbox: React.FC<{
     steps: GalleryStep[];
@@ -95,7 +92,7 @@ const Lightbox: React.FC<{
                 ) : (
                     <div className="text-white/40 text-center">
                         <Camera className="w-16 h-16 mx-auto mb-4 opacity-30" />
-                        <p>该步骤无截图</p>
+                        <p>No screenshot for this step</p>
                     </div>
                 )}
             </div>
@@ -145,13 +142,13 @@ const GalleryPanel: React.FC<GalleryPanelProps> = ({ taskId, isOpen }) => {
     const totalDuration = steps.reduce((sum, s) => sum + (s.duration || 0), 0);
 
     if (loading) {
-        return <div className="text-xs text-slate-400 p-3 flex items-center gap-2"><Camera className="w-4 h-4 animate-pulse" /> 加载截图中...</div>;
+        return <div className="text-xs text-slate-400 p-3 flex items-center gap-2"><Camera className="w-4 h-4 animate-pulse" /> Loading screenshots...</div>;
     }
 
     if (steps.length === 0) {
         return (
             <div className="text-xs text-slate-500 p-3 bg-slate-100 dark:bg-slate-800/50 rounded-lg flex items-center gap-2">
-                <Camera className="w-4 h-4 opacity-40" /> 该任务没有截图数据
+                <Camera className="w-4 h-4 opacity-40" /> No screenshots for this task
             </div>
         );
     }
@@ -173,8 +170,8 @@ const GalleryPanel: React.FC<GalleryPanelProps> = ({ taskId, isOpen }) => {
                 return (
                     <ScreenshotDiff
                         beforeSrc={prevSrc} afterSrc={currSrc}
-                        beforeLabel={`步骤 ${diffIndex}: ${prevStep.step}`}
-                        afterLabel={`步骤 ${diffIndex + 1}: ${currStep.step}`}
+                        beforeLabel={`Step ${diffIndex}: ${prevStep.step}`}
+                        afterLabel={`Step ${diffIndex + 1}: ${currStep.step}`}
                         onClose={() => setDiffIndex(null)}
                     />
                 );
@@ -182,9 +179,9 @@ const GalleryPanel: React.FC<GalleryPanelProps> = ({ taskId, isOpen }) => {
 
             {/* Stats */}
             <div className="flex items-center gap-4 mb-3 text-xs text-slate-500">
-                <span className="flex items-center gap-1"><BarChart3 className="w-3 h-3" /> {steps.length} 步骤</span>
-                <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400"><CheckCircle2 className="w-3 h-3" /> {passCount} 通过</span>
-                {failCount > 0 && <span className="flex items-center gap-1 text-red-600 dark:text-red-400"><XCircle className="w-3 h-3" /> {failCount} 失败</span>}
+                <span className="flex items-center gap-1"><BarChart3 className="w-3 h-3" /> {steps.length} Step</span>
+                <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400"><CheckCircle2 className="w-3 h-3" /> {passCount} Passed</span>
+                {failCount > 0 && <span className="flex items-center gap-1 text-red-600 dark:text-red-400"><XCircle className="w-3 h-3" /> {failCount} Failed</span>}
                 <span className="flex items-center gap-1"><Timer className="w-3 h-3" /> {formatDuration(totalDuration)}</span>
                 <div className="ml-auto flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5">
                     <button onClick={() => setViewMode('list')}
@@ -235,8 +232,8 @@ const GalleryPanel: React.FC<GalleryPanelProps> = ({ taskId, isOpen }) => {
                                     {idx > 0 && (steps[idx - 1]?.screenshot || steps[idx - 1]?.snapshots?.actual) && (
                                         <button onClick={(e) => { e.stopPropagation(); setDiffIndex(idx); }}
                                             className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 rounded-lg bg-black/60 hover:bg-indigo-600 text-white/70 hover:text-white text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-all z-10"
-                                            title="与前一步对比">
-                                            <GitCompareArrows className="w-3 h-3" /> 对比
+                                            title={"Compare with previous step"}>
+                                            <GitCompareArrows className="w-3 h-3" /> Compare
                                         </button>
                                     )}
                                 </div>

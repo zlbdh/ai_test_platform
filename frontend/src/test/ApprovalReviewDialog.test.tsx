@@ -16,7 +16,7 @@ describe('ApprovalReviewDialog', () => {
             />,
         );
 
-        expect(screen.queryByText('批准部署审批')).not.toBeInTheDocument();
+        expect(screen.queryByText("Approve deployment")).not.toBeInTheDocument();
     });
 
     it('批准模式下支持输入备注并提交', () => {
@@ -35,13 +35,13 @@ describe('ApprovalReviewDialog', () => {
             />,
         );
 
-        expect(screen.getByText('批准部署审批')).toBeInTheDocument();
+        expect(screen.getByText("Approve deployment")).toBeInTheDocument();
         expect(screen.getByText('支付后端')).toBeInTheDocument();
 
-        fireEvent.change(screen.getByPlaceholderText('例如：已确认发布时间窗，可以执行。'), {
+        fireEvent.change(screen.getByPlaceholderText("Example: The deployment window is confirmed. Proceed."), {
             target: { value: '今天可以发版' },
         });
-        fireEvent.click(screen.getByText('确认批准'));
+        fireEvent.click(screen.getByText("Confirm approval"));
 
         expect(onCommentChange).toHaveBeenCalledWith('今天可以发版');
         expect(onSubmit).toHaveBeenCalledTimes(1);
@@ -62,10 +62,10 @@ describe('ApprovalReviewDialog', () => {
             />,
         );
 
-        expect(screen.getByText('驳回部署审批')).toBeInTheDocument();
-        expect(screen.getByPlaceholderText('例如：变更窗口未到，请稍后重新申请。')).toBeInTheDocument();
+        expect(screen.getByText("Reject deployment")).toBeInTheDocument();
+        expect(screen.getByPlaceholderText("Example: The change window has not started. Submit again later.")).toBeInTheDocument();
 
-        fireEvent.click(screen.getByText('取消'));
+        fireEvent.click(screen.getByText("Cancel"));
         expect(onCancel).toHaveBeenCalledTimes(1);
     });
 
@@ -83,7 +83,7 @@ describe('ApprovalReviewDialog', () => {
             />,
         );
 
-        expect(screen.getByText('确认批准')).toBeDisabled();
-        expect(screen.getByText('取消')).toBeDisabled();
+        expect(screen.getByText("Confirm approval")).toBeDisabled();
+        expect(screen.getByText("Cancel")).toBeDisabled();
     });
 });

@@ -29,7 +29,7 @@ interface DataTableProps<T> {
 // DataTable Component
 // ============================================================================
 function DataTable<T extends object>({
-    columns, data, rowKey, pageSize = 10, emptyText = '暂无数据',
+    columns, data, rowKey, pageSize = 10, emptyText = "No data yet",
     className = '', onRowClick, loading, activeRowKey = null,
 }: DataTableProps<T>) {
     const [sortKey, setSortKey] = useState<string | null>(null);
@@ -149,7 +149,7 @@ function DataTable<T extends object>({
             {totalPages > 1 && (
                 <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
                     <span className="text-[10px] text-slate-400">
-                        共 {sorted.length} 条 · 第 {safePage}/{totalPages} 页
+                        Total: {sorted.length} entries · Page {safePage}/{totalPages} 
                     </span>
                     <div className="flex items-center gap-1">
                         <button

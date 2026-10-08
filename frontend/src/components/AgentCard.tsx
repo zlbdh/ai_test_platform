@@ -29,10 +29,10 @@ const AgentCard: React.FC<AgentCardProps> = ({ stat }) => {
 
     const getStatusLabel = (status: string) => {
         switch (status) {
-            case 'IDLE': return '空闲';
-            case 'BUSY': return '忙碌';
-            case 'ERROR': return '异常';
-            case 'HEALING': return '自愈中';
+            case 'IDLE': return "Idle";
+            case 'BUSY': return "Busy";
+            case 'ERROR': return "Error";
+            case 'HEALING': return "Self-healing";
             default: return status;
         }
     };
@@ -64,11 +64,11 @@ const AgentCard: React.FC<AgentCardProps> = ({ stat }) => {
 
             <div className="mt-6 grid grid-cols-2 gap-4">
                 <div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">已完成任务</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Completed tasks</p>
                     <p className="text-xl font-mono text-slate-900 dark:text-slate-200">{stat.tasksCompleted}</p>
                 </div>
                 <div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">成功率</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Success rate</p>
                     <p className="text-xl font-mono text-slate-900 dark:text-slate-200">{stat.successRate}%</p>
                 </div>
             </div>

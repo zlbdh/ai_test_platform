@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 
-// ── 操作类型识别 ──
+// Detect the action type.
 interface ParsedAction {
     type: string;
     icon: string;
@@ -27,7 +27,7 @@ const ACTION_PATTERNS: { pattern: RegExp; type: string; icon: string; color: str
 ];
 
 function parseAction(text: string): ParsedAction {
-    const now = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const now = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     const trimmed = text.slice(0, 120);
 
     for (const { pattern, type, icon, color } of ACTION_PATTERNS) {
@@ -38,7 +38,7 @@ function parseAction(text: string): ParsedAction {
     return { type: 'action', icon: '▶', label: 'ACTION', detail: trimmed, color: '#94a3b8', timestamp: now };
 }
 
-// ── ActionOverlay 主组件 ──
+// Main ActionOverlay component
 interface ActionOverlayProps {
     currentAction: string;
     isActive: boolean;
@@ -52,17 +52,17 @@ const ActionOverlay: React.FC<ActionOverlayProps> = ({ currentAction, isActive }
     const [history, setHistory] = useState<ParsedAction[]>([]);
     const [isNew, setIsNew] = useState(false);
 
-    // 操作变化处理 — 通过回调触发而非 effect
+    // Handle action changes through callbacks instead of effects.
     const processAction = useCallback((action: string) => {
         const parsed = parseAction(action);
         setActiveAction(parsed);
         setIsNew(true);
         setHistory(prev => [parsed, ...prev].slice(0, MAX_HISTORY));
-        // 动画重置
+        // Reset the animation.
         setTimeout(() => setIsNew(false), 600);
     }, []);
 
-    // 检测 currentAction 变化 — 用条件渲染触发
+    // Detect currentAction changes through conditional rendering.
     if (isActive && currentAction && currentAction !== lastAction) {
         setLastAction(currentAction);
         processAction(currentAction);
@@ -72,7 +72,7 @@ const ActionOverlay: React.FC<ActionOverlayProps> = ({ currentAction, isActive }
 
     return (
         <>
-            {/* ── 当前操作标签 — 顶部居中弹入 ── */}
+            {/* Current action label: centered pop-in at the top*/}
             {activeAction && (
                 <div className={`absolute top-3 left-1/2 -translate-x-1/2 z-20 transition-all duration-300 ${isNew ? 'animate-bounce-in' : ''}`}>
                     <div
@@ -96,7 +96,7 @@ const ActionOverlay: React.FC<ActionOverlayProps> = ({ currentAction, isActive }
                 </div>
             )}
 
-            {/* ── 操作历史轨迹 — 右侧迷你时间线 ── */}
+            {/* Action history: compact timeline on the right*/}
             {history.length > 0 && (
                 <div className="absolute top-12 right-2 z-20 flex flex-col gap-1 pointer-events-none">
                     {history.map((h, i) => (

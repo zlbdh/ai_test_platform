@@ -1,42 +1,34 @@
-/**
- * usePolling — 通用轮询 Hook
- *
- * 适用于部署进度、任务状态等需要定时刷新的场景。
- *
+/** usePolling: shared polling hook for deployment progress, task status, and other periodic updates.
  * @example
  *   const { start, stop, active } = usePolling(async () => {
  *       const status = await fetchDeployStatus(repoId);
  *       setProgress(status);
- *       if (status.done) return false; // 返回 false 停止轮询
+ *       if (status.done) return false; // Return false to stop polling.
  *   }, { interval: 2000 });
- *
- *   // 启动
- *   start();
- *   // 手动停止
- *   stop();
+ *   start(); // Start polling.
+ *   stop(); // Stop manually.
  */
 import { useState, useCallback, useRef, useEffect } from 'react';
 
 interface UsePollingOptions {
-    /** 轮询间隔(ms)，默认 3000 */
+    /** Polling interval in milliseconds; defaults to 3000. */
     interval?: number;
-    /** 是否立即执行第一次，默认 true */
+    /** Execute the first poll immediately; defaults to true. */
     immediate?: boolean;
-    /** 最大轮询次数，0=无限 */
+    /** Maximum number of polls; 0 means unlimited. */
     maxRetries?: number;
 }
 
 interface UsePollingReturn {
-    /** 启动轮询 */
+    /** Start polling. */
     start: () => void;
-    /** 停止轮询 */
+    /** Stop polling. */
     stop: () => void;
-    /** 是否正在轮询 */
+    /** Whether polling is active. */
     active: boolean;
 }
 
-/**
- * @param fn 轮询函数，返回 false 时自动停止
+/** @param fn Polling function; returning false stops polling automatically.
  */
 export function usePolling(
     fn: () => Promise<boolean | void>,
@@ -95,7 +87,7 @@ export function usePolling(
         }
     }, [stop, tick, immediate, interval]);
 
-    // 组件卸载时自动停止
+    // Stop automatically when the component unmounts.
     useEffect(() => {
         return () => {
             if (timerRef.current) clearTimeout(timerRef.current);

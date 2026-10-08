@@ -1,9 +1,4 @@
-/**
- * CommandPalette — 命令面板 (P2-1)
- * 
- * 类似 VSCode 的 Ctrl+K 命令面板
- * 支持: 页面跳转、快捷操作、模糊搜索
- */
+/* CommandPalette: VS Code-style Ctrl+K navigation, actions, and fuzzy search.*/
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -43,29 +38,29 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
     const listRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
 
-    // 命令列表
+    // Command list
     const commands: Command[] = useMemo(() => [
-        // 导航
-        { id: 'nav-home', label: '仪表盘', description: '返回首页', icon: <Layout size={16} />, category: 'navigation', action: () => { navigate('/'); onClose(); } },
-        { id: 'nav-orchestrator', label: '测试编排', description: '生成和执行测试', icon: <Play size={16} />, category: 'navigation', action: () => { navigate('/orchestrator'); onClose(); } },
-        { id: 'nav-prototype-agents', label: '原型测试', description: '7 Agent 原型验收工作台', icon: <Zap size={16} />, category: 'navigation', action: () => { navigate('/prototype-agents'); onClose(); } },
-        { id: 'nav-history', label: '执行中心', description: '历史记录与截图', icon: <History size={16} />, category: 'navigation', action: () => { navigate('/history'); onClose(); } },
-        { id: 'nav-api', label: 'API 工作台', description: 'REST/GraphQL 测试', icon: <Terminal size={16} />, category: 'navigation', action: () => { navigate('/api'); onClose(); } },
-        { id: 'nav-performance', label: '性能测试', description: '负载压力测试', icon: <Activity size={16} />, category: 'navigation', action: () => { navigate('/performance'); onClose(); } },
-        { id: 'nav-security', label: '安全扫描', description: '漏洞检测', icon: <Shield size={16} />, category: 'navigation', action: () => { navigate('/security'); onClose(); } },
-        { id: 'nav-database', label: '数据库测试', description: 'SQL 查询测试', icon: <Database size={16} />, category: 'navigation', action: () => { navigate('/database'); onClose(); } },
-        { id: 'nav-quality', label: '质量审计', description: '代码质量分析', icon: <FileText size={16} />, category: 'navigation', action: () => { navigate('/quality'); onClose(); } },
-        { id: 'nav-knowledge', label: '知识库', description: 'PRD/文档管理', icon: <FileText size={16} />, category: 'navigation', action: () => { navigate('/knowledge'); onClose(); } },
-        { id: 'nav-batch', label: '批量测试', description: '批量执行', icon: <Zap size={16} />, category: 'navigation', action: () => { navigate('/batch'); onClose(); } },
-        { id: 'nav-exploratory', label: '探索测试', description: 'AI 自主探索', icon: <Zap size={16} />, category: 'navigation', action: () => { navigate('/exploratory'); onClose(); } },
-        // 操作
-        { id: 'act-settings', label: '打开设置', description: 'LLM 配置/连接参数', icon: <Settings size={16} />, category: 'action', shortcut: 'Ctrl+.', action: () => { onOpenSettings(); onClose(); } },
-        { id: 'act-theme', label: isDark ? '切换亮色主题' : '切换暗色主题', description: '切换外观', icon: isDark ? <Sun size={16} /> : <Moon size={16} />, category: 'action', action: () => { onToggleTheme(); onClose(); } },
-        // 设置
-        { id: 'set-shortcuts', label: '快捷键一览', description: '查看所有快捷键', icon: <Keyboard size={16} />, category: 'settings', shortcut: '?', action: () => { /* TODO */ onClose(); } },
+        // Navigation commands
+        { id: 'nav-home', label: "Dashboard", description: "Return home", icon: <Layout size={16} />, category: 'navigation', action: () => { navigate('/'); onClose(); } },
+        { id: 'nav-orchestrator', label: "Test orchestration", description: "Generate and run tests", icon: <Play size={16} />, category: 'navigation', action: () => { navigate('/orchestrator'); onClose(); } },
+        { id: 'nav-prototype-agents', label: "Prototype testing", description: "Seven-agent prototype acceptance workspace", icon: <Zap size={16} />, category: 'navigation', action: () => { navigate('/prototype-agents'); onClose(); } },
+        { id: 'nav-history', label: "Execution center", description: "History and screenshots", icon: <History size={16} />, category: 'navigation', action: () => { navigate('/history'); onClose(); } },
+        { id: 'nav-api', label: "API workbench", description: "REST and GraphQL testing", icon: <Terminal size={16} />, category: 'navigation', action: () => { navigate('/api'); onClose(); } },
+        { id: 'nav-performance', label: "Performance testing", description: "Load and stress testing", icon: <Activity size={16} />, category: 'navigation', action: () => { navigate('/performance'); onClose(); } },
+        { id: 'nav-security', label: "Security scanning", description: "Vulnerability detection", icon: <Shield size={16} />, category: 'navigation', action: () => { navigate('/security'); onClose(); } },
+        { id: 'nav-database', label: "Database testing", description: "SQL query testing", icon: <Database size={16} />, category: 'navigation', action: () => { navigate('/database'); onClose(); } },
+        { id: 'nav-quality', label: "Quality audit", description: "Code quality analysis", icon: <FileText size={16} />, category: 'navigation', action: () => { navigate('/quality'); onClose(); } },
+        { id: 'nav-knowledge', label: "Knowledge base", description: "PRD and document management", icon: <FileText size={16} />, category: 'navigation', action: () => { navigate('/knowledge'); onClose(); } },
+        { id: 'nav-batch', label: "Batch testing", description: "Batch execution", icon: <Zap size={16} />, category: 'navigation', action: () => { navigate('/batch'); onClose(); } },
+        { id: 'nav-exploratory', label: "Exploratory testing", description: "Autonomous AI exploration", icon: <Zap size={16} />, category: 'navigation', action: () => { navigate('/exploratory'); onClose(); } },
+        // Action commands
+        { id: 'act-settings', label: "Open settings", description: "LLM configuration and connection parameters", icon: <Settings size={16} />, category: 'action', shortcut: 'Ctrl+.', action: () => { onOpenSettings(); onClose(); } },
+        { id: 'act-theme', label: isDark ? "Switch to light theme" : "Switch to dark theme", description: "Change appearance", icon: isDark ? <Sun size={16} /> : <Moon size={16} />, category: 'action', action: () => { onToggleTheme(); onClose(); } },
+        // Settings commands
+        { id: 'set-shortcuts', label: "Keyboard shortcuts", description: "View all shortcuts", icon: <Keyboard size={16} />, category: 'settings', shortcut: '?', action: () => { /* TODO */ onClose(); } },
     ], [navigate, onClose, onOpenSettings, onToggleTheme, isDark]);
 
-    // 模糊搜索
+    // Fuzzy matching
     const filtered = useMemo(() => {
         if (!query.trim()) return commands;
         const q = query.toLowerCase();
@@ -74,19 +69,19 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
         );
     }, [query, commands]);
 
-    // 分组
+    // Group commands.
     const groups = useMemo(() => {
         const nav = filtered.filter(c => c.category === 'navigation');
         const act = filtered.filter(c => c.category === 'action');
         const set = filtered.filter(c => c.category === 'settings');
         const result: { label: string; items: Command[] }[] = [];
-        if (nav.length) result.push({ label: '页面导航', items: nav });
-        if (act.length) result.push({ label: '操作', items: act });
-        if (set.length) result.push({ label: '设置', items: set });
+        if (nav.length) result.push({ label: "Page navigation", items: nav });
+        if (act.length) result.push({ label: "Actions", items: act });
+        if (set.length) result.push({ label: "Settings", items: set });
         return result;
     }, [filtered]);
 
-    // 自动聚焦
+    // Focus the search field automatically.
     useEffect(() => {
         if (isOpen) {
             setQuery('');
@@ -95,7 +90,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
         }
     }, [isOpen]);
 
-    // 键盘导航
+    // Keyboard navigation
     useEffect(() => {
         if (!isOpen) return;
 
@@ -118,7 +113,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
         return () => window.removeEventListener('keydown', handleKey);
     }, [isOpen, filtered, selectedIndex, onClose]);
 
-    // 滚动到选中项
+    // Scroll the selected item into view.
     useEffect(() => {
         const el = listRef.current?.querySelector(`[data-index="${selectedIndex}"]`);
         el?.scrollIntoView({ block: 'nearest' });
@@ -151,7 +146,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
                         type="text"
                         value={query}
                         onChange={(e) => { setQuery(e.target.value); setSelectedIndex(0); }}
-                        placeholder="搜索页面、操作..."
+                        placeholder={"Search pages and actions..."}
                         className="flex-1 bg-transparent outline-none text-sm"
                         style={{ color: 'var(--color-text)' }}
                     />
@@ -164,7 +159,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
                 <div ref={listRef} className="max-h-[50vh] overflow-y-auto p-2">
                     {groups.length === 0 ? (
                         <div className="py-8 text-center text-sm" style={{ color: 'var(--color-text-muted)' }}>
-                            没有匹配的结果
+                            No matching results
                         </div>
                     ) : (
                         groups.map((group) => (
@@ -208,9 +203,9 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
 
                 {/* Footer */}
                 <div className="flex items-center gap-4 px-4 py-2 border-t text-[11px]" style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-muted)' }}>
-                    <span>↑↓ 导航</span>
-                    <span>↵ 选择</span>
-                    <span>ESC 关闭</span>
+                    <span>↑↓ Navigate</span>
+                    <span>↵ Select</span>
+                    <span>ESC Close</span>
                 </div>
             </div>
 

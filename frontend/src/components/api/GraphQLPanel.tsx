@@ -25,7 +25,7 @@ const GraphQLPanel: React.FC = () => {
             const res = await fetch(API_ENDPOINTS.graphql.execute, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ endpoint, query, variables: vars, ...ensureExecutionContextPayload('GraphQL 专项测试', { targetUrl: endpoint }) })
+                body: JSON.stringify({ endpoint, query, variables: vars, ...ensureExecutionContextPayload("GraphQL test suite", { targetUrl: endpoint }) })
             });
             const data = await res.json();
             setResponse(data);
@@ -44,7 +44,7 @@ const GraphQLPanel: React.FC = () => {
             const res = await fetch(API_ENDPOINTS.graphql.introspect, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ endpoint, ...ensureExecutionContextPayload('GraphQL 专项测试', { targetUrl: endpoint }) })
+                body: JSON.stringify({ endpoint, ...ensureExecutionContextPayload("GraphQL test suite", { targetUrl: endpoint }) })
             });
             const data = await res.json();
             setSchema(data.schema);
@@ -75,7 +75,7 @@ const GraphQLPanel: React.FC = () => {
                 <button onClick={executeQuery} disabled={loading}
                     className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white rounded-lg font-medium shadow-lg shadow-pink-500/20 active:scale-95 transition-all disabled:opacity-50">
                     {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-                    执行
+                    Run
                 </button>
             </div>
 
@@ -107,7 +107,7 @@ const GraphQLPanel: React.FC = () => {
                         )}
                         {activeTab === 'schema' && (
                             <pre className="px-4 py-3 text-xs font-mono text-slate-600 dark:text-slate-400 whitespace-pre-wrap">
-                                {schema ? JSON.stringify(schema, null, 2) : '点击 "Schema" 按钮获取自省结果'}
+                                {schema ? JSON.stringify(schema, null, 2) : "Click Schema to retrieve introspection results"}
                             </pre>
                         )}
                     </div>
@@ -116,7 +116,7 @@ const GraphQLPanel: React.FC = () => {
                 {/* Response */}
                 <div className="flex flex-col rounded-xl border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md overflow-hidden">
                     <div className="p-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                        <span className="text-sm font-bold text-slate-700 dark:text-white">响应</span>
+                        <span className="text-sm font-bold text-slate-700 dark:text-white">Response</span>
                         {responseTime > 0 && (
                             <span className="text-xs text-slate-500 flex items-center gap-1">
                                 <Clock className="w-3 h-3" /> {responseTime}ms
@@ -124,7 +124,7 @@ const GraphQLPanel: React.FC = () => {
                         )}
                     </div>
                     <pre className="flex-1 overflow-auto px-4 py-3 text-sm font-mono text-slate-700 dark:text-slate-300 whitespace-pre-wrap">
-                        {response ? JSON.stringify(response, null, 2) : '执行查询以查看响应...'}
+                        {response ? JSON.stringify(response, null, 2) : "Run a query to view its response..."}
                     </pre>
                 </div>
             </div>

@@ -1,37 +1,32 @@
-/**
- * useAsync — 统一异步操作状态管理 Hook
- *
- * 消除 10+ 页面中重复的 [loading, setLoading] + try/catch/finally 模式。
- *
+/** useAsync: shared asynchronous operation state management.
+ * Replaces repeated loading state and try/catch/finally patterns in more than ten pages.
  * @example
  *   const { loading, error, run } = useAsync();
- *
  *   const load = useCallback(() => run(async () => {
  *       const data = await fetchProjects();
  *       setProjects(data);
  *   }), [run]);
- *
  *   useEffect(() => { load(); }, [load]);
  */
 import { useState, useCallback, useRef } from 'react';
 
 interface UseAsyncOptions {
-    /** 初始 loading 状态，默认 false */
+    /** Initial loading state; defaults to false. */
     initialLoading?: boolean;
-    /** 错误回调 */
+    /** Error callback. */
     onError?: (error: Error) => void;
 }
 
 interface UseAsyncReturn {
-    /** 是否正在加载 */
+    /** Whether an operation is loading. */
     loading: boolean;
-    /** 最近一次错误 */
+    /** Most recent error. */
     error: Error | null;
-    /** 包裹异步函数，自动管理 loading/error */
+    /** Wrap an asynchronous function to manage loading and error state. */
     run: <T>(fn: () => Promise<T>) => Promise<T | undefined>;
-    /** 手动设置 loading */
+    /** Set loading manually. */
     setLoading: (v: boolean) => void;
-    /** 清除错误 */
+    /** Clear the error. */
     clearError: () => void;
 }
 
@@ -41,7 +36,7 @@ export function useAsync(options: UseAsyncOptions = {}): UseAsyncReturn {
     const [error, setError] = useState<Error | null>(null);
     const mountedRef = useRef(true);
 
-    // 组件卸载后不更新状态
+    // Do not update state after unmounting.
     const isMounted = useCallback(() => mountedRef.current, []);
 
     const run = useCallback(async <T>(fn: () => Promise<T>): Promise<T | undefined> => {
