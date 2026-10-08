@@ -1,12 +1,12 @@
 """
-Test Report Generator - 测试报告增强生成器
+Test Report Generator - enhanced test reports
 
-生成多种格式的测试报告：
-- HTML 报告
+Generate test reports in multiple formats:
+- HTML report
 - JUnit XML
-- JSON 报告
-- Markdown 报告
-- 邮件通知
+- JSON report
+- Markdown report
+- Email notifications
 """
 
 from typing import Dict, Any, List, Optional
@@ -26,7 +26,7 @@ class ReportFormat(Enum):
 
 @dataclass
 class TestResult:
-    """测试结果"""
+    """Test results"""
     __test__ = False
     name: str
     status: str  # passed, failed, skipped
@@ -38,7 +38,7 @@ class TestResult:
 
 @dataclass
 class TestSuite:
-    """测试套件"""
+    """Test suite"""
     __test__ = False
     name: str
     tests: List[TestResult]
@@ -47,18 +47,18 @@ class TestSuite:
 
 
 class EnhancedReportGenerator:
-    """增强报告生成器"""
-    
+    """Enhanced report generator"""
+
     def __init__(self, output_dir: str = "./reports"):
         self.output_dir = output_dir
         os.makedirs(output_dir, exist_ok=True)
-    
+
     def generate(
         self,
         suite: TestSuite,
         format: ReportFormat = ReportFormat.HTML
     ) -> str:
-        """生成报告"""
+        """Generate a report"""
         if format == ReportFormat.HTML:
             return self._generate_html(suite)
         elif format == ReportFormat.JUNIT_XML:
@@ -69,15 +69,15 @@ class EnhancedReportGenerator:
             return self._generate_markdown(suite)
         else:
             return self._generate_json(suite)
-    
+
     def _calculate_stats(self, suite: TestSuite) -> Dict[str, Any]:
-        """计算统计"""
+        """Calculate statistics"""
         total = len(suite.tests)
         passed = sum(1 for t in suite.tests if t.status == "passed")
         failed = sum(1 for t in suite.tests if t.status == "failed")
         skipped = sum(1 for t in suite.tests if t.status == "skipped")
         duration = sum(t.duration_ms for t in suite.tests)
-        
+
         return {
             "total": total,
             "passed": passed,
@@ -87,17 +87,17 @@ class EnhancedReportGenerator:
             "duration_ms": duration,
             "duration_readable": f"{duration / 1000:.2f}s"
         }
-    
+
     def _generate_html(self, suite: TestSuite) -> str:
-        """生成 HTML 报告"""
+        """Generate an HTML report"""
         stats = self._calculate_stats(suite)
-        
+
         html = f"""<!DOCTYPE html>
-<html lang="zh">
+<html lang="en-US">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>测试报告 - {suite.name}</title>
+    <title>Test report - {suite.name}</title>
     <style>
         :root {{
             --bg: #0a0a1a;
@@ -198,44 +198,44 @@ class EnhancedReportGenerator:
 </head>
 <body>
     <div class="container">
-        <h1>📊 测试报告 - {suite.name}</h1>
-        <div class="subtitle">执行时间: {suite.start_time} ~ {suite.end_time}</div>
-        
+        <h1>📊 Test report - {suite.name}</h1>
+        <div class="subtitle">Execution time: {suite.start_time} ~ {suite.end_time}</div>
+
         <div class="stats">
             <div class="stat-card passed">
                 <h3>{stats['passed']}</h3>
-                <p>通过</p>
+                <p>Passed</p>
             </div>
             <div class="stat-card failed">
                 <h3>{stats['failed']}</h3>
-                <p>失败</p>
+                <p>Failed</p>
             </div>
             <div class="stat-card rate">
                 <h3>{stats['pass_rate']}%</h3>
-                <p>通过率</p>
+                <p>Pass rate</p>
             </div>
             <div class="stat-card duration">
                 <h3>{stats['duration_readable']}</h3>
-                <p>耗时</p>
+                <p>Duration</p>
             </div>
         </div>
-        
+
         <table>
             <thead>
                 <tr>
-                    <th>测试用例</th>
-                    <th>状态</th>
-                    <th>耗时</th>
-                    <th>错误信息</th>
+                    <th>Test case</th>
+                    <th>Status</th>
+                    <th>Duration</th>
+                    <th>Error message</th>
                 </tr>
             </thead>
             <tbody>
 """
-        
+
         for test in suite.tests:
             status_class = f"status-{test.status}"
             error_html = f'<div class="error">{test.error_message}</div>' if test.error_message else "-"
-            
+
             html += f"""
                 <tr>
                     <td>{test.name}</td>
@@ -244,7 +244,7 @@ class EnhancedReportGenerator:
                     <td>{error_html}</td>
                 </tr>
 """
-        
+
         html += """
             </tbody>
         </table>
@@ -256,26 +256,26 @@ class EnhancedReportGenerator:
 </body>
 </html>
 """
-        
-        # 保存文件
+
+        # Save the file
         filename = f"{suite.name.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
         filepath = os.path.join(self.output_dir, filename)
         with open(filepath, 'w', encoding='utf-8') as f:
             f.write(html)
-        
+
         return filepath
-    
+
     def _generate_junit_xml(self, suite: TestSuite) -> str:
-        """生成 JUnit XML 报告"""
+        """Generate a JUnit XML report"""
         stats = self._calculate_stats(suite)
-        
+
         xml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <testsuite name="{suite.name}" tests="{stats['total']}" failures="{stats['failed']}" skipped="{stats['skipped']}" time="{stats['duration_ms'] / 1000}">
 """
-        
+
         for test in suite.tests:
             xml += f'  <testcase name="{test.name}" time="{test.duration_ms / 1000}"'
-            
+
             if test.status == "passed":
                 xml += " />\n"
             elif test.status == "failed":
@@ -288,20 +288,20 @@ class EnhancedReportGenerator:
     <skipped />
   </testcase>
 """
-        
+
         xml += "</testsuite>\n"
-        
+
         filename = f"{suite.name.replace(' ', '_')}_junit.xml"
         filepath = os.path.join(self.output_dir, filename)
         with open(filepath, 'w', encoding='utf-8') as f:
             f.write(xml)
-        
+
         return filepath
-    
+
     def _generate_json(self, suite: TestSuite) -> str:
-        """生成 JSON 报告"""
+        """Generate a JSON report"""
         stats = self._calculate_stats(suite)
-        
+
         data = {
             "suite": suite.name,
             "start_time": suite.start_time,
@@ -317,57 +317,57 @@ class EnhancedReportGenerator:
                 for t in suite.tests
             ]
         }
-        
+
         filename = f"{suite.name.replace(' ', '_')}.json"
         filepath = os.path.join(self.output_dir, filename)
         with open(filepath, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
-        
+
         return filepath
-    
+
     def _generate_markdown(self, suite: TestSuite) -> str:
-        """生成 Markdown 报告"""
+        """Generate a Markdown report"""
         stats = self._calculate_stats(suite)
-        
-        md = f"""# 测试报告 - {suite.name}
 
-**执行时间**: {suite.start_time} ~ {suite.end_time}
+        md = f"""# Test report - {suite.name}
 
-## 统计
+**Execution time**: {suite.start_time} ~ {suite.end_time}
 
-| 指标 | 值 |
+## Statistics
+
+| Metric | Value |
 |------|-----|
-| 总数 | {stats['total']} |
-| 通过 | {stats['passed']} |
-| 失败 | {stats['failed']} |
-| 跳过 | {stats['skipped']} |
-| 通过率 | {stats['pass_rate']}% |
-| 耗时 | {stats['duration_readable']} |
+| Total | {stats['total']} |
+| Passed | {stats['passed']} |
+| Failed | {stats['failed']} |
+| Skipped | {stats['skipped']} |
+| Pass rate | {stats['pass_rate']}% |
+| Duration | {stats['duration_readable']} |
 
-## 测试结果
+## Test results
 
-| 用例 | 状态 | 耗时 |
+| Case | Status | Duration |
 |------|------|------|
 """
-        
+
         for test in suite.tests:
             status_emoji = "✅" if test.status == "passed" else ("❌" if test.status == "failed" else "⏭️")
             md += f"| {test.name} | {status_emoji} {test.status} | {test.duration_ms}ms |\n"
-        
+
         if stats['failed'] > 0:
-            md += "\n## 失败详情\n\n"
+            md += "\n## Failure details\n\n"
             for test in suite.tests:
                 if test.status == "failed" and test.error_message:
                     md += f"### {test.name}\n\n```\n{test.error_message}\n```\n\n"
-        
+
         filename = f"{suite.name.replace(' ', '_')}.md"
         filepath = os.path.join(self.output_dir, filename)
         with open(filepath, 'w', encoding='utf-8') as f:
             f.write(md)
-        
+
         return filepath
 
 
 def create_report_generator(output_dir: str = "./reports") -> EnhancedReportGenerator:
-    """创建报告生成器"""
+    """Create a report generator"""
     return EnhancedReportGenerator(output_dir)

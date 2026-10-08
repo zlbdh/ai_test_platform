@@ -1,11 +1,11 @@
 """
-Test Knowledge Base - 测试知识库
+Test Knowledge Base
 
-学习历史测试模式，持续优化测试决策：
-- 记录成功/失败模式
-- 学习最佳测试策略
-- 推荐历史类似案例
-- 持久化知识
+Learn from prior test patterns to improve testing decisions:
+- Record success and failure patterns
+- Learn effective testing strategies
+- Recommend similar previous cases
+- Persist knowledge
 """
 
 from typing import Dict, Any, List, Optional
@@ -18,7 +18,7 @@ from pathlib import Path
 
 @dataclass
 class TestPattern:
-    """测试模式"""
+    """Test pattern"""
 
     __test__ = False
 
@@ -40,7 +40,7 @@ class TestPattern:
 
 @dataclass
 class TestCase:
-    """测试用例记录"""
+    """Test-case record"""
 
     __test__ = False
 
@@ -57,7 +57,7 @@ class TestCase:
 
 
 class TestKnowledgeBase:
-    """测试知识库"""
+    """Test knowledge base"""
 
     __test__ = False
 
@@ -72,7 +72,7 @@ class TestKnowledgeBase:
         self._load()
 
     def _load(self):
-        """加载持久化数据"""
+        """Load persisted data"""
         patterns_file = self.storage_path / "patterns.json"
         cases_file = self.storage_path / "cases.json"
 
@@ -99,7 +99,7 @@ class TestKnowledgeBase:
         self._rebuild_index()
 
     def _save(self):
-        """持久化数据"""
+        """Persist data"""
         patterns_file = self.storage_path / "patterns.json"
         cases_file = self.storage_path / "cases.json"
 
@@ -110,25 +110,25 @@ class TestKnowledgeBase:
             json.dump([asdict(c) for c in self.cases[-1000:]], f, ensure_ascii=False, indent=2)
 
     def _rebuild_index(self):
-        """重建关键词索引"""
+        """Rebuild the keyword index"""
         self.keyword_index.clear()
         for pattern_key, pattern in self.patterns.items():
             self._add_to_index(pattern_key, pattern.requirement_keywords)
 
     @staticmethod
     def _unique_preserve_order(items: List[str]) -> List[str]:
-        """去重并保持原顺序"""
+        """Deduplicate while preserving order"""
         return list(dict.fromkeys(items))
 
     def _add_to_index(self, pattern_key: str, keywords: List[str]):
-        """向关键词索引注册模式键"""
+        """Register a pattern key in the keyword index"""
         for kw in self._unique_preserve_order(keywords):
             bucket = self.keyword_index.setdefault(kw, [])
             if pattern_key not in bucket:
                 bucket.append(pattern_key)
 
     def _extract_keywords(self, text: str) -> List[str]:
-        """提取关键词"""
+        """Extract keywords"""
         import re
 
         words = re.findall(r"[\u4e00-\u9fff]+|[a-zA-Z]+", text.lower())
@@ -136,7 +136,7 @@ class TestKnowledgeBase:
         return [w for w in words if w not in stopwords and len(w) > 1]
 
     def _hash_requirement(self, requirement: str) -> str:
-        """生成需求哈希"""
+        """Generate a requirement hash"""
         keywords = sorted(self._extract_keywords(requirement))
         return hashlib.md5("_".join(keywords).encode()).hexdigest()[:16]
 
@@ -151,7 +151,7 @@ class TestKnowledgeBase:
         healing_applied: bool = False,
         ai_confidence: float = 0,
     ) -> TestCase:
-        """记录测试执行"""
+        """Record a test execution"""
         case_id = f"tc_{datetime.now().strftime('%Y%m%d%H%M%S')}_{len(self.cases)}"
 
         case = TestCase(
@@ -182,7 +182,7 @@ class TestKnowledgeBase:
         result: str,
         duration_ms: int,
     ):
-        """更新或创建模式"""
+        """Update or create a pattern"""
         req_hash = self._hash_requirement(requirement)
         keywords = self._unique_preserve_order(self._extract_keywords(requirement))
         normalized_test_types = self._unique_preserve_order(list(test_types))
@@ -223,7 +223,7 @@ class TestKnowledgeBase:
         requirement: str,
         limit: int = 5,
     ) -> List[TestPattern]:
-        """查找相似模式"""
+        """Find similar patterns"""
         keywords = self._extract_keywords(requirement)
 
         scores: Dict[str, float] = {}
@@ -242,7 +242,7 @@ class TestKnowledgeBase:
         return results
 
     def recommend_test_types(self, requirement: str) -> Dict[str, float]:
-        """根据历史推荐测试类型"""
+        """Recommend test types based on history"""
         similar = self.find_similar_patterns(requirement, limit=10)
 
         if not similar:
@@ -258,7 +258,7 @@ class TestKnowledgeBase:
         return {k: v / max_score for k, v in type_scores.items()}
 
     def get_statistics(self) -> Dict[str, Any]:
-        """获取知识库统计"""
+        """Get knowledge-base statistics"""
         total_cases = len(self.cases)
         success_cases = sum(1 for c in self.cases if c.result == "success")
 
@@ -271,7 +271,7 @@ class TestKnowledgeBase:
         }
 
     def export_report(self) -> Dict[str, Any]:
-        """导出知识库报告"""
+        """Export a knowledge-base report"""
         stats = self.get_statistics()
 
         top_patterns = sorted(
@@ -291,7 +291,7 @@ _knowledge_base: Optional[TestKnowledgeBase] = None
 
 
 def get_knowledge_base() -> TestKnowledgeBase:
-    """获取知识库单例"""
+    """Get the knowledge-base singleton"""
     global _knowledge_base
     if _knowledge_base is None:
         _knowledge_base = TestKnowledgeBase()

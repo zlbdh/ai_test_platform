@@ -47,7 +47,7 @@ class ExecuteStepResponse(BaseModel):
 # === Migrated Log Models ===
 class LogType(str, Enum):
     THOUGHT = "thought"
-    ACTION = "action" 
+    ACTION = "action"
     OBSERVATION = "observation"
     SYSTEM = "system"
     ERROR = "error"
@@ -225,7 +225,7 @@ class ShadowDbQuarantineRequest(BaseModel):
 
 
 class CommanderChatOpsSimulateRequest(BaseModel):
-    message: str = "状态"
+    message: str = "Status"
     from_user: str = "debug_console"
     chat_id: str = "debug_chat"
     deliver: bool = True
@@ -303,11 +303,11 @@ class PauseRequest(BaseModel):
 
 
 # =============================================================================
-# Inspector 视觉质检结果
+# Inspector visual review results
 # =============================================================================
 
 class InspectionResult(BaseModel):
-    """Inspector 视觉审查结果 — 判定每步执行后的业务正确性"""
+    """Inspector visual review result: assess business correctness after each step"""
     passed: bool
     confidence: float = 1.0
     reason: str = ""
@@ -315,16 +315,16 @@ class InspectionResult(BaseModel):
 
 
 # =============================================================================
-# 统一 API 响应模型 & 异常类
-# 所有新增/重构的 router 应使用这些类型实现一致的错误处理
+# Shared API response models and exception classes
+# New and refactored routers should use these types for consistent error handling
 # =============================================================================
 
 class APIResponse(BaseModel):
-    """统一 API 响应格式"""
+    """Standard API response format"""
     status: str = "success"               # "success" | "error"
-    message: Optional[str] = None         # 人类可读消息
-    data: Optional[Any] = None            # 业务数据
-    error_code: Optional[str] = None      # 机器可读错误码 (e.g. "LLM_TIMEOUT")
+    message: Optional[str] = None         # Human-readable message
+    data: Optional[Any] = None            # Business data
+    error_code: Optional[str] = None      # Machine-readable error code (e.g. "LLM_TIMEOUT")
 
     @classmethod
     def ok(cls, data: Any = None, message: str = None):
@@ -336,7 +336,7 @@ class APIResponse(BaseModel):
 
 
 class APIError(Exception):
-    """统一业务异常 — 可在路由中 raise，由全局异常处理器捕获"""
+    """Shared business exception: raise in routes for the global exception handler to catch"""
     def __init__(self, message: str, status_code: int = 400, error_code: str = None):
         self.message = message
         self.status_code = status_code

@@ -1,39 +1,39 @@
 # -*- coding: utf-8 -*-
 """
-统一日志配置 — trace_id 链路追踪 + 结构化格式
-所有模块通过 logging.getLogger(__name__) 自动继承此配置。
+Shared logging configuration: trace_id request tracing and structured formatting
+All modules inherit this configuration through logging.getLogger(__name__).
 """
 import logging
 import uuid
 from contextvars import ContextVar
 
-# ── trace_id 上下文 ─────────────────────────────────────────
-# 每个请求在中间件中设置唯一 trace_id，整个请求链路均可访问
+# ── trace_id context ─────────────────────────────────────────
+# Middleware assigns a unique trace_id that is available throughout each request
 trace_id_var: ContextVar[str] = ContextVar("trace_id", default="-")
 
 
 def get_trace_id() -> str:
-    """获取当前请求的 trace_id（供日志或响应头使用）"""
+    """Get the current request's trace_id for logs or response headers"""
     return trace_id_var.get()
 
 
 def new_trace_id() -> str:
-    """生成并设置新的 trace_id，返回该值"""
+    """Generate, set, and return a new trace_id"""
     tid = uuid.uuid4().hex[:12]
     trace_id_var.set(tid)
     return tid
 
 
-# ── 自定义 Formatter（注入 trace_id）──────────────────────
+# ── Custom Formatter that injects trace_id──────────────────────
 class TraceFormatter(logging.Formatter):
-    """自动将 trace_id 注入每条日志"""
+    """Inject trace_id into each log record automatically"""
 
     def format(self, record: logging.LogRecord) -> str:
         record.trace_id = trace_id_var.get()
         return super().format(record)
 
 
-# ── 初始化函数（应在 app 启动前调用一次）────────────────────
+# ── Initialization function; call once before application startup────────────────────
 _initialized = False
 
 LOG_FORMAT = (
@@ -44,8 +44,8 @@ DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 def setup_logging(level: int = logging.INFO) -> None:
     """
-    配置项目根 logger，统一格式。
-    幂等：多次调用不会重复添加 handler。
+    Configure the project's root logger with a consistent format.
+    Idempotent: repeated calls do not add duplicate handlers.
     """
     global _initialized
     if _initialized:
@@ -58,11 +58,11 @@ def setup_logging(level: int = logging.INFO) -> None:
 
     root = logging.getLogger()
     root.setLevel(level)
-    # 移除已有的 handler（避免 basicConfig 的默认 handler 导致重复输出）
+    # Remove existing handlers to prevent duplicate output from basicConfig's default handler
     root.handlers.clear()
     root.addHandler(console_handler)
 
-    # 降低第三方库噪音
+    # Reduce third-party logging noise
     for noisy in ["httpx", "httpcore", "urllib3", "watchfiles", "uvicorn.access"]:
         logging.getLogger(noisy).setLevel(logging.WARNING)
 

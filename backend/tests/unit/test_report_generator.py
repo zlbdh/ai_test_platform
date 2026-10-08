@@ -88,7 +88,7 @@ class TestReportGenerator:
         
         assert filepath.endswith(".md")
         written_content = "".join(call.args[0] for call in mock_file().write.mock_calls)
-        assert "# 测试报告 - API Regression V1" in written_content
+        assert "# Test report - API Regression V1" in written_content
         assert "✅ passed" in written_content
         assert "❌ failed" in written_content
 

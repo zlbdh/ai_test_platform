@@ -12,10 +12,10 @@ logger = logging.getLogger(__name__)
 def normalize_base_url(base_url: str) -> str:
     raw = (base_url or "").strip()
     if not raw:
-        raise ValueError("base_url 不能为空")
+        raise ValueError("base_url must not be empty")
     parsed = urlparse(raw)
     if not parsed.scheme or not parsed.netloc:
-        raise ValueError(f"base_url 非法: {base_url}")
+        raise ValueError(f"Invalid base_url: {base_url}")
     return f"{parsed.scheme}://{parsed.netloc}"
 
 
@@ -46,20 +46,20 @@ def _ensure_success(response: Dict[str, Any], action: str) -> None:
     status_code = int(response.get("status_code") or -1)
     content = response.get("content")
     if status_code != 200:
-        raise RuntimeError(f"{action}失败: HTTP {status_code}")
+        raise RuntimeError(f"{action} failed: HTTP {status_code}")
     if isinstance(content, dict):
         code = content.get("code")
         if code not in (None, 200):
-            msg = content.get("msg") or content.get("message") or "未知错误"
-            raise RuntimeError(f"{action}失败: {msg}")
+            msg = content.get("msg") or content.get("message") or "Unknown error"
+            raise RuntimeError(f"{action} failed: {msg}")
 
 
 def apply_auth_bootstrap(page, payload: Dict[str, Any]) -> Dict[str, Any]:
     """
-    通过真实接口完成登录、切站，并把认证态注入当前浏览器上下文。
+    Sign in and switch sites through real APIs, then inject authentication into the current browser context.
     """
     if not isinstance(payload, dict):
-        raise ValueError("bootstrap payload 必须是字典")
+        raise ValueError("bootstrap payload must be a dictionary")
 
     base_url = normalize_base_url(str(payload.get("base_url") or ""))
     username = str(payload.get("username") or "").strip()
@@ -67,7 +67,7 @@ def apply_auth_bootstrap(page, payload: Dict[str, Any]) -> Dict[str, Any]:
     access_token = str(payload.get("access_token") or "").strip()
 
     if not access_token and (not username or not password):
-        raise ValueError("预认证至少需要 access_token，或 username/password")
+        raise ValueError("Preauthentication requires access_token or username/password")
 
     login_path = str(payload.get("login_path") or "/auth/login1").strip() or "/auth/login1"
     token_cookie_name = str(payload.get("token_cookie_name") or "Admin-Token").strip() or "Admin-Token"
@@ -85,10 +85,10 @@ def apply_auth_bootstrap(page, payload: Dict[str, Any]) -> Dict[str, Any]:
             headers={"Content-Type": "application/json"},
             json_body=login_body,
         )
-        _ensure_success(login_response, "登录")
+        _ensure_success(login_response, "Sign-in")
         access_token = _extract_token(login_response)
         if not access_token:
-            raise RuntimeError("登录失败: 响应中未返回 access_token")
+            raise RuntimeError("Sign-in failed: the response did not include access_token")
 
     station_id = payload.get("station_id")
     city = payload.get("city")
@@ -103,7 +103,7 @@ def apply_auth_bootstrap(page, payload: Dict[str, Any]) -> Dict[str, Any]:
             },
             json_body={"stationId": str(station_id), "city": str(city)},
         )
-        _ensure_success(switch_response, "切换站点")
+        _ensure_success(switch_response, "Switch site")
 
     page.context.add_cookies([{
         "name": token_cookie_name,

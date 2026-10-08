@@ -2,10 +2,10 @@ from core.session_manager import session_manager, SessionManager
 
 class SharedBrowserState:
     """
-    过渡期兼容类：代理到 DEFAULT_SESSION_ID
-    即将废弃，请在各处代码显式使用 session_manager.get_session(session_id)
+    Transitional compatibility class delegating to DEFAULT_SESSION_ID
+    Deprecated soon; use session_manager.get_session(session_id) explicitly throughout the code
     """
-    
+
     @classmethod
     def _default(cls):
         return session_manager.get_session(SessionManager.DEFAULT_SESSION_ID)
@@ -90,11 +90,11 @@ class SharedBrowserState:
     def get_frame(cls) -> bytes:
         return cls._default().get_frame()
 
-    # 兼容直接属性访问 (部分测试代码可能使用了直接访问如 agent_status)
+    # Support direct attribute access used by some tests, such as agent_status
     @property
     def agent_status(self):
         return self._default().agent_status
-        
+
     @property
     def current_task(self):
         return self._default().current_task
@@ -102,7 +102,7 @@ class SharedBrowserState:
     @property
     def execution_signal(self):
         return self._default().execution_signal
-        
+
     @property
     def page(self):
         return self._default().page

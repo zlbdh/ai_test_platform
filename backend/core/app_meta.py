@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-应用元信息
+Application metadata
 
-集中维护会对外暴露的产品名称与版本号，避免多入口漂移。
+Centralize public product names and versions to keep entry points consistent.
 """
 
 APP_NAME = "AI Test Platform"

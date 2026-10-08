@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-FastAPI 鉴权依赖
+FastAPI authentication dependencies
 
-统一提供 token 提取、登录态校验与管理员校验，供高风险路由复用。
+Provide shared token extraction, session validation, and administrator checks for high-risk routes.
 """
 from __future__ import annotations
 
@@ -36,7 +36,7 @@ async def extract_request_token(
     x_auth_token: Optional[str] = Header(default=None),
     token: Optional[str] = Query(default=None),
 ) -> str:
-    """从 query/header/body 中提取 token。"""
+    """Extract the token from query parameters, headers, or the body."""
     if token:
         return token.strip()
 
@@ -69,7 +69,7 @@ async def require_authenticated_user(
     x_auth_token: Optional[str] = Header(default=None),
     token: Optional[str] = Query(default=None),
 ) -> User:
-    """要求请求具备有效登录态。"""
+    """Require a valid authenticated session."""
     auth = get_auth_service()
     token_value = await extract_request_token(
         request=request,
@@ -103,7 +103,7 @@ async def require_admin_user(
     x_auth_token: Optional[str] = Header(default=None),
     token: Optional[str] = Query(default=None),
 ) -> User:
-    """要求请求具备管理员权限。"""
+    """Require administrator privileges."""
     user = await require_authenticated_user(
         request=request,
         authorization=authorization,
@@ -117,7 +117,7 @@ async def require_admin_user(
 
 
 def build_permission_dependency(permission: Permission, detail: str):
-    """构建基于细粒度权限的依赖。"""
+    """Build a dependency for granular permission checks."""
 
     async def _require_permission_user(
         request: Request,

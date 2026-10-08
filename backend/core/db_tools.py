@@ -17,7 +17,7 @@ MOCK_DB_PATH = ""
 
 
 def _get_sqlite_path() -> str:
-    """默认跟随平台正式业务库路径，必要时允许测试覆盖。"""
+    """Default to the platform's business database path; allow test overrides when needed."""
     candidate = MOCK_DB_PATH or db_helper.get_db_path()
     return db_helper.resolve_db_path(candidate)
 
@@ -203,7 +203,7 @@ def snapshot_db(table: str, condition: str) -> Dict[str, Any]:
 
 def diff_db(snapshot_data: List[Dict], table: str, condition: str) -> Dict[str, Any]:
     """
-    Compare current DB state with snapshot (全行比较).
+    Compare current DB state with snapshot (full-row comparison).
     """
     current_res = snapshot_db(table, condition)
     if current_res.get("status") == "error":

@@ -35,7 +35,7 @@ class TestVisualTools:
         result = assert_visual_snapshot(mock_page, "test_snap")
         
         assert result["status"] == "error"
-        assert "视觉比对失败" in result["message"]
+        assert "Visual comparison failed" in result["message"]
         assert "Pixels differ" in result["details"]["error"]
 
     @patch("core.visual_tools.expect")
@@ -52,7 +52,7 @@ class TestVisualTools:
         result = assert_visual_snapshot(mock_page, "test_snap")
         
         assert result["status"] == "success"
-        assert "首次运行，已保存基准截图" in result["message"]
+        assert "First run: baseline screenshot saved" in result["message"]
         mock_page.screenshot.assert_called()
 
     @patch("core.visual_tools.expect")
@@ -82,7 +82,7 @@ class TestVisualTools:
         result = assert_visual_snapshot(mock_page, "test_snap")
         
         assert result["status"] == "success"
-        assert "视觉比对通过 (Manual" in result["message"]
+        assert "Visual comparison passed (Manual" in result["message"]
 
     @patch("core.visual_tools.expect")
     @patch("core.visual_tools.os.makedirs")
@@ -114,4 +114,4 @@ class TestVisualTools:
         result = assert_visual_snapshot(mock_page, "test_snap", threshold=0.1)
         
         assert result["status"] == "error"
-        assert "视觉比对失败 (RMS" in result["message"]
+        assert "Visual comparison failed (RMS" in result["message"]

@@ -13,7 +13,7 @@ class TestFormatMessage:
         payload = _format_message("dingtalk", "报告", "completed", "摘要", {"total_steps": 3, "passed": 2, "failed": 1, "duration": "5s"})
         assert payload["msgtype"] == "markdown"
         assert "报告" in payload["markdown"]["title"]
-        assert "步骤: 3" in payload["markdown"]["text"]
+        assert "Steps: 3" in payload["markdown"]["text"]
 
     def test_formats_wecom(self):
         payload = _format_message("wecom", "报告", "failed", "摘要")

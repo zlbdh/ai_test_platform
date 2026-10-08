@@ -1,9 +1,9 @@
 """
-文档文件文本提取
+Document text extraction
 
-职责：
-- 统一处理 txt / md / docx / pdf 等文档输入
-- 为需求解析和测试生成提供稳定的纯文本内容
+Responsibilities:
+- Handle txt, md, docx, pdf, and other document inputs consistently
+- Provide consistent plain text for requirement parsing and test generation
 """
 
 from __future__ import annotations
@@ -30,7 +30,7 @@ def extract_text_from_path(file_path: str) -> str:
 def extract_text_from_bytes(filename: str, data: bytes) -> str:
     suffix = Path(filename or "").suffix.lower()
     if suffix not in SUPPORTED_SUFFIXES:
-        raise ValueError(f"暂不支持的文件类型: {suffix or 'unknown'}")
+        raise ValueError(f"Unsupported file type: {suffix or 'unknown'}")
 
     if suffix in TEXT_SUFFIXES:
         content = _decode_text_bytes(data)
@@ -41,7 +41,7 @@ def extract_text_from_bytes(filename: str, data: bytes) -> str:
 
     normalized = _normalize_text(content)
     if not normalized:
-        raise ValueError("未从文档中提取到可用文本内容")
+        raise ValueError("No usable text could be extracted from the document")
     return normalized
 
 

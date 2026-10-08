@@ -19,7 +19,7 @@ def ensure_data_dir():
     os.makedirs(get_data_dir(), exist_ok=True)
 
 def load_history() -> List[Dict[str, Any]]:
-    """从文件加载执行历史"""
+    """Load execution history from a file"""
     history_file = get_history_file()
     if os.path.exists(history_file):
         try:
@@ -27,19 +27,19 @@ def load_history() -> List[Dict[str, Any]]:
                 data = json.load(f)
                 if isinstance(data, list):
                     return data
-                logger.error("历史记录文件格式无效: 期望列表")
+                logger.error("Invalid history-file format: expected a list")
                 return []
         except Exception as e:
-            logger.error(f"加载历史记录失败: {e}")
+            logger.error(f"Failed to load history: {e}")
             return []
     return []
 
 def save_history(history: List[Dict[str, Any]]):
-    """保存执行历史到文件"""
+    """Save execution history to a file"""
     ensure_data_dir()
     history_file = get_history_file()
     try:
         with open(history_file, 'w', encoding='utf-8') as f:
             json.dump(history, f, ensure_ascii=False, indent=2)
     except Exception as e:
-        logger.error(f"保存历史记录失败: {e}")
+        logger.error(f"Failed to save history: {e}")

@@ -265,7 +265,7 @@ class PlannerAgent:
         if not isinstance(text, str): return text
 
         if not hasattr(self, '_faker'):
-            self._faker = Faker('zh_CN')
+            self._faker = Faker('en_US')
         fake = self._faker
 
         matches = re.findall(r"\$\{(.*?)\}", text)

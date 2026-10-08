@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-通知辅助函数 — 供各模块在测试完成时调用
+Notification helpers called by modules when tests finish
 """
 import asyncio
 import logging
@@ -18,13 +18,13 @@ async def send_completion_notification(
     details: dict = None,
 ):
     """
-    发送测试完成通知到所有启用的 Webhook。
-    
+    Send test-completion notifications to all enabled webhooks.
+
     Args:
-        title: 通知标题 (如 "AI 编排测试报告")
-        status: 状态 (completed / failed / stopped)
-        summary: 摘要文本
-        details: 额外详情 dict (total_steps, passed, failed, duration 等)
+        title: Notification title, such as "AI orchestration test report"
+        status: Status (completed / failed / stopped)
+        summary: Summary text
+        details: Additional details dictionary (total_steps, passed, failed, duration, etc.)
     """
     result = {
         "configured": 0,
@@ -35,7 +35,7 @@ async def send_completion_notification(
     try:
         rows = query_all("SELECT * FROM notification_webhooks WHERE enabled=1")
     except Exception:
-        return result  # 表不存在时静默返回
+        return result  # Return silently if the table does not exist
 
     if not rows:
         return result
@@ -86,9 +86,9 @@ def _format_message(webhook_type: str, title: str, status: str, summary: str, de
         if annotations:
             text += "\n\n" + "\n".join(str(item) for item in annotations if str(item).strip())
         if "total_steps" in details:
-            text += f"\n\n📊 步骤: {details['total_steps']} | 通过: {details.get('passed', 0)} | 失败: {details.get('failed', 0)}"
+            text += f"\n\n📊 Steps: {details['total_steps']} | Passed: {details.get('passed', 0)} | Failed: {details.get('failed', 0)}"
         if "duration" in details:
-            text += f"\n⏱️ 耗时: {details['duration']}"
+            text += f"\n⏱️ Duration: {details['duration']}"
 
     if webhook_type == "dingtalk":
         return {"msgtype": "markdown", "markdown": {"title": title, "text": text}}

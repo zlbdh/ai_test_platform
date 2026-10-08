@@ -83,7 +83,7 @@ class TestResolveVariables:
     def test_faker_variable(self):
         planner = _make_planner()
         result = planner._resolve_variables("name: ${fake.name}")
-        # Faker 会返回中文名字，只要替换成功即可
+        # Faker returns an American English name; verify that substitution succeeds
         assert "${fake.name}" not in result
         assert len(result) > len("name: ")
 

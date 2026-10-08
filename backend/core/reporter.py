@@ -14,7 +14,7 @@ def generate_report(task_data: Dict[str, Any], output_dir: str = "reports") -> s
         # Resolve paths
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         template_dir = os.path.join(base_dir, "templates")
-        
+
         # Ensure output dir exists
         full_output_dir = os.path.join(os.path.dirname(base_dir), output_dir)
         os.makedirs(full_output_dir, exist_ok=True)
@@ -30,22 +30,22 @@ def generate_report(task_data: Dict[str, Any], output_dir: str = "reports") -> s
 
         env = Environment(loader=FileSystemLoader(template_dir))
         template = env.get_template("report.html")
-        
-        # 避免修改调用方传入的数据
+
+        # Avoid modifying caller-provided data
         render_data = dict(task_data)
         render_data.setdefault("generated_at", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-        
+
         # Render
         html_content = template.render(task_data=render_data)
-        
+
         # Save
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"report_{timestamp}.html"
         file_path = os.path.join(full_output_dir, filename)
-        
+
         with open(file_path, "w", encoding="utf-8") as f:
             f.write(html_content)
-            
+
         logger.info(f"Report generated: {file_path}")
         return file_path
 

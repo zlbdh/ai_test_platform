@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-中文任务文本展示辅助。
+Task-text display helpers, including Chinese encoding checks.
 
-区分：
-1. raw：原始输入，保留给诊断与 planner
-2. display：用户可见标题，避免把明显损坏的文本继续扩散到状态、历史和通知
+Distinguish:
+1. raw：Original input retained for diagnostics and the planner
+2. display：User-visible title that prevents obviously corrupted text from spreading to status, history, and notifications
 """
 from __future__ import annotations
 
@@ -43,7 +43,7 @@ def looks_broken_text(value: Optional[str]) -> bool:
 def resolve_display_text(
     raw_text: Optional[str],
     target_url: str = "",
-    fallback: str = "未命名测试",
+    fallback: str = "Untitled test",
 ) -> Tuple[str, str]:
     raw = str(raw_text or "").strip()
     if not looks_broken_text(raw):
@@ -54,4 +54,4 @@ def resolve_display_text(
 
 
 def build_broken_text_notice() -> str:
-    return "需求文本疑似编码损坏，已回退为可读标题。"
+    return "The requirement text appears to have an encoding problem; a readable fallback title is being used."

@@ -7,34 +7,34 @@ from typing import Callable, Dict, List, Optional, Tuple
 
 class SessionState:
     """
-    独立测试会话状态
-    替代原先的 SharedBrowserState 单例模型，使得每个会话可以并行运行隔离的状态。
+    Isolated test-session state
+    Replace the SharedBrowserState singleton so sessions can run concurrently with isolated state.
     """
     def __init__(self, session_id: str):
         self.session_id = session_id
-        
+
         self.page = None
         self._page_owner_thread_id = None
         self.execution_signal = "RUNNING"  # RUNNING, PAUSED, STOPPED
         self.agent_status = "IDLE"         # IDLE, RUNNING
         self.current_task = ""
         self.logs = []
-        
+
         # Locks for thread safety
         self._logs_lock = threading.Lock()
         self._signal_lock = threading.Lock()
         self._page_lock = threading.Lock()
-        
+
         self._active_context_id = None
         self._pause_reason = None
         self._intervention_screenshot = None
-        
+
         self._page_state: dict = {}
         self._page_state_lock = threading.Lock()
-        
+
         self.context_data = {}
         self._context_lock = threading.Lock()
-        
+
         self._latest_frame: bytes = None
         self._frame_lock = threading.Lock()
         self._browser_command_queue: thread_queue.Queue = thread_queue.Queue()
@@ -158,10 +158,10 @@ class SessionState:
 
     async def run_browser(self, callback: Callable, timeout: float = 10.0):
         """
-        在页面所属线程安全执行浏览器操作。
+        Execute browser actions safely in the thread that owns the page.
 
-        - 当前线程就是页面拥有者时直接执行
-        - 否则将回调派发给拥有页面的线程处理
+        - Execute directly when the current thread owns the page
+        - Otherwise dispatch the callback to the page's owning thread
         """
         page = self.get_page()
         if page is None:
@@ -180,8 +180,8 @@ class SessionState:
 
     def process_browser_commands(self, page=None, max_commands: int = 10) -> int:
         """
-        在页面拥有线程中执行待处理的浏览器命令。
-        由 Executor 线程循环调用。
+        Execute pending browser commands in the page's owning thread.
+        Called repeatedly by the Executor thread.
         """
         active_page = page or self.get_page()
         if active_page is None:
@@ -214,12 +214,12 @@ class SessionState:
 
 class SessionManager:
     """
-    多会话管理器
+    Multi-session manager
     """
     _sessions: Dict[str, SessionState] = {}
     _lock = threading.Lock()
-    
-    # 默认全局会话的 ID，为了在完全切换到全参数 session_id 期间提供过渡兼容
+
+    # Default global session ID for compatibility while migrating to explicit session_id arguments
     DEFAULT_SESSION_ID = "default_session"
 
     @classmethod
@@ -229,7 +229,7 @@ class SessionManager:
             if sid not in cls._sessions:
                 cls._sessions[sid] = SessionState(sid)
             return cls._sessions[sid]
-            
+
     @classmethod
     def remove_session(cls, session_id: str):
         with cls._lock:
@@ -241,5 +241,5 @@ class SessionManager:
         with cls._lock:
             return list(cls._sessions.keys())
 
-# 全局单例管理器
+# Global singleton manager
 session_manager = SessionManager()

@@ -76,5 +76,5 @@ def test_extract_text_from_bytes_supports_pdf():
 
 
 def test_extract_text_from_bytes_rejects_unsupported_type():
-    with pytest.raises(ValueError, match="暂不支持的文件类型"):
+    with pytest.raises(ValueError, match="Unsupported file type"):
         extract_text_from_bytes("login.doc", b"binary")

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-API 响应标准化工具
+API response standardization utilities
 
-统一所有 Router 的响应格式，简化错误处理样板代码。
+Standardize router responses and reduce error-handling boilerplate.
 """
 import logging
 import inspect
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 def ok(data: Any = None, message: str = "success") -> dict:
     """
-    构建标准成功响应。
+    Build a standard success response.
 
     Examples:
         @router.get("/items")
@@ -34,11 +34,11 @@ def ok(data: Any = None, message: str = "success") -> dict:
 
 def fail(message: str, code: int = 400, detail: Any = None) -> JSONResponse:
     """
-    构建标准失败响应（HTTP 200 但业务状态失败）。
+    Build a standard failure response with HTTP 200 and a failed business status.
 
     Examples:
-        return fail("项目不存在", 404)
-        # → status 200, {"status": "error", "message": "项目不存在"}
+        return fail("Project not found", 404)
+        # → status 200, {"status": "error", "message": "Project not found"}
     """
     body: dict = {"status": "error", "message": message}
     if detail is not None:
@@ -48,7 +48,7 @@ def fail(message: str, code: int = 400, detail: Any = None) -> JSONResponse:
 
 def safe_handler(func):
     """
-    装饰器：自动包裹 try/except，统一异常响应。
+    Decorator that wraps calls in try/except for consistent error responses.
 
     Examples:
         @router.post("/analyze")
@@ -56,7 +56,7 @@ def safe_handler(func):
         async def analyze(req: AnalyzeRequest):
             result = await heavy_computation(req)
             return ok(result)
-        # 异常时自动返回: {"status": "error", "message": "...", "trace": "..."}
+        # Automatically return on exception: {"status": "error", "message": "...", "trace": "..."}
     """
     import functools
 
@@ -68,14 +68,14 @@ def safe_handler(func):
                 return await result
             return result
         except HTTPException:
-            raise  # 让 FastAPI 处理 HTTP 异常
+            raise  # Let FastAPI handle HTTP exceptions
         except ValueError as e:
-            logger.warning(f"[{func.__name__}] 业务错误: {e}")
+            logger.warning(f"[{func.__name__}] Business error: {e}")
             return fail(str(e), 400)
         except Exception as e:
-            logger.error(f"[{func.__name__}] 未预期异常: {e}\n{traceback.format_exc()}")
+            logger.error(f"[{func.__name__}] Unexpected exception: {e}\n{traceback.format_exc()}")
             return fail(
-                f"服务器内部错误: {type(e).__name__}",
+                f"Internal server error: {type(e).__name__}",
                 500,
                 detail=str(e),
             )

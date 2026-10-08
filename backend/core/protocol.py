@@ -17,7 +17,7 @@ class TaskEvent(TypedDict):
     target: str             # CSS selector or description
     value: Optional[str]    # Input value or assertion expectation
     timestamp: str          # ISO timestamp
-    step_index: NotRequired[int]  # 用于前端结构化步骤追踪
+    step_index: NotRequired[int]  # Structured step tracking in the frontend
     scenario: NotRequired[str]
 
 class ResultEvent(TypedDict):
@@ -29,9 +29,9 @@ class ResultEvent(TypedDict):
     data: Optional[Any]     # Extracted text, DB result, etc.
     duration: float         # Execution time in seconds
     timestamp: str
-    action: Optional[str]   # 执行的动作名
-    target: Optional[str]   # 操作目标
-    value: Optional[str]    # 操作值
+    action: Optional[str]   # Action name
+    target: Optional[str]   # Action target
+    value: Optional[str]    # Action value
     step_index: NotRequired[int]
 
 class ControlEvent(TypedDict):
